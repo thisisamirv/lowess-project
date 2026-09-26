@@ -79,13 +79,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **fastLowess:**
 
-- **Breaking:** migrated wrappers and binding translation from individual `return_*`/`cv_*` calls to grouped `.outputs([...])` and `.cv(CVBuilder...)` configuration.
+- Breaking change: migrated wrappers and binding translation from individual `return_*`/`cv_*` calls to grouped `.outputs([...])` and `.cv(CVBuilder...)` configuration.
 - Replaced `std::mem::forget` with `Box::into_raw` in `vec_to_raw_ptr`, making the FFI ownership transfer explicit; bindings still release it through `free_raw_f64_buffer`.
 - Implemented `std::error::Error` for `BindingError`.
 
 **C++:**
 
-- **Breaking:** replaced flat `return_*`/`cv_*` fields with grouped `outputs` and nested `cv` options; prediction outputs are grouped as well.
+- Breaking change: replaced flat `return_*`/`cv_*` fields with grouped `outputs` and nested `cv` options; prediction outputs are grouped as well.
 - Declared the public wrapper's C++17 requirement for `std::optional`.
 - Represent unavailable diagnostics as empty `std::optional<double>` values instead of `NaN` sentinels.
 
@@ -104,7 +104,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **R:**
 
 - Replaced the local result alias with `extendr_api::error::Result`, which remains exported outside the prelude in `extendr-api 0.9.0`.
-- **Breaking:** replaced individual `return_*` arguments with grouped `outputs`, and replaced `Lowess()`'s four `cv_*` arguments with `cv = cv_opts(...)`.
+- Breaking change: replaced individual `return_*` arguments with grouped `outputs`, and replaced `Lowess()`'s four `cv_*` arguments with `cv = cv_opts(...)`.
 - Represent unavailable diagnostic metrics as R `NA` rather than generic `NaN` values.
 - Added regression comparisons with `stats::lowess` for input-order and sorted output.
 - Added committed `statsmodels.lowess` reference fixtures for cross-language validation.
@@ -250,14 +250,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **lowess:**
 
 - Cleaned up `lowess::prelude` by removing leaked builder and adapter markers.
-- Fixed standard errors collapsing to exactly `0` (and confidence intervals collapsing to a `1e-12` fallback width) for observations whose robustness weight reaches zero: `compute_se` now derives the leverage from the local *linear* design's equivalent kernel rather than the point's own robustness-weighted kernel, so down-weighted outliers keep a positive standard error.
-- Fixed systematic over-estimation (roughly 10-35% too wide) of confidence-interval standard errors: `compute_se` used the local-*constant* leverage `w_i / sum(w)` and divided the weighted residual sum of squares by `sum(w) - 2`, mixing a kernel-weight sum with a parameter count. It now uses the exact local-linear variance multiplier `e1'(X'WX)^-1 (X'W^2 X) (X'WX)^-1 e1` (the squared equivalent-kernel norm `sum_k l_k^2`) and the kernel-corrected residual degrees of freedom `sum(w) - 2 + sum(w^2)/sum(w)`. Reported standard errors now match the Monte-Carlo standard error to within a few percent on linear truth at typical fractions (new `calibration_tests` regression test).
+- Fixed standard errors collapsing to exactly `0` (and confidence intervals collapsing to a `1e-12` fallback width) for observations whose robustness weight reaches zero: `compute_se` now derives the leverage from the local linear design's equivalent kernel rather than the point's own robustness-weighted kernel, so down-weighted outliers keep a positive standard error.
+- Fixed systematic over-estimation (roughly 10-35% too wide) of confidence-interval standard errors: `compute_se` used the local-constant leverage `w_i / sum(w)` and divided the weighted residual sum of squares by `sum(w) - 2`, mixing a kernel-weight sum with a parameter count. It now uses the exact local-linear variance multiplier `e1'(X'WX)^-1 (X'W^2 X) (X'WX)^-1 e1` (the squared equivalent-kernel norm `sum_k l_k^2`) and the kernel-corrected residual degrees of freedom `sum(w) - 2 + sum(w^2)/sum(w)`. Reported standard errors now match the Monte-Carlo standard error to within a few percent on linear truth at typical fractions (new `calibration_tests` regression test).
 - Fixed `fraction >= 1.0` (the global OLS branch) returning a vector of zeros for standard errors, which collapsed every confidence interval to the `1e-12` fallback width; it now computes OLS standard errors using the classical simple-linear-regression formula `sigma_hat * sqrt(1/n + (x0 - xbar)^2 / Sxx)`, matching `stats::lm`'s `se.fit`.
 - Removed unused `pub use` re-exports and updated the few callers that used them.
 - Fixed `OnlineLowess`'s default `"incremental"` mode silently ignoring robustness iterations: `iterations > 0` is now rejected at `.build()` (`RobustnessIterationsRequireFullUpdateMode`) unless `update_mode("full")` is set, the Online `iterations` default is now `0`, and `iterations_used` is reported even without auto-convergence.
 - Fixed seeded k-fold CV (`cv_seed` set) producing inflated scores and selecting the wrong fraction: `interpolate_prediction_batch` used a monotone scan pointer that can't rewind for the shuffled (unordered) test fold, so it now locates each query point via binary search (matching the LOOCV interpolator).
-- Fixed the WLS solver silently zeroing the slope for small-magnitude `x`: `fit_wls` used an *absolute* degeneracy tolerance (`1e-7`) on the centred weighted x-variance, so any dataset whose x-range was below roughly `1e-4` was fitted as a local mean instead of a local line (interior derivatives came out as `0`). The tolerance is now relative to the design's own x-scale. The same absolute-tolerance defect in the `fraction >= 1.0` global OLS path (`fit_ols` and `ols_std_errors`) is fixed the same way.
-- Fixed k-fold cross-validation aggregating the *mean of per-fold RMSEs* instead of pooling: it now pools every test point's squared error and takes one square root, matching LOOCV. Previously `k`-fold with `k == n` (identical to leave-one-out) returned the mean absolute error instead of the RMSE and disagreed with `cv_method("loocv")`.
+- Fixed the WLS solver silently zeroing the slope for small-magnitude `x`: `fit_wls` used an absolute degeneracy tolerance (`1e-7`) on the centred weighted x-variance, so any dataset whose x-range was below roughly `1e-4` was fitted as a local mean instead of a local line (interior derivatives came out as `0`). The tolerance is now relative to the design's own x-scale. The same absolute-tolerance defect in the `fraction >= 1.0` global OLS path (`fit_ols` and `ols_std_errors`) is fixed the same way.
+- Fixed k-fold cross-validation aggregating the mean of per-fold RMSEs instead of pooling: it now pools every test point's squared error and takes one square root, matching LOOCV. Previously `k`-fold with `k == n` (identical to leave-one-out) returned the mean absolute error instead of the RMSE and disagreed with `cv_method("loocv")`.
 
 **fastLowess:**
 
@@ -273,11 +273,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Go:**
 
-- Fixed the Go module's import path to include the required `/v4` suffix. Breaking change for old unsuffixed imports.
+- Breaking change: The Go module import path now includes the required `/v4` suffix; old unsuffixed imports must be updated.
 
 **Java:**
 
-- Fixed the same `cv_seed` negative-value cast bug in `Lowess()`.
+- Fixed `Lowess()` accepting negative `cv_seed` values because they were cast before validation; negative seeds are now rejected before casting.
 - Fixed `mvn clean test` intermittently failing on macOS with `Failed to read artifact descriptor for commons-io:commons-io:jar:2.6`: Maven's default `clean` binding (`maven-clean-plugin:3.2.0`) depends on `maven-shared-utils`, which transitively pulls in the old `commons-io:2.6` artifact whose POM sometimes fails to resolve. `bindings/java/pom.xml` now pins `maven-clean-plugin` to `3.5.0`, which drops `maven-shared-utils`/`commons-io` in favor of `plexus-utils`, removing the flaky transitive dependency.
 
 **Node.js:**
@@ -369,68 +369,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **lowess:**
 
 - Removed the dead, unreachable `compute_residuals`/`parallel`/`backend` fields from `OnlineLowessBuilder`; `StreamingLowessBuilder` lost its unused `backend` field too.
-- `Streaming::convert()` no longer resolves `overlap` to a flat `500` when unset; it now resolves dynamically to `chunk_size / 10` (clamped to `[1, chunk_size - 10]`). Breaking change for callers relying on the previous flat default with a customized `chunk_size`.
+- Breaking change: `Streaming::convert()` no longer resolves `overlap` to a flat `500` when unset; it now resolves dynamically to `chunk_size / 10` (clamped to `[1, chunk_size - 10]`). This affects callers relying on the previous flat default with a customized `chunk_size`.
 - Improved API documentation for the lowess crate significantly.
 
 **fastLowess:**
 
-- Removed the same dead `compute_residuals`/`parallel`/`backend` fields as `lowess`.
-- Removed `.confidence_intervals()`, `.prediction_intervals()`, and `.return_se()` from the `StreamingLowess`/`OnlineLowess` wrapper structs — leaked in via the shared builder macro and silently ignored. Breaking change; `Lowess` is unaffected.
+- Removed the unused `compute_residuals`, `parallel`, and `backend` fields from `OnlineLowessBuilder` and the unused `backend` field from `StreamingLowessBuilder`.
+- Breaking change: Removed `.confidence_intervals()`, `.prediction_intervals()`, and `.return_se()` from the `StreamingLowess`/`OnlineLowess` wrapper structs — leaked in via the shared builder macro and silently ignored. `Lowess` is unaffected.
 - Fixed a stale comment on `binding_support::default_overlap()` referencing the now-removed flat `DEFAULT_STREAMING_OVERLAP` constant in `lowess`.
 - Improved API documentation for the fastLowess crate significantly.
 
 **C++:**
 
 - Repinned the macOS x64 job in `release-cpp.yml` to `macos-15-intel`.
-- Removed `return_diagnostics`/`return_residuals`/`parallel` from `OnlineOptions`, same reason as Python. Breaking change.
-- Removed `confidence_intervals`/`prediction_intervals` from `OnlineOptions`; `StreamingOptions` no longer forwards its inherited copies. Breaking change.
-- Removed the dead, never-read `custom_weights` field from `OnlineOptions`. Breaking change.
-- `StreamingOptions::overlap`'s default changed from a fixed `500` to `-1` (sentinel for "use the library default"), resolving dynamically to `chunk_size / 10`. Breaking change.
+- Breaking change: Removed `return_diagnostics`/`return_residuals`/`parallel` from `OnlineOptions`; these fields were accepted but had no effect in online mode.
+- Breaking change: Removed `confidence_intervals`/`prediction_intervals` from `OnlineOptions`; `StreamingOptions` no longer forwards its inherited copies.
+- Breaking change: Removed the dead, never-read `custom_weights` field from `OnlineOptions`.
+- Breaking change: `StreamingOptions::overlap`'s default changed from a fixed `500` to `-1` (sentinel for "use the library default"), resolving dynamically to `chunk_size / 10`.
 - Improved API documentation for C++ significantly.
 
 **Go:**
 
 - Repinned the macOS x64 job in `release-go.yml` to `macos-15-intel`.
-- `OnlineOptions` no longer embeds `Options`; removed `ReturnDiagnostics`, `ReturnResiduals`, `Parallel`, and the never-read `Backend`. Breaking change.
-- `StreamingOptions` no longer embeds `Options` either; both lost `ConfidenceIntervals`/`PredictionIntervals`, and `StreamingOptions` also lost `ReturnSE`/`ReturnSorted`/`CVFractions`/`CVMethod`/`CVK`/`CVSeed`/`Backend`. Breaking change.
+- Breaking change: `OnlineOptions` no longer embeds `Options`; removed `ReturnDiagnostics`, `ReturnResiduals`, `Parallel`, and the never-read `Backend`.
+- Breaking change: `StreamingOptions` no longer embeds `Options` either; both lost `ConfidenceIntervals`/`PredictionIntervals`, and `StreamingOptions` also lost `ReturnSE`/`ReturnSorted`/`CVFractions`/`CVMethod`/`CVK`/`CVSeed`/`Backend`.
 - Improved API documentation for Go significantly.
 - Updated Go documentation to show the dynamic overlap default `chunk_size / 10`, clamped to `[1, chunk_size - 10]`, instead of a flat `500`.
 
 **Java:**
 
-- Removed `returnDiagnostics`, `returnResiduals`, and `parallel` from `OnlineOptions.Builder`, same reason as Python. Breaking change.
-- Removed `confidenceIntervals` and `predictionIntervals` from `OnlineOptions.Builder` and `StreamingOptions.Builder`. Breaking change.
+- Breaking change: Removed `returnDiagnostics`, `returnResiduals`, and `parallel` from `OnlineOptions.Builder`; these options were accepted but had no effect in online mode.
+- Breaking change: Removed `confidenceIntervals` and `predictionIntervals` from `OnlineOptions.Builder` and `StreamingOptions.Builder`.
 - Improved API documentation for Java significantly.
 - Updated Java documentation to show the dynamic overlap default `chunk_size / 10`, clamped to `[1, chunk_size - 10]`, instead of a flat `500`.
 
 **Julia:**
 
-- Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess`, same reason as Python. Breaking change.
-- `StreamingLowess`'s `overlap` default changed from a fixed `500` to `-1` (sentinel for "use the library default"), resolving dynamically to `chunk_size / 10` like every other binding. Breaking change for customized `chunk_size` callers.
+- Breaking change: Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess`; these options were accepted but had no effect in online mode.
+- Breaking change: `StreamingLowess`'s `overlap` default changed from a fixed `500` to `-1` (sentinel for "use the library default"), resolving dynamically to `chunk_size / 10` like every other binding. This affects callers using a customized `chunk_size`.
 - Improved API documentation for Julia significantly.
 
 **Node.js:**
 
-- Split `SmoothOptions` into `SmoothOptions` (Batch), `StreamingSmoothOptions`, and `OnlineSmoothOptions`. Passing Batch-only fields to `StreamingLowess`/`OnlineLowess` is now a TypeScript compile-time error instead of a silent no-op. Breaking change; `Lowess` is unaffected.
+- Breaking change: Split `SmoothOptions` into `SmoothOptions` (Batch), `StreamingSmoothOptions`, and `OnlineSmoothOptions`. Passing Batch-only fields to `StreamingLowess`/`OnlineLowess` is now a TypeScript compile-time error instead of a silent no-op. `Lowess` is unaffected.
 - Improved API documentation for Node.js significantly.
 - Updated Node.js documentation to show the dynamic overlap default `chunk_size / 10`, clamped to `[1, chunk_size - 10]`, instead of a flat `500`.
 
 **Python:**
 
-- Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess`'s constructor — accepted but had no effect. Breaking change; `Lowess`/`StreamingLowess` are unaffected.
+- Breaking change: Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess`'s constructor — accepted but had no effect. `Lowess`/`StreamingLowess` are unaffected.
 - Improved API documentation for Python significantly.
 - Renamed `docs/guide/adapters.md` and `docs/use-case/{genomics,real-time,time-series}.md` to `adapter-choice.md` and `use-case-*.md` for consistency with the other bindings.
 
 **R:**
 
-- Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess()`'s constructor, same reason as Python. Breaking change.
-- Removed `confidence_intervals` and `prediction_intervals` from `OnlineLowess()`'s and `StreamingLowess()`'s constructors — never actually computed. Breaking change; `Lowess()` is unaffected.
+- Breaking change: Removed `return_diagnostics`, `return_residuals`, and `parallel` from `OnlineLowess()`'s constructor; these options were accepted but had no effect in online mode.
+- Breaking change: Removed `confidence_intervals` and `prediction_intervals` from `OnlineLowess()`'s and `StreamingLowess()`'s constructors — never actually computed. `Lowess()` is unaffected.
 - Improved API documentation for R significantly.
 - Updated R documentation to show the dynamic overlap default `chunk_size / 10`, clamped to `[1, chunk_size - 10]`, instead of a flat `500`.
 
 **WASM:**
 
-- Same `SmoothOptions` split as Node.js, for the same reason. Breaking change.
+- Breaking change: Split the shared `SmoothOptions` into `SmoothOptions` for batch fitting and separate `StreamingOptions` and `OnlineOptions`, so batch-only fields are not accepted by the streaming and online APIs.
 - Improved API documentation for WASM significantly.
 - Updated WASM documentation to show the dynamic overlap default `chunk_size / 10`, clamped to `[1, chunk_size - 10]`, instead of a flat `500`.
 
@@ -466,7 +466,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **WASM:**
 
-- Fixed the same class of stale doc-comment defaults as Node.js: `StreamingOptions.overlap` stated a flat `500` instead of the dynamic `chunk_size / 10`, and `OnlineOptions.window_capacity`/`update_mode` stated `100`/`"full"` instead of `1000`/`"incremental"`.
+- Fixed stale doc-comment defaults: `StreamingOptions.overlap` stated a flat `500` instead of the dynamic `chunk_size / 10`, and `OnlineOptions.window_capacity`/`update_mode` stated `100`/`"full"` instead of `1000`/`"incremental"`.
 
 ## 3.2.1
 
@@ -752,12 +752,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **WASM:**
 
-- Same fix as Node.js: `README.md` is now embedded via `dev/add-readme-to-docs.js`, wired into `npm run docs` and `make wasm-dev`.
+- Embedded the WASM README in the documentation site via `dev/add-readme-to-docs.js`, wired into `npm run docs` and `make wasm-dev`.
 - Fixed `concepts.md` figures (MkDocs-only `<figure>`/attr_list syntax) not rendering; converted to plain images with italicized captions.
 - Fixed inline/display LaTeX math rendering as literal text; wired `remark-math`/`rehype-katex` into `astro.config.mjs`.
-- Fixed the same `@astrojs/sitemap` warning as Node.js, with the same fallback in `astro.config.mjs`.
-- Fixed the same "API Reference" 404s as Node.js, via the same `dev/lowercase-typedoc-refs.js` script.
-- Fixed the same `custom-weights.md` "Zero-weight windows" admonition closing early as Node.js.
+- Fixed the `@astrojs/sitemap` warning emitted when the `SITE` environment variable was unset by adding a production URL fallback in `astro.config.mjs`.
+- Fixed "API Reference" links 404ing because generated TypeDoc paths preserve uppercase filenames while Starlight lowercases route slugs; `dev/lowercase-typedoc-refs.js` now normalizes generated filenames and links.
+- Fixed `custom-weights.md`'s "Zero-weight windows" admonition closing one line early, which left its final sentence outside the callout.
 - Fixed the Handling Outliers quickstart example in WASM: increased `fraction` from `0.5` to `0.7` because the six-point example otherwise fit the injected outlier exactly instead of downweighting it.
 - Capped the WASM Detecting Outliers example output at five lines.
 
@@ -882,31 +882,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **lowess:**
 
-- Added `*See: ...*` cross-reference links after option headings in the lowess crate API docs, pointing to the corresponding user guide.
+- Added `See: ...` cross-reference links after option headings in the lowess crate API docs, pointing to the corresponding user guide.
 
 **fastLowess:**
 
-- Added `*See: ...*` cross-reference links after option headings in the fastLowess crate API docs, pointing to the corresponding user guide.
+- Added `See: ...` cross-reference links after option headings in the fastLowess crate API docs, pointing to the corresponding user guide.
 
 **C++:**
 
 - Exposed a `backend` option (`"cpu"` default, `"gpu"`) on `Lowess`, gated behind an opt-in `gpu` Cargo feature not enabled by default. Call `fastlowess::gpu::install()` to download a prebuilt GPU library, or build locally with `cargo build --features gpu`.
-- Added `*See: ...*` cross-reference links after option headings in the C++ API docs, pointing to the corresponding user guide.
+- Added `See: ...` cross-reference links after option headings in the C++ API docs, pointing to the corresponding user guide.
 
 **Julia:**
 
 - Exposed a `backend` option (`"cpu"` default, `"gpu"`) on `Lowess`, gated behind an opt-in `gpu` Cargo feature not enabled in published JLL artifacts. Run `install_gpu()` to download a prebuilt GPU library, or build locally with `cargo build --release --features gpu`.
-- Added `*See: ...*` cross-reference links after option headings in the Julia API docs, pointing to the corresponding user guide.
+- Added `See: ...` cross-reference links after option headings in the Julia API docs, pointing to the corresponding user guide.
 
 **Node.js:**
 
 - Exposed a `backend` option (`"cpu"` default, `"gpu"`) on `Lowess`, gated behind an opt-in `gpu` Cargo feature not enabled in published npm binaries. Run `await fastlowess.installGpu()` to download a prebuilt GPU addon (requires restarting Node.js), or build locally with `napi build --features gpu`.
-- Added `*See: ...*` cross-reference links after option headings in the Node.js API docs, pointing to the corresponding user guide.
+- Added `See: ...` cross-reference links after option headings in the Node.js API docs, pointing to the corresponding user guide.
 
 **Python:**
 
 - Exposed a `backend` option (`"cpu"` default, `"gpu"`) on `Lowess`, gated behind an opt-in `gpu` Cargo feature not enabled in published wheels. Run `fastlowess.install_gpu()` to download a prebuilt GPU wheel, or build locally with `maturin develop --features gpu`.
-- Added `*See: ...*` cross-reference links after option headings in the Python API docs, pointing to the corresponding user guide.
+- Added `See: ...` cross-reference links after option headings in the Python API docs, pointing to the corresponding user guide.
 
 **R:**
 
@@ -914,11 +914,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Introduced S3 generics `fit()`, `process_chunk()`, `finalize()`, and `add_point()`, replacing the previous list-closure API.
 - `bindings/r/Makefile` now auto-installs [Air](https://posit-dev.github.io/air/) if missing, before running `air format`.
 - Added a `reject_extra_positional_args()` helper to reject extra unnamed arguments.
-- Added `*See: ...*` cross-reference links after option headings in the R API docs, pointing to the corresponding user guide.
+- Added `See: ...` cross-reference links after option headings in the R API docs, pointing to the corresponding user guide.
 
 **WASM:**
 
-- Added `*See: ...*` cross-reference links after option headings in the WASM API docs, pointing to the corresponding user guide.
+- Added `See: ...` cross-reference links after option headings in the WASM API docs, pointing to the corresponding user guide.
 
 ### Fixed
 
@@ -952,42 +952,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **lowess:**
 
-- Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`, matching `LowessResult`. This is a **breaking change**.
+- Breaking change: Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`, matching `LowessResult`.
 - Updated `wide` to v1.6.
 - Split Streaming/Online content from the lowess crate API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 
 **fastLowess:**
 
-- Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`, matching `LowessResult`. This is a **breaking change**.
+- Breaking change: Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`, matching `LowessResult`.
 - Disabled wgpu's default `dx12` and `gles` features (keeping `vulkan`/`metal`) — both pulled in Windows DLLs not present on every system, causing `--features gpu` builds to fail to even load rather than just failing to find a GPU adapter.
 - Exposed GPU backend in `binding_support.rs`.
 - Split Streaming/Online content from the fastLowess crate API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 
 **C++:**
 
-- Renamed `OnlineOutput`'s `smoothed()` and `std_error()` methods to `y()` and `standard_error()`. This is a **breaking change**.
+- Breaking change: Renamed `OnlineOutput`'s `smoothed()` and `std_error()` methods to `y()` and `standard_error()`.
 - Split Streaming/Online content from the C++ API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 
 **Julia:**
 
-- Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`. This is a **breaking change**.
+- Breaking change: Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`.
 - Removed `dev/format_julia.jl`; formatting is now inlined in `bindings/julia/Makefile`.
 - Split Streaming/Online content from the Julia API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 
 **Node.js:**
 
-- Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`. This is a **breaking change**.
+- Breaking change: Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`.
 - Updated `@napi-rs/cli` to v3.8 and `oxlint` to v1.79.
 - Split Streaming/Online content from the Node.js API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 
 **Python:**
 
-- Renamed `OnlineOutput`'s `smoothed` and `std_error` properties to `y` and `standard_error`. This is a **breaking change**.
+- Breaking change: Renamed `OnlineOutput`'s `smoothed` and `std_error` properties to `y` and `standard_error`.
 - Split Streaming/Online content from the Python API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 
 **R:**
 
-- Renamed the `smoothed` and `std_error` fields returned by `OnlineLowess`'s `add_point()` to `y` and `standard_error`. This is a **breaking change**.
+- Breaking change: Renamed the `smoothed` and `std_error` fields returned by `OnlineLowess`'s `add_point()` to `y` and `standard_error`.
 - Replaced `dev/style_pkg.R` with [Air](https://posit-dev.github.io/air/) for formatting.
 - Removed `dev/fix_rd_style.R`, `dev/prepare_cargo.py`, `dev/patch_vendor_crates.py`, `dev/clean_checksums.py`, and `dev/prepare_cran.sh` — their logic is now inlined directly in `bindings/r/Makefile`, so the R build no longer requires any Python scripts.
 - Added `...` to `Lowess()`, `StreamingLowess()`, and `OnlineLowess()` to force named arguments for optional parameters.
@@ -999,7 +999,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **WASM:**
 
-- Renamed `OnlineOutput`'s `smoothed` and `std_error` getters to `y` and `standard_error`. This is a **breaking change**.
+- Breaking change: Renamed `OnlineOutput`'s `smoothed` and `std_error` getters to `y` and `standard_error`.
 - Updated `oxlint` to v1.79.
 - Split Streaming/Online content from the WASM API reference into dedicated pages, moved tutorials into the user-guide use-cases section, and standardized API examples with expected output.
 
@@ -1060,7 +1060,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Monorepo:**
 
-- Renamed all public API method and option names from camelCase to snake_case across every binding and all documentation. This is a **breaking change** for all consumers of the C++, Node.js, and WASM APIs.
+- Breaking change: Renamed all public API method and option names from camelCase to snake_case across every binding and all documentation. The public APIs for C++, Node.js, and WASM have changed.
 - Converted all documentation tables to compact single-space format.
 - Updated `.clang-tidy` to configure `lower_case` as the required naming convention for functions and member functions, matching the new snake_case public API.
 - Moved `BENCHMARKS.md`, `CHANGELOG.md`, and `CONTRIBUTING.md` from the repository root into `docs/` and added them to the documentation site navigation.
@@ -1073,40 +1073,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **lowess:**
 
 - Added `Lowess<T>`, `StreamingLowess<T>`, and `OnlineLowess<T>` type aliases as the primary user-facing constructors (e.g. `StreamingLowess::new().chunk_size(50).build()`). Mode-specific builder methods (`chunk_size`, `overlap`, `window_capacity`, `min_points`, `update_mode`) are now called directly on the type alias rather than after `.adapter()`.
-- Made `BatchLowessBuilder`, `StreamingLowessBuilder`, and `OnlineLowessBuilder` internal-only: all public setter methods have been removed from these types. All smoothing configuration now flows through `LowessBuilder<T, Mode>` (exposed via the type aliases above). This is a **breaking change** for any code that called setter methods on an adapter builder directly.
-- Changed all enum-typed builder methods to accept strings instead: `weight_function`, `robustness_method`, `scaling_method`, `boundary_policy`, `zero_weight_fallback`, `merge_strategy`, and `update_mode` now take `impl IntoEnum<T>` (accepting both enum variants and strings such as `.weight_function("tricube")`) rather than requiring enum variants to be imported. This is a **breaking change** for any code passing enum variants directly.
+- Breaking change: Made `BatchLowessBuilder`, `StreamingLowessBuilder`, and `OnlineLowessBuilder` internal-only: all public setter methods have been removed from these types. All smoothing configuration now flows through `LowessBuilder<T, Mode>` (exposed via the type aliases above). Callers that used setters on adapter builders must update their code.
+- Breaking change: Changed all enum-typed builder methods to accept strings instead: `weight_function`, `robustness_method`, `scaling_method`, `boundary_policy`, `zero_weight_fallback`, `merge_strategy`, and `update_mode` now take `impl IntoEnum<T>` (accepting both enum variants and strings such as `.weight_function("tricube")`) rather than requiring enum variants to be imported. Callers passing enum variants must use strings instead.
 - Inlined the `IntoEnum<E>` trait and its macro-generated impls for all enum-typed builder parameters directly into `api.rs` (`lowess`) and `binding_support.rs` (`fastLowess`), eliminating a previously separate `parse` module. This allows builder methods to accept either a typed enum value (e.g. `.weight_function(WeightFunction::Tricube)`) or a string (e.g. `.weight_function("tricube")`) interchangeably.
-- Replaced the `cross_validate(CVConfig)` builder method (which required importing `KFold` or `LOOCV` types) with a string-based cross-validation API: `.cv_method("kfold")` / `.cv_method("loocv")`, `.cv_k(n)`, `.cv_fractions(vec![...])`, and `.cv_seed(n)`. `KFold` and `LOOCV` are no longer exported from the prelude. This is a **breaking change** for any code using the old `cross_validate` API.
+- Breaking change: Replaced the `cross_validate(CVConfig)` builder method (which required importing `KFold` or `LOOCV` types) with a string-based cross-validation API: `.cv_method("kfold")` / `.cv_method("loocv")`, `.cv_k(n)`, `.cv_fractions(vec![...])`, and `.cv_seed(n)`. `KFold` and `LOOCV` are no longer exported from the prelude. Callers using the old `cross_validate` API must migrate to the string-based cross-validation options.
 - Added a `binding_support` module providing shared helpers for all language binding frontends: string-to-enum parse functions (`parse_weight_function`, `parse_robustness_method`, `parse_scaling_method`, `parse_boundary_policy`, `parse_zero_weight_fallback`, `parse_merge_strategy`, `parse_update_mode`), matching canonical-string display functions, `BuilderOptionSet` / `TypedBuilderOptionSet` structs, and `apply_builder_options` / `apply_typed_builder_options` / `apply_cross_validation` helpers. This consolidates previously duplicated logic that was scattered across every binding into a single source of truth.
-- Renamed the internal `auto_convergence` struct field to `auto_converge` on `BatchLowessBuilder`, `OnlineLowessBuilder`, `StreamingLowessBuilder`, and the executor config types, making the field name consistent with the existing `auto_converge()` setter method. This is a **breaking change** for any code that accessed these fields directly.
-- Changed `build()` to wrap all accumulated string-parse errors in a `LowessError::ParseErrors(Vec<LowessError>)` value instead of surfacing only the first error. This is a **breaking change** for code that matched on `LowessError::InvalidOption` as the error returned from `build()`.
+- Breaking change: Renamed the internal `auto_convergence` struct field to `auto_converge` on `BatchLowessBuilder`, `OnlineLowessBuilder`, `StreamingLowessBuilder`, and the executor config types, making the field name consistent with the existing `auto_converge()` setter method. Callers accessing these fields directly must update their code.
+- Breaking change: Changed `build()` to wrap all accumulated string-parse errors in a `LowessError::ParseErrors(Vec<LowessError>)` value instead of surfacing only the first error. Code matching on `LowessError::InvalidOption` from `build()` must be updated.
 - Made the `IntoEnum<E>` trait `pub(crate)` in both `lowess` and `fastLowess`, restricting it to crate-internal use. Callers do not need to name this trait; builder methods continue to accept both enum variants and string literals unchanged.
 - Updated `wide` dependency to v1.5, `wgpu` to v30.0, and `pollster` to v1.0.
 
 **fastLowess:**
 
 - Added `Lowess<T>`, `StreamingLowess<T>`, and `OnlineLowess<T>` type aliases as the primary user-facing constructors (e.g. `StreamingLowess::new().chunk_size(50).build()`). Mode-specific builder methods (`chunk_size`, `overlap`, `window_capacity`, `min_points`, `update_mode`) are now called directly on the type alias rather than after `.adapter()`.
-- Made `BatchLowessBuilder`, `StreamingLowessBuilder`, and `OnlineLowessBuilder` internal-only: all public setter methods have been removed from these types. All smoothing configuration now flows through `LowessBuilder<T, Mode>` (exposed via the type aliases above). This is a **breaking change** for any code that called setter methods on an adapter builder directly.
-- Changed all enum-typed builder methods to accept strings instead: `weight_function`, `robustness_method`, `scaling_method`, `boundary_policy`, `zero_weight_fallback`, `merge_strategy`, and `update_mode` now take `impl IntoEnum<T>` (accepting both enum variants and strings such as `.weight_function("tricube")`) rather than requiring enum variants to be imported. This is a **breaking change** for any code passing enum variants directly.
+- Breaking change: Made `BatchLowessBuilder`, `StreamingLowessBuilder`, and `OnlineLowessBuilder` internal-only: all public setter methods have been removed from these types. All smoothing configuration now flows through `LowessBuilder<T, Mode>` (exposed via the type aliases above). Callers that used setters on adapter builders must update their code.
+- Breaking change: Changed all enum-typed builder methods to accept strings instead: `weight_function`, `robustness_method`, `scaling_method`, `boundary_policy`, `zero_weight_fallback`, `merge_strategy`, and `update_mode` now take `impl IntoEnum<T>` (accepting both enum variants and strings such as `.weight_function("tricube")`) rather than requiring enum variants to be imported. Callers passing enum variants must use strings instead.
 - Inlined the `IntoEnum<E>` trait and its macro-generated impls for all enum-typed builder parameters directly into `api.rs` (`lowess`) and `binding_support.rs` (`fastLowess`), eliminating a previously separate `parse` module. This allows builder methods to accept either a typed enum value (e.g. `.weight_function(WeightFunction::Tricube)`) or a string (e.g. `.weight_function("tricube")`) interchangeably.
-- Replaced the `cross_validate(CVConfig)` builder method (which required importing `KFold` or `LOOCV` types) with a string-based cross-validation API: `.cv_method("kfold")` / `.cv_method("loocv")`, `.cv_k(n)`, `.cv_fractions(vec![...])`, and `.cv_seed(n)`. `KFold` and `LOOCV` are no longer exported from the prelude. This is a **breaking change** for any code using the old `cross_validate` API.
+- Breaking change: Replaced the `cross_validate(CVConfig)` builder method (which required importing `KFold` or `LOOCV` types) with a string-based cross-validation API: `.cv_method("kfold")` / `.cv_method("loocv")`, `.cv_k(n)`, `.cv_fractions(vec![...])`, and `.cv_seed(n)`. `KFold` and `LOOCV` are no longer exported from the prelude. Callers using the old `cross_validate` API must migrate to the string-based cross-validation options.
 - Added a `binding_support` module providing shared helpers for all language binding frontends: string-to-enum parse functions (`parse_weight_function`, `parse_robustness_method`, `parse_scaling_method`, `parse_boundary_policy`, `parse_zero_weight_fallback`, `parse_merge_strategy`, `parse_update_mode`), matching canonical-string display functions, `BuilderOptionSet` / `TypedBuilderOptionSet` structs, and `apply_builder_options` / `apply_typed_builder_options` / `apply_cross_validation` helpers. This consolidates previously duplicated logic that was scattered across every binding into a single source of truth.
-- Renamed the internal `auto_convergence` struct field to `auto_converge` on `BatchLowessBuilder`, `OnlineLowessBuilder`, `StreamingLowessBuilder`, and the executor config types, making the field name consistent with the existing `auto_converge()` setter method. This is a **breaking change** for any code that accessed these fields directly.
-- Changed `build()` to wrap all accumulated string-parse errors in a `LowessError::ParseErrors(Vec<LowessError>)` value instead of surfacing only the first error. This is a **breaking change** for code that matched on `LowessError::InvalidOption` as the error returned from `build()`.
+- Breaking change: Renamed the internal `auto_convergence` struct field to `auto_converge` on `BatchLowessBuilder`, `OnlineLowessBuilder`, `StreamingLowessBuilder`, and the executor config types, making the field name consistent with the existing `auto_converge()` setter method. Callers accessing these fields directly must update their code.
+- Breaking change: Changed `build()` to wrap all accumulated string-parse errors in a `LowessError::ParseErrors(Vec<LowessError>)` value instead of surfacing only the first error. Code matching on `LowessError::InvalidOption` from `build()` must be updated.
 - Made the `IntoEnum<E>` trait `pub(crate)` in both `lowess` and `fastLowess`, restricting it to crate-internal use. Callers do not need to name this trait; builder methods continue to accept both enum variants and string literals unchanged.
 - Updated `wide` dependency to v1.5, `wgpu` to v30.0, and `pollster` to v1.0.
 
-- `Lowess`, `StreamingLowess`, and `OnlineLowess` are now dedicated wrapper structs around `LowessBuilder<f64>` with string-accepting forwarding methods, rather than type aliases re-exported from the base `lowess` crate. Each wrapper's `build()` delegates to the corresponding parallel adapter and defaults to parallel execution. This is a **breaking change**: replace `.adapter(Batch).build()` with `.build()`, `Lowess::new().adapter(Streaming)` with `StreamingLowess::new()`, and `Lowess::new().adapter(Online)` with `OnlineLowess::new()`.
-- The `fastLowess` prelude now exports only `{Lowess, LowessError, LowessResult, OnlineLowess, StreamingLowess}`, removing `LowessBuilder`, `Adapter::{Batch, Online, Streaming}`, and `Backend::{CPU, GPU}`. This is a **breaking change** for code that relied on those names being in scope via `use fastLowess::prelude::*`.
+- Breaking change: `Lowess`, `StreamingLowess`, and `OnlineLowess` are now dedicated wrapper structs around `LowessBuilder<f64>` with string-accepting forwarding methods, rather than type aliases re-exported from the base `lowess` crate. Each wrapper's `build()` delegates to the corresponding parallel adapter and defaults to parallel execution. Migration: replace `.adapter(Batch).build()` with `.build()`, `Lowess::new().adapter(Streaming)` with `StreamingLowess::new()`, and `Lowess::new().adapter(Online)` with `OnlineLowess::new()`.
+- Breaking change: The `fastLowess` prelude now exports only `{Lowess, LowessError, LowessResult, OnlineLowess, StreamingLowess}`, removing `LowessBuilder`, `Adapter::{Batch, Online, Streaming}`, and `Backend::{CPU, GPU}`. Code relying on the removed prelude exports must import the needed names directly.
 
 **C++:**
 
 - Renamed all public member functions to snake_case: `make_error()`, `has_value()`, `r_squared()`, `effective_df()`, `residual_sd()`, `x_value()`, `y_value()`, `x_vector()`, `y_vector()`, `standard_errors()`, `confidence_lower()`, `confidence_upper()`, `prediction_lower()`, `prediction_upper()`, `robustness_weights()`, `fraction_used()`, `iterations_used()`, `process_chunk()`, `add_points()`.
-- Replaced `Expected<LowessResult> OnlineLowess::add_points(const std::vector<double>&, const std::vector<double>&)` with `Expected<std::optional<double>> OnlineLowess::add_point(double x, double y)`. The method now processes a single point and returns only that point's smoothed value, or `std::nullopt` if not enough points have been accumulated yet. The underlying C FFI symbol is renamed from `cpp_online_add_points` to `cpp_online_add_point`. This is a **breaking change**.
+- Breaking change: Replaced `Expected<LowessResult> OnlineLowess::add_points(const std::vector<double>&, const std::vector<double>&)` with `Expected<std::optional<double>> OnlineLowess::add_point(double x, double y)`. The method now processes a single point and returns only that point's smoothed value, or `std::nullopt` if not enough points have been accumulated yet. The underlying C FFI symbol is renamed from `cpp_online_add_points` to `cpp_online_add_point`.
 
 **Julia:**
 
-- Replaced `add_points(online, x::Vector{Float64}, y::Vector{Float64}) :: LowessResult` with `add_point(online, x::Float64, y::Float64) :: Union{Float64, Nothing}`. The function now processes a single point and returns the smoothed value, or `nothing` if not enough points have been accumulated yet. The underlying C FFI symbol is renamed from `jl_online_lowess_add_points` to `jl_online_lowess_add_point`. This is a **breaking change**.
+- Breaking change: Replaced `add_points(online, x::Vector{Float64}, y::Vector{Float64}) :: LowessResult` with `add_point(online, x::Float64, y::Float64) :: Union{Float64, Nothing}`. The function now processes a single point and returns the smoothed value, or `nothing` if not enough points have been accumulated yet. The underlying C FFI symbol is renamed from `jl_online_lowess_add_points` to `jl_online_lowess_add_point`.
 
 **Node.js:**
 
@@ -1114,25 +1114,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed binding methods to snake_case: `fit_async`, `process_chunk`, `add_points`.
 - Renamed `LowessResultObj` getters to snake_case: `standard_errors`, `confidence_lower`, `confidence_upper`, `prediction_lower`, `prediction_upper`, `robustness_weights`, `cv_scores`, `fraction_used`, `iterations_used`.
 - Updated `index.d.ts` to reflect all renamed fields and methods.
-- Replaced `add_points(x: Float64Array, y: Float64Array): LowessResultObj` on `OnlineLowess` with `add_point(x: number, y: number): OnlineOutput | null`. The method now processes a single point and returns an `OnlineOutput` object, or `null` if not enough points have been accumulated yet. This is a **breaking change**.
+- Breaking change: Replaced `add_points(x: Float64Array, y: Float64Array): LowessResultObj` on `OnlineLowess` with `add_point(x: number, y: number): OnlineOutput | null`. The method now processes a single point and returns an `OnlineOutput` object, or `null` if not enough points have been accumulated yet.
 - Changed default `OnlineOptions.window_capacity` from 100 to 1000 and `OnlineOptions.min_points` from 2 to 3, matching the defaults used by the loess binding.
 - `OnlineLowess` now forwards all `SmoothOptions` fields to the underlying builder (previously only `fraction`, `iterations`, and `parallel` were forwarded; all other fields were hardcoded to `None`/`false`).
 - Updated `napi-rs/cli` dependency to v3.7 and `oxlint` to v1.73.
 
 **Python:**
 
-- Renamed the `update(x, y)` method on `OnlineLowess` to `add_point(x, y)` and removed the separate array-based `add_points(x, y)` method. `add_point` processes a single point and returns the smoothed value as `float | None`. This is a **breaking change**.
+- Breaking change: Renamed the `update(x, y)` method on `OnlineLowess` to `add_point(x, y)` and removed the separate array-based `add_points(x, y)` method. `add_point` processes a single point and returns the smoothed value as `float | None`.
 - Updated `pyo3` and `numpy` dependencies to v0.29.
 
 **R:**
 
-- Replaced `$add_points(x, y)` (vector inputs returning a list result) on `OnlineLowess` with `$add_point(x, y)` (scalar inputs returning `numeric` or `NULL`). The method now processes one point at a time and returns `NULL` until enough points have been accumulated. This is a **breaking change**.
+- Breaking change: Replaced `$add_points(x, y)` (vector inputs returning a list result) on `OnlineLowess` with `$add_point(x, y)` (scalar inputs returning `numeric` or `NULL`). The method now processes one point at a time and returns `NULL` until enough points have been accumulated.
 
 **WASM:**
 
 - Renamed all JS-facing option keys to snake_case by removing `#[serde(rename = "camelCase")]` attributes from `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`. JSON passed from JavaScript must now use snake_case keys.
 - Updated `Diagnostics` getter names to snake_case: `r_squared`, `effective_df`, `residual_sd`.
-- Renamed the `update(x: number, y: number)` method on `OnlineLowess` to `add_point(x: number, y: number)`. This is a **breaking change**.
+- Breaking change: Renamed the `update(x: number, y: number)` method on `OnlineLowess` to `add_point(x: number, y: number)`.
 - Updated `oxlint` dependency to v1.73.
 
 ### Fixed
