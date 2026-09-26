@@ -31,17 +31,22 @@ In short:
 [`stats::lowess()`](https://rdrr.io/r/stats/lowess.html) and
 `rfastlowess`’s
 [`Lowess()`](https://thisisamirv.github.io/lowess-project/r/reference/Lowess.md)
-implement the same underlying algorithm, but two defaults differ:
+implement the same underlying algorithm, but several defaults differ:
 
 | Option | [`stats::lowess()`](https://rdrr.io/r/stats/lowess.html) | [`Lowess()`](https://thisisamirv.github.io/lowess-project/r/reference/Lowess.md) default |
 |----|----|----|
 | Boundary padding | None (`"noboundary"`) | `"extend"` |
 | Residual scaling | MAR: `median(\|r\|)` | `"mad"`: `median(\|r - median(r)\|)` |
+| Zero-weight fallback | `"return_original"` | `"use_local_mean"` |
 | `fraction` | `f = 2/3` | `0.67` |
 | `iterations` | `iter = 3` | `3` |
 | `delta` | `0.01 * diff(range(x))` | same (`NULL` -\> auto) |
 
-Setting the first two options to match R,
+`rfastlowess` intentionally keeps its default zero-weight fallback
+aligned with Rust and the historical package behavior; when comparing to
+R, pass `zero_weight_fallback = "return_original"` explicitly to match
+[`stats::lowess()`](https://rdrr.io/r/stats/lowess.html). Setting the
+R-parity options to match R,
 [`Lowess()`](https://thisisamirv.github.io/lowess-project/r/reference/Lowess.md)
 reproduces [`stats::lowess()`](https://rdrr.io/r/stats/lowess.html)
 exactly (up to floating-point rounding):
@@ -59,7 +64,8 @@ model <- Lowess(
     fraction = 2 / 3,
     iterations = 3L,
     boundary_policy = "noboundary",
-    scaling_method = "mar"
+    scaling_method = "mar",
+    zero_weight_fallback = "return_original"
 )
 result <- fit(model, x, y)
 
@@ -86,6 +92,7 @@ model <- Lowess(
     iterations = 3L,
     boundary_policy = "noboundary",
     scaling_method = "mar",
+    zero_weight_fallback = "return_original",
     outputs = "sorted"
 )
 result <- fit(model, x_unsorted, y_unsorted)
@@ -131,6 +138,13 @@ scale estimator; MAR (`median(|r|)`, what R uses) does not center first,
 so it can be biased when residuals are systematically skewed. See
 [`vignette("scaling")`](https://thisisamirv.github.io/lowess-project/r/articles/scaling.md)
 for the full comparison, including `"mean"`.
+
+**Zero-weight fallback** (default
+`zero_weight_fallback = "use_local_mean"` vs. R’s `"return_original"`).
+This package keeps the Rust/default behavior unchanged for end users;
+exact [`stats::lowess()`](https://rdrr.io/r/stats/lowess.html)
+comparisons should set `zero_weight_fallback = "return_original"`
+explicitly.
 
 ------------------------------------------------------------------------
 

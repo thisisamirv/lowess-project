@@ -142,7 +142,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Emilio Cobos Álvarez <emilio@crisal.io>, Jeff Muizelaar <jmuizelaar@mozilla.com>, Kartikaya Gupta <kats@mozilla.com>, Ryan Hunt <rhunt@eqrion.net>
     License: MPL-2.0
     ----------------------------------------
-    Package: cc (1.4.7)
+    Package: cc (1.5.1)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -230,7 +230,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Stjepan Glavina <stjepang@gmail.com>
     License: Apache-2.0 OR MIT
     ----------------------------------------
-    Package: find-msvc-tools (0.1.13)
+    Package: find-msvc-tools (0.1.14)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -326,7 +326,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Robert Bragg <robert@sixbynine.org>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: js-sys (0.3.105)
+    Package: js-sys (0.3.106)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -638,7 +638,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Carl Lerche <me@carllerche.com>
     License: MIT
     ----------------------------------------
-    Package: smallvec (1.16.1)
+    Package: smallvec (1.16.2)
     Authors: The Servo Project Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -678,6 +678,10 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: David Tolnay <dtolnay@gmail.com>
     License: MIT OR Apache-2.0
     ----------------------------------------
+    Package: tokio (1.53.1)
+    Authors: Tokio Contributors <team@tokio.rs>
+    License: MIT
+    ----------------------------------------
     Package: toml (0.9.12+spec-1.1.0)
     Authors:
     License: MIT OR Apache-2.0
@@ -714,39 +718,39 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Andrew Gallant <jamslam@gmail.com>
     License: Unlicense/MIT
     ----------------------------------------
-    Package: wasm-bindgen (0.2.128)
+    Package: wasm-bindgen (0.2.129)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wasm-bindgen-futures (0.4.78)
+    Package: wasm-bindgen-futures (0.4.79)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wasm-bindgen-macro (0.2.128)
+    Package: wasm-bindgen-macro (0.2.129)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wasm-bindgen-macro-support (0.2.128)
+    Package: wasm-bindgen-macro-support (0.2.129)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wasm-bindgen-shared (0.2.128)
+    Package: wasm-bindgen-shared (0.2.129)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wasm-bindgen-test (0.3.78)
+    Package: wasm-bindgen-test (0.3.79)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wasm-bindgen-test-macro (0.3.78)
+    Package: wasm-bindgen-test-macro (0.3.79)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wasm-bindgen-test-shared (0.2.128)
+    Package: wasm-bindgen-test-shared (0.2.129)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: web-sys (0.3.105)
+    Package: web-sys (0.3.106)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -838,11 +842,11 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors:
     License: MIT
     ----------------------------------------
-    Package: zerocopy (0.8.57)
+    Package: zerocopy (0.8.59)
     Authors:
     License: BSD-2-Clause OR Apache-2.0 OR MIT
     ----------------------------------------
-    Package: zerocopy-derive (0.8.57)
+    Package: zerocopy-derive (0.8.59)
     Authors:
     License: BSD-2-Clause OR Apache-2.0 OR MIT
     ----------------------------------------

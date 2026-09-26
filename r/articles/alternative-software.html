@@ -91,8 +91,8 @@ adds</a>).</li>
 <h2 id="reproducing-statslowess">Reproducing <code>stats::lowess()</code><a class="anchor" aria-label="anchor" href="#reproducing-statslowess"></a>
 </h2>
 <p><code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code> and <code>rfastlowess</code>’s
-<code><a href="../reference/Lowess.html">Lowess()</a></code> implement the same underlying algorithm, but two
-defaults differ:</p>
+<code><a href="../reference/Lowess.html">Lowess()</a></code> implement the same underlying algorithm, but
+several defaults differ:</p>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -120,25 +120,34 @@ defaults differ:</p>
 </td>
 </tr>
 <tr class="odd">
+<td>Zero-weight fallback</td>
+<td><code>"return_original"</code></td>
+<td><code>"use_local_mean"</code></td>
+</tr>
+<tr class="even">
 <td><code>fraction</code></td>
 <td><code>f = 2/3</code></td>
 <td><code>0.67</code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>iterations</code></td>
 <td><code>iter = 3</code></td>
 <td><code>3</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>delta</code></td>
 <td><code>0.01 * diff(range(x))</code></td>
 <td>same (<code>NULL</code> -&gt; auto)</td>
 </tr>
 </tbody>
 </table>
-<p>Setting the first two options to match R, <code><a href="../reference/Lowess.html">Lowess()</a></code>
-reproduces <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code> exactly (up to floating-point
-rounding):</p>
+<p><code>rfastlowess</code> intentionally keeps its default zero-weight
+fallback aligned with Rust and the historical package behavior; when
+comparing to R, pass
+<code>zero_weight_fallback = "return_original"</code> explicitly to
+match <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code>. Setting the R-parity options to
+match R, <code><a href="../reference/Lowess.html">Lowess()</a></code> reproduces <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code>
+exactly (up to floating-point rounding):</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/lowess-project" class="external-link">rfastlowess</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
@@ -151,7 +160,8 @@ rounding):</p>
 <span>    fraction <span class="op">=</span> <span class="fl">2</span> <span class="op">/</span> <span class="fl">3</span>,</span>
 <span>    iterations <span class="op">=</span> <span class="fl">3L</span>,</span>
 <span>    boundary_policy <span class="op">=</span> <span class="st">"noboundary"</span>,</span>
-<span>    scaling_method <span class="op">=</span> <span class="st">"mar"</span></span>
+<span>    scaling_method <span class="op">=</span> <span class="st">"mar"</span>,</span>
+<span>    zero_weight_fallback <span class="op">=</span> <span class="st">"return_original"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span></span>
@@ -174,6 +184,7 @@ rounding):</p>
 <span>    iterations <span class="op">=</span> <span class="fl">3L</span>,</span>
 <span>    boundary_policy <span class="op">=</span> <span class="st">"noboundary"</span>,</span>
 <span>    scaling_method <span class="op">=</span> <span class="st">"mar"</span>,</span>
+<span>    zero_weight_fallback <span class="op">=</span> <span class="st">"return_original"</span>,</span>
 <span>    outputs <span class="op">=</span> <span class="st">"sorted"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x_unsorted</span>, <span class="va">y_unsorted</span><span class="op">)</span></span>
@@ -214,6 +225,12 @@ breakdown-point-optimal scale estimator; MAR (<code>median(|r|)</code>,
 what R uses) does not center first, so it can be biased when residuals
 are systematically skewed. See <code><a href="../articles/scaling.html">vignette("scaling")</a></code> for the
 full comparison, including <code>"mean"</code>.</p>
+<p><strong>Zero-weight fallback</strong> (default
+<code>zero_weight_fallback = "use_local_mean"</code> vs. R’s
+<code>"return_original"</code>). This package keeps the Rust/default
+behavior unchanged for end users; exact <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code>
+comparisons should set
+<code>zero_weight_fallback = "return_original"</code> explicitly.</p>
 <hr>
 </div>
 <div class="section level2">
