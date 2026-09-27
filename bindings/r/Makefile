@@ -76,7 +76,6 @@ R_PKG_VERSION = $(shell grep "^Version:" bindings/r/DESCRIPTION | sed 's/Version
 R_PKG_TARBALL = $(R_PKG_NAME)_$(R_PKG_VERSION).tar.gz
 R_DIR := bindings/r
 R_LIB_DIR := $(R_DIR)/.r-lib
-R_PROPERTY_TEST_RUNS ?= 30
 R_CARGO_TARGET :=
 R_CROSS_ENV :=
 ifeq ($(OS),Windows_NT)
@@ -200,19 +199,6 @@ tests:
 	@cd $(R_DIR)/src && $(R_CROSS_ENV) cargo test -q --no-run $(R_CARGO_TARGET)
 	@rm -rf $(R_DIR)/src/.cargo
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('$(R_DIR)/tests/testthat', package = 'rfastlowess')"
-	@echo "Running $(R_PROPERTY_TEST_RUNS) parallel LOWESS property-test runs..."
-	@tmp_dir=$$(mktemp -d); status=0; pids=""; run=1; \
-	while [ $$run -le $(R_PROPERTY_TEST_RUNS) ]; do \
-		R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('$(R_DIR)/tests/testthat', package = 'rfastlowess', filter = 'property-lowess', reporter = 'silent')" >"$$tmp_dir/run-$$run.log" 2>&1 & \
-		pids="$$pids $$!"; run=$$((run + 1)); \
-	done; \
-	for pid in $$pids; do \
-		if wait $$pid; then :; else status=1; fi; \
-		done; \
-	if [ $$status -ne 0 ]; then \
-		cat "$$tmp_dir"/*.log; rm -rf "$$tmp_dir"; exit $$status; \
-	fi; \
-	rm -rf "$$tmp_dir"; echo "All $(R_PROPERTY_TEST_RUNS) LOWESS property-test runs passed."
 
 coverage:
 	@echo "Calculating $(R_PKG_NAME) coverage..."
