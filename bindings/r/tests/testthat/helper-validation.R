@@ -281,7 +281,10 @@ check_stats_lowess <- function(
         iteration_counts <- seq.int(0L, as.integer(iterations))
         iteration_fits <- lapply(iteration_counts, function(n_iter) {
             reference_iter <- stats::lowess(
-                x_fit, y_fit, f = fraction, iter = n_iter
+                x_fit,
+                y_fit,
+                f = fraction,
+                iter = n_iter
             )
             model_iter <- Lowess(
                 fraction = fraction,
@@ -294,9 +297,13 @@ check_stats_lowess <- function(
             result_iter <- fit(model_iter, x_fit, y_fit)
             list(reference = reference_iter$y, package = result_iter$y)
         })
-        iteration_diffs <- vapply(iteration_fits, function(fits) {
-            max(abs(fits$package - fits$reference))
-        }, numeric(1))
+        iteration_diffs <- vapply(
+            iteration_fits,
+            function(fits) {
+                max(abs(fits$package - fits$reference))
+            },
+            numeric(1)
+        )
         first_divergence <- which(iteration_diffs > tolerance)[1]
         iteration_summary <- paste0(
             sprintf("%d=%.17g", iteration_counts, iteration_diffs),
@@ -333,13 +340,15 @@ check_stats_lowess <- function(
                     "package fit: [%s]; reference abs residuals: [%s]; ",
                     toString(sprintf("%.17g", previous_fits$package)),
                     toString(sprintf(
-                        "%.17g", abs(residual_y - previous_fits$reference)
+                        "%.17g",
+                        abs(residual_y - previous_fits$reference)
                     ))
                 ),
                 sprintf(
                     "package abs residuals: [%s]",
                     toString(sprintf(
-                        "%.17g", abs(residual_y - previous_fits$package)
+                        "%.17g",
+                        abs(residual_y - previous_fits$package)
                     ))
                 )
             )
