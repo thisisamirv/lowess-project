@@ -280,14 +280,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed `Lowess()` accepting negative `cv_seed` values because they were cast before validation; negative seeds are now rejected before casting.
 - Fixed `mvn clean test` intermittently failing on macOS with `Failed to read artifact descriptor for commons-io:commons-io:jar:2.6`: Maven's default `clean` binding (`maven-clean-plugin:3.2.0`) depends on `maven-shared-utils`, which transitively pulls in the old `commons-io:2.6` artifact whose POM sometimes fails to resolve. `bindings/java/pom.xml` now pins `maven-clean-plugin` to `3.5.0`, which drops `maven-shared-utils`/`commons-io` in favor of `plexus-utils`, removing the flaky transitive dependency.
+- `dev/bump_version.py` now updates the Go `/vN` path and the Java Maven example version.
 
 **Node.js:**
 
 - Fixed `cv_seed` silently accepting negative values; they are now rejected before casting.
-
-**R:**
-
-- `dev/bump_version.py` now updates the Go `/vN` path and the Java Maven example version.
 - Fixed inconsistent Node.js naming in READMEs, doc-site home pages, and `CITATION.cff`.
 
 ## 4.0.0
