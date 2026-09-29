@@ -582,10 +582,6 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: David Tolnay <dtolnay@gmail.com>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: safe_arch (1.2.0)
-    Authors: Lokathor <zefria@gmail.com>
-    License: Zlib OR Apache-2.0 OR MIT
-    ----------------------------------------
     Package: same-file (1.0.6)
     Authors: Andrew Gallant <jamslam@gmail.com>
     License: Unlicense/MIT
@@ -781,10 +777,6 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Package: wgpu-types (30.0.1)
     Authors: gfx-rs developers
     License: MIT OR Apache-2.0
-    ----------------------------------------
-    Package: wide (1.7.1)
-    Authors: Lokathor <zefria@gmail.com>
-    License: Zlib OR Apache-2.0 OR MIT
     ----------------------------------------
     Package: winapi-util (0.1.11)
     Authors: Andrew Gallant <jamslam@gmail.com>

@@ -35,7 +35,7 @@ model <- Lowess(
 result <- fit(model, t, y)
 
 cat(sprintf("y[0]: %.4f\n", result$y[1]))
-#> y[0]: 11.3216
+#> y[0]: 11.3116
 ```
 
 ------------------------------------------------------------------------
@@ -103,7 +103,7 @@ cat(sprintf(
     "95%% PI: [%.4f, %.4f]\n",
     result$prediction_lower[1], result$prediction_upper[1]
 ))
-#> 95% PI: [0.1531, 0.2958]
+#> 95% PI: [0.1561, 0.2989]
 ```
 
 ------------------------------------------------------------------------
@@ -125,7 +125,7 @@ y_irregular <- 10 + 0.3 * t_irregular + 2.0 * sin(t_irregular * 0.1)
 model <- Lowess(fraction = 0.2)
 result <- fit(model, t_irregular, y_irregular)
 cat(sprintf("y[0]: %.4f\n", result$y[1]))
-#> y[0]: 11.4324
+#> y[0]: 11.4517
 ```
 
 ------------------------------------------------------------------------
@@ -148,7 +148,7 @@ trends <- lapply(scales, function(f) {
     fit(model, t, y)$y
 })
 cat("Trend y[0] values:", vapply(trends, function(tr) tr[1], numeric(1)), "\n")
-#> Trend y[0] values: 0.131712 0.2244466 0.3343704
+#> Trend y[0] values: 0.131712 0.2275244 0.3325414
 ```
 
 ------------------------------------------------------------------------
@@ -174,7 +174,7 @@ model <- Lowess(
 )
 result <- fit(model, hours, expression)
 cat(sprintf("R2: %.3f\n", result$diagnostics$r_squared))
-#> R2: 0.973
+#> R2: 0.976
 ```
 
 ------------------------------------------------------------------------

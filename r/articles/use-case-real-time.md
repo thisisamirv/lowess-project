@@ -110,7 +110,7 @@ process_chunk(model, chunk2_x, chunk2_y)
 # CRITICAL: Get buffered overlap data
 result <- finalize(model)
 cat(sprintf("y[0]: %.6f\n", result$y[1]))
-#> y[0]: 0.516484
+#> y[0]: 0.518853
 ```
 
 ------------------------------------------------------------------------
@@ -152,7 +152,7 @@ for (i in seq_along(x)) {
     last_smoothed <- result$y[length(result$y)]
 }
 cat(sprintf("Smoothed (dashboard, latest tick): %.4f\n", last_smoothed))
-#> Smoothed (dashboard, latest tick): -0.0663
+#> Smoothed (dashboard, latest tick): -0.0678
 ```
 
 ------------------------------------------------------------------------

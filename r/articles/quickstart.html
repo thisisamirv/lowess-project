@@ -82,7 +82,7 @@ noise.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"First smoothed value: %.4f (true: %.4f)\n"</span>,</span>
 <span>            <span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; First smoothed value: 0.4246 (true: 0.0000)</span></span></code></pre></div>
+<span><span class="co">#&gt; First smoothed value: 0.4287 (true: 0.0000)</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -104,13 +104,13 @@ noise.</p>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Smoothed (first 5):"</span>, <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span>, <span class="fl">5</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Smoothed (first 5): 0.4722882 0.4822189 0.4927151 0.5037882 0.5153461</span></span>
+<span><span class="co">#&gt; Smoothed (first 5): 0.4814511 0.4921418 0.5035375 0.5156728 0.528477</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"CI lower (first 5):"</span>, <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span>, <span class="fl">5</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; CI lower (first 5): 0.4119072 0.41897 0.4265719 0.4347548 0.4434627</span></span>
+<span><span class="co">#&gt; CI lower (first 5): 0.4076832 0.415085 0.4231661 0.4320027 0.441572</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"CI upper (first 5):"</span>, <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">confidence_upper</span>, <span class="fl">5</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; CI upper (first 5): 0.5326692 0.5454677 0.5588584 0.5728215 0.5872295</span></span>
+<span><span class="co">#&gt; CI upper (first 5): 0.555219 0.5691987 0.5839089 0.5993429 0.615382</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"R2:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">diagnostics</span><span class="op">$</span><span class="va">r_squared</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; R2: 0.7841212</span></span></code></pre></div>
+<span><span class="co">#&gt; R2: 0.7984579</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">

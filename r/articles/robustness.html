@@ -101,7 +101,7 @@ zero.</p>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>iterations <span class="op">=</span> <span class="fl">3</span>, robustness_method <span class="op">=</span> <span class="st">"bisquare"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Smoothed y[0]:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Smoothed y[0]: 0.4862648</span></span></code></pre></div>
+<span><span class="co">#&gt; Smoothed y[0]: 0.5023423</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level3">
@@ -115,7 +115,7 @@ influence.</p>
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>iterations <span class="op">=</span> <span class="fl">3</span>, robustness_method <span class="op">=</span> <span class="st">"huber"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Smoothed y[0]:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Smoothed y[0]: 0.4937237</span></span></code></pre></div>
+<span><span class="co">#&gt; Smoothed y[0]: 0.4995519</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level3">
@@ -130,7 +130,7 @@ exclusion.</p>
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>iterations <span class="op">=</span> <span class="fl">3</span>, robustness_method <span class="op">=</span> <span class="st">"talwar"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Smoothed y[0]:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Smoothed y[0]: 0.4606284</span></span></code></pre></div>
+<span><span class="co">#&gt; Smoothed y[0]: 0.4919233</span></span></code></pre></div>
 <hr>
 </div>
 </div>
@@ -189,11 +189,11 @@ exclusion.</p>
 <span>        <span class="va">shown</span> <span class="op">&lt;-</span> <span class="va">shown</span> <span class="op">+</span> <span class="fl">1</span></span>
 <span>    <span class="op">}</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; Potential outlier at index 2: weight = 0.312</span></span>
-<span><span class="co">#&gt; Potential outlier at index 9: weight = 0.403</span></span>
-<span><span class="co">#&gt; Potential outlier at index 12: weight = 0.082</span></span>
-<span><span class="co">#&gt; Potential outlier at index 18: weight = 0.461</span></span>
-<span><span class="co">#&gt; Potential outlier at index 20: weight = 0.000</span></span></code></pre></div>
+<span><span class="co">#&gt; Potential outlier at index 12: weight = 0.460</span></span>
+<span><span class="co">#&gt; Potential outlier at index 20: weight = 0.000</span></span>
+<span><span class="co">#&gt; Potential outlier at index 24: weight = 0.465</span></span>
+<span><span class="co">#&gt; Potential outlier at index 25: weight = 0.218</span></span>
+<span><span class="co">#&gt; Potential outlier at index 50: weight = 0.000</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -237,7 +237,7 @@ methods:</p>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>iterations <span class="op">=</span> <span class="fl">3</span>, scaling_method <span class="op">=</span> <span class="st">"mad"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Smoothed y[0]:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Smoothed y[0]: 0.4862648</span></span></code></pre></div>
+<span><span class="co">#&gt; Smoothed y[0]: 0.5023423</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -258,7 +258,7 @@ iterations.</p>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>iterations <span class="op">=</span> <span class="fl">10</span>, auto_converge <span class="op">=</span> <span class="fl">1e-6</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Smoothed y[0]:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Smoothed y[0]: 0.4784941</span></span></code></pre></div>
+<span><span class="co">#&gt; Smoothed y[0]: 0.5015125</span></span></code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>

@@ -21,7 +21,7 @@ result <- fit(model, x, y)
 
 cat(sprintf("First smoothed value: %.4f (true: %.4f)\n",
             result$y[1], sin(x[1])))
-#> First smoothed value: 0.4246 (true: 0.0000)
+#> First smoothed value: 0.4287 (true: 0.0000)
 ```
 
 ------------------------------------------------------------------------
@@ -45,13 +45,13 @@ model <- Lowess(
 result <- fit(model, x, y)
 
 cat("Smoothed (first 5):", head(result$y, 5), "\n")
-#> Smoothed (first 5): 0.4722882 0.4822189 0.4927151 0.5037882 0.5153461
+#> Smoothed (first 5): 0.4814511 0.4921418 0.5035375 0.5156728 0.528477
 cat("CI lower (first 5):", head(result$confidence_lower, 5), "\n")
-#> CI lower (first 5): 0.4119072 0.41897 0.4265719 0.4347548 0.4434627
+#> CI lower (first 5): 0.4076832 0.415085 0.4231661 0.4320027 0.441572
 cat("CI upper (first 5):", head(result$confidence_upper, 5), "\n")
-#> CI upper (first 5): 0.5326692 0.5454677 0.5588584 0.5728215 0.5872295
+#> CI upper (first 5): 0.555219 0.5691987 0.5839089 0.5993429 0.615382
 cat("R2:", result$diagnostics$r_squared, "\n")
-#> R2: 0.7841212
+#> R2: 0.7984579
 ```
 
 ------------------------------------------------------------------------

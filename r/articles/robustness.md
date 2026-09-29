@@ -45,7 +45,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 model <- Lowess(iterations = 3, robustness_method = "bisquare")
 result <- fit(model, x, y)
 cat("Smoothed y[0]:", result$y[1], "\n")
-#> Smoothed y[0]: 0.4862648
+#> Smoothed y[0]: 0.5023423
 ```
 
 ------------------------------------------------------------------------
@@ -65,7 +65,7 @@ w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}
 model <- Lowess(iterations = 3, robustness_method = "huber")
 result <- fit(model, x, y)
 cat("Smoothed y[0]:", result$y[1], "\n")
-#> Smoothed y[0]: 0.4937237
+#> Smoothed y[0]: 0.4995519
 ```
 
 ------------------------------------------------------------------------
@@ -85,7 +85,7 @@ w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}
 model <- Lowess(iterations = 3, robustness_method = "talwar")
 result <- fit(model, x, y)
 cat("Smoothed y[0]:", result$y[1], "\n")
-#> Smoothed y[0]: 0.4606284
+#> Smoothed y[0]: 0.4919233
 ```
 
 ------------------------------------------------------------------------
@@ -123,11 +123,11 @@ for (i in seq_along(result$robustness_weights)) {
         shown <- shown + 1
     }
 }
-#> Potential outlier at index 2: weight = 0.312
-#> Potential outlier at index 9: weight = 0.403
-#> Potential outlier at index 12: weight = 0.082
-#> Potential outlier at index 18: weight = 0.461
+#> Potential outlier at index 12: weight = 0.460
 #> Potential outlier at index 20: weight = 0.000
+#> Potential outlier at index 24: weight = 0.465
+#> Potential outlier at index 25: weight = 0.218
+#> Potential outlier at index 50: weight = 0.000
 ```
 
 ------------------------------------------------------------------------
@@ -157,7 +157,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 model <- Lowess(iterations = 3, scaling_method = "mad")
 result <- fit(model, x, y)
 cat("Smoothed y[0]:", result$y[1], "\n")
-#> Smoothed y[0]: 0.4862648
+#> Smoothed y[0]: 0.5023423
 ```
 
 ------------------------------------------------------------------------
@@ -179,7 +179,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 model <- Lowess(iterations = 10, auto_converge = 1e-6)
 result <- fit(model, x, y)
 cat("Smoothed y[0]:", result$y[1], "\n")
-#> Smoothed y[0]: 0.4784941
+#> Smoothed y[0]: 0.5015125
 ```
 
 ``` r

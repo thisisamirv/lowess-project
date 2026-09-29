@@ -94,7 +94,7 @@ weights[calibration_indices] <- 10.0
 model <- Lowess(fraction = 0.5)
 result <- fit(model, x, y, custom_weights = weights)
 cat("Smoothed y[0]:", result$y[1], "\n")
-#> Smoothed y[0]: 0.323742
+#> Smoothed y[0]: 0.3229811
 ```
 
 ------------------------------------------------------------------------
@@ -127,7 +127,7 @@ lines(result$x, result$y, col = "blue", lwd = 2)
 
 
 cat("Smoothed y[0]:", result$y[1], "\n")
-#> Smoothed y[0]: 0.1922027
+#> Smoothed y[0]: 0.1737171
 ```
 
 ------------------------------------------------------------------------
@@ -152,7 +152,7 @@ weights[4] <- 0.0
 model <- Lowess(fraction = 0.4, iterations = 3)
 result <- fit(model, x, y, custom_weights = weights)
 cat("Smoothed y[0]:", result$y[1], "\n")
-#> Smoothed y[0]: 1.798397
+#> Smoothed y[0]: 0.8612265
 ```
 
 ------------------------------------------------------------------------

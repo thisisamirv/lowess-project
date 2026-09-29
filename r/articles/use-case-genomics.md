@@ -62,7 +62,7 @@ cat(sprintf(
     "95%% CI: [%.4f, %.4f]\n",
     result$confidence_lower[1], result$confidence_upper[1]
 ))
-#> 95% CI: [53.2753, 67.1392]
+#> 95% CI: [53.2792, 67.1554]
 ```
 
 ------------------------------------------------------------------------
@@ -97,7 +97,7 @@ result <- fit(model, positions, signal)
 # Identify peaks above threshold
 peak_count <- sum(result$y > 65.0)
 cat(sprintf("y[0]: %.4f\n", result$y[1]))
-#> y[0]: 59.9520
+#> y[0]: 59.9376
 cat(sprintf("Peak count: %d\n", peak_count))
 #> Peak count: 26
 ```
@@ -130,7 +130,7 @@ process_chunk(model, positions, coverage)
 #>   Iterations Used:   3
 result <- finalize(model)
 cat(sprintf("y[0]: %.4f\n", result$y[1]))
-#> y[0]: 41.2977
+#> y[0]: 41.2839
 ```
 
 ------------------------------------------------------------------------

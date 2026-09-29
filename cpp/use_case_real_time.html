@@ -198,7 +198,7 @@ $(document).ready(function(){initNavTree('use_case_real_time.html',''); initResi
 <div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_a493fdf1cc257a60df0d57efc7e9f7cc5"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#a493fdf1cc257a60df0d57efc7e9f7cc5">fastlowess::StreamingOptions::overlap</a></div><div class="ttdeci">int overlap</div><div class="ttdoc">Negative (the default) means &quot;use the library default&quot; (chunk_size / 10, clamped to [1,...</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:179</div></div>
 <div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_a5c33b791424c7b5f6aa95e1f8e8a6121"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#a5c33b791424c7b5f6aa95e1f8e8a6121">fastlowess::StreamingOptions::merge_strategy</a></div><div class="ttdeci">std::string merge_strategy</div><div class="ttdoc">weighted_average, average, take_first, take_last</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:180</div></div>
 <div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_aef557d1b8515c43f5027f0afea85018a"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#aef557d1b8515c43f5027f0afea85018a">fastlowess::StreamingOptions::chunk_size</a></div><div class="ttdeci">int chunk_size</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:176</div></div>
-</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.516484</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.518853</div>
 </div><!-- fragment --><hr  />
 <h2>Real-Time Dashboard Example</h2>
 <p>The dashboard pattern uses a plain LOWESS fit on a manually managed sliding window rather than <code>OnlineLowess</code>. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window^2) refit on every tick; for high-frequency streams prefer <code>OnlineLowess</code> with <code>update_mode = "incremental"</code> to bound per-frame cost.</p>
@@ -242,7 +242,7 @@ $(document).ready(function(){initNavTree('use_case_real_time.html',''); initResi
 <div class="line">}</div>
 <div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:700</div></div>
 <div class="ttc" id="astructfastlowess_1_1LowessOptions_html"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a></div><div class="ttdoc">Options for configuring LOWESS smoothing.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:134</div></div>
-</div><!-- fragment --><div class="fragment"><div class="line">Smoothed (dashboard, latest tick): -0.0663473</div>
+</div><!-- fragment --><div class="fragment"><div class="line">Smoothed (dashboard, latest tick): -0.0678055</div>
 </div><!-- fragment --><hr  />
 <h2>Choosing Parameters</h2>
 <h3>Online Mode</h3>

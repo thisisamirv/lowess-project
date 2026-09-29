@@ -177,8 +177,8 @@ Adapter Comparison</div></div>
 <div class="ttc" id="astructfastlowess_1_1LowessOptions_html_a689dba738384297e91479aa158dc2e45"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#a689dba738384297e91479aa158dc2e45">fastlowess::LowessOptions::parallel</a></div><div class="ttdeci">bool parallel</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:152</div></div>
 <div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ac4c7e581cd561fc11a928f9901bb5ec6"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fastlowess::LowessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:135</div></div>
 <div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ad06f7bb7d7036fb0417334bd71fbbeda"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ad06f7bb7d7036fb0417334bd71fbbeda">fastlowess::LowessOptions::outputs</a></div><div class="ttdeci">std::vector&lt; std::string &gt; outputs</div><div class="ttdoc">Optional result components: diagnostics, residuals, weights, derivative, se, and sorted.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:151</div></div>
-</div><!-- fragment --><div class="fragment"><div class="line">95% CI at midpoint: [0.0432732, 0.103712]</div>
-<div class="line">R2: 0.966427</div>
+</div><!-- fragment --><div class="fragment"><div class="line">95% CI at midpoint: [0.0433099, 0.103768]</div>
+<div class="line">R2: 0.966845</div>
 </div><!-- fragment --><hr  />
 <h2>Streaming Adapter</h2>
 <p>Process large datasets in chunks with configurable overlap.</p>
@@ -244,7 +244,7 @@ Adapter Comparison</div></div>
 <div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_a493fdf1cc257a60df0d57efc7e9f7cc5"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#a493fdf1cc257a60df0d57efc7e9f7cc5">fastlowess::StreamingOptions::overlap</a></div><div class="ttdeci">int overlap</div><div class="ttdoc">Negative (the default) means &quot;use the library default&quot; (chunk_size / 10, clamped to [1,...</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:179</div></div>
 <div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_a5c33b791424c7b5f6aa95e1f8e8a6121"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#a5c33b791424c7b5f6aa95e1f8e8a6121">fastlowess::StreamingOptions::merge_strategy</a></div><div class="ttdeci">std::string merge_strategy</div><div class="ttdoc">weighted_average, average, take_first, take_last</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:180</div></div>
 <div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_aef557d1b8515c43f5027f0afea85018a"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#aef557d1b8515c43f5027f0afea85018a">fastlowess::StreamingOptions::chunk_size</a></div><div class="ttdeci">int chunk_size</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:176</div></div>
-</div><!-- fragment --><div class="fragment"><div class="line">Smoothed y[0]: 0.257845</div>
+</div><!-- fragment --><div class="fragment"><div class="line">Smoothed y[0]: 0.257796</div>
 </div><!-- fragment --><hr  />
 <blockquote class="doxtable">
 <p>&zwj;<b>Always call finalize():</b> Always call <code>model.finalize()</code> after processing all chunks to retrieve buffered overlap data. </p>

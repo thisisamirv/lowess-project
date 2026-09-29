@@ -49,7 +49,7 @@ lines(result$x, result$confidence_upper, col = "blue", lty = 2)
 
 cat("95% CI at midpoint: [", result$confidence_lower[50], ", ",
     result$confidence_upper[50], "]\n")
-#> 95% CI at midpoint: [ -0.03641244 ,  0.1153279 ]
+#> 95% CI at midpoint: [ -0.04412499 ,  0.1214997 ]
 ```
 
 ------------------------------------------------------------------------
@@ -82,7 +82,7 @@ lines(result$x, result$prediction_upper, col = "red", lty = 2)
 
 cat("Prediction bounds: [", result$prediction_lower[1], ", ",
     result$prediction_upper[1], "]\n")
-#> Prediction bounds: [ -0.1525059 ,  1.097082 ]
+#> Prediction bounds: [ -0.1513472 ,  1.114249 ]
 ```
 
 ------------------------------------------------------------------------
@@ -130,7 +130,7 @@ legend("topright",
 
 cat("95% CI at midpoint: [", result$confidence_lower[50], ", ",
     result$confidence_upper[50], "]\n")
-#> 95% CI at midpoint: [ -0.03641244 ,  0.1153279 ]
+#> 95% CI at midpoint: [ -0.04412499 ,  0.1214997 ]
 ```
 
 ------------------------------------------------------------------------
@@ -152,7 +152,7 @@ model <- Lowess(fraction = 0.5, confidence_intervals = 0.99)
 result <- fit(model, x, y)
 cat("99% CI at midpoint: [", result$confidence_lower[50], ", ",
     result$confidence_upper[50], "]\n")
-#> 99% CI at midpoint: [ -0.06025736 ,  0.1391729 ]
+#> 99% CI at midpoint: [ -0.07015174 ,  0.1475265 ]
 ```
 
 ------------------------------------------------------------------------
@@ -166,7 +166,7 @@ Access standard errors directly (available when intervals are computed):
 model <- Lowess(fraction = 0.5, outputs = "se")
 result <- fit(model, x, y)
 cat("Standard errors (first 5):", head(result$standard_errors, 5), "\n")
-#> Standard errors (first 5): 0.03080664 0.03226983 0.03374655 0.03522111 0.03667521
+#> Standard errors (first 5): 0.03763669 0.03931471 0.04100582 0.04268883 0.04433928
 ```
 
 ------------------------------------------------------------------------

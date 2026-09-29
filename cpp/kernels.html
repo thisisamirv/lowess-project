@@ -161,7 +161,7 @@ Weight Functions</div></div>
 <div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:700</div></div>
 <div class="ttc" id="aclassfastlowess_1_1Lowess_html_a504a722970109b32ab8318352d224a2e"><div class="ttname"><a href="classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e">fastlowess::Lowess::fit</a></div><div class="ttdeci">Expected&lt; LowessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:748</div></div>
 <div class="ttc" id="afastlowess_8hpp_html"><div class="ttname"><a href="fastlowess_8hpp.html">fastlowess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLowess library.</div></div>
-</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.382608</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.380884</div>
 </div><!-- fragment --><hr  />
 <h2>Epanechnikov</h2>
 <p>Theoretically optimal for kernel density estimation.</p>
@@ -188,7 +188,7 @@ Weight Functions</div></div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.406728</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.406923</div>
 </div><!-- fragment --><hr  />
 <h2>Gaussian</h2>
 <p>Infinitely smooth. No boundary effects.</p>
@@ -215,7 +215,7 @@ Weight Functions</div></div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.435767</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.438213</div>
 </div><!-- fragment --><hr  />
 <h2>Biweight</h2>
 <p>Good balance of efficiency and smoothness.</p>
@@ -242,7 +242,7 @@ Weight Functions</div></div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.375903</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.374395</div>
 </div><!-- fragment --><hr  />
 <h2>Cosine</h2>
 <p>Smooth and computationally efficient.</p>
@@ -269,7 +269,7 @@ Weight Functions</div></div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.40083</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.400769</div>
 </div><!-- fragment --><hr  />
 <h2>Triangle</h2>
 <p>Simple linear taper.</p>
@@ -296,7 +296,7 @@ Weight Functions</div></div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.381657</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.381029</div>
 </div><!-- fragment --><hr  />
 <h2>Uniform</h2>
 <p>Equal weights within window. Fastest but least smooth.</p>
@@ -323,7 +323,7 @@ Weight Functions</div></div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.45084</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.454552</div>
 </div><!-- fragment --><hr  />
 <h2>Choosing a Kernel</h2>
 <p>Choose the first row below whose condition applies:</p>

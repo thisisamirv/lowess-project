@@ -51,7 +51,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 model <- Lowess(iterations = 3, scaling_method = "mad")
 result <- fit(model, x, y)
 cat("Smoothed y[0]:", result$y[1], "\n")
-#> Smoothed y[0]: 0.4862648
+#> Smoothed y[0]: 0.5023423
 ```
 
 ------------------------------------------------------------------------
@@ -75,7 +75,7 @@ residuals.
 model <- Lowess(iterations = 3, scaling_method = "mar")
 result <- fit(model, x, y)
 cat("Smoothed y[0]:", result$y[1], "\n")
-#> Smoothed y[0]: 0.4870733
+#> Smoothed y[0]: 0.5051908
 ```
 
 ------------------------------------------------------------------------
@@ -99,7 +99,7 @@ required.
 model <- Lowess(iterations = 3, scaling_method = "mean")
 result <- fit(model, x, y)
 cat("Smoothed y[0]:", result$y[1], "\n")
-#> Smoothed y[0]: 0.5023604
+#> Smoothed y[0]: 0.509126
 ```
 
 ------------------------------------------------------------------------

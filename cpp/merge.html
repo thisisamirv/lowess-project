@@ -161,7 +161,7 @@ Merge Strategies</div></div>
 <div class="ttc" id="afastlowess_8hpp_html"><div class="ttname"><a href="fastlowess_8hpp.html">fastlowess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLowess library.</div></div>
 <div class="ttc" id="astructfastlowess_1_1StreamingOptions_html"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html">fastlowess::StreamingOptions</a></div><div class="ttdoc">Options for streaming LOWESS.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:175</div></div>
 <div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_a5c33b791424c7b5f6aa95e1f8e8a6121"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#a5c33b791424c7b5f6aa95e1f8e8a6121">fastlowess::StreamingOptions::merge_strategy</a></div><div class="ttdeci">std::string merge_strategy</div><div class="ttdoc">weighted_average, average, take_first, take_last</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:180</div></div>
-</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.382608</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.380884</div>
 </div><!-- fragment --><hr  />
 <h2>Take First</h2>
 <p>Keeps only the left-chunk estimate in the overlap zone and discards the right-chunk estimate. Produces a definitive, non-revised output as soon as the right boundary of each chunk is reached.</p>
@@ -191,7 +191,7 @@ Merge Strategies</div></div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.382608</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.380884</div>
 </div><!-- fragment --><hr  />
 <h2>Take Last</h2>
 <p>Keeps only the right-chunk estimate in the overlap zone. The right chunk sees more of the surrounding data, so its fit can be more accurate near the left boundary of the new chunk.</p>
@@ -221,7 +221,7 @@ Merge Strategies</div></div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.382608</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.380884</div>
 </div><!-- fragment --><hr  />
 <h2>Weighted Average</h2>
 <p>Assigns each overlap point a weight proportional to its proximity to the centre of its respective chunk: points near the left-chunk centre get higher left weight; points near the right-chunk centre get higher right weight. This produces the smoothest transition across chunk boundaries.</p>
@@ -255,7 +255,7 @@ Merge Strategies</div></div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.382608</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.380884</div>
 </div><!-- fragment --><hr  />
 <h2>Choosing a Strategy</h2>
 <table class="markdownTable">

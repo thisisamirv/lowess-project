@@ -54,7 +54,7 @@ model <- Lowess(
 result <- fit(model, x, y)
 cat("95% CI at midpoint: [", result$confidence_lower[50], ", ",
     result$confidence_upper[50], "]\n")
-#> 95% CI at midpoint: [ -0.03641244 ,  0.1153279 ]
+#> 95% CI at midpoint: [ -0.04412499 ,  0.1214997 ]
 ```
 
 ------------------------------------------------------------------------
@@ -108,7 +108,7 @@ process_chunk(model, x, y)
 #>   Iterations Used:   2
 result <- finalize(model)
 cat("Smoothed y[0]:", result$y[1], "\n")
-#> Smoothed y[0]: 0.2578452
+#> Smoothed y[0]: 0.2577957
 ```
 
 > **Always call finalize():** The streaming adapter buffers overlap

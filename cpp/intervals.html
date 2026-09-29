@@ -153,7 +153,7 @@ Confidence and Prediction Intervals</div></div>
 <div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:700</div></div>
 <div class="ttc" id="aclassfastlowess_1_1Lowess_html_a504a722970109b32ab8318352d224a2e"><div class="ttname"><a href="classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e">fastlowess::Lowess::fit</a></div><div class="ttdeci">Expected&lt; LowessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:748</div></div>
 <div class="ttc" id="afastlowess_8hpp_html"><div class="ttname"><a href="fastlowess_8hpp.html">fastlowess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLowess library.</div></div>
-</div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.294818, 0.373923]</div>
+</div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.292929, 0.372154]</div>
 </div><!-- fragment --><hr  />
 <h2>Prediction Intervals</h2>
 <p>Estimate where new observations might fall.</p>
@@ -176,7 +176,7 @@ Confidence and Prediction Intervals</div></div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% PI: [&quot;</span> &lt;&lt; result.prediction_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.prediction_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">95% PI: [-0.0400307, 0.708771]</div>
+</div><!-- fragment --><div class="fragment"><div class="line">95% PI: [-0.040546, 0.705629]</div>
 </div><!-- fragment --><hr  />
 <h2>Both Intervals</h2>
 <p>Request both types simultaneously:</p>
@@ -199,7 +199,7 @@ Confidence and Prediction Intervals</div></div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.294818, 0.373923]</div>
+</div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.292929, 0.372154]</div>
 </div><!-- fragment --><hr  />
 <h2>Confidence Levels</h2>
 <p>Common levels and their z-values:</p>
@@ -232,7 +232,7 @@ Confidence and Prediction Intervals</div></div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;99% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">99% CI: [0.319262, 0.445953]</div>
+</div><!-- fragment --><div class="fragment"><div class="line">99% CI: [0.317464, 0.444303]</div>
 </div><!-- fragment --><hr  />
 <h2>Standard Errors</h2>
 <p>Access standard errors directly (available when intervals are computed):</p>
@@ -265,7 +265,7 @@ Confidence and Prediction Intervals</div></div>
 <div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ad06f7bb7d7036fb0417334bd71fbbeda"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ad06f7bb7d7036fb0417334bd71fbbeda">fastlowess::LowessOptions::outputs</a></div><div class="ttdeci">std::vector&lt; std::string &gt; outputs</div><div class="ttdoc">Optional result components: diagnostics, residuals, weights, derivative, se, and sorted.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:151</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">Point 0: SE = 0.0246</div>
 <div class="line">Point 1: SE = 0.0252</div>
-<div class="line">Point 2: SE = 0.0259</div>
+<div class="line">Point 2: SE = 0.0258</div>
 </div><!-- fragment --><hr  />
 <h2>Availability</h2>
 <blockquote class="doxtable">

@@ -48,7 +48,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 model <- Lowess(weight_function = "tricube")
 result <- fit(model, x, y)
 cat("Smoothed y[0]:", result$y[1], "\n")
-#> Smoothed y[0]: 0.4862648
+#> Smoothed y[0]: 0.5023423
 ```
 
 ------------------------------------------------------------------------
@@ -68,7 +68,7 @@ w(u) = \frac{3}{4}(1 - u^2)
 model <- Lowess(weight_function = "epanechnikov")
 result <- fit(model, x, y)
 cat("Smoothed y[0]:", result$y[1], "\n")
-#> Smoothed y[0]: 0.4980927
+#> Smoothed y[0]: 0.5158928
 ```
 
 ------------------------------------------------------------------------
@@ -88,7 +88,7 @@ w(u) = \exp(-u^2/2)
 model <- Lowess(weight_function = "gaussian")
 result <- fit(model, x, y)
 cat("Smoothed y[0]:", result$y[1], "\n")
-#> Smoothed y[0]: 0.5254291
+#> Smoothed y[0]: 0.5459516
 ```
 
 ------------------------------------------------------------------------
@@ -108,7 +108,7 @@ w(u) = (1 - u^2)^2
 model <- Lowess(weight_function = "biweight")
 result <- fit(model, x, y)
 cat("Smoothed y[0]:", result$y[1], "\n")
-#> Smoothed y[0]: 0.482559
+#> Smoothed y[0]: 0.4989114
 ```
 
 ------------------------------------------------------------------------
@@ -128,7 +128,7 @@ w(u) = \cos(\pi u / 2)
 model <- Lowess(weight_function = "cosine")
 result <- fit(model, x, y)
 cat("Smoothed y[0]:", result$y[1], "\n")
-#> Smoothed y[0]: 0.4941485
+#> Smoothed y[0]: 0.5131147
 ```
 
 ------------------------------------------------------------------------
@@ -148,7 +148,7 @@ w(u) = 1 - |u|
 model <- Lowess(weight_function = "triangle")
 result <- fit(model, x, y)
 cat("Smoothed y[0]:", result$y[1], "\n")
-#> Smoothed y[0]: 0.4813591
+#> Smoothed y[0]: 0.5013121
 ```
 
 ------------------------------------------------------------------------
@@ -168,7 +168,7 @@ w(u) = 1
 model <- Lowess(weight_function = "uniform")
 result <- fit(model, x, y)
 cat("Smoothed y[0]:", result$y[1], "\n")
-#> Smoothed y[0]: 0.537598
+#> Smoothed y[0]: 0.5600545
 ```
 
 ------------------------------------------------------------------------

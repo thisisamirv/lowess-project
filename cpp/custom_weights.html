@@ -209,7 +209,7 @@ $(document).ready(function(){initNavTree('custom_weights.html',''); initResizabl
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.323742</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.322981</div>
 </div><!-- fragment --><hr  />
 <h3>Propagate Measurement Uncertainty</h3>
 <p>If each observation has a known standard deviation \(\sigma_i\), set \(w_i = 1 / \sigma_i^2\) to give the fit information-theoretically optimal weighting.</p>
@@ -238,7 +238,7 @@ $(document).ready(function(){initNavTree('custom_weights.html',''); initResizabl
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.152222</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.142507</div>
 </div><!-- fragment --><hr  />
 <h2>Combined with Robustness Iterations</h2>
 <p>Custom weights and robustness iterations compose naturally: use custom weights for <em>known</em> bad points and robustness for <em>unknown</em> contamination.</p>
@@ -268,7 +268,7 @@ $(document).ready(function(){initNavTree('custom_weights.html',''); initResizabl
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 1.7984</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.861226</div>
 </div><!-- fragment --><hr  />
 <h2>Validation Rules</h2>
 <table class="markdownTable">

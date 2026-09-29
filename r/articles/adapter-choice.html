@@ -165,7 +165,7 @@ features.</strong></p>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"95% CI at midpoint: ["</span>, <span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">", "</span>,</span>
 <span>    <span class="va">result</span><span class="op">$</span><span class="va">confidence_upper</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">"]\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 95% CI at midpoint: [ -0.03641244 ,  0.1153279 ]</span></span></code></pre></div>
+<span><span class="co">#&gt; 95% CI at midpoint: [ -0.04412499 ,  0.1214997 ]</span></span></code></pre></div>
 <hr>
 </div>
 </div>
@@ -260,7 +260,7 @@ features.</strong></p>
 <span><span class="co">#&gt;   Iterations Used:   2</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/finalize.html">finalize</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Smoothed y[0]:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Smoothed y[0]: 0.2578452</span></span></code></pre></div>
+<span><span class="co">#&gt; Smoothed y[0]: 0.2577957</span></span></code></pre></div>
 <blockquote>
 <p><strong>Always call finalize():</strong> The streaming adapter
 buffers overlap data. Call <code>finalize(model)</code> after the last

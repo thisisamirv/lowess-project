@@ -30,7 +30,7 @@ result <- fit(model, x, y)
 cat("Selected fraction:", result$fraction_used, "\n")
 #> Selected fraction: 0.3
 cat("CV scores:", result$cv_scores, "\n")
-#> CV scores: 0.5007816 0.4646127 0.5052989 0.5577482
+#> CV scores: 0.4950802 0.4716297 0.5044107 0.545229
 ```
 
 ------------------------------------------------------------------------

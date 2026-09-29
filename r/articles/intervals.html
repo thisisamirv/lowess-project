@@ -131,7 +131,7 @@ with the default <code>"incremental"</code> mode).</p>
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"95% CI at midpoint: ["</span>, <span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">", "</span>,</span>
 <span>    <span class="va">result</span><span class="op">$</span><span class="va">confidence_upper</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">"]\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 95% CI at midpoint: [ -0.03641244 ,  0.1153279 ]</span></span></code></pre></div>
+<span><span class="co">#&gt; 95% CI at midpoint: [ -0.04412499 ,  0.1214997 ]</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -157,7 +157,7 @@ with the default <code>"incremental"</code> mode).</p>
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Prediction bounds: ["</span>, <span class="va">result</span><span class="op">$</span><span class="va">prediction_lower</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">", "</span>,</span>
 <span>    <span class="va">result</span><span class="op">$</span><span class="va">prediction_upper</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"]\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Prediction bounds: [ -0.1525059 ,  1.097082 ]</span></span></code></pre></div>
+<span><span class="co">#&gt; Prediction bounds: [ -0.1513472 ,  1.114249 ]</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -198,7 +198,7 @@ with the default <code>"incremental"</code> mode).</p>
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"95% CI at midpoint: ["</span>, <span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">", "</span>,</span>
 <span>    <span class="va">result</span><span class="op">$</span><span class="va">confidence_upper</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">"]\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 95% CI at midpoint: [ -0.03641244 ,  0.1153279 ]</span></span></code></pre></div>
+<span><span class="co">#&gt; 95% CI at midpoint: [ -0.04412499 ,  0.1214997 ]</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -235,7 +235,7 @@ with the default <code>"incremental"</code> mode).</p>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"99% CI at midpoint: ["</span>, <span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">", "</span>,</span>
 <span>    <span class="va">result</span><span class="op">$</span><span class="va">confidence_upper</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">"]\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 99% CI at midpoint: [ -0.06025736 ,  0.1391729 ]</span></span></code></pre></div>
+<span><span class="co">#&gt; 99% CI at midpoint: [ -0.07015174 ,  0.1475265 ]</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -247,7 +247,7 @@ computed):</p>
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.5</span>, outputs <span class="op">=</span> <span class="st">"se"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Standard errors (first 5):"</span>, <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">standard_errors</span>, <span class="fl">5</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Standard errors (first 5): 0.03080664 0.03226983 0.03374655 0.03522111 0.03667521</span></span></code></pre></div>
+<span><span class="co">#&gt; Standard errors (first 5): 0.03763669 0.03931471 0.04100582 0.04268883 0.04433928</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
