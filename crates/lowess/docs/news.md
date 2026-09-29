@@ -14,6 +14,7 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Changed
 
 * Marked `WeightFunction` as non-exhaustive so future variants do not break downstream exhaustive matches.
+* Removed the `wide` SIMD dependency and the `WLSSolver` trait methods it backed: they were superseded when the fitting path was changed to preserve R's exact arithmetic order, leaving them unused.
 
 ### Fixed
 

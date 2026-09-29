@@ -30,14 +30,13 @@ include = [
 
 [dependencies]
 num-traits = { version = "0.2", features = ["libm"] }
-wide = { version = "1.7", default-features = false }
 
 [dev-dependencies]
 approx = "0.5"
 
 [features]
 default = ["std"]
-std = ["num-traits/std", "wide/std"]
+std = ["num-traits/std"]
 dev = []
 
 [package.metadata.docs.rs]

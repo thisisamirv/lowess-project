@@ -77,6 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced the cross-validation candidate-fit `unwrap()` with error propagation through sequential CPU, parallel CPU, and GPU CV paths.
 - Replaced the `iteration_loop_with_callback` clippy suppression with a typed options bundle for its iteration controls and callbacks.
 - Marked `WeightFunction` as non-exhaustive and made GPU handling reject unsupported future kernels explicitly.
+- Removed the `accumulate_wls`/`solve_wls` methods from the `WLSSolver` trait (and their backing free functions): they became dead once the WLS fit path (`LinearFit::fit_wls`) was changed to a hand-written scalar loop preserving R's exact arithmetic order, superseding this SIMD-based formulation. `WLSSolver` is now a plain marker trait. Removed the now-unused `wide` dependency this code was the only user of.
 
 **fastLowess:**
 
