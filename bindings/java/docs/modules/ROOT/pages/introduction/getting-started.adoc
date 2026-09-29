@@ -50,8 +50,8 @@ public class Example {
 
 [source,console]
 ----
-x=0.00  y=0.000  smoothed=0.166
-x=0.10  y=0.184  smoothed=0.215
+x=0.00  y=0.000  smoothed=0.165
+x=0.10  y=0.184  smoothed=0.214
 x=0.20  y=0.290  smoothed=0.270
 x=0.30  y=0.310  smoothed=0.331
 x=0.40  y=0.314  smoothed=0.395

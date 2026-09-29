@@ -99,6 +99,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Represent unavailable diagnostic metrics as `nothing` instead of `NaN` sentinels.
 
+**Node.js:**
+
+- Updated `oxlint` to v1.86.0.
+
 **Python:**
 
 - Refactored the internal `parse_cv_options` helper to return a named `ParsedCvOptions` alias, reducing signature type complexity so strict clippy (`-D warnings`) passes in `python-dev`.
@@ -112,6 +116,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added committed `statsmodels.lowess` reference fixtures for cross-language validation.
 - Made `make r-dev` retry transient Windows `pak` move failures after clearing partial local cache/lock state.
 - Added `make r-tests` for the R test phase; `make r-dev` invokes it and runs the LOWESS property suite 30 times in parallel.
+
+**WASM:**
+
+- Updated `oxlint` to v1.86.0.
 
 ### Fixed
 

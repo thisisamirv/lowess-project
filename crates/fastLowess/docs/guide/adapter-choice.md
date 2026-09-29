@@ -66,8 +66,8 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-95% CI at midpoint: [0.0433, 0.1037]
-R2: 0.9664
+95% CI at midpoint: [0.0433, 0.1038]
+R2: 0.9668
 ```
 
 ---

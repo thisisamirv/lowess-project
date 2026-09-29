@@ -108,10 +108,10 @@ dev:
 	  -e "# Required packages (CRAN)" \
 	  -e "required <- c('styler', 'testthat', 'rmarkdown', 'knitr', 'lintr', 'roxygen2', 'pkgdown', 'remotes', 'quickcheck')" \
 	  -e "tryCatch(pak::pkg_install(required, lib = lib, ask = FALSE), error = function(err) { message('pak install failed; clearing partial local cache and retrying once: ', conditionMessage(err)); unlink(c(Sys.glob(file.path(lib, '00LOCK*')), file.path(lib, '_cache'), file.path(lib, 'data.table')), recursive = TRUE, force = TRUE); Sys.setenv(PKG_NUM_WORKERS = '1'); pak::pkg_install(required, lib = lib, ask = FALSE) })" \
-	  -e "# srr lives on its own R-universe; optional so a dead mirror doesn't break the build" \
-	  -e "options(repos = c(ropenscireviewtools = 'https://ropensci-review-tools.r-universe.dev', CRAN = 'https://cloud.r-project.org')); try(pak::pkg_install('srr', lib = lib, ask = FALSE), silent = TRUE)" \
-	  -e "# Optional: rOpenSci tooling and local dev helpers" \
-	  -e "options(repos = c(ropensci = 'https://ropensci.r-universe.dev', CRAN = 'https://cloud.r-project.org')); try(pak::pkg_install(c('pkgcheck', 'pkgstats', 'covr', 'prettycode', 'toml', 'V8', 'visNetwork'), lib = lib, ask = FALSE), silent = TRUE)" \
+	  -e "# srr's roclet (used below in Documentation) needs srr itself plus its 'toml' Suggests and pkgstats, so these must succeed like 'required' rather than fail silently" \
+	  -e "options(repos = c(ropenscireviewtools = 'https://ropensci-review-tools.r-universe.dev', ropensci = 'https://ropensci.r-universe.dev', CRAN = 'https://cloud.r-project.org')); srr_deps <- c('srr', 'pkgstats', 'toml'); tryCatch(pak::pkg_install(srr_deps, lib = lib, ask = FALSE), error = function(err) { message('srr dependency install failed; clearing partial local cache and retrying once: ', conditionMessage(err)); unlink(c(Sys.glob(file.path(lib, '00LOCK*')), file.path(lib, '_cache')), recursive = TRUE, force = TRUE); pak::pkg_install(srr_deps, lib = lib, ask = FALSE) })" \
+	  -e "# Optional: rOpenSci tooling and local dev helpers used only by later check targets, not by 'dev' itself" \
+	  -e "options(repos = c(ropensci = 'https://ropensci.r-universe.dev', CRAN = 'https://cloud.r-project.org')); try(pak::pkg_install(c('pkgcheck', 'covr', 'prettycode', 'V8', 'visNetwork'), lib = lib, ask = FALSE), silent = TRUE)" \
 	  >/dev/null
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "if (!rmarkdown::pandoc_available()) { message('\nERROR: Pandoc is required to build R Markdown vignettes but is not available.\nPlease install Pandoc (https://pandoc.org/installing.html) and ensure it is in your PATH.\n'); quit(status = 1) }"
 	@echo "R development packages installed!"

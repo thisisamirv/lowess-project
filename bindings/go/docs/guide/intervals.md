@@ -168,7 +168,7 @@ func main() {
 ```
 
 ```output
-First point 95% CI: [0.29481752497597874, 0.3739231958598525]
+First point 95% CI: [0.2929290861928646, 0.3721536723881128]
 ```
 
 ---
@@ -223,7 +223,7 @@ func main() {
 ```
 
 ```output
-First lower CI bound (99%): 0.31926203242453505
+First lower CI bound (99%): 0.31746448671917393
 ```
 
 ---
@@ -273,7 +273,7 @@ func main() {
 ```output
 Point 0: SE = 0.0246
 Point 1: SE = 0.0252
-Point 2: SE = 0.0259
+Point 2: SE = 0.0258
 ```
 
 ---

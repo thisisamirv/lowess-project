@@ -83,7 +83,7 @@ console.log("y[0]:", finalResult.y[0].toFixed(6));
 ```
 
 ```output
-y[0]: 0.516484
+y[0]: 0.518853
 ```
 
 ---
@@ -119,7 +119,7 @@ for (let i = 0; i < x.length; i++) {
 ```
 
 ```output
-Smoothed (dashboard, latest tick): -0.0663
+Smoothed (dashboard, latest tick): -0.0678
 ```
 
 ---

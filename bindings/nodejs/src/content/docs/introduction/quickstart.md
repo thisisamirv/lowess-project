@@ -23,7 +23,7 @@ console.log(`First smoothed value: ${result.y[0].toFixed(4)}  (true: ${Math.sin(
 ```
 
 ```output
-First smoothed value: 0.0278  (true: 0.0000)
+First smoothed value: 0.0273  (true: 0.0000)
 ```
 
 ---
@@ -53,10 +53,10 @@ console.log("R2:", result.diagnostics.r_squared.toFixed(4));
 ```
 
 ```output
-Smoothed (first 5): [ '0.3344', '0.3610', '0.3887', '0.4175', '0.4471' ]
-CI lower (first 5): [ '0.2948', '0.3208', '0.3478', '0.3759', '0.4048' ]
-CI upper (first 5): [ '0.3739', '0.4012', '0.4296', '0.4591', '0.4895' ]
-R2: 0.9664
+Smoothed (first 5): [ '0.3325', '0.3593', '0.3871', '0.4160', '0.4458' ]
+CI lower (first 5): [ '0.2929', '0.3190', '0.3462', '0.3743', '0.4034' ]
+CI upper (first 5): [ '0.3722', '0.3995', '0.4280', '0.4576', '0.4881' ]
+R2: 0.9668
 ```
 
 ---

@@ -63,7 +63,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (extend boundary): 0.38260776436644134
+First smoothed value (extend boundary): 0.38088390025381585
 ```
 
 ---
@@ -111,7 +111,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (reflect boundary): 0.7127616908322939
+First smoothed value (reflect boundary): 0.6823699602975638
 ```
 
 ---
@@ -159,7 +159,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (zero boundary): 0.3356097941646353
+First smoothed value (zero boundary): 0.3332743318308518
 ```
 
 ---

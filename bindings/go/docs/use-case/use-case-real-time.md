@@ -134,7 +134,7 @@ func main() {
 ```
 
 ```output
-y[0]: 0.516484
+y[0]: 0.518853
 ```
 
 ---
@@ -196,7 +196,7 @@ func main() {
 ```
 
 ```output
-Smoothed (dashboard, latest tick): -0.06634730089857549
+Smoothed (dashboard, latest tick): -0.06780546949749054
 ```
 
 ---

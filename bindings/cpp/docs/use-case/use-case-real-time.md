@@ -105,7 +105,7 @@ int main() {
 ```
 
 ```output
-y[0]: 0.516484
+y[0]: 0.518853
 ```
 
 ---
@@ -156,7 +156,7 @@ int main() {
 ```
 
 ```output
-Smoothed (dashboard, latest tick): -0.0663473
+Smoothed (dashboard, latest tick): -0.0678055
 ```
 
 ---

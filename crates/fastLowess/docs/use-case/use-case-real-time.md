@@ -100,7 +100,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (streaming log): 0.5164838198010396
+First smoothed value (streaming log): 0.518852654979974
 ```
 
 ---
@@ -144,7 +144,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-Smoothed (dashboard, latest tick): -0.06634730089857632
+Smoothed (dashboard, latest tick): -0.06780546949749104
 ```
 
 ---

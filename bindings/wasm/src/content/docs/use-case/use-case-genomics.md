@@ -38,7 +38,7 @@ console.log("95% CI: [" + result.confidence_lower[0].toFixed(4) + ", " + result.
 ```
 
 ```output
-95% CI: [53.2753, 67.1392]
+95% CI: [53.2792, 67.1554]
 ```
 
 ---
@@ -73,7 +73,7 @@ console.log("Peak count:", peakCount);
 ```
 
 ```output
-y[0]: 59.9520
+y[0]: 59.9376
 Peak count: 26
 ```
 
@@ -101,7 +101,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 41.2977
+y[0]: 41.2839
 ```
 
 ---

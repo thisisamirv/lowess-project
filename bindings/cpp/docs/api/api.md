@@ -42,7 +42,7 @@ int main() {
 ```
 
 ```output
-y[0]: 0.528325
+y[0]: 0.564054
 ```
 
 - `options`: A `LowessOptions` struct containing configuration parameters.

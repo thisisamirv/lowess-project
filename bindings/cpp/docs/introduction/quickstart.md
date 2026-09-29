@@ -33,7 +33,7 @@ int main() {
 ```
 
 ```output
-First smoothed value: 0.02784  (true: 0)
+First smoothed value: 0.0272725  (true: 0)
 ```
 
 ---
@@ -75,7 +75,7 @@ int main() {
 ```
 
 ```output
-95% CI: [0.294818, 0.373923]
+95% CI: [0.292929, 0.372154]
 ```
 
 ---

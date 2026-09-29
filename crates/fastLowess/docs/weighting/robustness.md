@@ -50,7 +50,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (bisquare robustness): 0.3826077643664414
+First smoothed value (bisquare robustness): 0.3808839002538159
 ```
 
 ---
@@ -84,7 +84,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (huber robustness): 0.381704958772818
+First smoothed value (huber robustness): 0.3789215614787963
 ```
 
 ---
@@ -213,7 +213,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (mad scaling): 0.3826077643664414
+First smoothed value (mad scaling): 0.3808839002538159
 ```
 
 ---
@@ -246,5 +246,5 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (auto-converge): 0.38260220357176766
+First smoothed value (auto-converge): 0.3808832251069814
 ```

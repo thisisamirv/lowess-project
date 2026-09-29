@@ -40,7 +40,7 @@ public class Example {
 
 [source,console]
 ----
-y[0]: 11.32159092241617
+y[0]: 11.311602696688702
 ----
 
 '''
@@ -84,7 +84,7 @@ public class Example {
 
 [source,console]
 ----
-residuals[0]: -0.15824361645514926
+residuals[0]: -0.158236024878226
 ----
 
 '''
@@ -128,7 +128,7 @@ public class Example {
 
 [source,console]
 ----
-95% PI: [0.15311435602040607, 0.2957788276788151]
+95% PI: [0.15614437877449788, 0.29890448860239904]
 ----
 
 '''
@@ -165,7 +165,7 @@ public class Example {
 
 [source,console]
 ----
-y[0]: 11.327309510259992
+y[0]: 11.32705234623955
 ----
 
 '''
@@ -204,8 +204,8 @@ public class Example {
 [source,console]
 ----
 fraction=0.05: y[0] = 0.13171195982828227
-fraction=0.2: y[0] = 0.22444659184961058
-fraction=0.5: y[0] = 0.3343703604179157
+fraction=0.2: y[0] = 0.22752443368844846
+fraction=0.5: y[0] = 0.33254137929048877
 ----
 
 '''
@@ -247,7 +247,7 @@ public class Example {
 
 [source,console]
 ----
-R2: 0.973
+R2: 0.976
 ----
 
 '''

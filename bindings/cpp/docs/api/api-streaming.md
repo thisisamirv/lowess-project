@@ -45,7 +45,7 @@ int main() {
 ```
 
 ```output
-y[0]: 17.6391
+y[0]: 17.92
 ```
 
 - `options`: A `StreamingOptions` struct (inherits from `LowessOptions`) with additional `chunk_size`, `overlap`, and `merge_strategy` parameters.

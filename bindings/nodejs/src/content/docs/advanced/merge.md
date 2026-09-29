@@ -49,7 +49,7 @@ console.log("First smoothed value (average merge):", result.y[0].toFixed(4));
 ```
 
 ```output
-First smoothed value (average merge): 0.3826
+First smoothed value (average merge): 0.3809
 ```
 
 ---
@@ -75,7 +75,7 @@ console.log("First smoothed value (take_first merge):", result.y[0].toFixed(4));
 ```
 
 ```output
-First smoothed value (take_first merge): 0.3826
+First smoothed value (take_first merge): 0.3809
 ```
 
 ---
@@ -101,7 +101,7 @@ console.log("First smoothed value (take_last merge):", result.y[0].toFixed(4));
 ```
 
 ```output
-First smoothed value (take_last merge): 0.3826
+First smoothed value (take_last merge): 0.3809
 ```
 
 ---
@@ -131,7 +131,7 @@ console.log("First smoothed value (weighted_average merge):", result.y[0].toFixe
 ```
 
 ```output
-First smoothed value (weighted_average merge): 0.3826
+First smoothed value (weighted_average merge): 0.3809
 ```
 
 ---

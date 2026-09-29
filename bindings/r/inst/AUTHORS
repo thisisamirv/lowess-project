@@ -56,7 +56,7 @@ Package: bit-vec (0.9.1)
 Authors: Alexis Beingessner <a.beingessner@gmail.com>
 License: Apache-2.0 OR MIT
 ----------------------------------------
-Package: bitflags (2.13.1)
+Package: bitflags (2.13.2)
 Authors: The Rust Project Developers
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -72,7 +72,7 @@ Package: bytemuck (1.25.2)
 Authors: Lokathor <zefria@gmail.com>
 License: Zlib OR Apache-2.0 OR MIT
 ----------------------------------------
-Package: bytemuck_derive (1.12.0)
+Package: bytemuck_derive (1.12.1)
 Authors: Lokathor <zefria@gmail.com>
 License: Zlib OR Apache-2.0 OR MIT
 ----------------------------------------
@@ -88,11 +88,11 @@ Package: cbindgen (0.29.4)
 Authors: Emilio Cobos Álvarez <emilio@crisal.io>, Jeff Muizelaar <jmuizelaar@mozilla.com>, Kartikaya Gupta <kats@mozilla.com>, Ryan Hunt <rhunt@eqrion.net>
 License: MPL-2.0
 ----------------------------------------
-Package: cc (1.4.3)
+Package: cc (1.5.1)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: cfg-if (1.0.4)
+Package: cfg-if (1.0.5)
 Authors: Alex Crichton <alex@alexcrichton.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -100,15 +100,15 @@ Package: cfg_aliases (0.2.2)
 Authors: Zicklag <zicklag@katharostech.com>
 License: MIT
 ----------------------------------------
-Package: clap (4.6.6)
+Package: clap (4.6.7)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: clap_builder (4.6.6)
+Package: clap_builder (4.6.7)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: clap_lex (1.1.0)
+Package: clap_lex (1.1.1)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -128,19 +128,19 @@ Package: console_error_panic_hook (0.1.7)
 Authors: Nick Fitzgerald <fitzgen@gmail.com>
 License: Apache-2.0/MIT
 ----------------------------------------
-Package: convert_case (0.11.0)
+Package: convert_case (0.12.0)
 Authors: rutrum <dave@rutrum.net>
 License: MIT
 ----------------------------------------
-Package: crossbeam-deque (0.8.7)
+Package: crossbeam-deque (0.8.8)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: crossbeam-epoch (0.9.20)
+Package: crossbeam-epoch (0.9.21)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: crossbeam-utils (0.8.22)
+Package: crossbeam-utils (0.8.23)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -160,7 +160,7 @@ Package: document-features (0.2.12)
 Authors: Slint Developers <info@slint.dev>
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: either (1.17.0)
+Package: either (1.18.0)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -176,7 +176,7 @@ Package: fastrand (2.5.0)
 Authors: Stjepan Glavina <stjepang@gmail.com>
 License: Apache-2.0 OR MIT
 ----------------------------------------
-Package: find-msvc-tools (0.1.11)
+Package: find-msvc-tools (0.1.14)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -244,7 +244,7 @@ Package: heck (0.5.0)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: indexmap (2.14.0)
+Package: indexmap (2.14.2)
 Authors: 
 License: Apache-2.0 OR MIT
 ----------------------------------------
@@ -272,7 +272,7 @@ Package: jni-sys-macros (0.4.1)
 Authors: Robert Bragg <robert@sixbynine.org>
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: js-sys (0.3.104)
+Package: js-sys (0.3.106)
 Authors: The wasm-bindgen Developers
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -300,7 +300,7 @@ Package: lock_api (0.4.14)
 Authors: Amanieu d'Antras <amanieu@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: log (0.4.33)
+Package: log (0.4.34)
 Authors: The Rust Project Developers
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -312,35 +312,35 @@ Package: memchr (2.8.3)
 Authors: Andrew Gallant <jamslam@gmail.com>, bluss
 License: Unlicense OR MIT
 ----------------------------------------
-Package: minicov (0.3.9)
+Package: minicov (0.3.8)
 Authors: Amanieu d'Antras <amanieu@gmail.com>
 License: Apache-2.0/MIT
 ----------------------------------------
-Package: naga (30.0.0)
+Package: naga (30.0.1)
 Authors: gfx-rs developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: naga-types (30.0.0)
+Package: naga-types (30.0.1)
 Authors: gfx-rs developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: napi (3.12.1)
+Package: napi (3.13.0)
 Authors: Nathan Sobo <nathan@github.com>, Yinan Long <lynweklm@gmail.com>
 License: MIT
 ----------------------------------------
-Package: napi-build (2.4.1)
+Package: napi-build (2.5.0)
 Authors: LongYinan <lynweklm@gmail.com>
 License: MIT
 ----------------------------------------
-Package: napi-derive (3.6.3)
+Package: napi-derive (3.6.9)
 Authors: LongYinan <lynweklm@gmail.com>, Forehalo <forehalo@gmail.com>
 License: MIT
 ----------------------------------------
-Package: napi-derive-backend (6.1.2)
+Package: napi-derive-backend (6.1.4)
 Authors: 
 License: MIT
 ----------------------------------------
-Package: napi-sys (3.3.0)
+Package: napi-sys (3.3.2)
 Authors: LongYinan <lynweklm@gmail.com>
 License: MIT
 ----------------------------------------
@@ -416,7 +416,7 @@ Package: oorandom (11.1.5)
 Authors: Simon Heath <icefox@dreamquest.io>
 License: MIT
 ----------------------------------------
-Package: ordered-float (5.3.0)
+Package: ordered-float (5.4.0)
 Authors: Jonathan Reem <jonathan.reem@gmail.com>, Matt Brubeck <mbrubeck@limpet.net>
 License: MIT
 ----------------------------------------
@@ -440,7 +440,7 @@ Package: portable-atomic (1.15.0)
 Authors: 
 License: Apache-2.0 OR MIT
 ----------------------------------------
-Package: portable-atomic-util (0.2.7)
+Package: portable-atomic-util (0.2.8)
 Authors: 
 License: Apache-2.0 OR MIT
 ----------------------------------------
@@ -520,17 +520,13 @@ Package: rustc_version (0.4.1)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: rustix (1.1.4)
+Package: rustix (1.1.5)
 Authors: Dan Gohman <dev@sunfishcode.online>, Jakub Konka <kubkon@jakubkonka.com>
 License: Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT
 ----------------------------------------
 Package: rustversion (1.0.23)
 Authors: David Tolnay <dtolnay@gmail.com>
 License: MIT OR Apache-2.0
-----------------------------------------
-Package: safe_arch (1.2.0)
-Authors: Lokathor <zefria@gmail.com>
-License: Zlib OR Apache-2.0 OR MIT
 ----------------------------------------
 Package: same-file (1.0.6)
 Authors: Andrew Gallant <jamslam@gmail.com>
@@ -584,7 +580,7 @@ Package: slab (0.4.12)
 Authors: Carl Lerche <me@carllerche.com>
 License: MIT
 ----------------------------------------
-Package: smallvec (1.15.2)
+Package: smallvec (1.16.2)
 Authors: The Servo Project Developers
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -616,13 +612,17 @@ Package: termcolor (1.4.1)
 Authors: Andrew Gallant <jamslam@gmail.com>
 License: Unlicense OR MIT
 ----------------------------------------
-Package: thiserror (2.0.20)
+Package: thiserror (2.0.21)
 Authors: David Tolnay <dtolnay@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: thiserror-impl (2.0.20)
+Package: thiserror-impl (2.0.21)
 Authors: David Tolnay <dtolnay@gmail.com>
 License: MIT OR Apache-2.0
+----------------------------------------
+Package: tokio (1.53.1)
+Authors: Tokio Contributors <team@tokio.rs>
+License: MIT
 ----------------------------------------
 Package: toml (0.9.12+spec-1.1.0)
 Authors: 
@@ -640,7 +640,7 @@ Package: toml_writer (1.1.2+spec-1.1.0)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: unicode-ident (1.0.24)
+Package: unicode-ident (1.0.26)
 Authors: David Tolnay <dtolnay@gmail.com>
 License: (MIT OR Apache-2.0) AND Unicode-3.0
 ----------------------------------------
@@ -660,73 +660,69 @@ Package: walkdir (2.5.0)
 Authors: Andrew Gallant <jamslam@gmail.com>
 License: Unlicense/MIT
 ----------------------------------------
-Package: wasm-bindgen (0.2.127)
+Package: wasm-bindgen (0.2.129)
 Authors: The wasm-bindgen Developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: wasm-bindgen-futures (0.4.77)
+Package: wasm-bindgen-futures (0.4.79)
 Authors: The wasm-bindgen Developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: wasm-bindgen-macro (0.2.127)
+Package: wasm-bindgen-macro (0.2.129)
 Authors: The wasm-bindgen Developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: wasm-bindgen-macro-support (0.2.127)
+Package: wasm-bindgen-macro-support (0.2.129)
 Authors: The wasm-bindgen Developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: wasm-bindgen-shared (0.2.127)
+Package: wasm-bindgen-shared (0.2.129)
 Authors: The wasm-bindgen Developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: wasm-bindgen-test (0.3.77)
+Package: wasm-bindgen-test (0.3.79)
 Authors: The wasm-bindgen Developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: wasm-bindgen-test-macro (0.3.77)
+Package: wasm-bindgen-test-macro (0.3.79)
 Authors: The wasm-bindgen Developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: wasm-bindgen-test-shared (0.2.127)
+Package: wasm-bindgen-test-shared (0.2.129)
 Authors: The wasm-bindgen Developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: web-sys (0.3.104)
+Package: web-sys (0.3.106)
 Authors: The wasm-bindgen Developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: wgpu (30.0.0)
+Package: wgpu (30.0.1)
 Authors: gfx-rs developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: wgpu-core (30.0.0)
+Package: wgpu-core (30.0.1)
 Authors: gfx-rs developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: wgpu-core-deps-apple (30.0.0)
+Package: wgpu-core-deps-apple (30.0.1)
 Authors: gfx-rs developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: wgpu-core-deps-windows-linux-android (30.0.0)
+Package: wgpu-core-deps-windows-linux-android (30.0.1)
 Authors: gfx-rs developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: wgpu-hal (30.0.0)
+Package: wgpu-hal (30.0.1)
 Authors: gfx-rs developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: wgpu-naga-bridge (30.0.0)
+Package: wgpu-naga-bridge (30.0.1)
 Authors: gfx-rs developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: wgpu-types (30.0.0)
+Package: wgpu-types (30.0.1)
 Authors: gfx-rs developers
 License: MIT OR Apache-2.0
-----------------------------------------
-Package: wide (1.7.0)
-Authors: Lokathor <zefria@gmail.com>
-License: Zlib OR Apache-2.0 OR MIT
 ----------------------------------------
 Package: winapi-util (0.1.11)
 Authors: Andrew Gallant <jamslam@gmail.com>
@@ -784,11 +780,11 @@ Package: winnow (0.7.15)
 Authors: 
 License: MIT
 ----------------------------------------
-Package: zerocopy (0.8.56)
+Package: zerocopy (0.8.59)
 Authors: 
 License: BSD-2-Clause OR Apache-2.0 OR MIT
 ----------------------------------------
-Package: zerocopy-derive (0.8.56)
+Package: zerocopy-derive (0.8.59)
 Authors: 
 License: BSD-2-Clause OR Apache-2.0 OR MIT
 ----------------------------------------

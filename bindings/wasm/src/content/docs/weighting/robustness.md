@@ -43,7 +43,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.1662
+y[0]: 0.1671
 ```
 
 ---
@@ -69,7 +69,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.1635
+y[0]: 0.1621
 ```
 
 ---
@@ -95,7 +95,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.1410
+y[0]: 0.1627
 ```
 
 ---
@@ -133,13 +133,6 @@ result.robustness_weights.forEach((w, i) => {
 });
 ```
 
-```output
-Potential outlier at index 26: weight = 0.484
-Potential outlier at index 31: weight = 0.470
-Potential outlier at index 70: weight = 0.447
-Potential outlier at index 75: weight = 0.483
-```
-
 ---
 
 ## Scale Estimation
@@ -167,7 +160,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.1662
+y[0]: 0.1671
 ```
 
 ---
@@ -193,5 +186,5 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.1661
+y[0]: 0.1671
 ```

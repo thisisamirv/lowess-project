@@ -305,9 +305,8 @@ check_stats_lowess <- function(
             numeric(1)
         )
         first_divergence <- which(iteration_diffs > tolerance)[1]
-        iteration_summary <- paste0(
-            sprintf("%d=%.17g", iteration_counts, iteration_diffs),
-            collapse = ", "
+        iteration_summary <- toString(
+            sprintf("%d=%.17g", iteration_counts, iteration_diffs)
         )
         failure_message <- sprintf(
             paste0(

@@ -49,7 +49,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.3826
+y[0]: 0.3809
 ```
 
 ---
@@ -75,7 +75,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.4067
+y[0]: 0.4069
 ```
 
 ---
@@ -101,7 +101,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.4358
+y[0]: 0.4382
 ```
 
 ---
@@ -127,7 +127,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.3759
+y[0]: 0.3744
 ```
 
 ---
@@ -179,7 +179,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.3817
+y[0]: 0.3810
 ```
 
 ---
@@ -205,7 +205,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.4508
+y[0]: 0.4546
 ```
 
 ---

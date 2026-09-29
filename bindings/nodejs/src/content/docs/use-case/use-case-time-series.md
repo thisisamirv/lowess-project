@@ -32,7 +32,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 11.3216
+y[0]: 11.3116
 ```
 
 ---
@@ -91,7 +91,7 @@ console.log(`95% PI: [${result.prediction_lower[0]}, ${result.prediction_upper[0
 ```
 
 ```output
-95% PI: [0.15311435602040568, 0.29577882767881647]
+95% PI: [0.1561443787744956, 0.2989044886023961]
 ```
 
 ---
@@ -113,7 +113,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 11.3273
+y[0]: 11.3271
 ```
 
 ---
@@ -138,7 +138,7 @@ console.log("Trend y[0] values:", trends.map(tr => tr[0].toFixed(4)));
 ```
 
 ```output
-Trend y[0] values: [ '0.1317', '0.2244', '0.3344' ]
+Trend y[0] values: [ '0.1317', '0.2275', '0.3325' ]
 ```
 
 ---
@@ -165,7 +165,7 @@ console.log(`R2: ${result.diagnostics.r_squared.toFixed(3)}`);
 ```
 
 ```output
-R2: 0.973
+R2: 0.976
 ```
 
 ---

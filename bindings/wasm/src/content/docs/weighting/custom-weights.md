@@ -101,7 +101,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.3237
+y[0]: 0.3230
 ```
 
 ---
@@ -127,7 +127,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.1522
+y[0]: 0.1425
 ```
 
 ---
@@ -154,7 +154,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 1.7984
+y[0]: 0.8612
 ```
 
 ---

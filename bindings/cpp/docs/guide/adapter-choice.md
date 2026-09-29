@@ -68,8 +68,8 @@ int main() {
 ```
 
 ```output
-95% CI at midpoint: [0.0432732, 0.103712]
-R2: 0.966427
+95% CI at midpoint: [0.0433099, 0.103768]
+R2: 0.966845
 ```
 
 ---
@@ -133,7 +133,7 @@ int main() {
 ```
 
 ```output
-Smoothed y[0]: 0.257845
+Smoothed y[0]: 0.257796
 ```
 
 ---
