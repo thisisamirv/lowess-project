@@ -14,7 +14,7 @@ endif
 
 PYTHON ?= python3
 
-CHECKSTYLE_VERSION := 14.1.0
+CHECKSTYLE_VERSION := 14.3.0
 CHECKSTYLE_JAR := checkstyle-$(CHECKSTYLE_VERSION)-all.jar
 CHECKSTYLE_URL := https://github.com/checkstyle/checkstyle/releases/download/checkstyle-$(CHECKSTYLE_VERSION)/$(CHECKSTYLE_JAR)
 

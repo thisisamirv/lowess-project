@@ -14,7 +14,7 @@ endif
 
 PYTHON ?= python3
 
-GOLANGCI_LINT_VERSION := v2.13.2
+GOLANGCI_LINT_VERSION := v2.14.0
 
 GO_PKG := fastlowess-go
 GO_DIR := bindings/go

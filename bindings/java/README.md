@@ -49,7 +49,7 @@ Read more about how LOWESS works in the [Concepts](https://thisisamirv.github.io
 
 ### Speed
 
-The `lowess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average **200-327x faster** than Python's `statsmodels.lowess` and **2-3x faster** than R's `lowess`.
+The `lowess` project beats the competition in terms of speed, especially with multi-threaded parallel execution. It is on average **200-327x faster** than Python's `statsmodels.lowess`, and **up to 12x faster** than R's `lowess` with parallel execution (averaging ~3.6x); single-threaded performance is comparable to R's `lowess` on typical inputs, pulling ahead by 1.6-2.7x at scale.
 
 For more details on the performance comparison, see the [Benchmarks](https://thisisamirv.github.io/lowess-project/java/benchmarks/) page.
 

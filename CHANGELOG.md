@@ -78,12 +78,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced the `iteration_loop_with_callback` clippy suppression with a typed options bundle for its iteration controls and callbacks.
 - Marked `WeightFunction` as non-exhaustive and made GPU handling reject unsupported future kernels explicitly.
 - Removed the `accumulate_wls`/`solve_wls` methods from the `WLSSolver` trait (and their backing free functions): they became dead once the WLS fit path (`LinearFit::fit_wls`) was changed to a hand-written scalar loop preserving R's exact arithmetic order, superseding this SIMD-based formulation. `WLSSolver` is now a plain marker trait. Removed the now-unused `wide` dependency this code was the only user of.
+- Bumped the vendored KaTeX CDN version from `0.18.7` to `0.18.9`, updating SRI hashes to match.
 
 **fastLowess:**
 
 - Breaking change: migrated wrappers and binding translation from individual `return_*`/`cv_*` calls to grouped `.outputs([...])` and `.cv(CVBuilder...)` configuration.
 - Replaced `std::mem::forget` with `Box::into_raw` in `vec_to_raw_ptr`, making the FFI ownership transfer explicit; bindings still release it through `free_raw_f64_buffer`.
 - Implemented `std::error::Error` for `BindingError`.
+- Bumped the vendored KaTeX CDN version from `0.18.7` to `0.18.9`, updating SRI hashes to match.
 
 **C++:**
 
@@ -94,6 +96,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Go:**
 
 - Represent unavailable diagnostic metrics as `nil` optional values instead of `NaN` sentinels.
+- Bumped the pinned `golangci-lint` install-script version from `v2.13.2` to `v2.14.0`.
+
+**Java:**
+
+- Bumped the pinned Checkstyle standalone jar version from `14.1.0` to `14.3.0`.
 
 **Julia:**
 

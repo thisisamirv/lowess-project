@@ -12,8 +12,45 @@ Compares `stats::lowess` (base R) against `rfastlowess` (this package) across a 
 | **Financial** | n = 500 / 1 000 / 5 000 | Cumulative-return time series, fraction 0.1 |
 | **Scientific** | n = 500 / 1 000 / 5 000 | Damped-oscillator signal, fraction 0.15 |
 | **Genomic** | n = 1 000 / 5 000 / 100 000 | Step-function expression data, fraction 0.1 |
-| **Pathological** | clustered, high-noise | Edge cases: clustered x-values and high-noise signal |
+| **Pathological** | clustered, high-noise, extreme outliers, constant y | Edge cases: clustered x-values, high-noise signal, extreme outliers, and a constant y signal |
 | **Large Scale** | n = 20 000 / 50 000 | Stress tests at scale: exact fit (`delta = 0`), interpolation shortcut, high iteration count, high fraction |
+
+## Results
+
+Median times per scenario, and rfastlowess's speedup over `stats::lowess` (in parentheses):
+
+| Scenario | `stats::lowess` | rfastlowess (serial) | rfastlowess (parallel) |
+| --- | ---: | ---: | ---: |
+| scale_1000 | 0.31 ms | 0.28 ms (1.1×) | 0.28 ms (1.1×) |
+| scale_5000 | 1.34 ms | 1.36 ms (1.0×) | 1.00 ms (1.3×) |
+| scale_10000 | 2.42 ms | 2.75 ms (0.9×) | 1.39 ms (1.7×) |
+| fraction_0.05 | 0.82 ms | 0.97 ms (0.8×) | 0.97 ms (0.8×) |
+| fraction_0.1 | 1.63 ms | 1.35 ms (1.2×) | 0.87 ms (1.9×) |
+| fraction_0.2 | 2.40 ms | 2.50 ms (1.0×) | 1.06 ms (2.3×) |
+| fraction_0.3 | 3.15 ms | 3.68 ms (0.9×) | 1.22 ms (2.6×) |
+| fraction_0.5 | 4.89 ms | 5.90 ms (0.8×) | 1.61 ms (3.0×) |
+| fraction_0.67 | 6.52 ms | 7.68 ms (0.8×) | 1.83 ms (3.6×) |
+| iterations_0 | 0.47 ms | 0.74 ms (0.6×) | 0.33 ms (1.4×) |
+| iterations_1 | 0.99 ms | 1.25 ms (0.8×) | 0.77 ms (1.3×) |
+| iterations_2 | 1.52 ms | 1.75 ms (0.9×) | 0.88 ms (1.7×) |
+| iterations_3 | 2.02 ms | 2.24 ms (0.9×) | 1.16 ms (1.7×) |
+| iterations_5 | 2.93 ms | 3.27 ms (0.9×) | 1.54 ms (1.9×) |
+| iterations_10 | 5.75 ms | 6.33 ms (0.9×) | 2.59 ms (2.2×) |
+| financial_500 | 0.11 ms | 0.13 ms (0.9×) | 0.14 ms (0.8×) |
+| financial_1000 | 0.18 ms | 0.19 ms (0.9×) | 0.21 ms (0.9×) |
+| financial_5000 | 1.51 ms | 1.19 ms (1.3×) | 0.66 ms (2.3×) |
+| scientific_500 | 0.32 ms | 0.22 ms (1.4×) | 0.22 ms (1.4×) |
+| scientific_1000 | 0.56 ms | 0.38 ms (1.5×) | 0.39 ms (1.4×) |
+| scientific_5000 | 1.73 ms | 1.89 ms (0.9×) | 1.16 ms (1.5×) |
+| genomic_1000 | 0.32 ms | 0.28 ms (1.2×) | 0.29 ms (1.1×) |
+| genomic_5000 | 1.17 ms | 1.25 ms (0.9×) | 0.91 ms (1.3×) |
+| genomic_100000 | 24.02 ms | 26.26 ms (0.9×) | 6.99 ms (3.4×) |
+| clustered | 1.88 ms | 2.38 ms (0.8×) | 0.89 ms (2.1×) |
+| high_noise | 6.98 ms | 8.08 ms (0.9×) | 2.34 ms (3.0×) |
+| extreme_outliers | 5.32 ms | 6.15 ms (0.9×) | 2.67 ms (2.0×) |
+| constant_y | 1.50 ms | 2.16 ms (0.7×) | 0.73 ms (2.0×) |
+
+At small scenario sizes, fixed overhead (FFI call, allocation) can outweigh `rfastlowess`'s per-point algorithmic work, so serial speedup dips below 1× on several scenarios; the parallel backend recovers a speedup in almost every case once there's enough work to spread across threads. See [Large Scale Benchmarks](#large-scale-benchmarks) below for how this trend continues at higher n.
 
 ## Large Scale Benchmarks
 
@@ -30,12 +67,12 @@ Median times, and fastLowess's speedup over `stats::lowess`:
 
 | Variant | `stats::lowess` | fastLowess (serial) | fastLowess (parallel) | Speedup (serial) | Speedup (parallel) |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| `large_delta_0` | 5.12 s | 3.13 s | 1.06 s | 1.6× | 4.8× |
-| `large_delta_0.1` | 13.8 ms | 8.8 ms | 6.1 ms | 1.6× | 2.3× |
-| `large_high_iter` | 37.7 s | 9.1 s | 3.3 s | 4.1× | 11.6× |
-| `large_high_fraction` | 16.2 s | 3.5 s | 0.7 s | 4.6× | 22.3× |
+| `large_delta_0` | 10.16 s | 6.32 s | 1.38 s | 1.6× | 7.3× |
+| `large_delta_0.1` | 11.48 ms | 13.75 ms | 5.77 ms | 0.8× | 2.0× |
+| `large_high_iter` | 37.17 s | 13.62 s | 3.81 s | 2.7× | 9.8× |
+| `large_high_fraction` | 10.90 s | 4.72 s | 0.90 s | 2.3× | 12.2× |
 
-The speedup grows with the amount of per-point work (more iterations, wider fraction): parallel execution pays off most when there's more to parallelize, reaching **22×** at `large_high_fraction`. The `large_delta_0.1` variant shows how much of `stats::lowess`'s exact-fit cost simply disappears once its interpolation shortcut is allowed to kick in (5.12s → 13.8ms) — fastLowess's own shortcut yields a similar drop (3.13s → 8.8ms serial).
+The speedup grows with the amount of per-point work (more iterations, wider fraction): parallel execution pays off most when there's more to parallelize, reaching **12.2×** at `large_high_fraction`. The `large_delta_0.1` variant shows how much of `stats::lowess`'s exact-fit cost simply disappears once its interpolation shortcut is allowed to kick in (10.16s → 11.48ms) — fastLowess's own shortcut yields a similar drop (6.32s → 13.75ms serial), though at that point fixed per-call overhead dominates enough that the serial backend no longer outpaces `stats::lowess`.
 
 ## GPU Benchmarks
 
