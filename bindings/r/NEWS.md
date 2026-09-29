@@ -15,6 +15,10 @@ This changelog includes end-user changes only. For internal development notes, s
 * Breaking change: replaced individual `return_*` arguments with grouped `outputs`, and replaced `Lowess()`'s four `cv_*` arguments with `cv = cv_opts(...)`.
 * Represent unavailable diagnostic metrics as R `NA` rather than generic `NaN` values.
 
+### Fixed
+
+* Fixed the default `boundary_policy` (`"extend"`) letting synthetic boundary points bias the shared robustness scale estimate used to reweight every point, compounding across robustness iterations.
+
 ## 4.1.0
 
 ### Added

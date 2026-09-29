@@ -13,6 +13,10 @@ This changelog includes end-user changes only. For internal development notes, s
 * Requires C++17 for the public wrapper's use of `std::optional`.
 * Represent unavailable diagnostics as empty `std::optional<double>` values instead of `NaN` sentinels.
 
+### Fixed
+
+* Fixed the default `boundary_policy` (`"extend"`) letting synthetic boundary points bias the shared robustness scale estimate used to reweight every point, compounding across robustness iterations.
+
 ## 4.1.0
 
 ### Added

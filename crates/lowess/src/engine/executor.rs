@@ -358,6 +358,9 @@ struct IterationLoopOptions<'a, T: Float> {
     smooth_pass_fn: Option<SmoothPassFn<T>>,
     interval_pass_fn: Option<IntervalPassFn<T>>,
     custom_weights: Option<&'a [T]>,
+    // Number of synthetic boundary points padded onto each side of `x`/`y` (0 if
+    // unpadded), so robustness scale statistics can be restricted to the real data.
+    pad_len: usize,
 }
 
 struct RobustnessUpdateBuffers<'a, T> {
@@ -817,6 +820,7 @@ impl<T: Float> LowessExecutor<T> {
                 smooth_pass_fn: self.custom_smooth_pass,
                 interval_pass_fn: self.custom_interval_pass,
                 custom_weights: effective_custom_weights,
+                pad_len,
             },
             buffer,
         )?;
@@ -937,6 +941,7 @@ impl<T: Float> LowessExecutor<T> {
             smooth_pass_fn,
             interval_pass_fn,
             custom_weights,
+            pad_len,
         } = options;
 
         if let Some(fit_pass) = self.custom_fit_pass {
@@ -945,6 +950,10 @@ impl<T: Float> LowessExecutor<T> {
         }
 
         let n = x.len();
+        // Restrict robustness scale statistics (median/mean-abs) to the real data,
+        // excluding synthetic boundary padding so it doesn't skew the shared scale
+        // estimate used to reweight every point on the next iteration.
+        let scale_range = pad_len..(n - pad_len);
         let mut internal_buffers;
         let buffers = if let Some(b) = buffer {
             b.prepare(n, convergence_tolerance.is_some());
@@ -1035,6 +1044,7 @@ impl<T: Float> LowessExecutor<T> {
                     },
                     robustness_updater,
                     self.scaling_method,
+                    scale_range.clone(),
                 )
             {
                 break;
@@ -1186,13 +1196,15 @@ impl<T: Float> LowessExecutor<T> {
     // Update robustness weights based on residuals. Returns `true` if the residual scale
     // was found to be degenerate (see `RobustnessMethod::apply_robustness_weights`), in
     // which case `robustness_weights` was left unchanged and the caller should stop
-    // robustifying.
+    // robustifying. `scale_range` restricts the scale statistics to the real (non-padded)
+    // data; weights are still updated for every point, including any padding.
     fn update_robustness_weights(
         y: &[T],
         y_smooth: &[T],
         buffers: RobustnessUpdateBuffers<'_, T>,
         robustness_updater: &RobustnessMethod,
         scaling_method: ScalingMethod,
+        scale_range: core::ops::Range<usize>,
     ) -> bool {
         // Inline compute_residuals: residuals[i] = y[i] - y_smooth[i]
         for i in 0..y.len() {
@@ -1203,6 +1215,7 @@ impl<T: Float> LowessExecutor<T> {
             buffers.robustness_weights,
             scaling_method,
             buffers.scratch,
+            scale_range,
         )
     }
 

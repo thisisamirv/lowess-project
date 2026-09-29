@@ -18,6 +18,10 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Represent unavailable diagnostic metrics as `nil` optional values instead of `NaN` sentinels.
 
+### Fixed
+
+* Fixed the default `BoundaryPolicy` (`"extend"`) letting synthetic boundary points bias the shared robustness scale estimate used to reweight every point, compounding across robustness iterations.
+
 ## 4.1.0
 
 ### Added

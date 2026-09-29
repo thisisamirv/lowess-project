@@ -10,6 +10,10 @@ This changelog includes end-user changes only. For internal development notes, s
 * Added grouped `outputs` and nested `cv` constructor options, plus grouped prediction outputs, while preserving legacy keyword arguments.
 * Added an "Alternative Software" guide comparing `fastlowess` with `statsmodels.lowess()`.
 
+### Fixed
+
+* Fixed the default `boundary_policy` (`"extend"`) letting synthetic boundary points bias the shared robustness scale estimate used to reweight every point, compounding across robustness iterations.
+
 ## 4.1.0
 
 ### Added

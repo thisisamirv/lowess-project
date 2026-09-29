@@ -11,6 +11,7 @@
 // Robust scale estimation via MAD with fallback to MAR.
 
 // External dependencies
+use core::ops::Range;
 use num_traits::Float;
 
 // Internal dependencies
@@ -48,18 +49,25 @@ impl RobustnessMethod {
 
     // Apply robustness weights using the configured method. R's LOWESS stops
     // when the tuned median residual is effectively zero relative to the mean.
+    // `scale_range` restricts the median/mean-abs scale statistics to the real
+    // (non-padded) residuals; weights are still assigned for every residual in
+    // `residuals`/`weights`, including any padding outside `scale_range`.
     pub fn apply_robustness_weights<T: Float>(
         &self,
         residuals: &[T],
         weights: &mut [T],
         scaling_method: ScalingMethod,
         scratch: &mut [T],
+        scale_range: Range<usize>,
     ) -> bool {
         if residuals.is_empty() {
             return false;
         }
 
-        let base_scale = self.compute_scale(residuals, scaling_method, scratch);
+        let scale_residuals = &residuals[scale_range.clone()];
+        let range_len = scale_residuals.len();
+        let scale_scratch = &mut scratch[..range_len];
+        let base_scale = self.compute_scale(scale_residuals, scaling_method, scale_scratch);
         let (method_type, tuning_constant) = match self {
             Self::Bisquare => (0, Self::DEFAULT_BISQUARE_C),
             Self::Huber => (1, Self::DEFAULT_HUBER_C),
@@ -68,17 +76,17 @@ impl RobustnessMethod {
 
         let c_t = T::from(tuning_constant).unwrap_or(T::one());
 
-        let mean_abs = residuals
+        let mean_abs = scale_residuals
             .iter()
             .fold(T::zero(), |sum, residual| sum + residual.abs())
-            / T::from(residuals.len()).unwrap_or(T::one());
+            / T::from(range_len).unwrap_or(T::one());
         let tuned_scale = if method_type == 0 && matches!(scaling_method, ScalingMethod::MAR) {
-            let mid = scratch.len() / 2;
-            if scratch.len().is_multiple_of(2) {
-                let lower = scratch[..mid].iter().copied().fold(T::zero(), T::max);
-                T::from(3.0).unwrap_or(T::one()) * (lower + scratch[mid])
+            let mid = range_len / 2;
+            if range_len.is_multiple_of(2) {
+                let lower = scale_scratch[..mid].iter().copied().fold(T::zero(), T::max);
+                T::from(3.0).unwrap_or(T::one()) * (lower + scale_scratch[mid])
             } else {
-                c_t * scratch[mid]
+                c_t * scale_scratch[mid]
             }
         } else {
             base_scale * c_t

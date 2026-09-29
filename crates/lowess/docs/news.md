@@ -20,6 +20,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Improved robust fitting for sparse and outlier-heavy data, including neighborhoods with effectively zero robustness weights.
 * Improved numerical stability and agreement with Cleveland's LOWESS reference for near-degenerate, asymmetric, and high-iteration fits.
+* Fixed the default `boundary_policy` ("extend") letting synthetic boundary points bias the shared robustness scale estimate used to reweight every point, compounding across robustness iterations.
 
 ## 4.1.0
 

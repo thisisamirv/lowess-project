@@ -40,6 +40,7 @@ fn test_bisquare_weight_computation() {
         &mut weights,
         ScalingMethod::default(),
         &mut scratch,
+        0..residuals.len(),
     );
 
     // Verify all weights are in valid range
@@ -80,6 +81,7 @@ fn test_bisquare_smooth_downweighting() {
         &mut weights,
         ScalingMethod::default(),
         &mut scratch,
+        0..residuals.len(),
     );
 
     // Weights should decrease monotonically with residual magnitude
@@ -113,6 +115,7 @@ fn test_huber_weight_computation() {
         &mut weights,
         ScalingMethod::default(),
         &mut scratch,
+        0..residuals.len(),
     );
 
     // Verify all weights are in valid range
@@ -146,6 +149,7 @@ fn test_huber_moderate_outliers() {
         &mut weights,
         ScalingMethod::default(),
         &mut scratch,
+        0..residuals.len(),
     );
 
     // All weights should be positive (Huber doesn't completely reject points)
@@ -184,6 +188,7 @@ fn test_talwar_hard_rejection() {
         &mut weights,
         ScalingMethod::default(),
         &mut scratch,
+        0..residuals.len(),
     );
 
     // Small residual should have weight 1.0
@@ -208,6 +213,7 @@ fn test_talwar_extreme_outliers() {
         &mut weights,
         ScalingMethod::default(),
         &mut scratch,
+        0..residuals.len(),
     );
 
     // Extreme outliers should be completely rejected
@@ -243,6 +249,7 @@ fn test_robustness_empty_input() {
             &mut weights,
             ScalingMethod::default(),
             &mut scratch,
+            0..residuals.len(),
         );
 
         assert!(
@@ -273,6 +280,7 @@ fn test_robustness_zero_residuals() {
             &mut weights,
             ScalingMethod::default(),
             &mut scratch,
+            0..residuals.len(),
         );
 
         // All weights should remain 1.0 for zero residuals
@@ -303,6 +311,7 @@ fn test_robustness_single_point() {
             &mut weights,
             ScalingMethod::default(),
             &mut scratch,
+            0..residuals.len(),
         );
 
         assert_eq!(weights.len(), 1, "Should have one weight");
@@ -334,6 +343,7 @@ fn test_robustness_identical_residuals() {
             &mut weights,
             ScalingMethod::default(),
             &mut scratch,
+            0..residuals.len(),
         );
 
         // All weights should be equal
@@ -361,18 +371,21 @@ fn test_robustness_method_comparison() {
         &mut weights_bisquare,
         ScalingMethod::default(),
         &mut scratch,
+        0..residuals.len(),
     );
     RobustnessMethod::Huber.apply_robustness_weights(
         &residuals,
         &mut weights_huber,
         ScalingMethod::default(),
         &mut scratch,
+        0..residuals.len(),
     );
     RobustnessMethod::Talwar.apply_robustness_weights(
         &residuals,
         &mut weights_talwar,
         ScalingMethod::default(),
         &mut scratch,
+        0..residuals.len(),
     );
 
     // All methods should downweight the large outlier (index 4)
@@ -412,6 +425,7 @@ fn test_robustness_negative_residuals() {
             &mut weights,
             ScalingMethod::default(),
             &mut scratch,
+            0..residuals.len(),
         );
 
         // Symmetric residuals should get symmetric weights
@@ -436,6 +450,7 @@ fn test_robustness_extreme_residual_values() {
         &mut weights,
         ScalingMethod::default(),
         &mut scratch,
+        0..residuals.len(),
     );
 
     assert_relative_eq!(weights[0], 1.0, epsilon = 1e-12);
@@ -459,6 +474,7 @@ fn test_robustness_mar_fallback() {
         &mut weights,
         ScalingMethod::default(),
         &mut scratch,
+        0..residuals.len(),
     );
 
     assert_relative_eq!(weights[2], 0.5625, epsilon = 1e-12);
@@ -478,6 +494,7 @@ fn test_robustness_all_outliers_except_one() {
         &mut weights,
         ScalingMethod::default(),
         &mut scratch,
+        0..residuals.len(),
     );
 
     // The point at 0 should have the highest weight
@@ -497,6 +514,7 @@ fn test_huber_talwar_zero_scale() {
         &mut weights,
         ScalingMethod::default(),
         &mut scratch,
+        0..residuals.len(),
     );
     for &w in &weights {
         assert_relative_eq!(w, 1.0, epsilon = 1e-12);
@@ -507,6 +525,7 @@ fn test_huber_talwar_zero_scale() {
         &mut weights,
         ScalingMethod::default(),
         &mut scratch,
+        0..residuals.len(),
     );
     for &w in &weights {
         assert_relative_eq!(w, 1.0, epsilon = 1e-12);
@@ -527,6 +546,7 @@ fn test_robustness_nan_inf_residuals() {
         &mut weights,
         ScalingMethod::default(),
         &mut scratch,
+        0..residuals.len(),
     );
 
     // We don't strictly define what NaN/Inf should result in,
@@ -555,6 +575,7 @@ fn test_mar_degenerate_scale_reports_true() {
         &mut weights,
         ScalingMethod::MAR,
         &mut scratch,
+        0..residuals.len(),
     );
 
     assert!(

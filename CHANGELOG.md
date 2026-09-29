@@ -135,6 +135,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrected the high-iteration MAR regression fixture to the current `stats::lowess` output.
 - Matched Cleveland/R's delta interpolation order (`alpha * y1 + (1 - alpha) * y0`) so interpolated roundoff residuals preserve the correct robustness-cycle phase.
 - Preserved sparse-fit robustness cycles found by `quickcheck`; long-iteration comparisons allow bounded floating-point drift while fixed regressions pin each branch.
+- Fixed the robustness scale/mean-absolute-residual statistics being computed over the full boundary-padded array (when `boundary_policy` pads data): synthetic boundary points' near-zero residuals contaminated the shared scale estimate used to reweight every point, compounding across robustness iterations. `update_robustness_weights` now restricts these statistics to the original (unpadded) data range while still assigning a weight to every residual, including padding.
 
 **fastLowess:**
 
