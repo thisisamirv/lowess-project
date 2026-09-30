@@ -27,12 +27,12 @@ Useful links:
 ## Author
 
 **Maintainer**: Amir Valizadeh <thisisamirv@gmail.com>
-([ORCID](https://orcid.org/0000-0001-5983-8527)) \[funder\]
+([ORCID](https://orcid.org/0000-0001-5983-8527))
 
 Authors:
 
 - Amir Valizadeh <thisisamirv@gmail.com>
-  ([ORCID](https://orcid.org/0000-0001-5983-8527)) \[funder\]
+  ([ORCID](https://orcid.org/0000-0001-5983-8527))
 
 Other contributors:
 

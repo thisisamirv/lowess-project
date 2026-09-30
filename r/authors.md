@@ -2,7 +2,7 @@
 
 ## Authors
 
-- **Amir Valizadeh**. Author, maintainer, funder.
+- **Amir Valizadeh**. Author, maintainer.
   [](https://orcid.org/0000-0001-5983-8527)
 
 - **Aleksei Chirkunov**. Reviewer.  
@@ -510,23 +510,23 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Philip Degarmo <aclysma@gmail.com>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: pyo3 (0.29.2)
+    Package: pyo3 (0.29.3)
     Authors: PyO3 Project and Contributors <https://github.com/PyO3>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: pyo3-build-config (0.29.2)
+    Package: pyo3-build-config (0.29.3)
     Authors: PyO3 Project and Contributors <https://github.com/PyO3>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: pyo3-ffi (0.29.2)
+    Package: pyo3-ffi (0.29.3)
     Authors: PyO3 Project and Contributors <https://github.com/PyO3>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: pyo3-macros (0.29.2)
+    Package: pyo3-macros (0.29.3)
     Authors: PyO3 Project and Contributors <https://github.com/PyO3>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: pyo3-macros-backend (0.29.2)
+    Package: pyo3-macros-backend (0.29.3)
     Authors: PyO3 Project and Contributors <https://github.com/PyO3>
     License: MIT OR Apache-2.0
     ----------------------------------------
