@@ -15,15 +15,6 @@ members = [
 ]
 exclude = ["bindings/r/src/vendor"]
 
-[workspace.package]
-authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
-edition = "2024"
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/thisisamirv/lowess-project"
-homepage = "https://github.com/thisisamirv/lowess-project"
-rust-version = "1.89"
-readme = "README.md"
-
 [profile.release]
 opt-level = 3
 lto = true

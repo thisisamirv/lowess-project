@@ -11,7 +11,6 @@ license = "MIT OR Apache-2.0"
 description = "High-performance LOWESS (Locally Weighted Scatterplot Smoothing)"
 readme = "README.md"
 repository = "https://github.com/thisisamirv/lowess-project"
-homepage = "https://github.com/thisisamirv/lowess-project"
 documentation = "https://docs.rs/fastLowess"
 keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
 categories = ["science", "algorithms"]
