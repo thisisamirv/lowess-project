@@ -100,23 +100,12 @@ expect_stats_lowess_sorted <- function(
 
 #' Check whether `stats::lowess()`'s own bisquare scale is noise, not signal.
 #'
-#' Companion to `reference_is_ulp_unstable()`: that function empirically
-#' searches for a 1-ULP input perturbation that flips the fit, but for some
-#' counterexamples the flipping perturbation is very specific and can be
-#' missed by a bounded random search (confirmed on a real macos-latest/R
-#' release runner: 1000 random trials failed to find it for a known-bad
-#' case, even though the underlying instability is real and reproducible).
-#'
-#' This is a direct, deterministic check on the actual mechanism: at each
-#' reweighting step from iteration `k` to `k + 1`, `stats::lowess()`
-#' computes `cmad` (the median-absolute-residual-derived bisquare scale)
-#' from the current fit's residuals, then classifies each residual against
-#' hard cutoffs `0.001 * cmad` / `0.999 * cmad`. If `cmad` itself is smaller
-#' than a generous multiple of the response's own floating-point precision,
-#' every residual at that step is rounding noise from an already-exact fit,
-#' not a real signal - so which side of the cutoff each residual falls on
-#' is decided by whichever compiler/platform computed the fit, and there is
-#' no well-defined answer to compare a second implementation against.
+#' Deterministic companion to `reference_is_ulp_unstable()`, whose bounded
+#' random search can miss the specific perturbation that flips a fit. If `cmad`
+#' at any reweighting step falls below the response's own floating-point
+#' precision, the residuals there are rounding noise, so which side of the
+#' `0.001`/`0.999 * cmad` cutoffs each lands on is decided by the compiler and
+#' there is no well-defined answer to compare against.
 #' @noRd
 cmad_is_noise_floor <- function(x, y, fraction, iterations, guard = 100) {
     if (iterations < 1L) {
@@ -144,37 +133,14 @@ cmad_is_noise_floor <- function(x, y, fraction, iterations, guard = 100) {
 
 #' Check whether `stats::lowess()` itself is stable under 1-ULP input noise.
 #'
-#' The bisquare robustness reweighting in `stats::lowess()` (and this
-#' package) applies a *hard* cutoff: residuals below `0.001 * cmad` get
-#' weight 1, residuals above `0.999 * cmad` get weight exactly 0, and
-#' `cmad` is itself derived from the residuals. For degenerate fuzzed
-#' inputs (e.g. mostly-zero responses with one or two spikes and few
-#' points), the initial fit can reproduce the response to within a few ULPs,
-#' so every downstream residual - and thus `cmad` and the cutoffs - are
-#' themselves pure floating-point rounding noise rather than a real signal.
-#' When a residual sits within that noise band right at the cutoff, which
-#' side of the hard threshold it lands on is decided by the last bit or two
-#' of rounding in the local weighted regression - which is not required by
-#' IEEE 754, or by R's own documentation, to be identical across compilers
-#' (FMA contraction, summation order, vectorization all vary between Apple
-#' Clang 14/17/21, rustc/LLVM, gcc, MSVC, etc.).
-#'
-#' This function empirically confirms that instability *in `stats::lowess`
-#' alone* (no comparison to this package involved) by perturbing every `x`
-#' and `y` value by exactly 1 ULP, in a fixed set of pseudo-random sign
-#' patterns, and checking whether the resulting fit changes by more than
-#' `tolerance`. If R's own reference output is not reproducible under a
-#' perturbation far smaller than floating-point representability itself
-#' guarantees, there is no well-defined "correct" answer to compare a
-#' second, independently-computed implementation against, and the case
-#' must be discarded rather than treated as a genuine divergence.
-#'
-#' The perturbation signs are drawn from a fixed seed per trial so the
-#' decision is a deterministic function of `(x, y, fraction, iterations)`
-#' and does not introduce run-to-run flakiness of its own. A few hundred
-#' trials are needed in practice: only specific sign combinations flip the
-#' cutoff decision, and this only runs on the (rare) comparison-failure
-#' path, so the extra `stats::lowess()` calls are not a performance concern.
+#' Bisquare reweighting applies hard cutoffs at `0.001`/`0.999 * cmad`, so a
+#' residual sitting in the rounding-noise band can fall either side depending on
+#' compiler details (FMA contraction, summation order, vectorization). This
+#' perturbs R's own inputs by 1 ULP, with no comparison to this package: if R
+#' cannot reproduce its own fit, there is no well-defined reference and the case
+#' must be discarded rather than treated as a divergence. Perturbation signs use
+#' a fixed seed, so the verdict introduces no run-to-run flakiness. It runs only
+#' on the rare failure path, so the extra fits do not matter for performance.
 #' @noRd
 reference_is_ulp_unstable <- function(
     x,
@@ -191,11 +157,9 @@ reference_is_ulp_unstable <- function(
     y_ulp <- ifelse(y == 0, eps, abs(y) * eps)
     comparison_scale <- max(1, abs(base_fit))
 
-    # `stats::lowess` branches on exact equality of x: a run of tied x-values
-    # inherits one fitted value, and an all-tied input has zero x-range.
-    # Perturbing tied values independently would split them apart and probe a
-    # different class of input, so every tied case would look "unstable" and be
-    # discarded. Perturb each distinct x-level as a unit instead.
+    # `stats::lowess` branches on exact equality of x, so splitting tied values
+    # apart would probe a different class of input.
+    # Perturb each level as a unit.
     x_level <- match(x, unique(x))
     n_levels <- max(x_level)
 

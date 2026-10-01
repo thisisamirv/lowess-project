@@ -1,9 +1,7 @@
-<!-- markdownlint-disable MD024 MD025 -->
-# Changelog
-
+<!-- markdownlint-disable MD024 MD025 MD041 -->
 This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md).
 
-## [Unreleased]
+## rfastlowess (development version)
 
 ### Added
 
@@ -19,7 +17,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Fixed the default `boundary_policy` (`"extend"`) letting synthetic boundary points bias the shared robustness scale estimate used to reweight every point, compounding across robustness iterations.
 
-## 4.1.0
+## rfastlowess 4.1.0
 
 ### Added
 
@@ -31,7 +29,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Changed the `OnlineLowess()` default `iterations` from `3` to `0`, matching non-robust incremental updates; robustness iterations require `update_mode = "full"`.
 
-## 4.0.0
+## rfastlowess 4.0.0
 
 ### Added
 
@@ -51,13 +49,13 @@ This changelog includes end-user changes only. For internal development notes, s
 * Fixed the real-time vignette example failing with two data points by aligning its minimum point count with the library's minimum of two.
 * Fixed `install_gpu()` replacing a loaded shared library in place; it now installs through a temporary file and atomic rename.
 
-## 3.2.1
+## rfastlowess 3.2.1
 
 ### Changed
 
 * Clarified that results are returned in input order, even though the algorithm sorts internally.
 
-## 3.2.0
+## rfastlowess 3.2.0
 
 ### Changed
 
@@ -69,7 +67,7 @@ This changelog includes end-user changes only. For internal development notes, s
 * Corrected the Handling Outliers example to use a fraction that downweights the injected outlier.
 * Improved the Online, streaming, merge, robustness, and use-case examples so they show representative output and run successfully.
 
-## 3.1.0
+## rfastlowess 3.1.0
 
 ### Changed
 
@@ -80,7 +78,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Fixed extra positional arguments being accepted outside the initial positional argument; constructors now reject unnamed arguments in later positions.
 
-## 3.0.0
+## rfastlowess 3.0.0
 
 ### Added
 
@@ -95,7 +93,7 @@ This changelog includes end-user changes only. For internal development notes, s
 * Set the minimum supported R version to 4.6.
 * Organized Streaming and Online API documentation and tutorials into dedicated user-guide pages.
 
-## 2.0.0
+## rfastlowess 2.0.0
 
 ### Added
 
@@ -105,29 +103,29 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Breaking change: replaced vector-based `OnlineLowess()$add_points(x, y)` with scalar `add_point(x, y)`, which processes one point at a time and returns `NULL` until enough points are available.
 
-## 1.3.0
+## rfastlowess 1.3.0
 
 ### Fixed
 
 * Registered the extendr panic hook so Rust panics are reported as R errors instead of crashing the R session.
 
-## 1.2.0
+## rfastlowess 1.2.0
 
 ### Added
 
 * Added `print()` and `plot()` examples for `LowessResult` objects.
 
-## 1.1.2
+## rfastlowess 1.1.2
 
 * Under-the-hood maintenance; no changes to the public API or runtime behavior.
 
-## 1.1.1
+## rfastlowess 1.1.1
 
 ### Fixed
 
 * Fixed GPU configuration and initialization problems, and improved recovery after missing hardware/drivers or earlier GPU execution errors.
 
-## 1.1.0
+## rfastlowess 1.1.0
 
 ### Added
 
@@ -138,7 +136,7 @@ This changelog includes end-user changes only. For internal development notes, s
 * Fixed the `Extend` boundary policy not being applied and improved numerical precision through coordinate centering.
 * Fixed GPU integer overflow, initialization failures, and resource exhaustion.
 
-## 1.0.0
+## rfastlowess 1.0.0
 
 ### Added
 
@@ -149,7 +147,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Breaking change: returned `LowessResult` S3 objects instead of raw vectors.
 
-## 0.99.9
+## rfastlowess 0.99.9
 
 ### Added
 
@@ -159,29 +157,29 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Introduced class-based builders for streaming and online processing.
 
-## 0.99.8
+## rfastlowess 0.99.8
 
 * Under-the-hood maintenance; no changes to the public API or runtime behavior.
 
-## 0.99.7
+## rfastlowess 0.99.7
 
 ### Fixed
 
 * Fixed links in the shared project README.
 
-## 0.99.6
+## rfastlowess 0.99.6
 
 ### Fixed
 
 * Fixed formatting and links in the shared project README.
 
-## 0.99.5
+## rfastlowess 0.99.5
 
 ### Changed
 
 * Reduced the published package size by excluding development-only files.
 
-## 0.99.2
+## rfastlowess 0.99.2
 
 ### Added
 
@@ -196,13 +194,13 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Fixed package startup messages.
 
-## 0.99.1
+## rfastlowess 0.99.1
 
 ### Changed
 
 * Prepared the R package for Bioconductor submission.
 
-## 0.99.0
+## rfastlowess 0.99.0
 
 ### Added
 
@@ -212,7 +210,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Changed the license from AGPL-3.0-or-later to dual MIT OR Apache-2.0.
 
-## 0.7.0
+## rfastlowess 0.7.0
 
 ### Added
 
@@ -222,7 +220,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Improved fitting and cross-validation performance through SIMD accumulation, reusable buffers, and optimized window and scale calculations.
 
-## 0.6.0
+## rfastlowess 0.6.0
 
 ### Added
 
@@ -232,13 +230,13 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Fixed Batch and Streaming adapter conversion behavior in the LOWESS core.
 
-## 0.5.3
+## rfastlowess 0.5.3
 
 ### Changed
 
 * Improved fitting and cross-validation performance by optimizing sorting, window operations, robust scale estimation, regression, and delta interpolation.
 
-## 0.4.0
+## rfastlowess 0.4.0
 
 ### Added
 
@@ -248,7 +246,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Changed the license from AGPL-3.0-or-later to dual MIT OR Apache-2.0.
 
-## 0.3.0
+## rfastlowess 0.3.0
 
 ### Added
 
@@ -258,13 +256,13 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Updated the cross-validation API for fastLowess v0.3.0.
 
-## 0.2.0
+## rfastlowess 0.2.0
 
 ### Added
 
 * Added support for fastLowess v0.2.0 fitting improvements.
 
-## 0.1.0
+## rfastlowess 0.1.0
 
 ### Added
 
