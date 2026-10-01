@@ -31,7 +31,9 @@ use lowess::internals::algorithms::robustness::RobustnessMethod;
 use lowess::internals::api::LowessError;
 use lowess::internals::engine::executor::{IterationResult, LowessConfig};
 use lowess::internals::evaluation::cv::CVKind;
-use lowess::internals::evaluation::intervals::IntervalMethod;
+use lowess::internals::evaluation::intervals::{
+    BootstrapConfig, BootstrapOutput, DEFAULT_BOOTSTRAP_SEED, IntervalMethod,
+};
 use lowess::internals::math::boundary::BoundaryPolicy;
 use lowess::internals::math::kernel::WeightFunction;
 use lowess::internals::math::scaling::ScalingMethod;
@@ -2451,6 +2453,18 @@ impl GpuExecutor {
         robustness_method: u32,
         scaling_method: u32,
     ) {
+        self.reset_buffers_inner(x, y, config, robustness_method, scaling_method, false);
+    }
+
+    fn reset_buffers_inner(
+        &mut self,
+        x: &[f32],
+        y: &[f32],
+        config: GpuConfig,
+        robustness_method: u32,
+        scaling_method: u32,
+        bootstrap_sample: bool,
+    ) {
         let n_padded = config.n;
         let orig_n = config.orig_n;
         // Anchor buffer sized for worst case (every point is anchor)
@@ -2521,11 +2535,13 @@ impl GpuExecutor {
             256,
             BufferUsages::INDIRECT | BufferUsages::COPY_DST | BufferUsages::COPY_SRC
         );
-        self.queue.write_buffer(
-            self.buffers.y_buffer.as_ref().unwrap(),
-            offset,
-            cast_slice(y),
-        );
+        if !bootstrap_sample {
+            self.queue.write_buffer(
+                self.buffers.y_buffer.as_ref().unwrap(),
+                offset,
+                cast_slice(y),
+            );
+        }
 
         ensure!(
             "AnchorIndices",
@@ -3769,11 +3785,350 @@ fn record_intervals_pass<T>(
     exec.queue.submit(Some(encoder.finish()));
 }
 
+const BOOTSTRAP_SHADER: &str = r#"
+struct Params {
+    n: u32,
+    b: u32,
+    seed: u32,
+    replicate: u32,
+    level: f32,
+    confidence: u32,
+    prediction: u32,
+    unused: u32,
+}
+@group(0) @binding(0) var<uniform> params: Params;
+@group(0) @binding(1) var<storage, read> smooth: array<f32>;
+@group(0) @binding(2) var<storage, read> residual: array<f32>;
+@group(0) @binding(3) var<storage, read_write> sample: array<f32>;
+@group(0) @binding(4) var<storage, read_write> fits: array<f32>;
+@group(0) @binding(5) var<storage, read_write> predictions: array<f32>;
+@group(0) @binding(6) var<storage, read_write> output: array<f32>;
+
+fn hash(input: u32) -> u32 {
+    let state = input * 747796405u + 2891336453u;
+    let word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+    return (word >> 22u) ^ word;
+}
+
+@compute @workgroup_size(256)
+fn resample(@builtin(global_invocation_id) id: vec3<u32>) {
+    let i = id.x;
+    if (i < params.n) {
+        let draw = hash(params.seed ^ (params.replicate * params.n + i));
+        sample[i] = smooth[i] + residual[draw % params.n];
+    }
+}
+
+fn quantile(base: u32, q: f32, prediction: bool) -> f32 {
+    let rank = q * f32(params.b - 1u);
+    let lower = u32(floor(rank));
+    let upper = min(lower + 1u, params.b - 1u);
+    if (prediction) {
+        return predictions[base + lower] + (rank - f32(lower)) *
+            (predictions[base + upper] - predictions[base + lower]);
+    }
+    let i = base / params.b;
+    return fits[lower * params.n + i] + (rank - f32(lower)) *
+        (fits[upper * params.n + i] - fits[lower * params.n + i]);
+}
+
+@compute @workgroup_size(64)
+fn summarize(@builtin(global_invocation_id) id: vec3<u32>) {
+    let i = id.x;
+    if (i >= params.n) { return; }
+    let base = i * params.b;
+    var mean = 0.0;
+    for (var k = 0u; k < params.b; k++) { mean += fits[k * params.n + i]; }
+    mean /= f32(params.b);
+    var variance = 0.0;
+    for (var k = 0u; k < params.b; k++) {
+        let fit = fits[k * params.n + i];
+        let diff = fit - mean;
+        variance += diff * diff;
+        if (params.prediction != 0u) {
+            let draw = hash(params.seed ^ (params.b * params.n + base + k));
+            predictions[base + k] = fit + residual[draw % params.n];
+        }
+    }
+    output[i] = sqrt(variance / f32(params.b - 1u));
+    if (params.prediction != 0u) {
+        for (var j = 1u; j < params.b; j++) {
+            var k = j;
+            loop {
+                if (k == 0u || predictions[base + k - 1u] <= predictions[base + k]) { break; }
+                let previous = predictions[base + k - 1u];
+                predictions[base + k - 1u] = predictions[base + k];
+                predictions[base + k] = previous;
+                k -= 1u;
+            }
+        }
+        let lower = (1.0 - params.level) * 0.5;
+        output[3u * params.n + i] = quantile(base, lower, true);
+        output[4u * params.n + i] = quantile(base, 1.0 - lower, true);
+    }
+    if (params.confidence != 0u) {
+        for (var j = 1u; j < params.b; j++) {
+            var k = j;
+            loop {
+                let before = (k - 1u) * params.n + i;
+                let after = k * params.n + i;
+                if (k == 0u || fits[before] <= fits[after]) { break; }
+                let previous = fits[before];
+                fits[before] = fits[after];
+                fits[after] = previous;
+                k -= 1u;
+            }
+        }
+        let lower = (1.0 - params.level) * 0.5;
+        output[params.n + i] = quantile(base, lower, false);
+        output[2u * params.n + i] = quantile(base, 1.0 - lower, false);
+    }
+}
+"#;
+
+#[repr(C)]
+#[derive(Clone, Copy, Pod, Zeroable)]
+struct BootstrapParams {
+    n: u32,
+    b: u32,
+    seed: u32,
+    replicate: u32,
+    level: f32,
+    confidence: u32,
+    prediction: u32,
+    unused: u32,
+}
+
+struct BootstrapGpuState {
+    sampling: ComputePipeline,
+    group: BindGroup,
+    sample: Buffer,
+    fits: Buffer,
+}
+
+pub fn bootstrap_compute_gpu<T>(
+    x: &[T],
+    y_smooth: &[T],
+    residuals: &[T],
+    method: &IntervalMethod<T>,
+    bootstrap: BootstrapConfig,
+    config: &LowessConfig<T>,
+) -> Result<BootstrapOutput<T>, LowessError>
+where
+    T: Float + Debug + Send + Sync + 'static,
+{
+    let n = x.len();
+    let b = bootstrap.n_boot;
+    let elements = n
+        .checked_mul(b)
+        .filter(|&size| size <= u32::MAX as usize)
+        .ok_or_else(|| {
+            LowessError::InvalidInput("GPU bootstrap size exceeds u32 indexing".into())
+        })?;
+    let mut guard = match GLOBAL_EXECUTOR.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    let exec = guard
+        .as_mut()
+        .ok_or_else(|| LowessError::RuntimeError("GPU executor not initialized".into()))?;
+    let matrix_bytes = (elements as u64) * 4;
+    if matrix_bytes > exec.device.limits().max_storage_buffer_binding_size
+        || (5 * n as u64) * 4 > exec.device.limits().max_storage_buffer_binding_size
+    {
+        return Err(LowessError::InvalidInput(
+            "GPU bootstrap matrix exceeds storage buffer binding limit".into(),
+        ));
+    }
+    let centered: Vec<f32> = {
+        let values = cast_input_slice(residuals);
+        let mean = values.iter().sum::<f32>() / n as f32;
+        values.iter().map(|&value| value - mean).collect()
+    };
+    let initial = cast_input_slice(y_smooth);
+    let device = exec.device.clone();
+    let queue = exec.queue.clone();
+    let make_buffer = |label, bytes: &[u8], usage| {
+        device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some(label),
+            contents: bytes,
+            usage,
+        })
+    };
+    let smooth = make_buffer(
+        "Bootstrap smooth",
+        cast_slice(initial.as_ref()),
+        BufferUsages::STORAGE,
+    );
+    let residual = make_buffer(
+        "Bootstrap residual",
+        cast_slice(&centered),
+        BufferUsages::STORAGE,
+    );
+    let sample = device.create_buffer(&BufferDescriptor {
+        label: Some("Bootstrap sample"),
+        size: (n as u64) * 4,
+        usage: BufferUsages::STORAGE | BufferUsages::COPY_SRC,
+        mapped_at_creation: false,
+    });
+    let fits = device.create_buffer(&BufferDescriptor {
+        label: Some("Bootstrap fits"),
+        size: matrix_bytes,
+        usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
+        mapped_at_creation: false,
+    });
+    let predictions = device.create_buffer(&BufferDescriptor {
+        label: Some("Bootstrap predictions"),
+        size: matrix_bytes,
+        usage: BufferUsages::STORAGE,
+        mapped_at_creation: false,
+    });
+    let output = device.create_buffer(&BufferDescriptor {
+        label: Some("Bootstrap statistics"),
+        size: (5 * n as u64) * 4,
+        usage: BufferUsages::STORAGE | BufferUsages::COPY_SRC,
+        mapped_at_creation: false,
+    });
+    let mut params = BootstrapParams {
+        n: n as u32,
+        b: b as u32,
+        seed: {
+            let seed = bootstrap.seed.unwrap_or(DEFAULT_BOOTSTRAP_SEED);
+            seed as u32 ^ ((seed >> 32) as u32).rotate_left(16)
+        },
+        replicate: 0,
+        level: method.level.to_f32().unwrap(),
+        confidence: u32::from(method.confidence),
+        prediction: u32::from(method.prediction),
+        unused: 0,
+    };
+    let uniform = make_buffer(
+        "Bootstrap parameters",
+        bytes_of(&params),
+        BufferUsages::UNIFORM | BufferUsages::COPY_DST,
+    );
+    let entries: Vec<_> = (0..7)
+        .map(|binding| BindGroupLayoutEntry {
+            binding,
+            visibility: ShaderStages::COMPUTE,
+            ty: BindingType::Buffer {
+                ty: if binding == 0 {
+                    BufferBindingType::Uniform
+                } else {
+                    BufferBindingType::Storage {
+                        read_only: binding == 1 || binding == 2,
+                    }
+                },
+                has_dynamic_offset: false,
+                min_binding_size: None,
+            },
+            count: None,
+        })
+        .collect();
+    let layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+        label: Some("Bootstrap layout"),
+        entries: &entries,
+    });
+    let buffers = [
+        &uniform,
+        &smooth,
+        &residual,
+        &sample,
+        &fits,
+        &predictions,
+        &output,
+    ];
+    let bind_entries: Vec<_> = buffers
+        .iter()
+        .enumerate()
+        .map(|(binding, buffer)| BindGroupEntry {
+            binding: binding as u32,
+            resource: buffer.as_entire_binding(),
+        })
+        .collect();
+    let group = device.create_bind_group(&BindGroupDescriptor {
+        label: Some("Bootstrap data"),
+        layout: &layout,
+        entries: &bind_entries,
+    });
+    let shader = device.create_shader_module(ShaderModuleDescriptor {
+        label: Some("Bootstrap shader"),
+        source: ShaderSource::Wgsl(BOOTSTRAP_SHADER.into()),
+    });
+    let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+        label: Some("Bootstrap pipeline layout"),
+        bind_group_layouts: &[Some(&layout)],
+        ..Default::default()
+    });
+    let pipeline = |entry| {
+        device.create_compute_pipeline(&ComputePipelineDescriptor {
+            label: Some(entry),
+            layout: Some(&pipeline_layout),
+            module: &shader,
+            entry_point: Some(entry),
+            compilation_options: Default::default(),
+            cache: None,
+        })
+    };
+    let sampling = pipeline("resample");
+    let summary = pipeline("summarize");
+    let state = BootstrapGpuState {
+        sampling,
+        group,
+        sample,
+        fits,
+    };
+    drop(guard);
+    for replicate in 0..b {
+        params.replicate = replicate as u32;
+        queue.write_buffer(&uniform, 0, bytes_of(&params));
+        fit_pass_gpu_inner(x, y_smooth, config, Some((&state, replicate)))?;
+    }
+    let mut encoder = device.create_command_encoder(&Default::default());
+    {
+        let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
+        pass.set_pipeline(&summary);
+        pass.set_bind_group(0, &state.group, &[]);
+        pass.dispatch_workgroups((n as u32).div_ceil(64), 1, 1);
+    }
+    queue.submit(Some(encoder.finish()));
+    let mut guard = match GLOBAL_EXECUTOR.lock() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    let exec = guard.as_mut().unwrap();
+    let bytes = block_on(exec.download_buffers_batch(&[(output, (5 * n as u64) * 4, 0)]))
+        .ok_or_else(|| {
+            LowessError::RuntimeError("GPU bootstrap statistics download failed".into())
+        })?;
+    let values = cast_slice::<u8, f32>(&bytes[0]);
+    let slice = |index| cast_output_vec(values[index * n..(index + 1) * n].to_vec());
+    Ok(BootstrapOutput {
+        std_errors: slice(0),
+        confidence_lower: method.confidence.then(|| slice(1)),
+        confidence_upper: method.confidence.then(|| slice(2)),
+        prediction_lower: method.prediction.then(|| slice(3)),
+        prediction_upper: method.prediction.then(|| slice(4)),
+    })
+}
+
 // Perform a GPU-accelerated LOWESS fit pass.
 pub fn fit_pass_gpu<T>(
     x: &[T],
     y: &[T],
     config: &LowessConfig<T>,
+) -> Result<IterationResult<T>, LowessError>
+where
+    T: Float + Debug + Send + Sync + 'static,
+{
+    fit_pass_gpu_inner(x, y, config, None)
+}
+
+fn fit_pass_gpu_inner<T>(
+    x: &[T],
+    y: &[T],
+    config: &LowessConfig<T>,
+    bootstrap: Option<(&BootstrapGpuState, usize)>,
 ) -> Result<IterationResult<T>, LowessError>
 where
     T: Float + Debug + Send + Sync + 'static,
@@ -3819,7 +4174,11 @@ where
 
         // Convert original data to f32 (padding happens on GPU)
         let x_f32 = cast_input_slice(x);
-        let y_f32 = cast_input_slice(y);
+        let y_f32: Cow<'_, [f32]> = if bootstrap.is_some() {
+            Cow::Borrowed(&[])
+        } else {
+            cast_input_slice(y)
+        };
 
         // Calculate anchors based on PADDED range
         let mut delta = config.delta.to_f32().unwrap();
@@ -3907,12 +4266,34 @@ where
             ScalingMethod::Mean => SCALING_MEAN,
         };
 
-        exec.reset_buffers(&x_f32, &y_f32, gpu_config, robustness_id, scaling_id);
+        exec.reset_buffers_inner(
+            &x_f32,
+            &y_f32,
+            gpu_config,
+            robustness_id,
+            scaling_id,
+            bootstrap.is_some(),
+        );
 
         // Execute all GPU operations in a single command encoder (no synchronization)
         {
             let mut encoder = exec.device.create_command_encoder(&Default::default());
 
+            if let Some((state, _)) = bootstrap {
+                {
+                    let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
+                    pass.set_pipeline(&state.sampling);
+                    pass.set_bind_group(0, &state.group, &[]);
+                    pass.dispatch_workgroups((orig_n as u32).div_ceil(256), 1, 1);
+                }
+                encoder.copy_buffer_to_buffer(
+                    &state.sample,
+                    0,
+                    exec.buffers.y_buffer.as_ref().unwrap(),
+                    (pad_len as u64) * 4,
+                    (orig_n as u64) * 4,
+                );
+            }
             // 1. Sort and pad input data
             exec.record_sort_input(&mut encoder);
             exec.record_pad_data(&mut encoder);
@@ -3962,6 +4343,29 @@ where
 
         let trim_offset = (pad_len as u64) * 4;
         let trim_size = (orig_n as u64) * 4;
+
+        if let Some((state, replicate)) = bootstrap {
+            let mut encoder = exec.device.create_command_encoder(&Default::default());
+            encoder.copy_buffer_to_buffer(
+                exec.buffers.y_smooth_buffer.as_ref().unwrap(),
+                trim_offset,
+                &state.fits,
+                (replicate as u64) * trim_size,
+                trim_size,
+            );
+            exec.queue.submit(Some(encoder.finish()));
+            return Ok((
+                Vec::new(),
+                None,
+                0,
+                Vec::new(),
+                None,
+                None,
+                None,
+                None,
+                None,
+            ));
+        }
 
         // Prepare Batch Download
         let mut requests = Vec::with_capacity(9);

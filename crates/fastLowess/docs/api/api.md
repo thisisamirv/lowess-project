@@ -180,7 +180,7 @@ Convergence tolerance for early stopping of robustness iterations. `NaN` (defaul
 
 *See: [Intervals](crate::doc::guide::intervals)*
 
-Use `.intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95).bootstrap(1000))` to select confidence and prediction bounds and optionally replace analytic standard errors with residual-bootstrap refits. Set `.seed(42)` on `Lowess::new()` to seed both CV and bootstrap. Without it, each feature retains its own default seed; setting a seed alone does not enable bootstrap. `n < 2` returns `InvalidBootstrapSamples`. Batch and Streaming refits run concurrently with `parallel(true)`; Online and GPU Batch refits run sequentially. Online requires `update_mode("full")`.
+Use `.intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95).bootstrap(1000))` to select confidence and prediction bounds and optionally replace analytic standard errors with residual-bootstrap refits. Set `.seed(42)` on `Lowess::new()` to seed both CV and bootstrap. Without it, each feature retains its own default seed; setting a seed alone does not enable bootstrap. `n < 2` returns `InvalidBootstrapSamples`. CPU Batch and Streaming refits run concurrently with `parallel(true)`; Online refits sequentially on the CPU, while GPU Batch samples and refits sequentially on the device and reduces bootstrap intervals there. GPU draws are deterministic for a given seed but differ from CPU draws. Online requires `update_mode("full")`.
 
 ### outputs
 

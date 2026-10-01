@@ -159,8 +159,8 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelBatchLowess<T
                     builder.custom_fit_pass = Some(fit_pass_gpu);
                     builder.custom_cv_pass = Some(cross_validate_gpu);
                     builder.delegate_boundary_handling = true;
-                    // Replicates share the single GPU device, so they refit one at a time.
-                    builder.custom_bootstrap_pass = None;
+                    builder.custom_bootstrap_compute =
+                        Some(crate::engine::gpu::bootstrap_compute_gpu);
                 }
                 #[cfg(not(feature = "gpu"))]
                 {

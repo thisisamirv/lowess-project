@@ -31,7 +31,9 @@ use crate::engine::predict::PredictPassFn;
 use crate::engine::validator::{MissingPolicy, Validator};
 use crate::evaluation::cv::CVKind;
 use crate::evaluation::diagnostics::Diagnostics;
-use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod, MIN_BOOTSTRAP_SAMPLES};
+use crate::evaluation::intervals::{
+    BootstrapConfig, BootstrapOutput, IntervalMethod, MIN_BOOTSTRAP_SAMPLES,
+};
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
 use crate::math::kernel::WeightFunction;
@@ -39,6 +41,15 @@ use crate::math::scaling::ScalingMethod;
 use crate::primitives::backend::Backend;
 use crate::primitives::errors::LowessError;
 use crate::primitives::sorting::{SortedData, sort_by_x, unsort};
+
+pub type BootstrapComputeFn<T> = fn(
+    &[T],
+    &[T],
+    &[T],
+    &IntervalMethod<T>,
+    BootstrapConfig,
+    &LowessConfig<T>,
+) -> Result<BootstrapOutput<T>, LowessError>;
 
 // Builder for batch LOWESS processor.
 #[derive(Debug, Clone)]
@@ -148,6 +159,7 @@ pub struct BatchLowessBuilder<T: Float> {
 
     // Custom (e.g. parallel) bootstrap refit pass function.
     pub custom_bootstrap_pass: Option<BootstrapPassFn<T>>,
+    pub custom_bootstrap_compute: Option<BootstrapComputeFn<T>>,
 }
 
 impl<T: Float> Default for BatchLowessBuilder<T> {
@@ -194,6 +206,7 @@ impl<T: Float> BatchLowessBuilder<T> {
             retain_model: DEFAULT_RETAIN_MODEL,
             custom_predict_pass: None,
             custom_bootstrap_pass: None,
+            custom_bootstrap_compute: None,
         }
     }
 
@@ -368,16 +381,20 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
             (Some(bc), Some(mut base), Some(method)) => {
                 base.fraction = Some(fraction_used);
                 let pass = self.config.custom_bootstrap_pass;
-                let out = bc.compute(method, &y_smooth, &residuals, |replicates| match pass {
-                    Some(p) => p(&sorted.x, replicates, &base),
-                    None => replicates
-                        .iter()
-                        .map(|y_star| {
-                            LowessExecutor::run_with_config(&sorted.x, y_star, base.clone())
-                                .map(|r| r.smoothed)
-                        })
-                        .collect(),
-                })?;
+                let out = if let Some(compute) = self.config.custom_bootstrap_compute {
+                    compute(&sorted.x, &y_smooth, &residuals, method, bc, &base)?
+                } else {
+                    bc.compute(method, &y_smooth, &residuals, |replicates| match pass {
+                        Some(p) => p(&sorted.x, replicates, &base),
+                        None => replicates
+                            .iter()
+                            .map(|y_star| {
+                                LowessExecutor::run_with_config(&sorted.x, y_star, base.clone())
+                                    .map(|r| r.smoothed)
+                            })
+                            .collect(),
+                    })?
+                };
                 std_errors = Some(out.std_errors.clone());
                 Some(out)
             }

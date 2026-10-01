@@ -918,6 +918,90 @@ fn test_cpu_gpu_interval_equivalence() {
 }
 
 #[test]
+fn test_gpu_bootstrap_intervals_are_reproducible() {
+    let x: Vec<f32> = (0..48).map(|i| i as f32 * 0.1).collect();
+    let y: Vec<f32> = x
+        .iter()
+        .map(|&value| value.sin() + 0.15 * (value * 9.0).cos())
+        .collect();
+    let fit = |seed| {
+        Lowess::new()
+            .fraction(0.35)
+            .iterations(1)
+            .seed(seed)
+            .intervals(
+                IntervalsBuilder::new()
+                    .confidence(0.9)
+                    .prediction(0.9)
+                    .bootstrap(16),
+            )
+            .backend(GPU)
+            .boundary_policy(BoundaryPolicy::NoBoundary)
+            .build()
+            .unwrap()
+            .fit(&x, &y)
+            .unwrap()
+    };
+    let first = fit(41);
+    let again = fit(41);
+    let other = fit(42);
+    let high_bits = fit(41 + (1u64 << 32));
+    assert_eq!(first.standard_errors, again.standard_errors);
+    assert_eq!(first.confidence_lower, again.confidence_lower);
+    assert_eq!(first.prediction_upper, again.prediction_upper);
+    assert_ne!(first.standard_errors, other.standard_errors);
+    assert_ne!(first.standard_errors, high_bits.standard_errors);
+    for values in [
+        first.standard_errors.unwrap(),
+        first.confidence_lower.unwrap(),
+        first.confidence_upper.unwrap(),
+        first.prediction_lower.unwrap(),
+        first.prediction_upper.unwrap(),
+    ] {
+        assert_eq!(values.len(), x.len());
+        assert!(values.iter().all(|value| value.is_finite()));
+    }
+}
+
+#[test]
+fn test_gpu_bootstrap_many_replicates_with_boundary_padding() {
+    let x: Vec<f32> = (0..32).map(|i| i as f32 * 0.1).collect();
+    let y: Vec<f32> = x
+        .iter()
+        .map(|&value| value.sin() + 0.1 * (value * 8.0).cos())
+        .collect();
+    let result = Lowess::new()
+        .fraction(0.3)
+        .iterations(2)
+        .seed(99)
+        .intervals(
+            IntervalsBuilder::new()
+                .confidence(0.95)
+                .prediction(0.95)
+                .bootstrap(300),
+        )
+        .backend(GPU)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    let errors = result.standard_errors.unwrap();
+    let (lower, upper) = (
+        result.confidence_lower.unwrap(),
+        result.confidence_upper.unwrap(),
+    );
+    let (pred_lower, pred_upper) = (
+        result.prediction_lower.unwrap(),
+        result.prediction_upper.unwrap(),
+    );
+    for index in 0..x.len() {
+        assert!(errors[index].is_finite() && errors[index] > 0.0);
+        assert!(lower[index] <= upper[index]);
+        assert!(pred_lower[index] <= pred_upper[index]);
+    }
+}
+
+#[test]
 #[allow(clippy::await_holding_lock)]
 fn test_gpu_median_diagnostic() {
     // Collect both median values while holding the lock, then assert after releasing it.

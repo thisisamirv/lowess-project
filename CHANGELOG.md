@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **fastLowess:**
 
+- Added GPU-resident Batch residual-bootstrap sampling, refits, and pointwise SE/percentile reduction. Replicates are processed sequentially on the device without per-replicate readback; GPU draws are reproducible for a given seed but differ from CPU bootstrap draws.
 - Added crate-level Streaming and Online quick starts covering typical use, annotated full-feature options, result/error handling, and ndarray input.
 - Added `.intervals(IntervalsBuilder::new()...)` on Batch, Streaming, and Online Rust entry points, matching the lowess crate's grouped interval configuration.
 - Added residual-bootstrap intervals to Batch `Lowess`, `StreamingLowess`, and full-update `OnlineLowess` via `.intervals(IntervalsBuilder::new().bootstrap(n))`. Batch and Streaming refits run concurrently via `bootstrap_pass_parallel` (Rayon) when `parallel` is on and match sequential results; GPU and Online refits run sequentially. Streaming bootstraps each combined chunk with its incoming overlap; Online bootstraps each sliding window. Documented in the crate-level docs and in `crates/fastLowess/docs/guide/intervals.md`.
