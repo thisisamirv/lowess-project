@@ -1,8 +1,8 @@
 //! Layer 1: Primitives
 //!
 //! This layer provides the primitive abstractions, data structures, and
-//! utility functions used throughout the crate. It has zero internal
-//! dependencies within the crate.
+//! utility functions used throughout the crate. Only `parser` depends on
+//! sibling primitive modules, as permitted by the layering rules.
 
 // Sorting utilities.
 pub mod sorting;

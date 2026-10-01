@@ -95,9 +95,6 @@ pub struct OnlineLowessBuilder<T: Float> {
     // Deferred error from adapter conversion
     pub deferred_error: Option<LowessError>,
 
-    // ++++++++++++++++++++++++++++++++++++++
-    // +               DEV                  +
-    // ++++++++++++++++++++++++++++++++++++++
     // Custom smooth pass function.
     pub custom_smooth_pass: Option<SmoothPassFn<T>>,
 
@@ -374,9 +371,6 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                         },
                         cv_seed: None,
                         return_derivative: self.config.return_derivative,
-                        // ++++++++++++++++++++++++++++++++++++++
-                        // +               DEV                  +
-                        // ++++++++++++++++++++++++++++++++++++++
                         custom_smooth_pass: self.config.custom_smooth_pass,
                         custom_cv_pass: self.config.custom_cv_pass,
                         custom_interval_pass: self.config.custom_interval_pass,

@@ -123,9 +123,6 @@ pub struct BatchLowessBuilder<T: Float> {
     // Scaling method for robust scale estimation (MAR/MAD)
     pub scaling_method: ScalingMethod,
 
-    // ++++++++++++++++++++++++++++++++++++++
-    // +               DEV                  +
-    // ++++++++++++++++++++++++++++++++++++++
     // Custom smooth pass function.
     pub custom_smooth_pass: Option<SmoothPassFn<T>>,
 
@@ -335,9 +332,6 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
             scaling_method: self.config.scaling_method,
             return_derivative: self.config.return_derivative,
             cv_seed: self.config.cv_seed,
-            // ++++++++++++++++++++++++++++++++++++++
-            // +               DEV                  +
-            // ++++++++++++++++++++++++++++++++++++++
             custom_smooth_pass: self.config.custom_smooth_pass,
             custom_cv_pass: self.config.custom_cv_pass,
             custom_interval_pass: self.config.custom_interval_pass,

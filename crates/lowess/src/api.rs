@@ -27,8 +27,9 @@ use crate::adapters::online::OnlineLowessBuilder;
 use crate::adapters::streaming::StreamingLowessBuilder;
 use crate::algorithms::regression::ZeroWeightFallback;
 use crate::algorithms::robustness::RobustnessMethod;
-use crate::engine::executor::{CVPassFn, IntervalPassFn, SmoothPassFn};
-use crate::engine::executor::{ExtrapolationPolicy, PredictPassFn};
+use crate::engine::executor::{
+    CVPassFn, ExtrapolationPolicy, IntervalPassFn, PredictPassFn, SmoothPassFn,
+};
 use crate::evaluation::cv::{CVKind, CVOptions};
 use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod, IntervalsBuilder};
 use crate::math::boundary::BoundaryPolicy;
@@ -197,9 +198,6 @@ pub struct LowessBuilder<T, Mode = BatchMode> {
     // Minimum points required for a valid fit (Online only).
     pub min_points: Option<usize>,
 
-    // ++++++++++++++++++++++++++++++++++++++
-    // +               DEV                  +
-    // ++++++++++++++++++++++++++++++++++++++
     // Custom smooth pass function.
     #[doc(hidden)]
     pub custom_smooth_pass: Option<SmoothPassFn<T>>,
@@ -680,32 +678,28 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
         self
     }
 
-    // ++++++++++++++++++++++++++++++++++++++
-    // +               DEV                  +
-    // ++++++++++++++++++++++++++++++++++++++
-
-    // Set a custom smooth pass function for execution (only for dev)
+    // Set a custom smooth pass function for extension crates.
     #[doc(hidden)]
     pub fn custom_smooth_pass(mut self, pass: SmoothPassFn<T>) -> Self {
         self.custom_smooth_pass = Some(pass);
         self
     }
 
-    // Set a custom cross-validation pass function (only for dev)
+    // Set a custom cross-validation pass function for extension crates.
     #[doc(hidden)]
     pub fn custom_cv_pass(mut self, pass: CVPassFn<T>) -> Self {
         self.custom_cv_pass = Some(pass);
         self
     }
 
-    // Set a custom interval estimation pass function (only for dev)
+    // Set a custom interval estimation pass function for extension crates.
     #[doc(hidden)]
     pub fn custom_interval_pass(mut self, pass: IntervalPassFn<T>) -> Self {
         self.custom_interval_pass = Some(pass);
         self
     }
 
-    // Set the execution backend hint (only for dev)
+    // Set the execution backend hint for extension crates.
     #[doc(hidden)]
     pub fn backend(mut self, backend: impl IntoEnum<Backend>) -> Self {
         match backend.into_enum() {
@@ -715,7 +709,7 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
         self
     }
 
-    // Set parallel execution hint (only for dev)
+    // Set the parallel execution hint for extension crates.
     #[doc(hidden)]
     pub fn parallel(mut self, parallel: bool) -> Self {
         self.parallel = Some(parallel);
@@ -812,9 +806,6 @@ impl<T: Float> LowessAdapter<T> for Batch {
             result.missing = m;
         }
 
-        // ++++++++++++++++++++++++++++++++++++++
-        // +               DEV                  +
-        // ++++++++++++++++++++++++++++++++++++++
         if let Some(sp) = builder.custom_smooth_pass {
             result.custom_smooth_pass = Some(sp);
         }
@@ -921,10 +912,6 @@ impl<T: Float> LowessAdapter<T> for Streaming {
         if let Some(m) = builder.missing {
             result.missing = m;
         }
-
-        // ++++++++++++++++++++++++++++++++++++++
-        // +               DEV                  +
-        // ++++++++++++++++++++++++++++++++++++++
 
         if let Some(sp) = builder.custom_smooth_pass {
             result.custom_smooth_pass = Some(sp);
@@ -1034,10 +1021,6 @@ impl<T: Float> LowessAdapter<T> for Online {
         if let Some(m) = builder.missing {
             result.missing = m;
         }
-
-        // ++++++++++++++++++++++++++++++++++++++
-        // +               DEV                  +
-        // ++++++++++++++++++++++++++++++++++++++
 
         if let Some(sp) = builder.custom_smooth_pass {
             result.custom_smooth_pass = Some(sp);

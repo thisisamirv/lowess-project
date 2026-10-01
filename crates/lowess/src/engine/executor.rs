@@ -458,9 +458,6 @@ pub struct LowessConfig<T> {
     // Whether to compute per-point local fit derivative (slope) (Batch only).
     pub return_derivative: bool,
 
-    // ++++++++++++++++++++++++++++++++++++++
-    // +               DEV                  +
-    // ++++++++++++++++++++++++++++++++++++++
     // Custom smooth pass function (enables parallel execution).
     pub custom_smooth_pass: Option<SmoothPassFn<T>>,
 
@@ -564,9 +561,6 @@ pub struct LowessExecutor<T: Float> {
     // Whether to compute per-point local fit derivative (slope) (Batch only).
     pub return_derivative: bool,
 
-    // ++++++++++++++++++++++++++++++++++++++
-    // +               DEV                  +
-    // ++++++++++++++++++++++++++++++++++++++
     // Custom smooth pass function (e.g., for parallel execution).
     pub custom_smooth_pass: Option<SmoothPassFn<T>>,
 
@@ -674,9 +668,6 @@ impl<T: Float> LowessExecutor<T> {
             .auto_converge(config.auto_converge)
             .interval_method(config.return_variance)
             .return_derivative(config.return_derivative)
-            // ++++++++++++++++++++++++++++++++++++++
-            // +               DEV                  +
-            // ++++++++++++++++++++++++++++++++++++++
             .custom_smooth_pass(config.custom_smooth_pass)
             .custom_cv_pass(config.custom_cv_pass)
             .custom_interval_pass(config.custom_interval_pass)
@@ -711,9 +702,6 @@ impl<T: Float> LowessExecutor<T> {
             boundary_policy: self.boundary_policy,
             scaling_method: self.scaling_method,
             return_derivative: self.return_derivative,
-            // ++++++++++++++++++++++++++++++++++++++
-            // +               DEV                  +
-            // ++++++++++++++++++++++++++++++++++++++
             custom_smooth_pass: self.custom_smooth_pass,
             custom_cv_pass: self.custom_cv_pass,
             custom_interval_pass: self.custom_interval_pass,
@@ -793,9 +781,6 @@ impl<T: Float> LowessExecutor<T> {
         self.return_derivative = return_derivative;
         self
     }
-    // ++++++++++++++++++++++++++++++++++++++
-    // +               DEV                  +
-    // ++++++++++++++++++++++++++++++++++++++
 
     // Set a custom smooth pass function (e.g., for parallelization).
     pub fn custom_smooth_pass(mut self, smooth_pass_fn: Option<SmoothPassFn<T>>) -> Self {
