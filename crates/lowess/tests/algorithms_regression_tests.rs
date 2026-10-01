@@ -451,6 +451,33 @@ fn test_fit_point_various_kernels() {
     }
 }
 
+#[test]
+fn test_gaussian_fit_uses_observations_outside_neighbor_window() {
+    let x = vec![0.0_f64, 1.0, 2.0, 3.0, 4.0];
+    let fit_at_three = |y: &[f64]| {
+        let mut weights = vec![1.0; x.len()];
+        let robustness = vec![1.0; x.len()];
+        let mut ctx = RegressionContext {
+            x: &x,
+            y,
+            weights: &mut weights,
+            idx: 3,
+            window: Window { left: 2, right: 4 },
+            use_robustness: false,
+            robustness_weights: &robustness,
+            weight_function: WeightFunction::Gaussian,
+            zero_weight_fallback: ZeroWeightFallback::UseLocalMean,
+            custom_weights: None,
+        };
+        ctx.fit().unwrap()
+    };
+
+    let baseline = fit_at_three(&[0.0, 1.0, 4.0, 9.0, 16.0]);
+    let changed_tail = fit_at_three(&[100.0, 1.0, 4.0, 9.0, 16.0]);
+
+    assert_ne!(baseline, changed_tail);
+}
+
 /// Test with robustness weights enabled.
 ///
 /// Verifies that robustness weights are correctly applied.

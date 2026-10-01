@@ -157,12 +157,9 @@ fn test_gaussian_weight_values() {
         "Gaussian at 0 should be positive"
     );
 
-    // At large u, should still return small positive value
-    let val_large = gaussian.compute_weight(1000.0f64);
-    assert!(
-        val_large > 0.0 && val_large.is_finite(),
-        "Gaussian at large u should be positive and finite"
-    );
+    let tail = gaussian.compute_weight(7.0f64);
+    assert_relative_eq!(tail, (-24.5_f64).exp(), epsilon = 1e-25);
+    assert_eq!(gaussian.compute_weight(1000.0f64), 0.0);
 }
 
 /// Test Cosine kernel formula.
@@ -506,17 +503,15 @@ fn test_kernel_exact_boundaries() {
     }
 }
 
-/// Test Gaussian kernel cutoff behavior.
+/// Test Gaussian tails follow the formula without an arbitrary cutoff.
 #[test]
-fn test_gaussian_cutoff_behavior() {
+fn test_gaussian_tail_formula() {
     let gaussian = WeightFunction::Gaussian;
 
-    // GAUSSIAN_CUTOFF is 6.0
     let at_cutoff = gaussian.compute_weight(6.0);
-    assert!(at_cutoff > 0.0);
+    assert_relative_eq!(at_cutoff, (-18.0_f64).exp(), epsilon = 1e-22);
 
     let just_past = gaussian.compute_weight(6.0001);
-    // Should return MIN_POSITIVE or similar small value
     assert!(just_past > 0.0);
     assert!(just_past <= at_cutoff);
 }
