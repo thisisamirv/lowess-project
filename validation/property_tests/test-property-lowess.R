@@ -1,7 +1,7 @@
 #' @srrstats {G5.4, G5.4b} Reference comparison against base R's
 #'   `stats::lowess`, generalized here to randomized inputs.
 #' @srrstats {G5.10} Property-based tests run in the standard suite.
-#'   `quickcheck` is a Suggests test dependency, not a package dependency.
+#'   `quickcheck` is installed by `make validate`, not a package dependency.
 #' @noRd
 
 # Property-based regression test: fuzzes x/y/fraction/iterations and checks

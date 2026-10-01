@@ -16,12 +16,10 @@
 #' @srrstats {G2.0} Input validation for fraction, window_capacity, min_points.
 #' @srrstats {G1.6} Sliding window for incremental updates.
 #'
-#' @inheritParams Lowess fraction
-#' @param ... Not used; forces all subsequent arguments to be named.
+#' @inheritParams Lowess
 #' @param iterations Number of robustness iterations. Requires
 #'   \code{update_mode = "full"}; the default \code{"incremental"} mode is a
 #'   non-robust single-point fit that ignores robustness iterations. Default: 0.
-#' @inheritParams Lowess weight_function:missing
 #' @param window_capacity Maximum number of points kept in the sliding
 #'   window, at least 3. Default: 1000.
 #' @param min_points Minimum number of points required before smoothing
@@ -30,11 +28,10 @@
 #'   alias: \code{"single"}) updates only the newest point and does not run
 #'   robustness iterations; \code{"full"} (alias: \code{"resmooth"}) re-smooths
 #'   all window points after each addition and supports robustness iterations.
-#' @param outputs Character vector selecting optional output components:
+#' @param outputs Character vector selecting optional Online output components:
 #'   \code{"se"} (standard errors), \code{"weights"} (robustness weights),
 #'   and/or \code{"derivative"}. \code{NULL} (default) returns only the core
 #'   result.
-#' @inheritParams Lowess intervals seed
 #'
 #' @return An OnlineLowess object.
 #' @examples

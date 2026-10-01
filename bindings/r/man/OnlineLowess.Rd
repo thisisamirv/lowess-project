@@ -81,7 +81,7 @@ alias: \code{"single"}) updates only the newest point and does not run
 robustness iterations; \code{"full"} (alias: \code{"resmooth"}) re-smooths
 all window points after each addition and supports robustness iterations.}
 
-\item{outputs}{Character vector selecting optional output components:
+\item{outputs}{Character vector selecting optional Online output components:
 \code{"se"} (standard errors), \code{"weights"} (robustness weights),
 and/or \code{"derivative"}. \code{NULL} (default) returns only the core
 result.}

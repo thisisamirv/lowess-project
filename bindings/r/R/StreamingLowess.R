@@ -24,9 +24,7 @@
 #' @srrstats {G2.0} Input validation for fraction, chunk_size.
 #' @srrstats {G1.6} Memory-efficient streaming for large datasets.
 #'
-#' @inheritParams Lowess fraction
-#' @param ... Not used; forces all subsequent arguments to be named.
-#' @inheritParams Lowess iterations:missing
+#' @inheritParams Lowess
 #' @param chunk_size Number of data points per processing chunk, at least 10.
 #'   Default: 5000.
 #' @param overlap Number of overlapping points between consecutive chunks,
@@ -38,12 +36,10 @@
 #'   \code{"average"} (alias: \code{"mean"}),
 #'   \code{"take_first"} (alias: \code{"first"}), or
 #'   \code{"take_last"} (alias: \code{"last"}).
-#' @inheritParams Lowess parallel
-#' @param outputs Character vector selecting optional output components:
+#' @param outputs Streaming output choices:
 #'   \code{"se"} (standard errors), \code{"diagnostics"},
 #'   \code{"residuals"}, \code{"weights"} (robustness weights), and/or
 #'   \code{"derivative"}. \code{NULL} (default) returns only the core result.
-#' @inheritParams Lowess intervals seed
 #'
 #' @return A StreamingLowess object.
 #' @examples

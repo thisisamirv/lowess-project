@@ -86,7 +86,7 @@ less than \code{chunk_size}. \code{NULL} (default) computes
 
 \item{parallel}{Logical; enable parallel processing. Default: \code{TRUE}.}
 
-\item{outputs}{Character vector selecting optional output components:
+\item{outputs}{Streaming output choices:
 \code{"se"} (standard errors), \code{"diagnostics"},
 \code{"residuals"}, \code{"weights"} (robustness weights), and/or
 \code{"derivative"}. \code{NULL} (default) returns only the core result.}

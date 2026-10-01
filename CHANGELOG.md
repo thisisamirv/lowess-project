@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Monorepo:**
 
+- Added quickcheck-based Locfit comparisons for shared span, kernels, case weights, and default robust iterations. Locfit remains a validation-only dependency.
 - Added self-contained R and original Cleveland LOWESS references under `validation/reference/`, with provenance, dependency, precision, and build notes.
 
 **lowess:**
