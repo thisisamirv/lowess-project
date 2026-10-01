@@ -33,7 +33,7 @@
 #' @srrstats {RE5.0} O(n) scaling documented in README.
 #'
 #' @param fraction Smoothing fraction, greater than 0 and up to 1. Default:
-#'   0.67. See Details for guidance on choosing a value.
+#'   0.67.
 #' @param ... Not used; forces all subsequent arguments to be named.
 #' @param iterations Number of robustness iterations, between 0 and 1000
 #'   (inclusive). Default: 3.
@@ -82,10 +82,12 @@
 #'   \code{intervals = intervals_opts(confidence = 0.95, bootstrap = 200)}.
 #'   \code{NULL} (default) disables intervals.
 #' @param cv Cross-validation options, created with \code{\link{cv_opts}}:
-#'   e.g. \code{cv = cv_opts(method = "kfold", k = 5, fractions = c(0.2, 0.3, 0.5))}.
+#'   e.g. \code{cv = cv_opts(method = "kfold", k = 5,
+#'   fractions = c(0.2, 0.3, 0.5))}.
 #'   \code{NULL} (default) disables cross-validation.
-#' @param seed Non-negative whole-number seed shared by cross-validation fold
-#'   assignment and bootstrap resampling, for reproducible results.
+#' @param seed Non-negative whole-number seed shared by cross-validation and
+#'   bootstrap resampling for reproducible results. When cross-validation is
+#'   unavailable, it controls bootstrap resampling only.
 #'   \code{NULL} (default) uses a random seed.
 #' @param retain_model Logical; if \code{TRUE}, retain the fitted model's
 #'   training data, enabling \code{\link{predict.Lowess}} for out-of-sample
@@ -233,7 +235,11 @@ cv_opts <- function(method = "kfold", k = 5L, fractions) {
 #'     seed = 42
 #' )
 #' @export
-intervals_opts <- function(confidence = NULL, prediction = NULL, bootstrap = 0L) {
+intervals_opts <- function(
+    confidence = NULL,
+    prediction = NULL,
+    bootstrap = 0L
+) {
     validate_optional_count(bootstrap, "bootstrap")
     structure(
         list(

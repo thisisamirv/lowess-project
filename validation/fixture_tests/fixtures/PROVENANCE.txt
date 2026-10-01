@@ -1,0 +1,14 @@
+generated_by: validation/fixture_tests/fixtures/make_reference.R
+generated_at: 2026-09-29 13:39:14 UTC
+r_version: 4.6.1
+rfastlowess_version: 4.1.0
+platform: x86_64-w64-mingw32
+seed: 20240911
+rng_kind: Mersenne-Twister / Inversion / Rejection
+tolerance: 1.0e-10
+files:
+  batch_default.csv: 96f1aeac41e09eacc97762c040024eb9
+  batch_intervals.csv: 01eb7f4366f16482a03bfe36784ea3f3
+  batch_robust.csv: 748dfbdcf9122bc0215254a8ef74b441
+  streaming_chunked.csv: cce076a22c3450ff5ce3d828012af6f7
+  online_full.csv: 3fb90e11d4e59d49515b54998c47de35

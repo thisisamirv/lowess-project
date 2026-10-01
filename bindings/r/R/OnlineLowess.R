@@ -11,41 +11,17 @@
 #' that fit in memory, see \code{\link{Lowess}}; for large batches processed
 #' in chunks, see \code{\link{StreamingLowess}}.
 #'
+#' Confidence and prediction intervals require \code{update_mode = "full"}.
+#'
 #' @srrstats {G2.0} Input validation for fraction, window_capacity, min_points.
 #' @srrstats {G1.6} Sliding window for incremental updates.
 #'
-#' @param fraction Smoothing fraction, greater than 0 and up to 1. Default:
-#'   0.67.
+#' @inheritParams Lowess fraction
 #' @param ... Not used; forces all subsequent arguments to be named.
 #' @param iterations Number of robustness iterations. Requires
 #'   \code{update_mode = "full"}; the default \code{"incremental"} mode is a
 #'   non-robust single-point fit that ignores robustness iterations. Default: 0.
-#' @param weight_function Kernel weight function. One of \code{"tricube"}
-#'   (default), \code{"gaussian"}, \code{"uniform"} (alias: \code{"boxcar"}),
-#'   \code{"cosine"}, \code{"epanechnikov"}, \code{"biweight"} (alias:
-#'   \code{"bisquare"}), or \code{"triangle"} (alias: \code{"triangular"}).
-#' @param robustness_method Outlier downweighting method: \code{"bisquare"}
-#'   (default; alias: \code{"biweight"}), \code{"huber"}, or \code{"talwar"}.
-#' @param delta Interpolation distance threshold, as a non-negative fraction
-#'   of the x range; points within \code{delta} of each other on x share the
-#'   same local fit. \code{NULL} (default) sets it automatically to 1/100th
-#'   of the x range.
-#' @param zero_weight_fallback Fallback policy when all robustness weights drop
-#'   to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
-#'   \code{"mean"}), \code{"return_original"} (alias: \code{"original"}), or
-#'   \code{"return_none"} (alias: \code{"none"}).
-#' @param boundary_policy Boundary handling strategy: \code{"extend"}
-#'   (default; alias: \code{"pad"}), \code{"reflect"} (alias:
-#'   \code{"mirror"}), \code{"zero"}, or \code{"noboundary"} (alias: \code{"none"}).
-#' @param scaling_method Residual scale estimation for robustness weights:
-#'   \code{"mad"} (default; alias: \code{"median_absolute_deviation"}),
-#'   \code{"mar"} (alias: \code{"median_absolute_residual"}), or
-#'   \code{"mean"} (alias: \code{"mean_absolute_residual"}).
-#' @param auto_converge Convergence tolerance for early stopping of robustness
-#'   iterations. \code{NULL} (default) disables early stopping.
-#' @param missing Policy for non-finite (NaN/Infinity) values in input data:
-#'   \code{"error"} (default) raises an error, \code{"drop"} silently removes
-#'   affected observations before fitting.
+#' @inheritParams Lowess weight_function:missing
 #' @param window_capacity Maximum number of points kept in the sliding
 #'   window, at least 3. Default: 1000.
 #' @param min_points Minimum number of points required before smoothing
@@ -58,12 +34,7 @@
 #'   \code{"se"} (standard errors), \code{"weights"} (robustness weights),
 #'   and/or \code{"derivative"}. \code{NULL} (default) returns only the core
 #'   result.
-#' @param intervals Interval options, created with
-#'   \code{\link{intervals_opts}} (or a named list with any of
-#'   \code{confidence}, \code{prediction}, \code{bootstrap}). \code{NULL}
-#'   (default) disables intervals. Requires \code{update_mode = "full"}.
-#' @param seed Non-negative whole-number seed for bootstrap resampling.
-#'   \code{NULL} (default) uses a random seed.
+#' @inheritParams Lowess intervals seed
 #'
 #' @return An OnlineLowess object.
 #' @examples

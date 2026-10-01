@@ -63,7 +63,10 @@ test_that("Lowess confidence intervals work", {
     x <- seq(0, 10, length.out = 50)
     y <- sin(x) + rnorm(50, sd = 0.2)
 
-    model <- Lowess(fraction = 0.5, intervals = intervals_opts(confidence = 0.95))
+    model <- Lowess(
+        fraction = 0.5,
+        intervals = intervals_opts(confidence = 0.95)
+    )
     result <- fit(model, as.double(x), as.double(y))
 
     expect_true("confidence_lower" %in% names(result))

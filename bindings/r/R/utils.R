@@ -275,13 +275,18 @@ env_args <- function(param_names) {
         if (is.null(type)) {
             return(val)
         }
-        switch(type,
+        switch(
+            type,
             double = as.double(val),
             integer = as.integer(val),
             character = as.character(val),
             logical = as.logical(val),
             nullable = coerce_nullable(val)[[1]],
-            nullable_double = if (is.null(val)) Nullable(NULL) else as.double(val),
+            nullable_double = if (is.null(val)) {
+                Nullable(NULL)
+            } else {
+                as.double(val)
+            },
             val
         )
     })

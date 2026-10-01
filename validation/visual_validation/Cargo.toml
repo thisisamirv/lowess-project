@@ -1,0 +1,13 @@
+[package]
+name = "visual-validation"
+version = "0.0.0"
+rust-version = "1.89"
+edition = "2024"
+publish = false
+
+[[bin]]
+name = "visual"
+path = "src/visual.rs"
+
+[dependencies]
+fastLowess = { path = "../../crates/fastLowess" }

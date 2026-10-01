@@ -1,33 +1,29 @@
-# validation/Makefile — Run validation and comparison for fastLowess vs R.
+# validation/Makefile — Visual validation and R property/reference tests.
 #
 # Targets:
-#   fastlowess-visual    Build and run the visual Rust binary (writes output/fastLowess/)
-#   fastlowess-validate  Build and run the validate Rust binary (writes output/fastLowess/)
-#   r-validate           Run R reference script (writes output/r/)
-#   compare              Compare R and fastLowess outputs with compare.py
-#   plot                 Generate plots with plot.py
+#   visual   Generate CSVs used by visual_validation/plot.py
+#   plot     Generate SVGs from those CSVs
+#   r-tests  Run R property/reference and golden-fixture tests
 
 PYTHON ?= python
-CARGO_DIR := fastLowess
+VISUAL_DIR := visual_validation
+R_LIB_DIR ?= ../bindings/r/.r-lib
 
-.PHONY: fastlowess-visual fastlowess-validate r-validate compare plot
+.PHONY: visual plot r-tests
 
-fastlowess-visual:
-	@echo "Building and running fastLowess visual..."
-	@cd $(CARGO_DIR) && cargo run --bin visual --release
-
-fastlowess-validate:
-	@echo "Building and running fastLowess validate..."
-	@cd $(CARGO_DIR) && cargo run --bin validate --release
-
-r-validate:
-	@echo "Running R reference validation..."
-	@Rscript R/stats_lowess.R
-
-compare:
-	@echo "Comparing outputs..."
-	@$(PYTHON) compare.py
+visual:
+	@echo "Generating visual validation data..."
+	@cd $(VISUAL_DIR) && cargo run --bin visual --release
 
 plot:
-	@echo "Generating plots..."
-	@$(PYTHON) plot.py
+	@echo "Generating visual validation plots..."
+	@cd $(VISUAL_DIR) && $(PYTHON) plot.py
+
+r-tests:
+	@echo "Running R validation tests..."
+	@R_LIBS_USER=$(abspath $(R_LIB_DIR)) Rscript \
+	  -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_name_linter = NULL, commented_code_linter = NULL, object_usage_linter = NULL)" \
+	  -e "lints <- c(lintr::lint_dir('property_tests', linters = my_linters), lintr::lint_dir('fixture_tests', linters = my_linters))" \
+	  -e "print(lints)" \
+	  -e "if (length(lints) > 0L) quit(status = 1)"
+	@R_LIBS_USER=$(abspath $(R_LIB_DIR)) Rscript -e "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('property_tests', package = 'rfastlowess'); testthat::test_dir('fixture_tests', package = 'rfastlowess')"

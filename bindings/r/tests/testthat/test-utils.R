@@ -50,7 +50,7 @@ test_that("cv_opts returns coerced cross-validation options", {
     expect_null(result$seed)
 })
 
-test_that("intervals_opts and expand_intervals build grouped interval options", {
+test_that("intervals_opts and expand_intervals build grouped options", {
     result <- intervals_opts(confidence = 0.9, bootstrap = 20)
     expect_s3_class(result, "intervals_opts")
     expect_identical(result$bootstrap, 20L)

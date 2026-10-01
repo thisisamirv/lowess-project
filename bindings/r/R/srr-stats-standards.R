@@ -46,17 +46,17 @@ NULL
 #' @srrstats {G5.2, G5.2a, G5.2b} Error/warning tests in tests/.
 #' @srrstats {G5.3} No NA/NaN in outputs tested.
 #' @srrstats {G5.4, G5.4a, G5.4b} Correctness tests vs stats::lowess (and
-#'   stats::lm) in tests/testthat/test-validation.R.
+#'   stats::lm) in validation/property_tests/test-validation.R.
 #' @srrstats {G5.4c} Stored reference fixtures in
-#'   tests/testthat/fixtures/, verified against a fresh fit in
-#'   tests/testthat/test-golden.R.
+#'   validation/fixture_tests/fixtures/, verified against a fresh fit in
+#'   validation/fixture_tests/test-golden.R.
 #' @srrstats {G5.5} Fixed random seeds in tests.
 #' @srrstats {G5.6, G5.6a, G5.6b} Parameter recovery within tolerance.
 #' @srrstats {G5.7} Algorithm performance scales with data size.
 #' @srrstats {G5.8, G5.8a, G5.8b, G5.8c, G5.8d} Edge condition tests.
 #' @srrstats {G5.9, G5.9a, G5.9b} Noise susceptibility tests.
-#' @srrstats {G5.10} Property-based tests run in the standard test suite.
-#'   `quickcheck` is declared in Suggests and is not a runtime dependency.
+#' @srrstats {G5.10} Property tests run with `make validate`. `quickcheck` is
+#'   declared in Suggests and is not a runtime dependency.
 #' @srrstats {RE3.2, RE3.3} Threshold defaults documented, settable.
 #' @srrstats {RE7.0, RE7.0a} Tests with noiseless exact predictor relationships
 #'   (identical x, perfectly spaced x) confirm graceful handling and exact

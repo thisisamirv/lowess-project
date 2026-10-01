@@ -85,6 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Monorepo:**
 
+- Moved R property, reference, and golden-fixture tests into root `validation/`, removed the redundant JSON comparison pipeline, and added a root `validate` target that runs last in `all-dev`. Consolidated visual generation, plotting, and outputs under `validation/visual_validation/`; `r-dev` and `r-tests` remain package-only.
 - Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
 - Removed automatic changelog updating script (`update_changelogs.py`) in order to manually write high quality changelogs.
 

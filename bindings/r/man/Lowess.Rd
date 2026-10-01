@@ -5,29 +5,29 @@
 \title{LOWESS Batch Smoothing}
 \usage{
 Lowess(
-  fraction = 0.67,
-  ...,
-  iterations = 3L,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  delta = NULL,
-  zero_weight_fallback = "use_local_mean",
-  boundary_policy = "extend",
-  scaling_method = "mad",
-  auto_converge = NULL,
-  missing = "error",
-  parallel = TRUE,
-  backend = "cpu",
-  outputs = NULL,
-  intervals = NULL,
-  cv = NULL,
-  seed = NULL,
-  retain_model = FALSE
+    fraction = 0.67,
+    ...,
+    iterations = 3L,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    delta = NULL,
+    zero_weight_fallback = "use_local_mean",
+    boundary_policy = "extend",
+    scaling_method = "mad",
+    auto_converge = NULL,
+    missing = "error",
+    parallel = TRUE,
+    backend = "cpu",
+    outputs = NULL,
+    intervals = NULL,
+    cv = NULL,
+    seed = NULL,
+    retain_model = FALSE
 )
 }
 \arguments{
 \item{fraction}{Smoothing fraction, greater than 0 and up to 1. Default:
-0.67. See Details for guidance on choosing a value.}
+0.67.}
 
 \item{...}{Not used; forces all subsequent arguments to be named.}
 
@@ -91,11 +91,13 @@ returns only the core result (\code{x}, \code{y}, and fit metadata).}
 \code{NULL} (default) disables intervals.}
 
 \item{cv}{Cross-validation options, created with \code{\link{cv_opts}}:
-e.g. \code{cv = cv_opts(method = "kfold", k = 5, fractions = c(0.2, 0.3, 0.5))}.
+e.g. \code{cv = cv_opts(method = "kfold", k = 5,
+fractions = c(0.2, 0.3, 0.5))}.
 \code{NULL} (default) disables cross-validation.}
 
-\item{seed}{Non-negative whole-number seed shared by cross-validation fold
-assignment and bootstrap resampling, for reproducible results.
+\item{seed}{Non-negative whole-number seed shared by cross-validation and
+bootstrap resampling for reproducible results. When cross-validation is
+unavailable, it controls bootstrap resampling only.
 \code{NULL} (default) uses a random seed.}
 
 \item{retain_model}{Logical; if \code{TRUE}, retain the fitted model's
@@ -118,11 +120,11 @@ real-time data, see \code{\link{OnlineLowess}}.
 
 \code{fraction} is the most important parameter: it controls the size of the
 local neighbourhood used at each point.\tabular{lll}{
-   Range \tab Effect \tab Use case \cr
-   0.1-0.3 \tab Fine detail \tab Rapidly changing signals \cr
-   0.3-0.5 \tab Balanced \tab General purpose \cr
-   0.5-0.7 \tab Heavy smoothing \tab Noisy data \cr
-   0.7-1.0 \tab Very smooth \tab Trend extraction \cr
+    Range \tab Effect \tab Use case \cr
+    0.1-0.3 \tab Fine detail \tab Rapidly changing signals \cr
+    0.3-0.5 \tab Balanced \tab General purpose \cr
+    0.5-0.7 \tab Heavy smoothing \tab Noisy data \cr
+    0.7-1.0 \tab Very smooth \tab Trend extraction \cr
 }
 }
 \examples{

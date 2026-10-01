@@ -5,23 +5,23 @@
 \title{LOWESS Online Smoothing}
 \usage{
 OnlineLowess(
-  fraction = 0.67,
-  ...,
-  iterations = 0L,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  delta = NULL,
-  zero_weight_fallback = "use_local_mean",
-  boundary_policy = "extend",
-  scaling_method = "mad",
-  auto_converge = NULL,
-  missing = "error",
-  window_capacity = 1000L,
-  min_points = 2L,
-  update_mode = "incremental",
-  outputs = NULL,
-  intervals = NULL,
-  seed = NULL
+    fraction = 0.67,
+    ...,
+    iterations = 0L,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    delta = NULL,
+    zero_weight_fallback = "use_local_mean",
+    boundary_policy = "extend",
+    scaling_method = "mad",
+    auto_converge = NULL,
+    missing = "error",
+    window_capacity = 1000L,
+    min_points = 2L,
+    update_mode = "incremental",
+    outputs = NULL,
+    intervals = NULL,
+    seed = NULL
 )
 }
 \arguments{
@@ -36,8 +36,9 @@ non-robust single-point fit that ignores robustness iterations. Default: 0.}
 
 \item{weight_function}{Kernel weight function. One of \code{"tricube"}
 (default), \code{"gaussian"}, \code{"uniform"} (alias: \code{"boxcar"}),
-\code{"cosine"}, \code{"epanechnikov"}, \code{"biweight"} (alias:
-\code{"bisquare"}), or \code{"triangle"} (alias: \code{"triangular"}).}
+\code{"cosine"}, \code{"epanechnikov"},
+\code{"biweight"} (alias: \code{"bisquare"}), or
+\code{"triangle"} (alias: \code{"triangular"}).}
 
 \item{robustness_method}{Outlier downweighting method: \code{"bisquare"}
 (default; alias: \code{"biweight"}), \code{"huber"}, or \code{"talwar"}.}
@@ -54,7 +55,8 @@ to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
 
 \item{boundary_policy}{Boundary handling strategy: \code{"extend"}
 (default; alias: \code{"pad"}), \code{"reflect"} (alias:
-\code{"mirror"}), \code{"zero"}, or \code{"noboundary"} (alias: \code{"none"}).}
+\code{"mirror"}), \code{"zero"}, or
+\code{"noboundary"} (alias: \code{"none"}).}
 
 \item{scaling_method}{Residual scale estimation for robustness weights:
 \code{"mad"} (default; alias: \code{"median_absolute_deviation"}),
@@ -86,10 +88,13 @@ result.}
 
 \item{intervals}{Interval options, created with
 \code{\link{intervals_opts}} (or a named list with any of
-\code{confidence}, \code{prediction}, \code{bootstrap}). \code{NULL}
-(default) disables intervals. Requires \code{update_mode = "full"}.}
+\code{confidence}, \code{prediction}, \code{bootstrap}): e.g.
+\code{intervals = intervals_opts(confidence = 0.95, bootstrap = 200)}.
+\code{NULL} (default) disables intervals.}
 
-\item{seed}{Non-negative whole-number seed for bootstrap resampling.
+\item{seed}{Non-negative whole-number seed shared by cross-validation and
+bootstrap resampling for reproducible results. When cross-validation is
+unavailable, it controls bootstrap resampling only.
 \code{NULL} (default) uses a random seed.}
 }
 \value{
@@ -105,6 +110,8 @@ Best suited when data arrives incrementally (e.g. sensors or streams),
 real-time smoothed values are needed, or memory is fixed. For datasets
 that fit in memory, see \code{\link{Lowess}}; for large batches processed
 in chunks, see \code{\link{StreamingLowess}}.
+
+Confidence and prediction intervals require \code{update_mode = "full"}.
 }
 \examples{
 model <- OnlineLowess(fraction = 0.2, window_capacity = 20)

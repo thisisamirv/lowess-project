@@ -222,7 +222,7 @@ test_that("predict.Lowess bootstrap intervals are reproducible with a seed", {
     expect_identical(p1$confidence_lower, p2$confidence_lower)
     expect_identical(p1$prediction_upper, p2$prediction_upper)
     expect_error(
-        predict(model, c(2.5), intervals = iv, seed = -3),
+        predict(model, 2.5, intervals = iv, seed = -3),
         "seed must be"
     )
 })

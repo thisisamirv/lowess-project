@@ -175,6 +175,9 @@ r-dev:
 r-tests:
 	@"$(MAKE)" -f bindings/r/Makefile tests
 
+validate:
+	@"$(MAKE)" -C validation r-tests
+
 r-coverage:
 	@"$(MAKE)" -f bindings/r/Makefile coverage
 
@@ -279,6 +282,7 @@ all: lowess fastLowess python r julia nodejs wasm cpp go java check-msrv
 	@echo "All checks completed successfully!"
 
 all-dev: lowess-dev fastLowess-dev python-dev r-dev julia-dev nodejs-dev wasm-dev cpp-dev go-dev java-dev check-msrv
+	@"$(MAKE)" validate
 	@echo "All dev checks completed successfully!"
 
 all-coverage: lowess-coverage fastLowess-coverage python-coverage r-coverage
@@ -291,4 +295,4 @@ all-clean: r-clean lowess-clean fastLowess-clean python-clean julia-clean nodejs
 	@git clean -fdX .
 	@echo "All clean completed!"
 
-.PHONY: lowess lowess-dev lowess-coverage lowess-clean fastLowess fastLowess-dev fastLowess-coverage fastLowess-clean python python-dev python-coverage python-clean r r-dev r-tests r-coverage r-clean julia julia-dev julia-clean julia-update-commit nodejs nodejs-dev nodejs-clean wasm wasm-dev wasm-clean cpp cpp-dev cpp-clean go go-dev go-clean java java-dev java-clean check-msrv docs-test all all-dev all-coverage all-clean ensure-llvm-cov
+.PHONY: lowess lowess-dev lowess-coverage lowess-clean fastLowess fastLowess-dev fastLowess-coverage fastLowess-clean python python-dev python-coverage python-clean r r-dev r-tests r-coverage r-clean validate julia julia-dev julia-clean julia-update-commit nodejs nodejs-dev nodejs-clean wasm wasm-dev wasm-clean cpp cpp-dev cpp-clean go go-dev go-clean java java-dev java-clean check-msrv docs-test all all-dev all-coverage all-clean ensure-llvm-cov
