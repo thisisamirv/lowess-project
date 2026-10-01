@@ -73,12 +73,13 @@ same numbers out of <code>rfastlowess</code>, and if not, why
 not?</em></p>
 <p>In short:</p>
 <ul>
-<li>With two options set (<code>boundary_policy = "noboundary"</code>
-and <code>scaling_method = "mar"</code>), <code>rfastlowess</code>
-reproduces <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code> to within floating-point
-tolerance (~1e-10) — see <a href="#reproducing-statslowess">Reproducing
+<li>With three options set (<code>boundary_policy = "noboundary"</code>,
+<code>scaling_method = "mar"</code>, and
+<code>zero_weight_fallback = "return_original"</code>),
+<code>rfastlowess</code> reproduces <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code> to
+within floating-point tolerance (~1e-10) — see <a href="#reproducing-statslowess">Reproducing
 <code>stats::lowess()</code></a> below.</li>
-<li>Outside of those two options, <code>rfastlowess</code>’s
+<li>Outside of those three options, <code>rfastlowess</code>’s
 <em>defaults</em> intentionally differ from <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code>
 (see <a href="#why-the-defaults-differ">Why the defaults differ</a>),
 and it supports a number of features <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code>

@@ -12,17 +12,18 @@ not, why not?*
 
 In short:
 
-- With two options set (`boundary_policy = "noboundary"` and
-  `scaling_method = "mar"`), `rfastlowess` reproduces
+- With three options set (`boundary_policy = "noboundary"`,
+  `scaling_method = "mar"`, and
+  `zero_weight_fallback = "return_original"`), `rfastlowess` reproduces
   [`stats::lowess()`](https://rdrr.io/r/stats/lowess.html) to within
   floating-point tolerance (~1e-10) — see [Reproducing
   `stats::lowess()`](#reproducing-statslowess) below.
-- Outside of those two options, `rfastlowess`’s *defaults* intentionally
-  differ from [`stats::lowess()`](https://rdrr.io/r/stats/lowess.html)
-  (see [Why the defaults differ](#why-the-defaults-differ)), and it
-  supports a number of features
-  [`stats::lowess()`](https://rdrr.io/r/stats/lowess.html) doesn’t have
-  (see [What this package adds](#what-this-package-adds)).
+- Outside of those three options, `rfastlowess`’s *defaults*
+  intentionally differ from
+  [`stats::lowess()`](https://rdrr.io/r/stats/lowess.html) (see [Why the
+  defaults differ](#why-the-defaults-differ)), and it supports a number
+  of features [`stats::lowess()`](https://rdrr.io/r/stats/lowess.html)
+  doesn’t have (see [What this package adds](#what-this-package-adds)).
 
 ------------------------------------------------------------------------
 
