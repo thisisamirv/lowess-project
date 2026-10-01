@@ -15,43 +15,40 @@
 # This complements the fixed scenarios in test-validation.R: randomized
 # comparisons can expose divergences at iteration counts not covered by any
 # single hand-picked case.
-usable_x <- function(x, min_length = 5L) {
-    length(x) >= min_length && anyDuplicated(x) == 0L
+#
+# Iteration counts stop at 25: beyond roughly that many robustness passes,
+# tied-x inputs reach a known unresolved divergence from `stats::lowess` at a
+# rate of about 0.01%, where a ~1e-10 difference crosses a bisquare hard cutoff
+# and is amplified. Raising this bound re-exposes it.
+
+# quickcheck shrinks below the declared minimum length, so the two-point
+# minimum that both `stats::lowess` and this package require is enforced here.
+usable_x <- function(x, min_length = 2L) {
+    length(x) >= min_length
 }
 
 test_that("matches stats::lowess for randomized inputs (property-based)", {
     property <- function(xy, fraction, iterations) {
-        x <- xy[[1]]
-        y <- xy[[2]]
-
-        # Duplicate/near-duplicate x values exercise a separate tie-handling
-        # code path already covered by dedicated fixed cases in
-        # test-validation.R ("... when x has tied values" / "... replicated
-        # pairs"); keep this fuzz test focused on the well-conditioned,
-        # distinct-x class of input from the original bug report by
-        # discarding ties and letting quickcheck draw a new case.
-        if (!usable_x(x)) {
+        if (!usable_x(xy[[1]])) {
             return(expect_true(TRUE))
         }
         expect_true(check_stats_lowess(
-            x,
-            y,
+            xy[[1]],
+            xy[[2]],
             fraction = fraction,
             iterations = iterations,
             zero_weight_fallback = "return_original",
-            tolerance = 1e-5
+            tolerance = 1e-8
         ))
     }
 
     quickcheck::for_all(
         xy = quickcheck::equal_length(
-            quickcheck::double_bounded(-100, 100, len = c(5L, 40L)),
-            quickcheck::double_bounded(-100, 100, len = c(5L, 40L))
+            quickcheck::double_bounded(-100, 100, len = c(2L, 40L)),
+            quickcheck::double_bounded(-100, 100, len = c(2L, 40L))
         ),
         fraction = quickcheck::double_bounded(0.05, 1.0, len = 1L),
-        # Broad fuzzing covers enough passes to expose branch differences;
-        # long-run floating-point cycles are pinned by fixed regressions.
-        iterations = quickcheck::integer_bounded(0L, 12L, len = 1L),
+        iterations = quickcheck::integer_bounded(0L, 25L, len = 1L),
         property = property,
         tests = 200L,
         discards = 1000L
@@ -60,30 +57,62 @@ test_that("matches stats::lowess for randomized inputs (property-based)", {
 
 test_that("matches stats::lowess for randomized sorted output", {
     property <- function(xy, fraction, iterations) {
-        x <- xy[[1]]
-        y <- xy[[2]]
-
-        if (!usable_x(x)) {
+        if (!usable_x(xy[[1]])) {
             return(expect_true(TRUE))
         }
         expect_true(check_stats_lowess(
-            x,
-            y,
+            xy[[1]],
+            xy[[2]],
             fraction = fraction,
             iterations = iterations,
             sorted = TRUE,
             zero_weight_fallback = "return_original",
-            tolerance = 1e-5
+            tolerance = 1e-8
         ))
     }
 
     quickcheck::for_all(
         xy = quickcheck::equal_length(
-            quickcheck::double_bounded(-100, 100, len = c(5L, 40L)),
-            quickcheck::double_bounded(-100, 100, len = c(5L, 40L))
+            quickcheck::double_bounded(-100, 100, len = c(2L, 40L)),
+            quickcheck::double_bounded(-100, 100, len = c(2L, 40L))
         ),
         fraction = quickcheck::double_bounded(0.05, 1.0, len = 1L),
-        iterations = quickcheck::integer_bounded(0L, 12L, len = 1L),
+        iterations = quickcheck::integer_bounded(0L, 25L, len = 1L),
+        property = property,
+        tests = 200L,
+        discards = 1000L
+    )
+})
+
+# Continuous draws practically never collide, so ties need their own generator.
+# `stats::lowess` copies one fitted value across a run of tied x-values instead
+# of refitting each point, and collapsing the draw onto a handful of levels
+# exercises that path (including the all-tied case, where every x is equal).
+test_that("matches stats::lowess for tied x-values (property-based)", {
+    property <- function(xy, levels, fraction, iterations) {
+        if (!usable_x(xy[[1]])) {
+            return(expect_true(TRUE))
+        }
+        x <- round(xy[[1]] / (200 / levels))
+        expect_true(check_stats_lowess(
+            x,
+            xy[[2]],
+            fraction = fraction,
+            iterations = iterations,
+            sorted = TRUE,
+            zero_weight_fallback = "return_original",
+            tolerance = 1e-8
+        ))
+    }
+
+    quickcheck::for_all(
+        xy = quickcheck::equal_length(
+            quickcheck::double_bounded(-100, 100, len = c(2L, 40L)),
+            quickcheck::double_bounded(-100, 100, len = c(2L, 40L))
+        ),
+        levels = quickcheck::integer_bounded(1L, 8L, len = 1L),
+        fraction = quickcheck::double_bounded(0.05, 1.0, len = 1L),
+        iterations = quickcheck::integer_bounded(0L, 25L, len = 1L),
         property = property,
         tests = 200L,
         discards = 1000L
@@ -96,7 +125,8 @@ test_that("matches initial stats::lowess fits for sparse one-spike responses", {
         spike_position,
         spike_magnitude,
         spike_negative,
-        fraction
+        fraction,
+        iterations
     ) {
         if (!usable_x(x)) {
             return(expect_true(TRUE))
@@ -114,7 +144,7 @@ test_that("matches initial stats::lowess fits for sparse one-spike responses", {
             x,
             y,
             fraction = fraction,
-            iterations = 0L,
+            iterations = iterations,
             sorted = TRUE,
             zero_weight_fallback = "return_original",
             tolerance = 1e-8
@@ -122,11 +152,12 @@ test_that("matches initial stats::lowess fits for sparse one-spike responses", {
     }
 
     quickcheck::for_all(
-        x = quickcheck::double_bounded(-100, 100, len = c(5L, 40L)),
+        x = quickcheck::double_bounded(-100, 100, len = c(2L, 40L)),
         spike_position = quickcheck::double_bounded(0, 1, len = 1L),
         spike_magnitude = quickcheck::double_bounded(1e-4, 100, len = 1L),
         spike_negative = quickcheck::logical_(len = 1L),
         fraction = quickcheck::double_bounded(0.05, 1.0, len = 1L),
+        iterations = quickcheck::integer_bounded(0L, 25L, len = 1L),
         property = property,
         tests = 200L,
         discards = 1000L

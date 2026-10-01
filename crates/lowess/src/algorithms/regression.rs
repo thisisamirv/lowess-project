@@ -409,10 +409,19 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
         let window_radius = self.window.max_distance(self.x, x_pivot);
 
         if window_radius <= T::zero() {
+            // R's `lowest` scans from the window's left edge to the end of the data and
+            // stops at the first x past the pivot, so a zero-radius window takes in every
+            // point tied with the pivot rather than only the nearest `q`.
+            let mut tied_end = self.window.right;
+            while tied_end + 1 < n && self.x[tied_end + 1] == x_pivot {
+                tied_end += 1;
+            }
+            let tied_count = T::from(tied_end - self.window.left + 1).unwrap_or(T::one());
+
             let mut sum_w = T::zero();
             let mut sum_wy = T::zero();
             let mut j = self.window.left;
-            while j <= self.window.right {
+            while j <= tied_end {
                 let w_base = if self.use_robustness {
                     self.robustness_weights[j]
                 } else {
@@ -433,24 +442,22 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
             } else {
                 return match self.zero_weight_fallback {
                     ZeroWeightFallback::UseLocalMean => {
-                        let window_size = self.window.len();
-                        let mean = self.y[self.window.left..=self.window.right]
+                        let mean = self.y[self.window.left..=tied_end]
                             .iter()
                             .copied()
                             .fold(T::zero(), |acc, v| acc + v)
-                            / T::from(window_size).unwrap_or(T::one());
+                            / tied_count;
                         Some((mean, T::zero()))
                     }
                     // No original observation exists for an out-of-sample query point.
                     ZeroWeightFallback::ReturnOriginal => match orig_y {
                         Some(v) => Some((v, T::zero())),
                         None => {
-                            let window_size = self.window.len();
-                            let mean = self.y[self.window.left..=self.window.right]
+                            let mean = self.y[self.window.left..=tied_end]
                                 .iter()
                                 .copied()
                                 .fold(T::zero(), |acc, v| acc + v)
-                                / T::from(window_size).unwrap_or(T::one());
+                                / tied_count;
                             Some((mean, T::zero()))
                         }
                     },

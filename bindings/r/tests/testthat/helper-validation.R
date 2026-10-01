@@ -191,6 +191,14 @@ reference_is_ulp_unstable <- function(
     y_ulp <- ifelse(y == 0, eps, abs(y) * eps)
     comparison_scale <- max(1, abs(base_fit))
 
+    # `stats::lowess` branches on exact equality of x: a run of tied x-values
+    # inherits one fitted value, and an all-tied input has zero x-range.
+    # Perturbing tied values independently would split them apart and probe a
+    # different class of input, so every tied case would look "unstable" and be
+    # discarded. Perturb each distinct x-level as a unit instead.
+    x_level <- match(x, unique(x))
+    n_levels <- max(x_level)
+
     has_seed <- exists(".Random.seed", envir = .GlobalEnv)
     old_seed <- if (has_seed) get(".Random.seed", envir = .GlobalEnv) else NULL
     on.exit({
@@ -203,7 +211,8 @@ reference_is_ulp_unstable <- function(
     set.seed(0L)
 
     for (trial in seq_len(trials)) {
-        x_perturbed <- x + sample(c(-1, 1), n, replace = TRUE) * x_ulp
+        x_signs <- sample(c(-1, 1), n_levels, replace = TRUE)[x_level]
+        x_perturbed <- x + x_signs * x_ulp
         y_perturbed <- y + sample(c(-1, 1), n, replace = TRUE) * y_ulp
         perturbed_fit <- stats::lowess(
             x_perturbed,

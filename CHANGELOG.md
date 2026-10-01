@@ -151,6 +151,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Matched Cleveland/R's delta interpolation order (`alpha * y1 + (1 - alpha) * y0`) so interpolated roundoff residuals preserve the correct robustness-cycle phase.
 - Preserved sparse-fit robustness cycles found by `quickcheck`; long-iteration comparisons allow bounded floating-point drift while fixed regressions pin each branch.
 - Fixed the robustness scale/mean-absolute-residual statistics being computed over the full boundary-padded array (when `boundary_policy` pads data): synthetic boundary points' near-zero residuals contaminated the shared scale estimate used to reweight every point, compounding across robustness iterations. `update_robustness_weights` now restricts these statistics to the original (unpadded) data range while still assigning a weight to every residual, including padding.
+- Fixed zero-radius local windows dropping tied points beyond the nominal window edge. When every point in the window sits at the pivot, `lowest()` keeps scanning to the end of the data and stops at the first larger x, so it averages the whole tied run; the degenerate branch instead stopped at the `q`-th neighbour. A leading run of tied x-values returned the mean of only its first `q` responses rather than the run's own fit.
 
 **fastLowess:**
 
