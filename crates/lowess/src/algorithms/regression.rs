@@ -17,12 +17,16 @@
 
 // External dependencies
 #[cfg(not(feature = "std"))]
+use alloc::string::ToString;
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 use core::fmt::Debug;
+use core::str::FromStr;
 use num_traits::Float;
 
 // Internal dependencies
 use crate::math::kernel::WeightFunction;
+use crate::primitives::errors::LowessError;
 use crate::primitives::window::Window;
 
 // Policy for handling cases where all weights are zero.
@@ -37,6 +41,23 @@ pub enum ZeroWeightFallback {
 
     // Return None (propagate failure).
     ReturnNone,
+}
+
+impl FromStr for ZeroWeightFallback {
+    type Err = LowessError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "use_local_mean" | "local_mean" | "mean" => Ok(Self::UseLocalMean),
+            "return_original" | "original" => Ok(Self::ReturnOriginal),
+            "return_none" | "none" | "nan" => Ok(Self::ReturnNone),
+            _ => Err(LowessError::InvalidOption {
+                option: "zero_weight_fallback",
+                value: s.to_string(),
+                valid: "use_local_mean, return_original, return_none",
+            }),
+        }
+    }
 }
 
 impl ZeroWeightFallback {

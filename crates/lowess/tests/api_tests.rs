@@ -31,7 +31,9 @@ use lowess::internals::engine::validator::Validator;
 use lowess::internals::evaluation::cv::CVBuilder;
 use lowess::internals::evaluation::diagnostics::Diagnostics;
 use lowess::internals::evaluation::intervals::IntervalsBuilder;
+use lowess::internals::primitives::backend::Backend;
 use lowess::internals::primitives::errors::LowessError;
+use lowess::internals::primitives::policies::{MergeStrategy, MissingPolicy, UpdateMode};
 
 // ============================================================================
 // Helper Functions
@@ -41,6 +43,45 @@ fn linear_series(n: usize, slope: f64, intercept: f64) -> (Vec<f64>, Vec<f64>) {
     let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
     let y: Vec<f64> = x.iter().map(|xi| slope * xi + intercept).collect();
     (x, y)
+}
+
+#[test]
+fn test_primitive_option_parsers_preserve_aliases_and_errors() {
+    assert_eq!(
+        "DROP".parse::<MissingPolicy>().unwrap(),
+        MissingPolicy::Drop
+    );
+    assert_eq!("GPU".parse::<Backend>().unwrap(), Backend::GPU);
+    assert_eq!(
+        "take_first".parse::<MergeStrategy>().unwrap(),
+        MergeStrategy::TakeFirst
+    );
+    assert_eq!("RESMOOTH".parse::<UpdateMode>().unwrap(), UpdateMode::Full);
+
+    for (error, expected_option, expected_values) in [
+        (
+            "bad".parse::<MissingPolicy>().unwrap_err(),
+            "missing",
+            "error, drop",
+        ),
+        ("bad".parse::<Backend>().unwrap_err(), "backend", "cpu, gpu"),
+        (
+            "bad".parse::<MergeStrategy>().unwrap_err(),
+            "merge_strategy",
+            "average, weighted_average, take_first, take_last",
+        ),
+        (
+            "bad".parse::<UpdateMode>().unwrap_err(),
+            "update_mode",
+            "full, incremental",
+        ),
+    ] {
+        assert!(matches!(
+            error,
+            LowessError::InvalidOption { option, value, valid }
+                if option == expected_option && value == "bad" && valid == expected_values
+        ));
+    }
 }
 
 // ============================================================================

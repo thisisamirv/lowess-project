@@ -13,6 +13,8 @@
 
 // External dependencies
 #[cfg(not(feature = "std"))]
+use alloc::string::ToString;
+#[cfg(not(feature = "std"))]
 use alloc::sync::Arc;
 #[cfg(not(feature = "std"))]
 use alloc::vec;
@@ -22,6 +24,7 @@ use core::cmp::Ordering;
 use core::fmt::{Debug, Display, Formatter};
 use core::iter::repeat_n;
 use core::mem::swap;
+use core::str::FromStr;
 use num_traits::Float;
 #[cfg(feature = "std")]
 use std::sync::Arc;
@@ -54,6 +57,23 @@ pub enum ExtrapolationPolicy {
     Clamp,
     Linear,
     Error,
+}
+
+impl FromStr for ExtrapolationPolicy {
+    type Err = LowessError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "clamp" => Ok(Self::Clamp),
+            "linear" => Ok(Self::Linear),
+            "error" => Ok(Self::Error),
+            _ => Err(LowessError::InvalidOption {
+                option: "extrapolation",
+                value: s.to_string(),
+                valid: "clamp, linear, error",
+            }),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

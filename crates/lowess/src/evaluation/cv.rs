@@ -119,6 +119,18 @@ pub enum CVKind {
 }
 
 impl CVKind {
+    pub fn parse_method(method: &str, k: usize) -> Result<Self, LowessError> {
+        match method.to_lowercase().as_str() {
+            "kfold" | "k_fold" | "k-fold" => Ok(Self::KFold(k)),
+            "loocv" | "loo_cv" | "loo-cv" => Ok(Self::LOOCV),
+            _ => Err(LowessError::InvalidOption {
+                option: "cv_method",
+                value: method.to_string(),
+                valid: "kfold, loocv",
+            }),
+        }
+    }
+
     // Run cross-validation to select the best fraction.
     #[allow(clippy::too_many_arguments)]
     pub fn run<T, F, P>(

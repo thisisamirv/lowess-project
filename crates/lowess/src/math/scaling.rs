@@ -8,10 +8,14 @@
 // Quickselect-based median for O(n) performance.
 
 // External dependencies
+#[cfg(not(feature = "std"))]
+use alloc::string::ToString;
 use core::cmp::Ordering::Equal;
+use core::str::FromStr;
 use num_traits::Float;
 
 // Internal dependencies
+use crate::primitives::errors::LowessError;
 // Method for measuring the scale of residuals.
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
@@ -25,6 +29,23 @@ pub enum ScalingMethod {
 
     // Mean Absolute Residual: `mean(|r|)`.
     Mean,
+}
+
+impl FromStr for ScalingMethod {
+    type Err = LowessError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "mar" | "median_absolute_residual" => Ok(Self::MAR),
+            "mad" | "median_absolute_deviation" => Ok(Self::MAD),
+            "mean" => Ok(Self::Mean),
+            _ => Err(LowessError::InvalidOption {
+                option: "scaling_method",
+                value: s.to_string(),
+                valid: "mad, mar, mean",
+            }),
+        }
+    }
 }
 
 impl ScalingMethod {

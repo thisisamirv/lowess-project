@@ -259,6 +259,22 @@ lowess-project/
 
 Documentation lives alongside each crate/binding rather than in a shared top-level directory: `crates/*/src/doc.rs` (rustdoc, via `#[cfg(doc)]` modules) and `bindings/*/docs`/`docs-site` (Sphinx, Documenter.jl, Doxygen, Antora, Starlight, Hugo, or pkgdown, depending on the language).
 
+## Core Structure
+
+The `lowess` crate (`crates/lowess/src/`) is organized into seven layers, from lowest to highest:
+
+| Layer | Module | Responsibility |
+| --- | --- | --- |
+| 1 | `primitives/` | Shared types, errors, buffers, sorting, windows, and option parsing |
+| 2 | `math/` | Kernels, robust scaling, and boundary handling |
+| 3 | `algorithms/` | Local regression, robustness, and interpolation |
+| 4 | `evaluation/` | Cross-validation, diagnostics, and intervals |
+| 5 | `engine/` | Fit orchestration, validation, and result types |
+| 6 | `adapters/` | Batch, Streaming, Online, and Predict execution modes |
+| 7 | `api.rs` | Fluent builders and adapter selection |
+
+Dependencies must point to **lower-numbered layers only**; a module must not import from a higher layer. Sibling modules within the same layer must not depend on each other, except for dependencies involving that layer's `defaults.rs` or `parser.rs`. The exception allows shared defaults and parsers to use types from their owning layer without opening other same-layer dependencies. This hierarchy applies to `lowess` only, not the `fastLowess` extension crate.
+
 ## Pull Requests
 
 1. **Focus**: Keep PRs small and focused on a single change.

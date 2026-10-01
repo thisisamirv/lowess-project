@@ -10,10 +10,14 @@
 //   variance (mu_2), roughness (R), and AMISE efficiency relative to Epanechnikov.
 
 // External dependencies
+#[cfg(not(feature = "std"))]
+use alloc::string::ToString;
 use core::f64::consts::{PI, SQRT_2};
+use core::str::FromStr;
 use num_traits::Float;
 
 // Internal dependencies
+use crate::primitives::errors::LowessError;
 // Square root of 2*pi, used in Gaussian kernel calculations.
 #[allow(clippy::excessive_precision)]
 const SQRT_2PI: f64 = 2.5066282746310005024157652848110452530069867406099_f64;
@@ -120,6 +124,27 @@ pub enum WeightFunction {
 
     // Uniform (rectangular) kernel: K(u) = 1 for |u| < 1.
     Uniform,
+}
+
+impl FromStr for WeightFunction {
+    type Err = LowessError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "cosine" => Ok(Self::Cosine),
+            "epanechnikov" => Ok(Self::Epanechnikov),
+            "gaussian" => Ok(Self::Gaussian),
+            "biweight" | "bisquare" => Ok(Self::Biweight),
+            "triangle" | "triangular" => Ok(Self::Triangle),
+            "tricube" => Ok(Self::Tricube),
+            "uniform" | "boxcar" => Ok(Self::Uniform),
+            _ => Err(LowessError::InvalidOption {
+                option: "weight_function",
+                value: s.to_string(),
+                valid: "tricube, epanechnikov, gaussian, uniform, biweight, triangle, cosine",
+            }),
+        }
+    }
 }
 
 impl WeightFunction {
