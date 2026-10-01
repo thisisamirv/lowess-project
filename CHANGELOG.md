@@ -169,6 +169,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Skip comparison snippets when the optional `statsmodels` dependency is unavailable instead of failing verification.
 - Fixed C++ release CI staging the tracked Spack recipe despite the repository's broad `spack/` ignore rule.
+- Expanded the randomized Locfit comparison to cover Gaussian weights and their unbounded support.
 
 **Go:**
 
@@ -184,6 +185,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **lowess:**
 
+- Matched Locfit's Gaussian scale and unbounded support, applying nonzero Gaussian weights across the full dataset while retaining the nearest-neighbor span for bandwidth selection.
 - Matched R's effective-zero robustness guard: stop when `6 * median(abs(residuals)) < 1e-7 * mean(abs(residuals))`; centered MAD retains its separate fallback.
 - Matched Cleveland/R's local-linear degeneracy rule: suppress the slope when weighted local x-spread is below `0.001 * (max(x) - min(x))`.
 - Removed the absolute `1e-12` bisquare scale floor so roundoff-sized residuals are reweighted at their actual scale.
@@ -203,6 +205,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **fastLowess:**
 
+- Matched CPU Gaussian semantics in the GPU backend, including Locfit's 2.5 scale and full-data fitting and standard-error ranges.
 - Used the serial delta scan below the parallel-benefit threshold so small inputs preserve the exact arithmetic order required by `stats::lowess` robustness edge cases.
 - Fixed tied x-values being refit individually on the parallel path when `delta` is `0` (including the `delta = 0.01 * range` that `stats::lowess` derives for zero-range input). `stats::lowess` copies a fitted value across a run of tied x-values, so each refit point picked up its own narrower window: for all-tied input the final point returned its two-point window mean instead of the shared fit, and the resulting residuals then diverged through the robustness iterations.
 

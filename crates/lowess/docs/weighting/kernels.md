@@ -95,9 +95,9 @@ First smoothed value (epanechnikov kernel): 0.4069232787228461
 
 ## Gaussian
 
-Infinitely smooth. No boundary effects.
+Infinitely smooth, with unbounded support. The nearest-neighbor span sets the bandwidth, but observations outside that neighborhood still contribute.
 
-$$w(u) = \exp(-u^2/2)$$
+$$w(u) = \exp(-(2.5u)^2/2)$$
 
 **Use when**: Maximum smoothness needed, computational cost acceptable.
 

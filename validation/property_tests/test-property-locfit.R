@@ -18,8 +18,10 @@ test_that("matches Locfit for shared local-linear options", {
     })
     set.seed(20261001)
 
-    kernel_names <- c("tricube", "epanechnikov", "biweight", "triangle")
-    locfit_kernels <- c("tcub", "epan", "bisq", "tria")
+    kernel_names <- c(
+        "tricube", "epanechnikov", "biweight", "triangle", "gaussian"
+    )
+    locfit_kernels <- c("tcub", "epan", "bisq", "tria", "gauss")
 
     property <- function(xy, fraction, kernel_index) {
         if (length(xy[[1]]) < 8L) {
@@ -66,7 +68,7 @@ test_that("matches Locfit for shared local-linear options", {
             quickcheck::double_bounded(-100, 100, len = c(8L, 40L))
         ),
         fraction = quickcheck::double_bounded(0.2, 0.8, len = 1L),
-        kernel_index = quickcheck::integer_bounded(1L, 4L, len = 1L),
+        kernel_index = quickcheck::integer_bounded(1L, 5L, len = 1L),
         property = property,
         tests = 100L,
         discards = 500L

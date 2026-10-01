@@ -74,9 +74,9 @@ print(f"Smoothed y[0]: {result.y[0]:.4f}")
 
 ## Gaussian
 
-Infinitely smooth. No boundary effects.
+Infinitely smooth, with unbounded support. The nearest-neighbor span sets the bandwidth, but observations outside that neighborhood still contribute.
 
-$$w(u) = \exp(-u^2/2)$$
+$$w(u) = \exp(-(2.5u)^2/2)$$
 
 **Use when**: Maximum smoothness needed, computational cost acceptable.
 
