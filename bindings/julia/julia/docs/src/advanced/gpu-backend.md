@@ -77,7 +77,7 @@ Once GPU support is available, request it by setting the backend option on the b
 ```julia
 using FastLOWESS
 
-model = Lowess(fraction=0.5, backend="gpu", confidence_intervals=0.95)
+model = Lowess(fraction=0.5, backend="gpu", intervals=(confidence=0.95,))
 result = fit(model, x, y)
 ```
 

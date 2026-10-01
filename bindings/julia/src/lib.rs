@@ -16,7 +16,7 @@ use std::sync::Arc;
 
 use fastLowess::internals::LowessBuilder;
 use fastLowess::internals::binding_support as shared_parse;
-use fastLowess::prelude::LowessResult;
+use fastLowess::prelude::{IntervalsBuilder, LowessResult};
 
 thread_local! {
     static JL_LAST_ERROR: RefCell<Option<CString>> = const { RefCell::new(None) };
@@ -44,6 +44,24 @@ fn setter_unsupported_constructor_only(name: &str) {
     set_last_error_message(&shared_parse::setter_unsupported_constructor_only_message(
         name,
     ));
+}
+
+fn opt_seed(seed: u64, has_seed: c_int) -> Option<u64> {
+    (has_seed != 0).then_some(seed)
+}
+
+fn apply_bootstrap_and_seed(
+    mut builder: LowessBuilder<f64>,
+    bootstrap: c_ulong,
+    seed: Option<u64>,
+) -> LowessBuilder<f64> {
+    if bootstrap > 0 {
+        builder = builder.intervals(IntervalsBuilder::new().bootstrap(bootstrap as usize));
+    }
+    if let Some(seed) = seed {
+        builder = builder.seed(seed);
+    }
+    builder
 }
 
 /// Export the last error message set by a failed constructor.
@@ -277,7 +295,6 @@ pub struct JlPredictHandle {
 ///
 /// # Safety
 /// The returned pointer must be freed with jl_lowess_free.
-#[allow(clippy::useless_conversion)] // c_ulong is u32 on Windows, u64 on Unix
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_lowess_new(
     fraction: c_double,
@@ -289,6 +306,7 @@ pub unsafe extern "C" fn jl_lowess_new(
     boundary_policy: *const c_char,
     confidence_intervals: c_double, // NaN for disable
     prediction_intervals: c_double, // NaN for disable
+    bootstrap: c_ulong,             // 0 for analytic intervals
     return_diagnostics: c_int,
     return_residuals: c_int,
     return_robustness_weights: c_int,
@@ -299,7 +317,8 @@ pub unsafe extern "C" fn jl_lowess_new(
     cv_method: *const c_char,
     cv_k: c_int,
     parallel: c_int,
-    cv_seed: c_ulong, // 0 for none
+    seed: u64,
+    has_seed: c_int,
     return_se: c_int,
     return_sorted: c_int,
     backend: *const c_char,
@@ -378,7 +397,6 @@ pub unsafe extern "C" fn jl_lowess_new(
                 cv_fractions: cv_fractions_slice,
                 cv_method: Some(cv_method_str),
                 cv_k: Some(cv_k as usize),
-                cv_seed: (cv_seed != 0).then_some(cv_seed.into()),
                 retain_model: Some(retain_model != 0),
                 ..Default::default()
             },
@@ -392,6 +410,8 @@ pub unsafe extern "C" fn jl_lowess_new(
         } else {
             base_builder
         };
+        let base_builder =
+            apply_bootstrap_and_seed(base_builder, bootstrap, opt_seed(seed, has_seed));
 
         Box::into_raw(Box::new(JlLowessConfig { base_builder }))
     });
@@ -565,6 +585,9 @@ pub unsafe extern "C" fn jl_predict(
     extrapolation: *const c_char,
     max_extrapolation_distance: c_double,
     max_neighbor_distance: c_double,
+    bootstrap: c_ulong,
+    seed: u64,
+    has_seed: c_int,
 ) -> JlPredictResult {
     let result = catch_unwind(|| {
         if handle.is_null() {
@@ -578,7 +601,7 @@ pub unsafe extern "C" fn jl_predict(
             .then_some(unsafe { shared_parse::parse_c_str_or_default(extrapolation, "clamp") });
 
         let state = unsafe { &(*handle).state };
-        let output = match shared_parse::run_predict_state(
+        let output = match shared_parse::run_predict_state_with_bootstrap(
             state,
             new_x_slice,
             shared_parse::PredictOptionSet {
@@ -592,6 +615,8 @@ pub unsafe extern "C" fn jl_predict(
                 max_neighbor_distance: (!max_neighbor_distance.is_nan())
                     .then_some(max_neighbor_distance),
             },
+            (bootstrap > 0).then_some(bootstrap as usize),
+            opt_seed(seed, has_seed),
         ) {
             Ok(o) => o,
             Err(e) => return predict_error_result(&e.message),
@@ -650,7 +675,7 @@ pub unsafe extern "C" fn jl_predict_handle_free(ptr: *mut JlPredictHandle) {
 
 /// Legacy setter retained for ABI compatibility.
 ///
-/// Configure `cv_seed` in `jl_lowess_new` instead.
+/// Configure `seed` in `jl_lowess_new` instead.
 ///
 /// # Safety
 /// config_ptr must be a valid mutable pointer returned by jl_lowess_new.
@@ -696,6 +721,9 @@ pub unsafe extern "C" fn jl_streaming_lowess_new(
     return_se: c_int,
     confidence_intervals: c_double,
     prediction_intervals: c_double,
+    bootstrap: c_ulong,
+    seed: u64,
+    has_seed: c_int,
 ) -> *mut JlStreamingLowess {
     clear_last_error_message();
     let result = catch_unwind(|| {
@@ -783,6 +811,7 @@ pub unsafe extern "C" fn jl_streaming_lowess_new(
         } else {
             builder
         };
+        let builder = apply_bootstrap_and_seed(builder, bootstrap, opt_seed(seed, has_seed));
 
         let processor = match shared_parse::build_streaming(
             builder,
@@ -910,6 +939,9 @@ pub unsafe extern "C" fn jl_online_lowess_new(
     return_se: c_int,
     confidence_intervals: c_double,
     prediction_intervals: c_double,
+    bootstrap: c_ulong,
+    seed: u64,
+    has_seed: c_int,
 ) -> *mut JlOnlineLowess {
     clear_last_error_message();
     let result =
@@ -1000,6 +1032,7 @@ pub unsafe extern "C" fn jl_online_lowess_new(
             } else {
                 builder
             };
+            let builder = apply_bootstrap_and_seed(builder, bootstrap, opt_seed(seed, has_seed));
 
             let processor = match shared_parse::build_online(
                 builder,

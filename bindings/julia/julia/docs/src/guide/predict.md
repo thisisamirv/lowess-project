@@ -19,28 +19,25 @@ It reuses `fit`'s own (possibly `delta`-interpolated) smoothed curve for its `y`
 | Keyword Argument | Type | Default | Description |
 | --- | --- | --- | --- |
 | `outputs` | `Vector{String}` | `String[]` | Select `"se"` and/or `"derivative"` |
-| `confidence_level` | `Union{Float64, Nothing}` | `nothing` | Confidence interval coverage level (e.g. `0.95`) |
-| `prediction_level` | `Union{Float64, Nothing}` | `nothing` | Prediction interval coverage level (e.g. `0.95`) |
-| `return_derivative` | `Bool` | `false` | Include the local fit's derivative (slope) at each query point |
+| `intervals` | `NamedTuple` | `nothing` | Grouped `confidence`, `prediction`, and optional `bootstrap` options |
+| `seed` | `Union{Integer, Nothing}` | `nothing` | Reproducible prediction-time bootstrap draws; `0` is valid |
 | `extrapolation` | `String` | `"clamp"` | Behavior for query points outside the training `x`-range |
 | `max_extrapolation_distance` | `Union{Float64, Nothing}` | `nothing` | Under `"linear"` extrapolation, the max allowed distance beyond the training boundary before erroring |
 | `max_neighbor_distance` | `Union{Float64, Nothing}` | `nothing` | Max allowed distance to the farthest training point in a query's local window before erroring |
 
-### return_se
+### outputs
 
-Computes standard errors for each query point, using the retained model's residual scale and per-point leverage. Required for `confidence_level`/`prediction_level` to be populated. `false` by default.
+Request `"se"` for standard errors (from the retained model's residual scale and per-point leverage) and `"derivative"` for the local slope at each query point. Analytic intervals compute their required standard errors even without an explicit `"se"` output.
 
-### confidence_level
+### intervals
 
-Confidence level for the confidence interval around the mean response at each query point (e.g. `0.95`). Uses the same z-score convention as `fit`'s own confidence intervals. `nothing` (default) disables it.
+A `NamedTuple` such as `(confidence=0.95, prediction=0.95, bootstrap=200)`. `confidence` bounds the mean response and `prediction` bounds a new observation at each query point. Without bootstrap, these use normal-theory standard errors and the retained residual scale.
 
-### prediction_level
+Set `bootstrap` to at least `2` to resample the retained Batch residuals, refit the model, and calculate query-point percentile intervals and standard errors.
 
-Confidence level for the prediction interval for a new observation at each query point (e.g. `0.95`). Widens using the same MAD-based residual scale `fit` uses for its own intervals. `nothing` (default) disables it.
+### seed
 
-### return_derivative
-
-Includes the local fit's derivative (slope) at each query point in the output. `false` by default.
+Seeds prediction-time bootstrap draws, independently of the fit/CV `seed` on `Lowess`. It does not enable bootstrap by itself.
 
 ### extrapolation
 
@@ -84,6 +81,18 @@ prediction = predict(result.predict_model, [2.5]; outputs=["se", "derivative"])
 println("y: ", prediction.y)
 println("SE: ", prediction.standard_errors)
 println("Derivative: ", prediction.derivative)
+```
+
+### Bootstrap Intervals
+
+```@example predict
+prediction = predict(
+    result.predict_model,
+    [2.5, 4.5];
+    intervals=(confidence=0.95, prediction=0.95, bootstrap=200),
+    seed=7,
+)
+println("CI lower: ", prediction.confidence_lower)
 ```
 
 ### Linear Extrapolation

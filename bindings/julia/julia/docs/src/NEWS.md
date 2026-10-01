@@ -8,10 +8,12 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Added
 
 * Added grouped `outputs` and `cv` keywords for `Lowess`, grouped outputs for Streaming and Online constructors, and retained-model prediction.
+* Added a grouped `intervals` keyword with residual-bootstrap intervals for `Lowess`, `StreamingLowess`, full-update `OnlineLowess`, and `predict`.
 * Added an "Alternative Software" guide comparing `FastLOWESS.jl` with the general-purpose LOESS implementation in `Loess.jl`.
 
 ### Changed
 
+* Breaking change: replaced flat interval keywords and `predict`'s interval levels with `intervals=(confidence=..., prediction=..., bootstrap=...)`, and replaced flat CV keywords and the nested `cv` seed with `cv=(method=..., k=..., fractions=...)` plus one outer `seed` shared by CV and bootstrap. `predict` has its own `seed`; `seed=0` is a valid seed.
 * Represent unavailable diagnostic metrics as `nothing` instead of `NaN` sentinels.
 
 ### Fixed

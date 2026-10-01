@@ -112,9 +112,9 @@ x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = StreamingLowess(;
-    merge_strategy="weighted_average",
     chunk_size=5000,
-    overlap=500
+    overlap=500,
+    merge_strategy="weighted_average",
 )
 process_chunk(model, x, y)
 result = finalize(model)

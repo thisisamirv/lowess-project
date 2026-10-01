@@ -22,7 +22,7 @@ rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-model = Lowess(; cv=(fractions=[0.2, 0.3, 0.5, 0.7], method="kfold", k=5)
+model = Lowess(; cv=(method="kfold", k=5, fractions=[0.2, 0.3, 0.5, 0.7])
 )
 result = fit(model, x, y)
 
@@ -44,7 +44,7 @@ rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-model = Lowess(; cv=(fractions=[0.2, 0.3, 0.5, 0.7], method="loocv")
+model = Lowess(; cv=(method="loocv", fractions=[0.2, 0.3, 0.5, 0.7])
 )
 result = fit(model, x, y)
 println("Selected fraction (CV): ", result.fraction_used)
@@ -64,8 +64,7 @@ rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-model = Lowess(; cv=(fractions=[0.3, 0.5, 0.7], method="kfold", k=5, seed=42)
-)
+model = Lowess(; cv=(method="kfold", k=5, fractions=[0.3, 0.5, 0.7]), seed=42)
 result = fit(model, x, y)
 println("Selected fraction (CV): ", result.fraction_used)
 ```
@@ -108,8 +107,7 @@ x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 # Example output
-model = Lowess(; cv_method="kfold", cv_k=5,
-                cv_fractions=[0.1, 0.3, 0.5, 0.7])
+model = Lowess(; cv=(method="kfold", k=5, fractions=[0.1, 0.3, 0.5, 0.7]))
 result = fit(model, x, y)
 
 # Fraction  | CV Score (MSE)

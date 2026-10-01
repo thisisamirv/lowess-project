@@ -67,8 +67,7 @@ y = sin.(t) .+ 0.1
 model = Lowess(;
     fraction=0.2,
     iterations=3,
-    confidence_intervals=0.95,
-    prediction_intervals=0.95
+    intervals=(confidence=0.95, prediction=0.95),
 )
 result = fit(model, t, y)
 
@@ -133,8 +132,8 @@ expression = [100.0 * (1.0 + 0.5 * sin(hours[i] * pi / 12.0)) + (mod((i - 1) * 7
 model = Lowess(;
     fraction=0.3,
     iterations=3,
-    confidence_intervals=0.95,
-    return_diagnostics=true
+    outputs=["diagnostics"],
+    intervals=(confidence=0.95,),
 )
 result = fit(model, hours, expression)
 

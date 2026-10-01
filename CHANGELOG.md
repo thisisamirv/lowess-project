@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Julia:**
 
 - Added grouped `outputs` and `cv` keywords for `Lowess`, plus grouped outputs for Streaming/Online constructors and retained-model prediction.
+- Added a grouped `intervals` keyword (`confidence`, `prediction`, `bootstrap`) with residual-bootstrap intervals across `Lowess`, `StreamingLowess`, full-update `OnlineLowess`, and `predict`.
 - Added an "Alternative Software" guide comparing LOWESS in `FastLOWESS.jl` with the more general LOESS implementation in `Loess.jl`.
 - Added optional `Loess.jl` handling to the Julia snippet runner; comparison snippets are skipped when unavailable.
 
@@ -126,6 +127,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Julia:**
 
+- Breaking change: replaced `confidence_intervals`/`prediction_intervals` (and `predict`'s `confidence_level`/`prediction_level`) with `intervals`; removed `cv_fractions`/`cv_method`/`cv_k`/`cv_seed` and the nested `cv` seed in favor of `cv=(method, k, fractions)` plus one outer `seed` shared by CV and fit-time bootstrap. `predict` has its own `seed`, and `seed=0` is now a real seed instead of meaning "unset". Unknown `cv`/`intervals` keys raise `ArgumentError`.
 - Represent unavailable diagnostic metrics as `nothing` instead of `NaN` sentinels.
 
 **Node.js:**

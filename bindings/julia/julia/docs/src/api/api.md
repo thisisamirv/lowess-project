@@ -50,23 +50,22 @@ println("First smoothed value: ", result.y[1])
 | --- | --- | --- | --- |
 | `fraction` | `Float64` | `0.67` | Smoothing fraction (bandwidth) |
 | `iterations` | `Int` | `3` | Number of robustifying iterations |
-| `delta` | `Float64` | `NaN` | Interpolation distance (`NaN` auto-sets it to 1% of the x-range) |
 | `weight_function` | `String` | `"tricube"` | Weight function name |
 | `robustness_method` | `String` | `"bisquare"` | Robustness method name |
-| `scaling_method` | `String` | `"mad"` | Residual scaling method |
-| `boundary_policy` | `String` | `"extend"` | Boundary handling policy |
+| `delta` | `Float64` | `NaN` | Interpolation distance (`NaN` auto-sets it to 1% of the x-range) |
 | `zero_weight_fallback` | `String` | `"use_local_mean"` | Zero-weight handling strategy |
-| `missing` | `String` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
+| `boundary_policy` | `String` | `"extend"` | Boundary handling policy |
+| `scaling_method` | `String` | `"mad"` | Residual scaling method |
 | `auto_converge` | `Float64` | `NaN` | Auto-convergence tolerance |
-| `confidence_intervals` | `Float64` | `NaN` | Confidence level (e.g., 0.95) |
-| `prediction_intervals` | `Float64` | `NaN` | Prediction level (e.g., 0.95) |
-| `outputs` | `Vector{String}` | `String[]` | Select `diagnostics`, `residuals`, `weights`, `derivative`, `se`, and/or `sorted` |
+| `missing` | `String` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
 | `parallel` | `Bool` | `true` | Enable parallel execution |
 | `backend` | `String` | `"cpu"` | Execution backend (`"cpu"` or `"gpu"`); GPU requires the library to be built with the `gpu` Cargo feature |
-| `cv` | `NamedTuple` | `nothing` | Grouped CV options: `fractions`, `method`, `k`, and `seed` |
-| `custom_weights` | `Vector{Float64}` | `nothing` | Per-observation case weights — passed to `fit`, not the constructor |
+| `outputs` | `Vector{String}` | `String[]` | Select `se`, `diagnostics`, `residuals`, `weights`, `derivative`, and/or `sorted` |
+| `intervals` | `NamedTuple` | `nothing` | Grouped interval options: `confidence`, `prediction`, and `bootstrap` |
+| `cv` | `NamedTuple` | `nothing` | Grouped CV options: `method`, `k`, and `fractions` |
+| `seed` | `Union{Integer, Nothing}` | `nothing` | Shared CV/bootstrap seed; `0` is a valid seed |
 | `retain_model` | `Bool` | `false` | Retain training data, enabling `predict(model, new_x; ...)` on the result |
-| `return_derivative` | `Bool` | `false` | Include the per-point local fit derivative (slope) in result |
+| `custom_weights` | `Vector{Float64}` | `nothing` | Per-observation case weights — passed to `fit`, not the constructor |
 
 ## Options
 
@@ -92,10 +91,6 @@ println("First smoothed value: ", result.y[1])
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-### delta
-
-Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to 1% of the x-range. Set it to `0.0` explicitly to disable interpolation and fit every point exactly.
-
 ### weight_function
 
 *See: [Weight Functions](../weighting/kernels.md)*
@@ -116,22 +111,9 @@ Points within `delta` of each other on the x-axis share the same local fit inste
 - `"huber"`
 - `"talwar"`
 
-### scaling_method
+### delta
 
-*See: [Scaling Methods](../weighting/scaling.md)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### boundary_policy
-
-*See: [Boundary Handling](../advanced/boundary.md)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
+Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to 1% of the x-range. Set it to `0.0` explicitly to disable interpolation and fit every point exactly.
 
 ### zero_weight_fallback
 
@@ -142,6 +124,29 @@ Behavior when all neighborhood weights are zero:
 | `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### boundary_policy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
+### scaling_method
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### auto_converge
+
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
 
 ### missing
 
@@ -154,23 +159,61 @@ Policy for handling non-finite (NaN/Inf) values in `x`/`y` (and `custom_weights`
 
 **Note:** A length mismatch between `x` and `y` always errors, even under `"drop"`.
 
-### auto_converge
+### parallel
 
-*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+Enable multi-threaded execution via Rayon.
 
-Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+- `true` (default) — parallelizes the local regression fits across CPU cores
+- `false` — forces single-threaded execution (useful for benchmarking or deterministic profiling)
 
-### confidence_intervals
+### backend
+
+*See: [GPU Backend](../advanced/gpu-backend.md)*
+
+The batch `Lowess` type can optionally run on a GPU-accelerated backend powered by `wgpu`, for high-throughput processing of large datasets (10k+ points).
+
+- `"cpu"` (default)
+- `"gpu"` — requires the library to be built with the `gpu` Cargo feature
+
+### intervals
 
 *See: [Intervals](../guide/intervals.md)*
 
-Confidence level for the confidence interval around the mean response (e.g. `0.95`). `NaN` (default) disables confidence intervals.
+A `NamedTuple` such as `(confidence=0.95, prediction=0.95, bootstrap=200)`. `confidence` bounds the mean response and `prediction` bounds a new observation; omitted levels disable that bound. `bootstrap` (at least `2`) replaces analytic intervals with residual-bootstrap standard errors and percentile bounds. `seed` controls fit-time bootstrap draws but does not enable bootstrap by itself.
 
-### prediction_intervals
+### CV Options
 
-*See: [Intervals](../guide/intervals.md)*
+*See: [Cross-Validation](../guide/cross-validation.md)*
 
-Confidence level for the prediction interval for new observations (e.g. `0.95`). `NaN` (default) disables prediction intervals.
+A `NamedTuple` such as `(method="kfold", k=5, fractions=[0.2, 0.3, 0.5])`:
+
+- `method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
+- `k`: Number of folds for k-fold CV. Ignored when `method="loocv"`.
+- `fractions`: Candidate fractions to evaluate. Required.
+
+Seed k-fold shuffling with the outer `seed` keyword, not inside `cv`.
+
+### seed
+
+One seed shared by k-fold CV shuffling and fit-time residual bootstrap. It does not enable either feature by itself; `nothing` (default) uses each feature's default, and `0` is a valid seed.
+
+### retain_model
+
+*See: [Predict](../guide/predict.md)*
+
+Retains the fitted model's training data, populating `result.predict_model` with a `PredictModel` usable to evaluate the fit at out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
+
+### custom_weights
+
+*See: [Custom Weights](../weighting/custom-weights.md)*
+
+Per-observation weights, passed to `fit` rather than the constructor.
+
+### return_se
+
+*See: [Intervals](../guide/intervals.md#standard-errors)*
+
+Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
 
 ### return_diagnostics
 
@@ -195,60 +238,17 @@ Include the final per-point robustness weights (from the last robustness iterati
 - `false` (default) — leaves `result.robustness_weights` as `nothing`
 - `true` — populates `result.robustness_weights`
 
-### return_se
-
-*See: [Intervals](../guide/intervals.md#standard-errors)*
-
-Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
-
-### return_sorted
-
-When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
-To get both orderings, sort the default result client-side (e.g. `sortperm(result.x)`) instead of calling `fit` twice.
-
-### parallel
-
-Enable multi-threaded execution via Rayon.
-
-- `true` (default) — parallelizes the local regression fits across CPU cores
-- `false` — forces single-threaded execution (useful for benchmarking or deterministic profiling)
-
-### backend
-
-*See: [GPU Backend](../advanced/gpu-backend.md)*
-
-The batch `Lowess` type can optionally run on a GPU-accelerated backend powered by `wgpu`, for high-throughput processing of large datasets (10k+ points).
-
-- `"cpu"` (default)
-- `"gpu"` — requires the library to be built with the `gpu` Cargo feature
-
-### CV Options
-
-*See: [Cross-Validation](../guide/cross-validation.md)*
-
-- `cv_method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cv_k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
-- `cv_k`: Number of folds for k-fold CV. Ignored when `cv_method="loocv"`.
-- `cv_fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
-- `cv_seed`: Seed for reproducible k-fold shuffling. `nothing` (default) uses a random seed.
-
-### custom_weights
-
-*See: [Custom Weights](../weighting/custom-weights.md)*
-
-Per-observation weights, passed to `fit` rather than the constructor.
-
-### retain_model
-
-*See: [Predict](../guide/predict.md)*
-
-Retains the fitted model's training data, populating `result.predict_model` with a `PredictModel` usable to evaluate the fit at out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
-
 ### return_derivative
 
 Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `result.derivative`, enabling turning-point/rate-of-change analysis at effectively no extra computation cost.
 
 - `false` (default) — leaves `result.derivative` as `nothing`
 - `true` — populates it
+
+### return_sorted
+
+When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
+To get both orderings, sort the default result client-side (e.g. `sortperm(result.x)`) instead of calling `fit` twice.
 
 ## Result Structure
 
@@ -296,10 +296,9 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 model = Lowess(;
     fraction=0.5,
     iterations=3,
-    confidence_intervals=0.95,
-    prediction_intervals=0.95,
+    parallel=true,
     outputs=["diagnostics"],
-    parallel=true
+    intervals=(confidence=0.95, prediction=0.95),
 )
 result = fit(model, x, y)
 println("First smoothed value: ", result.y[1])

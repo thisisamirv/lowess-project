@@ -28,7 +28,7 @@ rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-model = Lowess(; fraction=0.5, confidence_intervals=0.95)
+model = Lowess(; fraction=0.5, intervals=(confidence=0.95,))
 result = fit(model, x, y)
 
 println("Smoothed (first 5): ", result.y[1:5])
@@ -50,7 +50,7 @@ rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-model = Lowess(; fraction=0.5, prediction_intervals=0.95)
+model = Lowess(; fraction=0.5, intervals=(prediction=0.95,))
 result = fit(model, x, y)
 
 println("Prediction bounds: [$(result.prediction_lower[1]), $(result.prediction_upper[1])]")
@@ -71,7 +71,7 @@ x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 result = fit(
-    Lowess(fraction=0.5, confidence_intervals=0.95, prediction_intervals=0.95),
+    Lowess(fraction=0.5, intervals=(confidence=0.95, prediction=0.95)),
     x, y
 )
 println("95% CI at midpoint: [$(round(result.confidence_lower[50]; digits=3)), $(round(result.confidence_upper[50]; digits=3))]")
@@ -98,7 +98,7 @@ x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 # 99% confidence interval
-model = Lowess(; confidence_intervals=0.99)
+model = Lowess(; intervals=(confidence=0.99,))
 result = fit(model, x, y)
 println("99% CI at midpoint: [$(round(result.confidence_lower[50]; digits=3)), $(round(result.confidence_upper[50]; digits=3))]")
 ```
@@ -117,10 +117,34 @@ rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-model = Lowess(; confidence_intervals=0.95)
+model = Lowess(; intervals=(confidence=0.95,))
 result = fit(model, x, y)
 
 println("Standard errors (first 5): ", result.standard_errors[1:5])
+```
+
+---
+
+## Residual Bootstrap
+
+Set `bootstrap` to at least `2` to replace analytic uncertainty with residual-bootstrap refits. Batch shares its outer `seed` with CV; Streaming restarts the seed per combined chunk, and Online per full-update window. Online bootstrap requires `update_mode="full"`.
+
+```@example intervals-bootstrap
+using FastLOWESS
+
+x = collect(0.0:0.1:2.9)
+y = sin.(x) .+ 0.1 .* cos.(7 .* x)
+intervals = (confidence=0.95, prediction=0.95, bootstrap=20)
+
+batch = fit(Lowess(; intervals=intervals, seed=42), x, y)
+println("Batch SEs: ", length(batch.standard_errors))
+
+chunk = process_chunk(StreamingLowess(; chunk_size=length(x), intervals=intervals, seed=42), x, y)
+println("Streaming CI present: ", chunk.confidence_lower !== nothing)
+
+online = OnlineLowess(; min_points=5, update_mode="full", intervals=intervals, seed=42)
+last_point = filter(!isnothing, [add_point(online, xi, yi) for (xi, yi) in zip(x[1:12], y[1:12])])[end]
+println("Online PI present: ", last_point.prediction_lower !== nothing)
 ```
 
 ---
@@ -135,3 +159,4 @@ println("Standard errors (first 5): ", result.standard_errors[1:5])
 | Confidence intervals | ✓ | ✓ | ✓ (`update_mode="full"` only) |
 | Prediction intervals | ✓ | ✓ | ✓ (`update_mode="full"` only) |
 | Standard errors | ✓ | ✓ | ✓ (`update_mode="full"` only) |
+| Residual bootstrap | ✓ | ✓ | ✓ (`update_mode="full"` only) |
