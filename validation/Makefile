@@ -8,8 +8,14 @@
 PYTHON ?= python
 VISUAL_DIR := visual_validation
 R_LIB_DIR ?= ../bindings/r/.r-lib
+PYTHON_VENV ?= ../.venv
+ifeq ($(OS),Windows_NT)
+PYTHON_BINDING ?= $(PYTHON_VENV)/Scripts/python.exe
+else
+PYTHON_BINDING ?= $(PYTHON_VENV)/bin/python
+endif
 
-.PHONY: visual plot validation-deps r-tests
+.PHONY: visual plot python-deps python-tests validation-deps r-tests
 
 visual:
 	@echo "Generating visual validation data..."
@@ -18,6 +24,16 @@ visual:
 plot:
 	@echo "Generating visual validation plots..."
 	@cd $(VISUAL_DIR) && $(PYTHON) plot.py
+
+python-deps:
+	@if [ ! -x "$(PYTHON_BINDING)" ]; then $(PYTHON) -m venv "$(PYTHON_VENV)"; fi
+	@if ! $(PYTHON_BINDING) -c "import fastlowess, numpy, pytest, hypothesis" >/dev/null 2>&1; then \
+	  $(PYTHON_BINDING) -m pip install -q "numpy>=1.20.0" pytest "hypothesis>=6,<7" ../bindings/python; \
+	fi
+
+python-tests: python-deps
+	@echo "Running Python-binding boundary validation..."
+	@$(PYTHON_BINDING) -m pytest -q property_tests/test_boundary_padding.py
 
 validation-deps:
 	@echo "Installing Locfit and quickcheck into the validation library when missing..."
