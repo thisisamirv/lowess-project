@@ -88,7 +88,7 @@ Once GPU support is available, request it by setting `backend` on the batch opti
 ----
 Options options = Options.builder()
         .backend("gpu")
-        .confidenceIntervals(0.95)
+        .intervals(IntervalsOptions.builder().confidence(0.95).build())
         .build();
 
 try (Lowess model = new Lowess(options)) {

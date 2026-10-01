@@ -59,22 +59,25 @@ result.ifPresent(r -> System.out.println(r.y()));
 
 |`fraction` |`double` |`0.67` |Smoothing fraction (bandwidth)
 |`iterations` |`int` |`0` |Number of robustifying iterations (requires `updateMode("full")`)
-|`delta` |`double` |`NaN` |Interpolation distance (`NaN` auto-sets it to 0.0 in Online, i.e. interpolation disabled)
 |`weightFunction` |`String` |`"tricube"` |Weight function name
 |`robustnessMethod` |`String` |`"bisquare"` |Robustness method name
-|`scalingMethod` |`String` |`"mad"` |Residual scaling method
-|`boundaryPolicy` |`String` |`"extend"` |Boundary handling policy
+|`delta` |`double` |`NaN` |Interpolation distance (`NaN` auto-sets it to 0.0 in Online, i.e. interpolation disabled)
 |`zeroWeightFallback` |`String` |`"use_local_mean"` |Zero-weight handling
-|`missing` |`String` |`"error"` |Policy for non-finite (NaN/Infinity) values in each point
+|`boundaryPolicy` |`String` |`"extend"` |Boundary handling policy
+|`scalingMethod` |`String` |`"mad"` |Residual scaling method
 |`autoConverge` |`double` |`NaN` |Auto-convergence tolerance
-|`returnRobustnessWeights` |`boolean` |`false` |Include `robustnessWeight()` in result
+|`missing` |`String` |`"error"` |Policy for non-finite (NaN/Infinity) values in each point
 |`windowCapacity` |`int` |`1000` |Maximum number of recent points retained
 |`minPoints` |`int` |`2` |Minimum points required before output starts
 |`updateMode` |`String` |`"incremental"` |How the window is updated as new points arrive: `incremental`, `full`
+|`outputs(String...)` |`String...` |empty |Select `se`, `weights`, and/or `derivative`; `se` requires `updateMode("full")`
+|`intervals(IntervalsOptions)` |`IntervalsOptions` |disabled |Confidence/prediction levels and per-window bootstrap refits (`updateMode("full")` only)
+|`seed(long)` |`long` |unset |Reproducible bootstrap draws for each full-update window
+|`returnRobustnessWeights` |`boolean` |`false` |Include `robustnessWeight()` in result
 |`returnDerivative` |`boolean` |`false` |Include the latest point's local fit derivative (slope) in the result
 |===
 
-Confidence/prediction intervals, standard errors, cross-validation, GPU `backend`, `customWeights`, `returnSorted`, `returnDiagnostics`, `returnResiduals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see xref:./api.adoc[API] for those.
+Cross-validation, GPU `backend`, `customWeights`, `returnSorted`, `returnDiagnostics`, `returnResiduals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see xref:./api.adoc[API] for those.
 
 == Options
 
@@ -106,10 +109,6 @@ Confidence/prediction intervals, standard errors, cross-validation, GPU `backend
 |7+ |Very strong |Heavy outliers
 |===
 
-=== delta
-
-Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression -- an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to `0` in Online mode, i.e. interpolation is disabled and every point is fit exactly.
-
 === weightFunction
 
 _See: xref:../weighting/kernels.adoc[Weight Functions]_
@@ -130,22 +129,9 @@ _See: xref:../weighting/robustness.adoc[Robustness]_
 * `"huber"`
 * `"talwar"`
 
-=== scalingMethod
+=== delta
 
-_See: xref:../weighting/scaling.adoc[Scaling Methods]_
-
-* `"mad"` (default; alias: `"median_absolute_deviation"`)
-* `"mar"` (alias: `"median_absolute_residual"`)
-* `"mean"` (alias: `"mean_absolute_residual"`)
-
-=== boundaryPolicy
-
-_See: xref:../advanced/boundary.adoc[Boundary Handling]_
-
-* `"extend"` (default; alias: `"pad"`)
-* `"reflect"` (alias: `"mirror"`)
-* `"zero"`
-* `"noboundary"` (alias: `"none"`)
+Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression -- an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to `0` in Online mode, i.e. interpolation is disabled and every point is fit exactly.
 
 === zeroWeightFallback
 
@@ -160,6 +146,29 @@ Behavior when all neighborhood weights are zero:
 |`"return_none"` (alias: `"none"`) |Return `NaN`
 |===
 
+=== boundaryPolicy
+
+_See: xref:../advanced/boundary.adoc[Boundary Handling]_
+
+* `"extend"` (default; alias: `"pad"`)
+* `"reflect"` (alias: `"mirror"`)
+* `"zero"`
+* `"noboundary"` (alias: `"none"`)
+
+=== scalingMethod
+
+_See: xref:../weighting/scaling.adoc[Scaling Methods]_
+
+* `"mad"` (default; alias: `"median_absolute_deviation"`)
+* `"mar"` (alias: `"median_absolute_residual"`)
+* `"mean"` (alias: `"mean_absolute_residual"`)
+
+=== autoConverge
+
+_See: xref:../weighting/robustness.adoc#_auto_convergence[Robustness]_
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+
 === missing
 
 Policy for handling a non-finite (NaN/Infinity) `x` or `y` value passed to `addPoint`:
@@ -171,19 +180,6 @@ Policy for handling a non-finite (NaN/Infinity) `x` or `y` value passed to `addP
 |`"error"` (default) |Throw
 |`"drop"` |Silently ignore the point — `addPoint` returns `Optional.empty()` instead of adding it to the window
 |===
-
-=== autoConverge
-
-_See: xref:../weighting/robustness.adoc#_auto_convergence[Robustness]_
-
-Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
-
-=== returnRobustnessWeights
-
-Include the robustness weight for the latest point (from the last robustness iteration) in the result.
-
-* `false` (default) — leaves `robustnessWeight()` empty
-* `true` — populates `robustnessWeight()`
 
 === windowCapacity
 
@@ -205,6 +201,23 @@ _See: xref:../guide/adapter-choice.adoc[Execution Modes]_
 |`"full"` |`"resmooth"` |Recompute entire window |More accurate
 |===
 
+=== intervals
+
+_See: xref:../guide/intervals.adoc[Intervals]_
+
+Build with `IntervalsOptions.builder()`. Requires `updateMode("full")`; incremental mode throws at construction. `confidence(level)` and `prediction(level)` add bounds for the latest point; `bootstrap(n)` (at least `2`) refits each sliding window from resampled residuals.
+
+=== seed
+
+Seeds bootstrap draws. Each full-update window restarts from the same seed. It does not enable bootstrap by itself; `0` is valid.
+
+=== returnRobustnessWeights
+
+Include the robustness weight for the latest point (from the last robustness iteration) in the result.
+
+* `false` (default) — leaves `robustnessWeight()` empty
+* `true` — populates `robustnessWeight()`
+
 === returnDerivative
 
 Each point's local WLS fit already computes a slope internally; this exposes the latest point's slope (rate of change of the smoothed curve) via `PointResult.derivative()` at effectively no extra computation cost.
@@ -223,7 +236,9 @@ Returned by `addPoint` once the window has enough points (`Optional.empty()` unt
 |Accessor |Type |Notes
 
 |`y()` |`double` |Smoothed value for the latest point.
-|`standardError()` |`OptionalDouble` |Always empty -- standard errors require `returnSe`/confidence intervals, which are Batch-only.
+|`standardError()` |`OptionalDouble` |`"se"` output or any interval (requires `updateMode("full")`).
+|`confidenceLower()`, `confidenceUpper()` |`OptionalDouble` |`intervals` confidence set.
+|`predictionLower()`, `predictionUpper()` |`OptionalDouble` |`intervals` prediction set.
 |`residual()` |`OptionalDouble` |Residual y minus smoothed; always populated (there is no `returnResiduals` option for Online).
 |`robustnessWeight()` |`OptionalDouble` |Robustness weight, if `returnRobustnessWeights` was set.
 |`iterationsUsed()` |`OptionalInt` |Robustness iterations performed.

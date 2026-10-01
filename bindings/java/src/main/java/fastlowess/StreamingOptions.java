@@ -230,26 +230,27 @@ public final class StreamingOptions {
         }
 
         /**
-         * Requests confidence intervals at the given level (e.g. {@code 0.95}).
+         * Confidence/prediction intervals and optional residual-bootstrap
+         * refits, computed per combined chunk and blended across overlaps.
          *
-         * @param confidenceIntervals the confidence level (e.g. 0.95)
+         * @param intervals interval configuration
          * @return this builder, for chaining
-         * @see Options.Builder#confidenceIntervals(double)
+         * @see Options.Builder#intervals(IntervalsOptions)
          */
-        public Builder confidenceIntervals(double confidenceIntervals) {
-            common.confidenceIntervals(confidenceIntervals);
+        public Builder intervals(IntervalsOptions intervals) {
+            common.intervals(intervals);
             return this;
         }
 
         /**
-         * Requests prediction intervals at the given level (e.g. {@code 0.95}).
+         * Seeds bootstrap draws; each combined chunk restarts from this seed.
          *
-         * @param predictionIntervals the prediction level (e.g. 0.95)
+         * @param seed the random seed
          * @return this builder, for chaining
-         * @see Options.Builder#predictionIntervals(double)
+         * @see Options.Builder#seed(long)
          */
-        public Builder predictionIntervals(double predictionIntervals) {
-            common.predictionIntervals(predictionIntervals);
+        public Builder seed(long seed) {
+            common.seed(seed);
             return this;
         }
 

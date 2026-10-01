@@ -126,6 +126,7 @@ final class NativeBridge {
             String boundaryPolicy,
             double confidenceIntervals,
             double predictionIntervals,
+            int bootstrap,
             boolean returnDiagnostics,
             boolean returnResiduals,
             boolean returnRobustnessWeights,
@@ -135,14 +136,14 @@ final class NativeBridge {
             double[] cvFractions,
             String cvMethod,
             int cvK,
+            long seed,
+            boolean hasSeed,
             boolean parallel,
             boolean returnSe,
             boolean returnSorted,
             String backend,
             String missing,
             boolean retainModel);
-
-    static native void lowessSetCvSeed(long handle, long seed);
 
     static native NativeResult lowessFit(long handle, double[] x, double[] y, double[] customWeights);
 
@@ -157,7 +158,10 @@ final class NativeBridge {
             boolean returnDerivative,
             String extrapolation,
             double maxExtrapolationDistance,
-            double maxNeighborDistance);
+            double maxNeighborDistance,
+            int bootstrap,
+            long seed,
+            boolean hasSeed);
 
     static native void predictHandleFree(long handle);
 
@@ -182,7 +186,10 @@ final class NativeBridge {
             String missing,
             boolean returnSe,
             double confidenceIntervals,
-            double predictionIntervals);
+            double predictionIntervals,
+            int bootstrap,
+            long seed,
+            boolean hasSeed);
 
     static native NativeResult streamingProcess(long handle, double[] x, double[] y);
 
@@ -208,7 +215,10 @@ final class NativeBridge {
             String missing,
             boolean returnSe,
             double confidenceIntervals,
-            double predictionIntervals);
+            double predictionIntervals,
+            int bootstrap,
+            long seed,
+            boolean hasSeed);
 
     static native NativeOnlineOutput onlineAddPoint(long handle, double x, double y);
 

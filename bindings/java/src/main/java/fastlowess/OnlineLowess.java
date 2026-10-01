@@ -16,6 +16,7 @@ public final class OnlineLowess implements AutoCloseable {
      */
     public OnlineLowess(OnlineOptions options) {
         Options c = options.common;
+        Long seed = c.seed;
         this.handle = NativeBridge.onlineNew(
                 c.fraction,
                 c.iterations,
@@ -33,8 +34,11 @@ public final class OnlineLowess implements AutoCloseable {
                 options.updateMode,
                 c.missing,
                 c.returnSe,
-                c.confidenceIntervals,
-                c.predictionIntervals);
+                c.intervals.confidence,
+                c.intervals.prediction,
+                c.intervals.bootstrap,
+                seed == null ? 0L : seed,
+                seed != null);
     }
 
     /**

@@ -14,6 +14,9 @@ public final class Lowess implements AutoCloseable {
      * @param options the model configuration
      */
     public Lowess(Options options) {
+        IntervalsOptions iv = options.intervals;
+        CVOptions cv = options.cv;
+        Long seed = options.seed;
         this.handle = NativeBridge.lowessNew(
                 options.fraction,
                 options.iterations,
@@ -22,26 +25,26 @@ public final class Lowess implements AutoCloseable {
                 options.robustnessMethod,
                 options.scalingMethod,
                 options.boundaryPolicy,
-                options.confidenceIntervals,
-                options.predictionIntervals,
+                iv.confidence,
+                iv.prediction,
+                iv.bootstrap,
                 options.returnDiagnostics,
                 options.returnResiduals,
                 options.returnRobustnessWeights,
                 options.returnDerivative,
                 options.zeroWeightFallback,
                 options.autoConverge,
-                options.cvFractions,
-                options.cvMethod,
-                options.cvK,
+                cv == null ? null : cv.fractions,
+                cv == null ? null : cv.method,
+                cv == null ? 5 : cv.k,
+                seed == null ? 0L : seed,
+                seed != null,
                 options.parallel,
                 options.returnSe,
                 options.returnSorted,
                 options.backend,
                 options.missing,
                 options.retainModel);
-        if (options.cvSeed != null) {
-            NativeBridge.lowessSetCvSeed(handle, options.cvSeed);
-        }
     }
 
     /**

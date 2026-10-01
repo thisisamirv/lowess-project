@@ -21,8 +21,6 @@ public final class Options {
     final String zeroWeightFallback;
     final String missing;
     final double autoConverge;
-    final double confidenceIntervals;
-    final double predictionIntervals;
     final boolean returnDiagnostics;
     final boolean returnResiduals;
     final boolean returnRobustnessWeights;
@@ -31,10 +29,9 @@ public final class Options {
     final boolean returnSe;
     final boolean returnSorted;
     final String backend;
-    final double[] cvFractions;
-    final String cvMethod;
-    final int cvK;
-    final Long cvSeed;
+    final IntervalsOptions intervals;
+    final CVOptions cv;
+    final Long seed;
     final boolean retainModel;
 
     Options(Builder b) {
@@ -48,8 +45,6 @@ public final class Options {
         this.zeroWeightFallback = b.zeroWeightFallback;
         this.missing = b.missing;
         this.autoConverge = b.autoConverge;
-        this.confidenceIntervals = b.confidenceIntervals;
-        this.predictionIntervals = b.predictionIntervals;
         this.returnDiagnostics = b.returnDiagnostics;
         this.returnResiduals = b.returnResiduals;
         this.returnRobustnessWeights = b.returnRobustnessWeights;
@@ -58,10 +53,9 @@ public final class Options {
         this.returnSe = b.returnSe;
         this.returnSorted = b.returnSorted;
         this.backend = b.backend;
-        this.cvFractions = b.cvFractions;
-        this.cvMethod = b.cvMethod;
-        this.cvK = b.cvK;
-        this.cvSeed = b.cvSeed;
+        this.intervals = b.intervals;
+        this.cv = b.cv;
+        this.seed = b.seed;
         this.retainModel = b.retainModel;
     }
 
@@ -89,8 +83,6 @@ public final class Options {
         String zeroWeightFallback = null;
         String missing = null;
         double autoConverge = Double.NaN;
-        double confidenceIntervals = Double.NaN;
-        double predictionIntervals = Double.NaN;
         boolean returnDiagnostics = false;
         boolean returnResiduals = false;
         boolean returnRobustnessWeights = false;
@@ -99,10 +91,9 @@ public final class Options {
         boolean returnSe = false;
         boolean returnSorted = false;
         String backend = null;
-        double[] cvFractions = null;
-        String cvMethod = null;
-        int cvK = 5;
-        Long cvSeed = null;
+        IntervalsOptions intervals = IntervalsOptions.DISABLED;
+        CVOptions cv = null;
+        Long seed = null;
         boolean retainModel = false;
 
         Builder() {
@@ -233,28 +224,6 @@ public final class Options {
         }
 
         /**
-         * Requests confidence intervals at the given level (e.g. {@code 0.95}).
-         *
-         * @param confidenceIntervals the confidence level
-         * @return this builder, for chaining
-         */
-        public Builder confidenceIntervals(double confidenceIntervals) {
-            this.confidenceIntervals = confidenceIntervals;
-            return this;
-        }
-
-        /**
-         * Requests prediction intervals at the given level (e.g. {@code 0.95}).
-         *
-         * @param predictionIntervals the prediction level
-         * @return this builder, for chaining
-         */
-        public Builder predictionIntervals(double predictionIntervals) {
-            this.predictionIntervals = predictionIntervals;
-            return this;
-        }
-
-        /**
          * Whether {@link Result#diagnostics()} should be populated.
          *
          * @param returnDiagnostics whether to compute diagnostics
@@ -369,16 +338,38 @@ public final class Options {
         }
 
         /**
+         * Configures confidence/prediction intervals and optional
+         * residual-bootstrap refits as one group.
+         *
+         * @param intervals interval configuration
+         * @return this builder, for chaining
+         */
+        public Builder intervals(IntervalsOptions intervals) {
+            this.intervals = intervals == null ? IntervalsOptions.DISABLED : intervals;
+            return this;
+        }
+
+        /**
          * Configures grouped cross-validation.
          *
          * @param cv cross-validation configuration
          * @return this builder, for chaining
          */
         public Builder cv(CVOptions cv) {
-            this.cvFractions = cv.fractions.clone();
-            this.cvMethod = cv.method;
-            this.cvK = cv.k;
-            this.cvSeed = cv.seed;
+            this.cv = cv;
+            return this;
+        }
+
+        /**
+         * Seeds k-fold cross-validation and residual-bootstrap draws. Does not
+         * enable either by itself; {@code 0} is a valid seed. The value is
+         * interpreted as an unsigned 64-bit integer.
+         *
+         * @param seed the random seed
+         * @return this builder, for chaining
+         */
+        public Builder seed(long seed) {
+            this.seed = seed;
             return this;
         }
 
@@ -390,53 +381,6 @@ public final class Options {
          */
         public Builder backend(String backend) {
             this.backend = backend;
-            return this;
-        }
-
-        /**
-         * Candidate fractions to cross-validate; enables
-         * {@link Result#cvScores()}.
-         *
-         * @param cvFractions the fractions to test for cross-validation
-         * @return this builder, for chaining
-         */
-        public Builder cvFractions(double[] cvFractions) {
-            this.cvFractions = cvFractions;
-            return this;
-        }
-
-        /**
-         * One of {@code "kfold"}, {@code "loocv"} (default {@code "kfold"});
-         * only used when {@code cvFractions} is set.
-         *
-         * @param cvMethod the cross-validation method name
-         * @return this builder, for chaining
-         */
-        public Builder cvMethod(String cvMethod) {
-            this.cvMethod = cvMethod;
-            return this;
-        }
-
-        /**
-         * Number of folds for {@code "kfold"} cross-validation (default
-         * {@code 5}).
-         *
-         * @param cvK the number of folds
-         * @return this builder, for chaining
-         */
-        public Builder cvK(int cvK) {
-            this.cvK = cvK;
-            return this;
-        }
-
-        /**
-         * Seeds the cross-validation fold assignment for reproducibility.
-         *
-         * @param cvSeed the random seed
-         * @return this builder, for chaining
-         */
-        public Builder cvSeed(long cvSeed) {
-            this.cvSeed = cvSeed;
             return this;
         }
 

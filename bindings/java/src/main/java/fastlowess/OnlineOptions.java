@@ -213,28 +213,28 @@ public final class OnlineOptions {
         }
 
         /**
-         * Confidence level for confidence intervals (e.g. 0.95). Requires
-         * {@code updateMode("full")}.
+         * Confidence/prediction intervals and optional residual-bootstrap
+         * refits for each sliding window. Requires {@code updateMode("full")}.
          *
-         * @param confidenceIntervals the confidence level
+         * @param intervals interval configuration
          * @return this builder, for chaining
-         * @see Options.Builder#confidenceIntervals(double)
+         * @see Options.Builder#intervals(IntervalsOptions)
          */
-        public Builder confidenceIntervals(double confidenceIntervals) {
-            common.confidenceIntervals(confidenceIntervals);
+        public Builder intervals(IntervalsOptions intervals) {
+            common.intervals(intervals);
             return this;
         }
 
         /**
-         * Confidence level for prediction intervals (e.g. 0.95). Requires
-         * {@code updateMode("full")}.
+         * Seeds bootstrap draws; each full-update window restarts from this
+         * seed.
          *
-         * @param predictionIntervals the prediction level
+         * @param seed the random seed
          * @return this builder, for chaining
-         * @see Options.Builder#predictionIntervals(double)
+         * @see Options.Builder#seed(long)
          */
-        public Builder predictionIntervals(double predictionIntervals) {
-            common.predictionIntervals(predictionIntervals);
+        public Builder seed(long seed) {
+            common.seed(seed);
             return this;
         }
 

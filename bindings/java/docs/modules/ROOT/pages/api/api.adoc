@@ -57,22 +57,21 @@ Result result = model.fit(x, y);
 
 |`fraction` |`double` |`0.67` |Smoothing fraction, in (0, 1].
 |`iterations` |`int` |`3` |Robustness iterations, in [0, 1000].
-|`delta` |`double` |`NaN` (auto) |Interpolation distance threshold, as a fraction of the x range.
 |`weightFunction` |`String` |`"tricube"` |Kernel: `tricube`, `gaussian`, `uniform`, `cosine`, `epanechnikov`, `biweight`, `triangle`.
 |`robustnessMethod` |`String` |`"bisquare"` |Outlier downweighting: `bisquare`, `huber`, `talwar`.
-|`scalingMethod` |`String` |`"mad"` |Residual scale estimator: `mad`, `mar`, `mean`.
-|`boundaryPolicy` |`String` |`"extend"` |Boundary handling: `extend`, `reflect`, `zero`, `noboundary`.
+|`delta` |`double` |`NaN` (auto) |Interpolation distance threshold, as a fraction of the x range.
 |`zeroWeightFallback` |`String` |`"use_local_mean"` |Fallback when all robustness weights hit zero: `use_local_mean`, `return_original`, `return_none`.
-|`missing` |`String` |`"error"` |Policy for non-finite (NaN/Infinity) values in input data: `error`, `drop`.
-|`confidenceIntervals` |`double` |`NaN` (disabled) |Confidence level in (0, 1), e.g. `0.95`.
-|`predictionIntervals` |`double` |`NaN` (disabled) |Confidence level in (0, 1), e.g. `0.95`.
+|`boundaryPolicy` |`String` |`"extend"` |Boundary handling: `extend`, `reflect`, `zero`, `noboundary`.
+|`scalingMethod` |`String` |`"mad"` |Residual scale estimator: `mad`, `mar`, `mean`.
 |`autoConverge` |`double` |`NaN` (disabled) |Convergence tolerance for early stopping.
-|`outputs(String...)` |`String...` |empty |Select `diagnostics`, `residuals`, `weights`, `derivative`, `se`, and/or `sorted`.
+|`missing` |`String` |`"error"` |Policy for non-finite (NaN/Infinity) values in input data: `error`, `drop`.
 |`parallel` |`boolean` |`true` |Enable parallel processing.
 |`backend` |`String` |`"cpu"` |`cpu` or `gpu` (requires a `gpu`-feature build of the native library).
+|`outputs(String...)` |`String...` |empty |Select `se`, `diagnostics`, `residuals`, `weights`, `derivative`, and/or `sorted`.
+|`intervals(IntervalsOptions)` |`IntervalsOptions` |disabled |Grouped confidence/prediction levels and optional residual-bootstrap refits.
 |`cv(CVOptions)` |`CVOptions` |`null` (disabled) |Grouped cross-validation configuration.
+|`seed(long)` |`long` |unset |Shared CV/bootstrap seed; `0` is a valid deterministic seed.
 |`retainModel` |`boolean` |`false` |Retain training data, enabling `Result.predictModel()`.
-|`outputs(String...)` |`String...` |empty |Includes the per-point local fit derivative when `"derivative"` is selected.
 |===
 
 Use `Options.builder()` (pre-populated with recommended defaults) and override only the settings you need:
@@ -115,10 +114,6 @@ Options options = Options.builder()
 |7+ |Very strong |Heavy outliers
 |===
 
-=== delta
-
-Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression -- an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to 1% of the x-range. Set it to `0.0` explicitly to disable interpolation and fit every point exactly.
-
 === weightFunction
 
 _See: xref:../weighting/kernels.adoc[Weight Functions]_
@@ -139,22 +134,9 @@ _See: xref:../weighting/robustness.adoc[Robustness]_
 * `"huber"`
 * `"talwar"`
 
-=== scalingMethod
+=== delta
 
-_See: xref:../weighting/scaling.adoc[Scaling Methods]_
-
-* `"mad"` (default; alias: `"median_absolute_deviation"`)
-* `"mar"` (alias: `"median_absolute_residual"`)
-* `"mean"` (alias: `"mean_absolute_residual"`)
-
-=== boundaryPolicy
-
-_See: xref:../advanced/boundary.adoc[Boundary Handling]_
-
-* `"extend"` (default; alias: `"pad"`)
-* `"reflect"` (alias: `"mirror"`)
-* `"zero"`
-* `"noboundary"` (alias: `"none"`)
+Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression -- an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to 1% of the x-range. Set it to `0.0` explicitly to disable interpolation and fit every point exactly.
 
 === zeroWeightFallback
 
@@ -168,6 +150,29 @@ Behavior when all neighborhood weights are zero:
 |`"return_original"` (alias: `"original"`) |Return the original y value
 |`"return_none"` (alias: `"none"`) |Return `NaN`
 |===
+
+=== boundaryPolicy
+
+_See: xref:../advanced/boundary.adoc[Boundary Handling]_
+
+* `"extend"` (default; alias: `"pad"`)
+* `"reflect"` (alias: `"mirror"`)
+* `"zero"`
+* `"noboundary"` (alias: `"none"`)
+
+=== scalingMethod
+
+_See: xref:../weighting/scaling.adoc[Scaling Methods]_
+
+* `"mad"` (default; alias: `"median_absolute_deviation"`)
+* `"mar"` (alias: `"median_absolute_residual"`)
+* `"mean"` (alias: `"mean_absolute_residual"`)
+
+=== autoConverge
+
+_See: xref:../weighting/robustness.adoc#_auto_convergence[Robustness]_
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
 
 === missing
 
@@ -183,23 +188,84 @@ Policy for handling non-finite (NaN/Infinity) values in `x`/`y` (and `customWeig
 
 NOTE: A length mismatch between `x` and `y` always throws, even under `"drop"`.
 
-=== autoConverge
+=== parallel
 
-_See: xref:../weighting/robustness.adoc#_auto_convergence[Robustness]_
+Enable multi-threaded execution via Rayon.
 
-Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+* `true` (default) — parallelizes the local regression fits across CPU cores
+* `false` — forces single-threaded execution (useful for benchmarking or deterministic profiling)
 
-=== confidenceIntervals
+=== backend
+
+_See: xref:../advanced/gpu-backend.adoc[GPU Backend]_
+
+The batch `Lowess` class can optionally run on a GPU-accelerated backend powered by `wgpu`, for high-throughput processing of large datasets (10k+ points).
+
+* `"cpu"` (default)
+* `"gpu"` -- requires a `gpu`-feature build of the native library
+
+=== intervals
 
 _See: xref:../guide/intervals.adoc[Intervals]_
 
-Confidence level for the confidence interval around the mean response (e.g. `0.95`). `NaN` (default) disables confidence intervals.
+Build with `IntervalsOptions.builder()`. Set `confidence(level)` and/or `prediction(level)` to coverage levels such as `0.95`; unset levels disable that bound. Set `bootstrap(n)` to at least `2` to replace analytic intervals with residual-bootstrap standard errors and percentile bounds. `seed` controls both CV and fit-time bootstrap when enabled, but does not enable either by itself.
 
-=== predictionIntervals
+=== CV Options
+
+_See: xref:../guide/cross-validation.adoc[Cross-Validation]_
+
+* `method`: `"kfold"` (default) -- fast, evaluates each candidate fraction over `k` folds; `"loocv"` -- slow, exhaustive leave-one-out cross-validation
+* `k`: Number of folds for k-fold CV. Ignored when `method("loocv")`.
+* `fractions`: Candidate fractions to evaluate. Required.
+* `seed` (on `Options.Builder`, not `CVOptions`): Outer seed shared by k-fold shuffling and bootstrap. Unset uses each feature's default; `0` is valid.
+
+[source,java]
+----
+Options options = Options.builder()
+        .cv(CVOptions.builder().method("kfold").k(5)
+            .fractions(0.1, 0.2, 0.3, 0.5).build())
+        .seed(42L)
+        .build();
+
+try (Lowess model = new Lowess(options)) {
+    Result result = model.fit(x, y);
+    System.out.println(java.util.Arrays.toString(result.cvScores().orElseThrow()));
+    System.out.println(result.fractionUsed()); // the CV-selected fraction
+}
+----
+
+=== seed
+
+One seed shared by k-fold CV shuffling and fit-time residual bootstrap. It does not enable either feature by itself. The value is interpreted as an unsigned 64-bit integer, and `0` is a valid seed.
+
+=== retainModel
+
+_See: xref:../guide/predict.adoc[Predict]_
+
+Retains the fitted model's training data, populating `Result.predictModel()` with an `Optional<PredictModel>` usable to evaluate the fit at out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
+
+=== customWeights
+
+_See: xref:../weighting/custom-weights.adoc[Custom Weights]_
+
+Per-observation weights, passed to `fit()` rather than the constructor.
+
+[source,java]
+----
+double[] weights = new double[x.length];
+java.util.Arrays.fill(weights, 1.0);
+weights[0] = 5.0; // trust the first observation more
+
+try (Lowess model = new Lowess(Options.builder().build())) {
+    Result result = model.fit(x, y, weights);
+}
+----
+
+=== returnSe
 
 _See: xref:../guide/intervals.adoc[Intervals]_
 
-Confidence level for the prediction interval for new observations (e.g. `0.95`). `NaN` (default) disables prediction intervals.
+Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
 
 === returnDiagnostics
 
@@ -222,85 +288,17 @@ Populate `Result.robustnessWeights()` (from the last robustness iteration).
 * `false` (default) — leaves `Result.robustnessWeights()` empty
 * `true` — populates `Result.robustnessWeights()`
 
-=== returnSe
-
-_See: xref:../guide/intervals.adoc[Intervals]_
-
-Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
-
-=== returnSorted
-
-When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
-To get both orderings, sort the default result client-side (e.g. via a `Comparator` over the returned `x()` array) instead of calling `fit()` twice.
-
-=== parallel
-
-Enable multi-threaded execution via Rayon.
-
-* `true` (default) — parallelizes the local regression fits across CPU cores
-* `false` — forces single-threaded execution (useful for benchmarking or deterministic profiling)
-
-=== backend
-
-_See: xref:../advanced/gpu-backend.adoc[GPU Backend]_
-
-The batch `Lowess` class can optionally run on a GPU-accelerated backend powered by `wgpu`, for high-throughput processing of large datasets (10k+ points).
-
-* `"cpu"` (default)
-* `"gpu"` -- requires a `gpu`-feature build of the native library
-
-=== CV Options
-
-_See: xref:../guide/cross-validation.adoc[Cross-Validation]_
-
-* `cvMethod`: `"kfold"` (default) -- fast, evaluates each candidate fraction over `cvK` folds; `"loocv"` -- slow, exhaustive leave-one-out cross-validation
-* `cvK`: Number of folds for k-fold CV. Ignored when `cvMethod="loocv"`.
-* `cvFractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
-* `cvSeed`: Seed for reproducible k-fold shuffling. `null` (default) uses a random seed.
-
-[source,java]
-----
-Options options = Options.builder()
-        .cv(CVOptions.builder().method("kfold").k(5)
-            .fractions(0.1, 0.2, 0.3, 0.5).seed(42L).build())
-        .build();
-
-try (Lowess model = new Lowess(options)) {
-    Result result = model.fit(x, y);
-    System.out.println(java.util.Arrays.toString(result.cvScores().orElseThrow()));
-    System.out.println(result.fractionUsed()); // the CV-selected fraction
-}
-----
-
-=== customWeights
-
-_See: xref:../weighting/custom-weights.adoc[Custom Weights]_
-
-Per-observation weights, passed to `fit()` rather than the constructor.
-
-[source,java]
-----
-double[] weights = new double[x.length];
-java.util.Arrays.fill(weights, 1.0);
-weights[0] = 5.0; // trust the first observation more
-
-try (Lowess model = new Lowess(Options.builder().build())) {
-    Result result = model.fit(x, y, weights);
-}
-----
-
-=== retainModel
-
-_See: xref:../guide/predict.adoc[Predict]_
-
-Retains the fitted model's training data, populating `Result.predictModel()` with an `Optional<PredictModel>` usable to evaluate the fit at out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
-
 === returnDerivative
 
 Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) via `Result.derivative()`, enabling turning-point/rate-of-change analysis at effectively no extra computation cost.
 
 * `false` (default) — leaves `Result.derivative()` empty
 * `true` — populates `Result.derivative()`
+
+=== returnSorted
+
+When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
+To get both orderings, sort the default result client-side (e.g. via a `Comparator` over the returned `x()` array) instead of calling `fit()` twice.
 
 == Result Structure
 
@@ -311,12 +309,12 @@ Each point's local WLS fit already computes a slope internally; this exposes tha
 |Accessor |Type |Populated when
 
 |`x()`, `y()` |`double[]` |Always.
-|`standardErrors()` |`Optional<double[]>` |`returnSe`
-|`confidenceLower()`, `confidenceUpper()` |`Optional<double[]>` |`confidenceIntervals` set
-|`predictionLower()`, `predictionUpper()` |`Optional<double[]>` |`predictionIntervals` set
+|`standardErrors()` |`Optional<double[]>` |`"se"` output or any interval
+|`confidenceLower()`, `confidenceUpper()` |`Optional<double[]>` |`intervals` confidence set
+|`predictionLower()`, `predictionUpper()` |`Optional<double[]>` |`intervals` prediction set
 |`residuals()` |`Optional<double[]>` |`returnResiduals`
 |`robustnessWeights()` |`Optional<double[]>` |`returnRobustnessWeights`
-|`cvScores()` |`Optional<double[]>` |`cvFractions` set
+|`cvScores()` |`Optional<double[]>` |`cv` set
 |`fractionUsed()` |`double` |Always.
 |`iterationsUsed()` |`OptionalInt` |Always (empty if not available).
 |`diagnostics()` |`Optional<Diagnostics>` |`returnDiagnostics`

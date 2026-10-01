@@ -16,7 +16,7 @@ use fastLowess::internals::LowessBuilder;
 use fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
 use fastLowess::internals::binding_support as shared_parse;
-use fastLowess::prelude::LowessResult;
+use fastLowess::prelude::{IntervalsBuilder, LowessResult};
 
 use jni::EnvUnowned;
 use jni::errors::ThrowRuntimeExAndDefault;
@@ -117,6 +117,30 @@ fn opt_f64(value: jdouble) -> Option<f64> {
     (!value.is_nan()).then_some(value)
 }
 
+fn opt_bootstrap(n_boot: jint) -> AppResult<Option<usize>> {
+    let n_boot = shared_parse::require_non_negative_usize("bootstrap", n_boot)?;
+    Ok((n_boot > 0).then_some(n_boot))
+}
+
+// Java has no unsigned long; reinterpret the bits so the full u64 seed range is reachable.
+fn opt_seed(seed: jlong, has_seed: jboolean) -> Option<u64> {
+    has_seed.then_some(seed as u64)
+}
+
+fn apply_bootstrap_and_seed(
+    mut builder: LowessBuilder<f64>,
+    bootstrap: Option<usize>,
+    seed: Option<u64>,
+) -> LowessBuilder<f64> {
+    if let Some(n_boot) = bootstrap {
+        builder = builder.intervals(IntervalsBuilder::new().bootstrap(n_boot));
+    }
+    if let Some(seed) = seed {
+        builder = builder.seed(seed);
+    }
+    builder
+}
+
 // Converts a `Vec<f64>` (or `None`) into a Java `double[]` (or `null`).
 fn vec_to_jdoublearray<'local>(
     env: &mut Env<'local>,
@@ -213,7 +237,6 @@ struct JavaLowess {
     cv_fractions: Option<Vec<f64>>,
     cv_method: Option<String>,
     cv_k: usize,
-    cv_seed: Option<u64>,
 }
 
 // Opaque handle retained by `lowessFit` (via `NativeResult.predictHandle`, non-zero only
@@ -237,6 +260,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_lowessNew<'local>(
     boundary_policy: JString<'local>,
     confidence_intervals: jdouble,
     prediction_intervals: jdouble,
+    bootstrap: jint,
     return_diagnostics: jboolean,
     return_residuals: jboolean,
     return_robustness_weights: jboolean,
@@ -246,6 +270,8 @@ pub extern "system" fn Java_fastlowess_NativeBridge_lowessNew<'local>(
     cv_fractions: JDoubleArray<'local>,
     cv_method: JString<'local>,
     cv_k: jint,
+    seed: jlong,
+    has_seed: jboolean,
     parallel: jboolean,
     return_se: jboolean,
     return_sorted: jboolean,
@@ -273,6 +299,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_lowessNew<'local>(
         let cv_fractions_vec = jarray_to_option_vec(env, &cv_fractions);
 
         let iterations = shared_parse::require_non_negative_usize("iterations", iterations)?;
+        let bootstrap = opt_bootstrap(bootstrap)?;
 
         let mut builder = shared_parse::apply_builder_options(
             LowessBuilder::<f64>::new(),
@@ -303,34 +330,14 @@ pub extern "system" fn Java_fastlowess_NativeBridge_lowessNew<'local>(
         if return_derivative {
             builder = builder.return_derivative();
         }
+        builder = apply_bootstrap_and_seed(builder, bootstrap, opt_seed(seed, has_seed));
 
         Ok(Box::into_raw(Box::new(JavaLowess {
             builder: Some(builder),
             cv_fractions: cv_fractions_vec,
             cv_method: Some(cv_method_str),
             cv_k: cv_k.max(2) as usize,
-            cv_seed: None,
         })) as jlong)
-    })
-    .resolve::<ThrowRuntimeExAndDefault>()
-}
-
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_fastlowess_NativeBridge_lowessSetCvSeed(
-    mut env: EnvUnowned,
-    _class: JClass,
-    handle: jlong,
-    seed: jlong,
-) {
-    env.with_env(|_env| -> AppResult<()> {
-        if handle != 0 {
-            if seed < 0 {
-                return Err(format!("cv_seed must be non-negative, got {seed}").into());
-            }
-            let lowess = unsafe { &mut *(handle as *mut JavaLowess) };
-            lowess.cv_seed = Some(seed as u64);
-        }
-        Ok(())
     })
     .resolve::<ThrowRuntimeExAndDefault>()
 }
@@ -364,7 +371,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_lowessFit<'local>(
             lowess.cv_fractions.as_deref(),
             lowess.cv_method.as_deref(),
             Some(lowess.cv_k),
-            lowess.cv_seed,
+            None,
         )?;
         let model = shared_parse::build_batch(builder, cw).map_err(|e| e.message)?;
         let result = model.fit(&x_vec, &y_vec).map_err(|e| e.to_string())?;
@@ -400,6 +407,9 @@ pub extern "system" fn Java_fastlowess_NativeBridge_predict<'local>(
     extrapolation: JString<'local>,
     max_extrapolation_distance: jdouble,
     max_neighbor_distance: jdouble,
+    bootstrap: jint,
+    seed: jlong,
+    has_seed: jboolean,
 ) -> JObject<'local> {
     env.with_env(|env| -> AppResult<JObject<'local>> {
         if handle == 0 {
@@ -411,8 +421,9 @@ pub extern "system" fn Java_fastlowess_NativeBridge_predict<'local>(
             return Err(shared_parse::INVALID_DATA_INPUTS.into());
         }
         let extrapolation_str = jstring_to_string(env, &extrapolation);
+        let bootstrap = opt_bootstrap(bootstrap)?;
 
-        let output = shared_parse::run_predict_state(
+        let output = shared_parse::run_predict_state_with_bootstrap(
             &predict_handle.state,
             &new_x_vec,
             shared_parse::PredictOptionSet {
@@ -424,6 +435,8 @@ pub extern "system" fn Java_fastlowess_NativeBridge_predict<'local>(
                 max_extrapolation_distance: opt_f64(max_extrapolation_distance),
                 max_neighbor_distance: opt_f64(max_neighbor_distance),
             },
+            bootstrap,
+            opt_seed(seed, has_seed),
         )
         .map_err(|e| e.message)?;
 
@@ -499,6 +512,9 @@ pub extern "system" fn Java_fastlowess_NativeBridge_streamingNew<'local>(
     return_se: jboolean,
     confidence_intervals: jdouble,
     prediction_intervals: jdouble,
+    bootstrap: jint,
+    seed: jlong,
+    has_seed: jboolean,
 ) -> jlong {
     env.with_env(|env| -> AppResult<jlong> {
         let wf = jstring_or_default(env, &weight_function, shared_parse::DEFAULT_WEIGHT_FUNCTION);
@@ -522,6 +538,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_streamingNew<'local>(
         let missing_str = jstring_or_default(env, &missing, shared_parse::DEFAULT_MISSING_POLICY);
 
         let chunk_size = shared_parse::require_positive_usize("chunkSize", chunk_size)?;
+        let bootstrap = opt_bootstrap(bootstrap)?;
 
         let mut builder = shared_parse::apply_builder_options(
             LowessBuilder::<f64>::new(),
@@ -549,6 +566,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_streamingNew<'local>(
         if return_derivative {
             builder = builder.return_derivative();
         }
+        builder = apply_bootstrap_and_seed(builder, bootstrap, opt_seed(seed, has_seed));
 
         let model = shared_parse::build_streaming(
             builder,
@@ -649,6 +667,9 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineNew<'local>(
     return_se: jboolean,
     confidence_intervals: jdouble,
     prediction_intervals: jdouble,
+    bootstrap: jint,
+    seed: jlong,
+    has_seed: jboolean,
 ) -> jlong {
     env.with_env(|env| -> AppResult<jlong> {
         let wf = jstring_or_default(env, &weight_function, shared_parse::DEFAULT_WEIGHT_FUNCTION);
@@ -670,6 +691,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineNew<'local>(
         let window_capacity =
             shared_parse::require_positive_usize("windowCapacity", window_capacity)?;
         let min_points = shared_parse::require_positive_usize("minPoints", min_points)?;
+        let bootstrap = opt_bootstrap(bootstrap)?;
 
         let mut builder = shared_parse::apply_builder_options(
             LowessBuilder::<f64>::new(),
@@ -697,6 +719,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineNew<'local>(
         if return_derivative {
             builder = builder.return_derivative();
         }
+        builder = apply_bootstrap_and_seed(builder, bootstrap, opt_seed(seed, has_seed));
 
         let model =
             shared_parse::build_online(builder, Some(window_capacity), Some(min_points), Some(&um))

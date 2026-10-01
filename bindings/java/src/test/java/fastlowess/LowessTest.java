@@ -1,5 +1,6 @@
 package fastlowess;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -174,5 +175,63 @@ class LowessTest {
         RuntimeException ex = org.junit.jupiter.api.Assertions.assertThrows(
                 RuntimeException.class, () -> new Lowess(opts));
         assertNotNull(ex);
+    }
+
+    private static double[] wavy(double[] x) {
+        double[] y = new double[x.length];
+        for (int i = 0; i < x.length; i++) {
+            y[i] = Math.sin(x[i] * 0.1) + 0.1 * Math.cos(0.7 * x[i]);
+        }
+        return y;
+    }
+
+    @Test
+    void sharedSeedReproducesCvAndBootstrap() {
+        double[] x = linspace(40);
+        double[] y = wavy(x);
+
+        Result[] runs = new Result[2];
+        for (int run = 0; run < 2; run++) {
+            Options opts = Options.builder()
+                    .intervals(IntervalsOptions.builder().confidence(0.95).prediction(0.95).bootstrap(20).build())
+                    .cv(CVOptions.builder().method("kfold").k(4).fractions(0.3, 0.5, 0.7).build())
+                    .seed(0)
+                    .build();
+            try (Lowess model = new Lowess(opts)) {
+                runs[run] = model.fit(x, y);
+            }
+        }
+        assertArrayEquals(runs[0].cvScores().orElseThrow(), runs[1].cvScores().orElseThrow());
+        assertArrayEquals(runs[0].confidenceLower().orElseThrow(), runs[1].confidenceLower().orElseThrow());
+        assertEquals(x.length, runs[0].standardErrors().orElseThrow().length);
+        assertEquals(x.length, runs[0].predictionUpper().orElseThrow().length);
+    }
+
+    @Test
+    void predictSupportsGroupedBootstrapIntervals() {
+        double[] x = linspace(30);
+        double[] y = wavy(x);
+        double[] newX = {2.5, 10.5, 20.5};
+
+        try (Lowess model = new Lowess(Options.builder().retainModel(true).build())) {
+            Result result = model.fit(x, y);
+            try (PredictModel predictModel = result.predictModel().orElseThrow()) {
+                PredictResult analytic = predictModel.predict(newX, PredictOptions.builder()
+                        .outputs("se", "derivative")
+                        .intervals(IntervalsOptions.builder().confidence(0.95).prediction(0.95).build())
+                        .build());
+                assertEquals(newX.length, analytic.standardErrors().orElseThrow().length);
+                assertEquals(newX.length, analytic.derivative().orElseThrow().length);
+                assertEquals(newX.length, analytic.predictionLower().orElseThrow().length);
+
+                PredictOptions bootstrap = PredictOptions.builder()
+                        .intervals(IntervalsOptions.builder().confidence(0.95).bootstrap(20).build())
+                        .seed(7)
+                        .build();
+                double[] first = predictModel.predict(newX, bootstrap).confidenceLower().orElseThrow();
+                double[] second = predictModel.predict(newX, bootstrap).confidenceLower().orElseThrow();
+                assertArrayEquals(first, second);
+            }
+        }
     }
 }

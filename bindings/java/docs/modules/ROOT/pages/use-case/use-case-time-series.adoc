@@ -95,6 +95,7 @@ Prediction intervals widen the uncertainty band to include both the uncertainty 
 
 [source,java]
 ----
+import fastlowess.IntervalsOptions;
 import fastlowess.Lowess;
 import fastlowess.Options;
 import fastlowess.Result;
@@ -112,8 +113,7 @@ public class Example {
         Options options = Options.builder()
                 .fraction(0.2)
                 .iterations(3)
-                .confidenceIntervals(0.95)
-                .predictionIntervals(0.95)
+                .intervals(IntervalsOptions.builder().confidence(0.95).prediction(0.95).build())
                 .build();
 
         try (Lowess model = new Lowess(options)) {

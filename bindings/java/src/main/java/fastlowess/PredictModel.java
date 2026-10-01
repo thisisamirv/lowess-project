@@ -38,16 +38,21 @@ public final class PredictModel implements AutoCloseable {
      */
     public PredictResult predict(double[] newX, PredictOptions options) {
         checkOpen();
+        IntervalsOptions iv = options.intervals();
+        Long seed = options.seed();
         NativePredictResult r = NativeBridge.predict(
                 handle,
                 newX,
                 options.returnSe(),
-                options.confidenceLevel(),
-                options.predictionLevel(),
+                iv.confidence,
+                iv.prediction,
                 options.returnDerivative(),
                 options.extrapolation(),
                 options.maxExtrapolationDistance(),
-                options.maxNeighborDistance());
+                options.maxNeighborDistance(),
+                iv.bootstrap,
+                seed == null ? 0L : seed,
+                seed != null);
         return PredictResult.fromNative(r);
     }
 

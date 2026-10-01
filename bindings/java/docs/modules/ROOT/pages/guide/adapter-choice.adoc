@@ -42,6 +42,7 @@ Standard mode for complete datasets. **Supports all features.**
 
 [source,java]
 ----
+import fastlowess.IntervalsOptions;
 import fastlowess.Lowess;
 import fastlowess.Options;
 import fastlowess.Result;
@@ -59,10 +60,9 @@ public class Example {
         Options options = Options.builder()
                 .fraction(0.5)
                 .iterations(3)
-                .confidenceIntervals(0.95)
-                .predictionIntervals(0.95)
-                .returnDiagnostics(true)
                 .parallel(true)
+                .outputs("diagnostics")
+                .intervals(IntervalsOptions.builder().confidence(0.95).prediction(0.95).build())
                 .build();
 
         try (Lowess model = new Lowess(options)) {

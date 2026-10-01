@@ -39,8 +39,8 @@ public class AltSoftwareNoRobustness {
         Options options = Options.builder()
                 .fraction(2.0 / 3.0)
                 .iterations(0)
-                .boundaryPolicy("noboundary")
                 .delta(0.0)
+                .boundaryPolicy("noboundary")
                 .build();
 
         try (Lowess model = new Lowess(options)) {
@@ -93,9 +93,9 @@ public class AltSoftwareRobustness {
         Options options = Options.builder()
                 .fraction(2.0 / 3.0)
                 .iterations(3)
+                .delta(0.0)
                 .boundaryPolicy("noboundary")
                 .scalingMethod("mar")
-                .delta(0.0)
                 .build();
 
         try (Lowess model = new Lowess(options)) {

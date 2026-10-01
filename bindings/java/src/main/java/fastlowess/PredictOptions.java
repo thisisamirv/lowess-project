@@ -4,12 +4,12 @@ package fastlowess;
  * Options for {@link PredictModel#predict}. Construct via {@link #builder()}.
  *
  * @param returnSe whether to include standard errors in the output
- * @param confidenceLevel confidence interval coverage level (e.g.
- * {@code 0.95}), or {@code Double.NaN} to skip
- * @param predictionLevel prediction interval coverage level (e.g.
- * {@code 0.95}), or {@code Double.NaN} to skip
  * @param returnDerivative whether to include the local fit's derivative (slope)
  * in the output
+ * @param intervals confidence/prediction levels and optional residual-bootstrap
+ * refits
+ * @param seed prediction-time bootstrap seed, or {@code null} for the default;
+ * interpreted as an unsigned 64-bit integer
  * @param extrapolation behavior for query points outside the training range:
  * one of {@code "clamp"} (default), {@code "linear"}, {@code "error"}
  * @param maxExtrapolationDistance under {@code "linear"} extrapolation, the
@@ -22,12 +22,19 @@ package fastlowess;
  */
 public record PredictOptions(
         boolean returnSe,
-        double confidenceLevel,
-        double predictionLevel,
         boolean returnDerivative,
+        IntervalsOptions intervals,
+        Long seed,
         String extrapolation,
         double maxExtrapolationDistance,
         double maxNeighborDistance) {
+
+    /**
+     * Normalizes a {@code null} interval group to "disabled".
+     */
+    public PredictOptions {
+        intervals = intervals == null ? IntervalsOptions.DISABLED : intervals;
+    }
 
     /**
      * Creates a new builder.
@@ -44,9 +51,9 @@ public record PredictOptions(
     public static final class Builder {
 
         boolean returnSe = false;
-        double confidenceLevel = Double.NaN;
-        double predictionLevel = Double.NaN;
         boolean returnDerivative = false;
+        IntervalsOptions intervals = IntervalsOptions.DISABLED;
+        Long seed = null;
         String extrapolation = "clamp";
         double maxExtrapolationDistance = Double.NaN;
         double maxNeighborDistance = Double.NaN;
@@ -63,28 +70,6 @@ public record PredictOptions(
          */
         public Builder returnSe(boolean returnSe) {
             this.returnSe = returnSe;
-            return this;
-        }
-
-        /**
-         * Requests confidence intervals at the given level (e.g. {@code 0.95}).
-         *
-         * @param confidenceLevel the confidence level
-         * @return this builder, for chaining
-         */
-        public Builder confidenceLevel(double confidenceLevel) {
-            this.confidenceLevel = confidenceLevel;
-            return this;
-        }
-
-        /**
-         * Requests prediction intervals at the given level (e.g. {@code 0.95}).
-         *
-         * @param predictionLevel the prediction level
-         * @return this builder, for chaining
-         */
-        public Builder predictionLevel(double predictionLevel) {
-            this.predictionLevel = predictionLevel;
             return this;
         }
 
@@ -119,6 +104,30 @@ public record PredictOptions(
                 }
 
             }
+            return this;
+        }
+
+        /**
+         * Confidence/prediction levels and optional residual-bootstrap refits
+         * over the retained training residuals.
+         *
+         * @param intervals interval configuration
+         * @return this builder, for chaining
+         */
+        public Builder intervals(IntervalsOptions intervals) {
+            this.intervals = intervals;
+            return this;
+        }
+
+        /**
+         * Seeds prediction-time bootstrap draws, independently of the fit's
+         * seed. Does not enable bootstrap by itself; {@code 0} is valid.
+         *
+         * @param seed the random seed
+         * @return this builder, for chaining
+         */
+        public Builder seed(long seed) {
+            this.seed = seed;
             return this;
         }
 
@@ -168,9 +177,9 @@ public record PredictOptions(
         public PredictOptions build() {
             return new PredictOptions(
                     returnSe,
-                    confidenceLevel,
-                    predictionLevel,
                     returnDerivative,
+                    intervals,
+                    seed,
                     extrapolation,
                     maxExtrapolationDistance,
                     maxNeighborDistance);

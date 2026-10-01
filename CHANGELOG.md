@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Java:**
 
 - Added grouped `outputs(...)`, `cv(CVOptions...)`, and prediction-output APIs while preserving native option mapping.
+- Added `IntervalsOptions` for grouped confidence/prediction levels and residual-bootstrap intervals across Batch, Streaming, full-update Online, and `PredictModel.predict`.
 - Added an "Alternative Software" guide comparing `fastlowess` with Apache Commons Math's `LoessInterpolator`.
 - Added optional `commons-math3` support to the Java snippet runner; unavailable downloads are skipped.
 
@@ -120,6 +121,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Java:**
 
+- Breaking change: replaced flat `confidenceIntervals`/`predictionIntervals` setters (and `PredictOptions` `confidenceLevel`/`predictionLevel`) with `intervals(IntervalsOptions)`; removed flat `cvFractions`/`cvMethod`/`cvK`/`cvSeed` setters and `CVOptions.seed` in favor of `cv(CVOptions)` plus one outer `seed(long)` shared by CV and fit-time bootstrap. `PredictOptions` has its own `seed`. Seeds are now interpreted as unsigned 64-bit values instead of rejecting negatives.
 - Bumped the pinned Checkstyle standalone jar version from `14.1.0` to `14.3.0`.
 
 **Julia:**

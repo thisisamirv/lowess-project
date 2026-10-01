@@ -2,20 +2,19 @@ package fastlowess;
 
 /**
  * Grouped cross-validation configuration for {@link Options.Builder#cv}.
- * Construct via {@link #builder()}.
+ * Construct via {@link #builder()}. K-fold shuffling is seeded by
+ * {@link Options.Builder#seed(long)}.
  */
 public final class CVOptions {
 
     final double[] fractions;
     final String method;
     final int k;
-    final Long seed;
 
     private CVOptions(Builder builder) {
         this.fractions = builder.fractions.clone();
         this.method = builder.method;
         this.k = builder.k;
-        this.seed = builder.seed;
     }
 
     /**
@@ -35,20 +34,8 @@ public final class CVOptions {
         double[] fractions;
         String method = "kfold";
         int k = 5;
-        Long seed;
 
         Builder() {
-        }
-
-        /**
-         * Sets candidate smoothing fractions.
-         *
-         * @param fractions candidate smoothing fractions
-         * @return this builder, for chaining
-         */
-        public Builder fractions(double... fractions) {
-            this.fractions = fractions.clone();
-            return this;
         }
 
         /**
@@ -74,13 +61,13 @@ public final class CVOptions {
         }
 
         /**
-         * Sets the reproducible k-fold seed. Ignored for LOOCV.
+         * Sets candidate smoothing fractions.
          *
-         * @param seed random seed
+         * @param fractions candidate smoothing fractions
          * @return this builder, for chaining
          */
-        public Builder seed(long seed) {
-            this.seed = seed;
+        public Builder fractions(double... fractions) {
+            this.fractions = fractions.clone();
             return this;
         }
 

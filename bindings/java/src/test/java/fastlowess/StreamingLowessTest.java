@@ -1,6 +1,8 @@
 package fastlowess;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
@@ -64,8 +66,7 @@ class StreamingLowessTest {
                         .fraction(0.2)
                         .chunkSize(50)
                         .returnSe(true)
-                        .confidenceIntervals(0.95)
-                        .predictionIntervals(0.95)
+                        .intervals(IntervalsOptions.builder().confidence(0.95).prediction(0.95).build())
                         .build())) {
             Result chunkResult = model.processChunk(x, y);
             Result finalResult = model.finish();
@@ -77,5 +78,41 @@ class StreamingLowessTest {
             assertTrue(chunkResult.predictionUpper().isPresent());
             assertTrue(finalResult.standardErrors().isPresent());
         }
+    }
+
+    @Test
+    void bootstrapIntervalsAreSeedReproducible() {
+        double[] x = new double[30];
+        double[] y = new double[30];
+        for (int i = 0; i < 30; i++) {
+            x[i] = i * 0.1;
+            y[i] = Math.sin(x[i]) + 0.1 * Math.cos(7 * x[i]);
+        }
+
+        double[][] lower = new double[2][];
+        for (int run = 0; run < 2; run++) {
+            try (StreamingLowess model = new StreamingLowess(
+                    StreamingOptions.builder()
+                            .chunkSize(x.length)
+                            .intervals(IntervalsOptions.builder()
+                                    .confidence(0.95).prediction(0.95).bootstrap(20).build())
+                            .seed(42)
+                            .build())) {
+                Result chunk = model.processChunk(x, y);
+                assertTrue(chunk.standardErrors().isPresent());
+                assertTrue(chunk.predictionUpper().isPresent());
+                lower[run] = chunk.confidenceLower().orElseThrow();
+            }
+        }
+        assertArrayEquals(lower[0], lower[1]);
+    }
+
+    @Test
+    void bootstrapRejectsSingleReplicate() {
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> new StreamingLowess(
+                StreamingOptions.builder()
+                        .intervals(IntervalsOptions.builder().confidence(0.95).bootstrap(1).build())
+                        .build()));
+        assertTrue(ex.getMessage() != null && !ex.getMessage().isEmpty());
     }
 }
