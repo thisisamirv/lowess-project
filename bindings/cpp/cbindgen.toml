@@ -1,4 +1,5 @@
 no_includes = true
+header = "#include <stdint.h>"
 
 [parse]
 parse_deps = false

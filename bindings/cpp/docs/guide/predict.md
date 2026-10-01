@@ -20,29 +20,22 @@ Requires `retain_model = true` on `LowessOptions` before `fit()`; obtain the `Pr
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `return_se` | `bool` | `false` | Include standard errors in the output |
-| `confidence_level` | `double` | `NaN` | Confidence interval coverage level (e.g. `0.95`; NaN to disable) |
-| `prediction_level` | `double` | `NaN` | Prediction interval coverage level (e.g. `0.95`; NaN to disable) |
-| `return_derivative` | `bool` | `false` | Include the local fit's derivative (slope) at each query point |
+| `outputs` | `std::vector<std::string>` | `{}` | Request `"se"` and/or `"derivative"` |
+| `intervals` | `IntervalsOptions` | disabled | Confidence/prediction levels and optional residual-bootstrap refits |
+| `seed` | `std::optional<uint64_t>` | unset | Reproducible prediction-time bootstrap draws; zero is valid |
 | `extrapolation` | `std::string` | `"clamp"` | Behavior for query points outside the training `x`-range |
 | `max_extrapolation_distance` | `double` | `NaN` | Under `"linear"` extrapolation, the max allowed distance beyond the training boundary before erroring |
 | `max_neighbor_distance` | `double` | `NaN` | Max allowed distance to the farthest training point in a query's local window before erroring |
 
-### return_se
+### outputs
 
-Computes standard errors for each query point, using the retained model's residual scale and per-point leverage. Required for `confidence_level`/`prediction_level` to be populated. `false` by default.
+Request `"se"` for standard errors and `"derivative"` for local slopes. Analytic intervals compute their required standard errors even when `"se"` was not requested separately.
 
-### confidence_level
+### intervals
 
-Confidence level for the confidence interval around the mean response at each query point (e.g. `0.95`). Uses the same z-score convention as `fit()`'s own confidence intervals. `NaN` (default) disables it.
+Set `intervals.confidence` for bounds around the mean response and `intervals.prediction` for bounds of a new observation (e.g. `0.95`); both default to `NaN` (disabled). Without bootstrap, these use normal-theory standard errors and the retained residual scale.
 
-### prediction_level
-
-Confidence level for the prediction interval for a new observation at each query point (e.g. `0.95`). Widens using the same MAD-based residual scale `fit()` uses for its own intervals. `NaN` (default) disables it.
-
-### return_derivative
-
-Includes the local fit's derivative (slope) at each query point in the output. `false` by default.
+Set `intervals.bootstrap` to at least 2 to resample the retained Batch residuals, refit the model, and calculate query-point percentile bounds and standard errors. `seed` on `PredictOptions` controls these draws independently of the seed used for fitting or CV. Bootstrap prediction requires `LowessOptions::retain_model = true`.
 
 ### extrapolation
 
@@ -114,9 +107,40 @@ int main() {
 
     auto predict_model = result.predict_model();
     fastlowess::PredictOptions popts;
-        popts.outputs = {"se", "derivative"};
+    popts.outputs = {"se", "derivative"};
     auto prediction = predict_model.predict({2.5}, popts);
     return 0;
+}
+```
+
+### Bootstrap Intervals
+
+```cpp
+#include <fastlowess.hpp>
+#include <cmath>
+#include <vector>
+
+int main() {
+    std::vector<double> x(30), y(30);
+    for (int i = 0; i < 30; ++i) {
+        x[i] = i * 0.1;
+        y[i] = std::sin(x[i]) + 0.1 * std::cos(7.0 * x[i]);
+    }
+
+    fastlowess::LowessOptions options;
+    options.retain_model = true;
+    fastlowess::Lowess model(options);
+    auto result = model.fit(x, y).value();
+    auto retained = result.predict_model();
+
+    fastlowess::PredictOptions predict_options;
+    predict_options.outputs = {"se", "derivative"};
+    predict_options.intervals.confidence = 0.95;
+    predict_options.intervals.prediction = 0.95;
+    predict_options.intervals.bootstrap = 40;
+    predict_options.seed = 42;
+    auto predicted = retained.predict({0.75, 1.25}, predict_options);
+    return predicted.valid() && predicted.confidence_lower().size() == 2 ? 0 : 1;
 }
 ```
 

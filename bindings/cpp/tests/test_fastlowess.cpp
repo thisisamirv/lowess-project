@@ -52,6 +52,10 @@ constexpr double k_cw_high_weight = 100.0;
 constexpr double k_cw_spike_value = 10.0;
 constexpr double k_cw_outlier_value = 100.0;
 constexpr double k_cw_slope = 2.0;
+constexpr double k_cv_low_fraction = 0.4;
+constexpr double k_cv_high_fraction = 0.6;
+constexpr unsigned long k_bootstrap_replicates = 12UL;
+constexpr int k_bootstrap_online_min_points = 5;
 
 constexpr std::array<double, k_small_sample_size> k_sample_x_values = {
     1.0, 2.0, 3.0, 4.0, 5.0};
@@ -307,7 +311,7 @@ void testLowessWithConfidenceIntervals() {
 
   fastlowess::LowessOptions options;
   options.fraction = k_basic_fraction;
-  options.confidence_intervals = k_confidence_level;
+  options.intervals.confidence = k_confidence_level;
   fastlowess::Lowess lowess(options);
   const auto result =
       lowess.fit(linear_data.x_values, linear_data.y_values).value();
@@ -334,7 +338,7 @@ void testLowessWithPredictionIntervals() {
 
   fastlowess::LowessOptions options;
   options.fraction = k_basic_fraction;
-  options.prediction_intervals = k_confidence_level;
+  options.intervals.prediction = k_confidence_level;
   fastlowess::Lowess lowess(options);
   const auto result =
       lowess.fit(linear_data.x_values, linear_data.y_values).value();
@@ -343,6 +347,52 @@ void testLowessWithPredictionIntervals() {
              "Prediction lower size mismatch");
   assertTrue(result.prediction_upper().size() == k_interval_point_count,
              "Prediction upper size mismatch");
+}
+
+void testGroupedCvBootstrapAndPredict() {
+  const auto data = makeLinearData({k_interval_point_count, k_interval_max_x,
+                                    k_linear_slope, k_zero_intercept});
+  fastlowess::LowessOptions options;
+  options.fraction = k_basic_fraction;
+  options.cv.fractions = {k_cv_low_fraction, k_cv_high_fraction};
+  options.cv.k = 3;
+  options.intervals.confidence = k_confidence_level;
+  options.intervals.prediction = k_confidence_level;
+  options.intervals.bootstrap = k_bootstrap_replicates;
+  options.seed = 0;
+  options.retain_model = true;
+
+  fastlowess::Lowess lowess(options);
+  auto result = lowess.fit(data.x_values, data.y_values).value();
+  assertTrue(result.cv_scores().size() == options.cv.fractions.size(),
+             "grouped CV should evaluate each fraction");
+  assertTrue(result.standard_errors().size() == data.x_values.size(),
+             "batch bootstrap should return standard errors");
+  assertTrue(result.confidence_lower().size() == data.x_values.size(),
+             "batch bootstrap should return confidence bounds");
+  assertTrue(result.prediction_upper().size() == data.x_values.size(),
+             "batch bootstrap should return prediction bounds");
+
+  auto model = result.predict_model();
+  assertTrue(model.valid(), "retained model should be available");
+  fastlowess::PredictOptions predict_options;
+  predict_options.outputs = {"se", "derivative"};
+  predict_options.intervals.confidence = k_confidence_level;
+  predict_options.intervals.prediction = k_confidence_level;
+  predict_options.intervals.bootstrap = k_bootstrap_replicates;
+  predict_options.seed = 0;
+  const auto first = model.predict({2.5, 5.5}, predict_options);
+  const auto again = model.predict({2.5, 5.5}, predict_options);
+  assertTrue(first.valid() && again.valid(),
+             "bootstrap predict should succeed");
+  assertTrue(first.standard_errors() == again.standard_errors(),
+             "predict bootstrap must reproduce seeded draws");
+  assertTrue(first.confidence_lower().size() == 2,
+             "predict bootstrap should return confidence bounds");
+  assertTrue(first.prediction_upper().size() == 2,
+             "predict bootstrap should return prediction bounds");
+  assertTrue(first.derivative().size() == 2,
+             "predict should return requested derivatives");
 }
 
 void testLowessReuse() {
@@ -674,8 +724,8 @@ void testStreamingReturnSeAndIntervals() {
   options.fraction = k_streaming_basic_fraction;
   options.chunk_size = k_streaming_accuracy_chunk_size;
   options.outputs = {"se"};
-  options.confidence_intervals = k_confidence_level;
-  options.prediction_intervals = k_confidence_level;
+  options.intervals.confidence = k_confidence_level;
+  options.intervals.prediction = k_confidence_level;
   fastlowess::StreamingLowess stream(options);
 
   const auto chunk_result = stream.process_chunk(x_values, y_values).value();
@@ -689,6 +739,30 @@ void testStreamingReturnSeAndIntervals() {
              "streaming prediction_lower should be present");
   assertTrue(!final_result.standard_errors().empty(),
              "finalize standard_errors should be present");
+}
+
+void testStreamingBootstrapIntervals() {
+  std::vector<double> x_values(k_interval_point_count);
+  std::vector<double> y_values(k_interval_point_count);
+  for (std::size_t i = 0; i < x_values.size(); ++i) {
+    x_values[i] = static_cast<double>(i);
+    y_values[i] = std::sin(x_values[i] / k_streaming_basic_sine_divisor);
+  }
+  fastlowess::StreamingOptions options;
+  options.chunk_size = static_cast<int>(k_interval_point_count);
+  options.overlap = 2;
+  options.intervals.confidence = k_confidence_level;
+  options.intervals.prediction = k_confidence_level;
+  options.intervals.bootstrap = k_bootstrap_replicates;
+  options.seed = 0;
+  fastlowess::StreamingLowess stream(options);
+  const auto chunk = stream.process_chunk(x_values, y_values).value();
+  assertTrue(!chunk.standard_errors().empty(),
+             "streaming bootstrap should return standard errors");
+  assertTrue(!chunk.confidence_lower().empty(),
+             "streaming bootstrap should return confidence bounds");
+  assertTrue(!chunk.prediction_upper().empty(),
+             "streaming bootstrap should return prediction bounds");
 }
 
 void testOnlineReturnSeAndIntervalsRequiresFullMode() {
@@ -719,8 +793,8 @@ void testOnlineReturnSeAndIntervals() {
   options.window_capacity = k_online_window_capacity;
   options.update_mode = "full";
   options.outputs = {"se"};
-  options.confidence_intervals = k_confidence_level;
-  options.prediction_intervals = k_confidence_level;
+  options.intervals.confidence = k_confidence_level;
+  options.intervals.prediction = k_confidence_level;
   fastlowess::OnlineLowess online_lowess(options);
 
   bool checked = false;
@@ -748,6 +822,34 @@ void testOnlineReturnSeAndIntervals() {
              "online prediction_lower should be computed");
 }
 
+void testOnlineBootstrapIntervals() {
+  fastlowess::OnlineOptions options;
+  options.update_mode = "full";
+  options.min_points = k_bootstrap_online_min_points;
+  options.intervals.confidence = k_confidence_level;
+  options.intervals.prediction = k_confidence_level;
+  options.intervals.bootstrap = k_bootstrap_replicates;
+  options.seed = 0;
+  fastlowess::OnlineLowess online(options);
+  bool checked = false;
+  for (int i = 0; i < k_online_return_se_point_count; ++i) {
+    const auto value =
+        online
+            .add_point(static_cast<double>(i), std::sin(static_cast<double>(i)))
+            .value();
+    if (value.has_value()) {
+      assertTrue(std::isfinite(value.standard_error()),
+                 "online bootstrap should return a standard error");
+      assertTrue(std::isfinite(value.confidence_lower()),
+                 "online bootstrap should return confidence bounds");
+      assertTrue(std::isfinite(value.prediction_upper()),
+                 "online bootstrap should return prediction bounds");
+      checked = true;
+    }
+  }
+  assertTrue(checked, "online bootstrap should produce an output");
+}
+
 } // namespace
 
 int main() {
@@ -761,6 +863,7 @@ int main() {
     testLowessReturnSorted();
     testLowessWithConfidenceIntervals();
     testLowessWithPredictionIntervals();
+    testGroupedCvBootstrapAndPredict();
     testLowessReuse();
     testStreamingReturnsAllPoints();
     testStreamingBasic();
@@ -775,8 +878,10 @@ int main() {
     testStreamingMissingDropRemovesNonFiniteRows();
     testOnlineMissingDropIgnoresNonFinitePoint();
     testStreamingReturnSeAndIntervals();
+    testStreamingBootstrapIntervals();
     testOnlineReturnSeAndIntervalsRequiresFullMode();
     testOnlineReturnSeAndIntervals();
+    testOnlineBootstrapIntervals();
 
     std::cout << "All C++ tests passed!\n";
   } catch (const std::exception &exception) {

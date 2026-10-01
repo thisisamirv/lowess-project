@@ -60,6 +60,7 @@ venv/
 .idea/
 .vscode/
 .clangd
+!/bindings/cpp/.clangd
 .cache/
 compile_commands.json
 *.swp

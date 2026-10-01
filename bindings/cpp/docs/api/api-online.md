@@ -104,22 +104,20 @@ int main() {
 | --- | --- | --- | --- |
 | `fraction` | `double` | 0.67 | Smoothing fraction (bandwidth) |
 | `iterations` | `int` | 0 | Number of robustifying iterations (requires `update_mode = "full"`) |
-| `delta` | `double` | NaN | Interpolation distance (`NaN` auto-sets it to 0.0 in Online, i.e. interpolation disabled) |
-| `weight_function` | `std::string` | "tricube" | Weight function name |
-| `robustness_method` | `std::string` | "bisquare" | Robustness method name |
-| `scaling_method` | `std::string` | "mad" | Residual scaling method |
-| `boundary_policy` | `std::string` | "extend" | Boundary handling policy |
-| `zero_weight_fallback` | `std::string` | "use_local_mean" | Zero-weight handling |
-| `missing` | `std::string` | "error" | Policy for non-finite (NaN/Inf) values in each point |
-| `auto_converge` | `double` | NaN | Auto-convergence tolerance |
-| `return_robustness_weights` | `bool` | false | Include `robustness_weight()` in result |
 | `window_capacity` | `int` | 1000 | Max points in sliding window |
 | `min_points` | `int` | 2 | Min points before smoothing starts |
 | `update_mode` | `std::string` | "incremental" | Update mode (`"full"` or `"incremental"`) |
-| `return_derivative` | `bool` | false | Include the latest point's local fit derivative (slope) in the result |
-| `return_se` | `bool` | false | Populate `standard_error()` in the result (requires `update_mode = "full"`; construction fails if combined with `"incremental"`) |
-| `confidence_intervals` | `double` | NaN | Confidence level (e.g., 0.95); populates `confidence_lower()`/`confidence_upper()` (requires `update_mode = "full"`) |
-| `prediction_intervals` | `double` | NaN | Prediction level (e.g., 0.95); populates `prediction_lower()`/`prediction_upper()` (requires `update_mode = "full"`) |
+| `delta` | `double` | NaN | Interpolation distance (`NaN` auto-sets it to 0.0 in Online, i.e. interpolation disabled) |
+| `weight_function` | `std::string` | "tricube" | Weight function name |
+| `robustness_method` | `std::string` | "bisquare" | Robustness method name |
+| `zero_weight_fallback` | `std::string` | "use_local_mean" | Zero-weight handling |
+| `boundary_policy` | `std::string` | "extend" | Boundary handling policy |
+| `scaling_method` | `std::string` | "mad" | Residual scaling method |
+| `auto_converge` | `double` | NaN | Auto-convergence tolerance |
+| `missing` | `std::string` | "error" | Policy for non-finite (NaN/Inf) values in each point |
+| `outputs` | `std::vector<std::string>` | `{}` | Request `"se"`, `"weights"`, or `"derivative"` |
+| `intervals` | `IntervalsOptions` | disabled | Confidence/prediction levels and per-window bootstrap refits (`update_mode = "full"` only) |
+| `seed` | `std::optional<uint64_t>` | unset | Reproducible bootstrap draws for each full-update window |
 
 Cross-validation, GPU `backend`, `custom_weights`, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [fastLowess](api.md) for those.
 
@@ -237,33 +235,15 @@ Minimum number of points required before smoothing starts. `add_point()` returns
 | `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
 | `"full"` | `"resmooth"` | Recompute entire window | More accurate |
 
-### return_derivative
+### outputs
 
-Each point's local WLS fit already computes a slope internally; this exposes the latest point's slope (rate of change of the smoothed curve) via `derivative()` at effectively no extra computation cost.
+Request `"derivative"` for the latest point's slope or `"weights"` for its robustness weight. Request `"se"` to populate `standard_error()` with `update_mode = "full"`; incremental mode rejects it at construction.
 
-- `false` (default) — leaves `derivative()` as NaN
-- `true` — populates `derivative()`
-
-### return_se
+### intervals
 
 *See: [Intervals](../guide/intervals.md)*
 
-Populates `standard_error()` — but only when combined with `update_mode = "full"`. The fast `"incremental"` path (the default) never computes standard errors, so combining `return_se` (or `confidence_intervals`/`prediction_intervals`) with anything other than `"full"` makes construction fail, rather than silently leaving `standard_error()` as NaN.
-
-- `false` (default) — leaves `standard_error()` as NaN
-- `true` — populates `standard_error()`, and requires `update_mode = "full"`
-
-### confidence_intervals
-
-*See: [Intervals](../guide/intervals.md)*
-
-Confidence level for the confidence interval around the mean response at the latest point (e.g. `0.95`), populating `confidence_lower()`/`confidence_upper()`. Same `update_mode = "full"` requirement as `return_se`. NaN (default) disables confidence intervals.
-
-### prediction_intervals
-
-*See: [Intervals](../guide/intervals.md)*
-
-Confidence level for the prediction interval for a new observation at the latest point (e.g. `0.95`), populating `prediction_lower()`/`prediction_upper()`. Same `update_mode = "full"` requirement as `return_se`. NaN (default) disables prediction intervals.
+Set `intervals.confidence` and/or `intervals.prediction` to a coverage level such as `0.95`, or leave them as `NaN` to disable. `intervals.bootstrap` (at least 2) refits the current full-update window for percentile intervals and standard errors. Set `seed` for reproducible draws. All interval settings require `update_mode = "full"`.
 
 ## Result Structure
 
@@ -275,12 +255,12 @@ Returned (inside `Expected`) by `add_point()`. Check `has_value()` before readin
 | --- | --- | --- |
 | `has_value()` | `bool` | `false` while window fills; `true` when output is ready |
 | `y()` | `double` | Smoothed value for the latest point |
-| `standard_error()` | `double` | Populated when `return_se` is set (requires `update_mode = "full"`); NaN otherwise |
-| `confidence_lower()` / `confidence_upper()` | `double` | Confidence interval bounds around the mean response, if `confidence_intervals` was set (requires `update_mode = "full"`) |
-| `prediction_lower()` / `prediction_upper()` | `double` | Prediction interval bounds for a new observation, if `prediction_intervals` was set (requires `update_mode = "full"`) |
+| `standard_error()` | `double` | Populated when `"se"` or intervals are requested (full mode only); NaN otherwise |
+| `confidence_lower()` / `confidence_upper()` | `double` | Bounds around the mean response if `intervals.confidence` was set (full mode only) |
+| `prediction_lower()` / `prediction_upper()` | `double` | Bounds for a new observation if `intervals.prediction` was set (full mode only) |
 | `residual()` | `double` | Residual y − smoothed; always populated (there is no `return_residuals` option for Online) |
 | `robustness_weight()` | `double` | Robustness weight, if `return_robustness_weights` was set |
 | `iterations_used()` | `int` | Robustness iterations performed (−1 if N/A) |
-| `derivative()` | `double` | Local fit derivative/slope for the latest point, if `return_derivative` was set (NaN otherwise) |
+| `derivative()` | `double` | Local fit derivative/slope if `"derivative"` was requested (NaN otherwise) |
 
 There is no `Diagnostics` object or `return_diagnostics` option for `OnlineLowess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.

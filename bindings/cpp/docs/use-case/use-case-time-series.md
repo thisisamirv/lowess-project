@@ -104,12 +104,12 @@ int main() {
         y[i] = std::sin(t[i]) + 0.1;
     }
 
-    fastlowess::Lowess forecast_model({
-        .fraction = 0.2,
-        .iterations = 3,
-        .confidence_intervals = 0.95,
-        .prediction_intervals = 0.95
-    });
+    fastlowess::LowessOptions options;
+    options.fraction = 0.2;
+    options.iterations = 3;
+    options.intervals.confidence = 0.95;
+    options.intervals.prediction = 0.95;
+    fastlowess::Lowess forecast_model(options);
     auto result = forecast_model.fit(t, y).value();
 
     std::cout << "95% PI: [" << result.prediction_lower()[0] << ", " << result.prediction_upper()[0] << "]\n";
@@ -214,12 +214,12 @@ int main() {
         expression[i] = 100.0 * (1.0 + 0.5 * std::sin(hours[i] * M_PI / 12.0)) + (std::fmod(i * 7 + 3, 1.7) - 0.85) * 10.0;
     }
 
-    fastlowess::Lowess gene_model({
-        .fraction = 0.3,
-        .iterations = 3,
-        .confidence_intervals = 0.95,
-        .outputs = {"diagnostics"}
-    });
+    fastlowess::LowessOptions options;
+    options.fraction = 0.3;
+    options.iterations = 3;
+    options.outputs = {"diagnostics"};
+    options.intervals.confidence = 0.95;
+    fastlowess::Lowess gene_model(options);
     auto result = gene_model.fit(hours, expression).value();
 
     std::cout << "R2: " << result.diagnostics().r_squared() << std::endl;

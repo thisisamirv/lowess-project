@@ -160,23 +160,42 @@ pub fn extrapolation_policy_str(value: ExtrapolationPolicy) -> &'static str {
 pub fn build_predict_options(
     options: PredictOptionSet<'_>,
 ) -> Result<PredictQuery<f64>, BindingError> {
+    build_predict_options_with_bootstrap(options, None, None)
+}
+
+pub fn build_predict_options_with_bootstrap(
+    options: PredictOptionSet<'_>,
+    bootstrap: Option<usize>,
+    seed: Option<u64>,
+) -> Result<PredictQuery<f64>, BindingError> {
     let extrapolation = match options.extrapolation {
         Some(s) => map_invalid_arg(parse_extrapolation_policy(s))?,
         None => ExtrapolationPolicy::default(),
     };
-    map_lowess_result(
-        PredictBuilder {
-            return_se: options.return_se,
-            confidence_intervals: options.confidence_level,
-            prediction_intervals: options.prediction_level,
-            return_derivative: options.return_derivative,
-            extrapolation,
-            max_extrapolation_distance: options.max_extrapolation_distance,
-            max_neighbor_distance: options.max_neighbor_distance,
-            ..Default::default()
+    let mut builder = PredictBuilder {
+        return_se: options.return_se,
+        confidence_intervals: options.confidence_level,
+        prediction_intervals: options.prediction_level,
+        return_derivative: options.return_derivative,
+        extrapolation,
+        max_extrapolation_distance: options.max_extrapolation_distance,
+        max_neighbor_distance: options.max_neighbor_distance,
+        ..Default::default()
+    };
+    if let Some(n_boot) = bootstrap {
+        let mut intervals = lowess::IntervalsBuilder::new().bootstrap(n_boot);
+        if let Some(level) = options.confidence_level {
+            intervals = intervals.confidence(level);
         }
-        .build(),
-    )
+        if let Some(level) = options.prediction_level {
+            intervals = intervals.prediction(level);
+        }
+        builder = builder.intervals(intervals);
+    }
+    if let Some(seed) = seed {
+        builder = builder.seed(seed);
+    }
+    map_lowess_result(builder.build())
 }
 
 // Evaluate a fitted Batch model at out-of-sample query points. Requires
@@ -199,6 +218,17 @@ pub fn run_predict_state(
     options: PredictOptionSet<'_>,
 ) -> Result<PredictOutput<f64>, BindingError> {
     let opts = build_predict_options(options)?;
+    map_lowess_result(predict_batch(state, new_x, &opts))
+}
+
+pub fn run_predict_state_with_bootstrap(
+    state: &PredictState<f64>,
+    new_x: &[f64],
+    options: PredictOptionSet<'_>,
+    bootstrap: Option<usize>,
+    seed: Option<u64>,
+) -> Result<PredictOutput<f64>, BindingError> {
+    let opts = build_predict_options_with_bootstrap(options, bootstrap, seed)?;
     map_lowess_result(predict_batch(state, new_x, &opts))
 }
 

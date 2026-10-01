@@ -53,10 +53,10 @@ int main() {
     fastlowess::LowessOptions opts;
     opts.fraction = 0.5;
     opts.iterations = 3;
-    opts.confidence_intervals = 0.95;
-    opts.prediction_intervals = 0.95;
-    opts.outputs = {"diagnostics"};
     opts.parallel = true;
+    opts.outputs = {"diagnostics"};
+    opts.intervals.confidence = 0.95;
+    opts.intervals.prediction = 0.95;
     fastlowess::Lowess model(opts);
     auto result = model.fit(x, y).value();
 

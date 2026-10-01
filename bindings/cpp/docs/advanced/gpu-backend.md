@@ -82,7 +82,7 @@ Once GPU support is available, request it by setting the backend option on the b
 fastlowess::LowessOptions opts;
 opts.fraction = 0.5;
 opts.backend = "gpu";
-opts.confidence_intervals = 0.95;
+opts.intervals.confidence = 0.95;
 fastlowess::Lowess model(opts);
 auto result = model.fit(x, y);
 ```

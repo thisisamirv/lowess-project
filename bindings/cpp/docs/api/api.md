@@ -92,30 +92,22 @@ int main() {
 | --- | --- | --- | --- |
 | `fraction` | `double` | 0.67 | Smoothing fraction (bandwidth) |
 | `iterations` | `int` | 3 | Number of robustifying iterations |
-| `delta` | `double` | NaN | Interpolation distance (`NaN` auto-sets it to 1% of the x-range) |
 | `weight_function` | `std::string` | "tricube" | Weight function name |
 | `robustness_method` | `std::string` | "bisquare" | Robustness method name |
-| `scaling_method` | `std::string` | "mad" | Residual scaling method |
-| `boundary_policy` | `std::string` | "extend" | Boundary handling policy |
+| `delta` | `double` | NaN | Interpolation distance (`NaN` auto-sets it to 1% of the x-range) |
 | `zero_weight_fallback` | `std::string` | "use_local_mean" | Zero-weight handling strategy |
-| `missing` | `std::string` | "error" | Policy for non-finite (NaN/Inf) values in input data |
+| `boundary_policy` | `std::string` | "extend" | Boundary handling policy |
+| `scaling_method` | `std::string` | "mad" | Residual scaling method |
 | `auto_converge` | `double` | NaN | Auto-convergence tolerance |
-| `confidence_intervals` | `double` | NaN | Confidence level (e.g., 0.95) |
-| `prediction_intervals` | `double` | NaN | Prediction level (e.g., 0.95) |
-| `return_diagnostics` | `bool` | false | Include diagnostics in result |
-| `return_residuals` | `bool` | false | Include residuals in result |
-| `return_robustness_weights` | `bool` | false | Include weights in result |
-| `return_se` | `bool` | false | Return standard errors |
-| `return_sorted` | `bool` | false | Return results sorted ascending by `x` instead of in original input order |
+| `missing` | `std::string` | "error" | Policy for non-finite (NaN/Inf) values in input data |
 | `parallel` | `bool` | true | Enable parallel execution |
 | `backend` | `std::string` | `"cpu"` | Execution backend (`"cpu"` or `"gpu"`); GPU requires the library to be built with the `gpu` Cargo feature |
-| `cv_method` | `std::string` | "kfold" | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) |
-| `cv_k` | `int` | 5 | Number of folds for k-fold CV |
-| `cv_fractions` | `std::vector<double>` | `{}` | Fractions to test for cross-validation |
-| `cv_seed` | `uint64_t` | `0` | Random seed for CV shuffling (0 = random) |
-| `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor |
+| `outputs` | `std::vector<std::string>` | `{}` | Request `"se"`, `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"`, or `"sorted"` |
+| `intervals` | `IntervalsOptions` | disabled | Confidence/prediction levels and optional residual-bootstrap refits |
+| `cv` | `CVOptions` | disabled | Method, fold count, and candidate fractions; empty fractions disable CV |
+| `seed` | `std::optional<uint64_t>` | unset | Shared CV/bootstrap seed; zero is a valid deterministic seed |
 | `retain_model` | `bool` | `false` | Retain training data, enabling `LowessResult::predict_model()` |
-| `return_derivative` | `bool` | `false` | Include the per-point local fit derivative (slope) in the result |
+| `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor |
 
 ## Options
 
@@ -209,50 +201,19 @@ Policy for handling non-finite (NaN/Inf) values in `x`/`y` (and `custom_weights`
 
 Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
 
-### confidence_intervals
+### intervals
 
 *See: [Intervals](../guide/intervals.md)*
 
-Confidence level for the confidence interval around the mean response (e.g. `0.95`). `NaN` (default) disables confidence intervals.
+Set `intervals.confidence` and/or `intervals.prediction` to a coverage level such as `0.95`. Both default to `NaN` (disabled). Set `intervals.bootstrap` to at least 2 to replace analytic uncertainty with residual-bootstrap refits. `seed` controls both CV and bootstrap when configured; it does not enable either by itself.
 
-### prediction_intervals
-
-*See: [Intervals](../guide/intervals.md)*
-
-Confidence level for the prediction interval for new observations (e.g. `0.95`). `NaN` (default) disables prediction intervals.
-
-### return_diagnostics
+### outputs
 
 *See: [`Diagnostics`](#fastlowessdiagnostics)*
 
-Include a `Diagnostics` object (RMSE, MAE, R², AIC/AICc, effective degrees of freedom) in the result. AIC/AICc/effective degrees of freedom additionally require `return_se = true` (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.
+Request any of `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"`, `"se"`, or `"sorted"`. The `"se"` output computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) as well as standard errors. AIC/AICc/effective degrees of freedom also require `"se"` or intervals to be populated.
 
-- `false` (default) — leaves `diagnostics()` empty
-- `true` — populates `diagnostics()`
-
-### return_residuals
-
-Include per-point residuals (`y - fitted`) in the result.
-
-- `false` (default) — leaves `residuals()` empty
-- `true` — populates `residuals()`
-
-### return_robustness_weights
-
-Include the final per-point robustness weights (from the last robustness iteration) in the result.
-
-- `false` (default) — leaves `robustness_weights()` empty
-- `true` — populates `robustness_weights()`
-
-### return_se
-
-*See: [Intervals](../guide/intervals.md#standard-errors)*
-
-Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
-
-### return_sorted
-
-When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
+`"sorted"` reorders every result field (residuals, intervals, etc.) by `x` in ascending order instead of original input order.
 To get both orderings, sort the default result client-side (e.g. via `std::sort` over an index vector) instead of calling `fit()` twice.
 
 ### parallel
@@ -270,10 +231,10 @@ The batch `fastlowess::Lowess` class can optionally run on a GPU-accelerated bac
 
 *See: [Cross-Validation](../guide/cross-validation.md)*
 
-- `cv_method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cv_k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
-- `cv_k`: Number of folds for k-fold CV. Ignored when `cv_method="loocv"`.
-- `cv_fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
-- `cv_seed`: Seed for reproducible k-fold shuffling. `0` (default) uses a random seed.
+- `cv.method`: `"kfold"` (default) or exhaustive `"loocv"`.
+- `cv.k`: Number of folds for k-fold CV; ignored by LOOCV.
+- `cv.fractions`: Candidate fractions to evaluate; empty disables CV.
+- `seed`: Reproducible k-fold shuffling and bootstrap draws; unset uses each feature's default, while zero is a valid seed.
 
 ### custom_weights
 
@@ -286,13 +247,6 @@ Per-observation weights, passed to `fit()` rather than the constructor.
 *See: [Predict](../guide/predict.md)*
 
 Retains the fitted model's training data, enabling `LowessResult::predict_model()` to obtain a `PredictModel` for out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
-
-### return_derivative
-
-Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) via `derivative()`, enabling turning-point/rate-of-change analysis at effectively no extra computation cost.
-
-- `false` (default) — leaves `derivative()` empty
-- `true` — populates `derivative()`
 
 ## Result Structure
 
@@ -315,7 +269,7 @@ A RAII wrapper around the C result struct `fastlowess_CppLowessResult`.
 | `robustness_weights()` | `std::vector<double>` | Robustness weights (if `return_robustness_weights`; empty if not computed) |
 | `cv_scores()` | `std::vector<double>` | CV score per tested fraction (empty if CV not run) |
 | `diagnostics()` | `Diagnostics` | Fit metrics — check `diagnostics().has_value()` before use (if `return_diagnostics`) |
-| `derivative()` | `std::vector<double>` | Per-point local fit derivative/slope (if `return_derivative`; empty if not computed) |
+| `derivative()` | `std::vector<double>` | Per-point local fit derivative/slope if `"derivative"` was requested (empty otherwise) |
 
 ### fastlowess::Diagnostics
 

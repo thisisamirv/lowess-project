@@ -18,7 +18,7 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 ### Solution
 
-A small `fraction = 0.1` lets LOWESS follow fine-scale spatial structure without smearing the transitions between methylated and unmethylated regions. `confidence_intervals = 0.95` produces uncertainty bands that naturally widen at positions with sparser CpG coverage, making low-confidence segments immediately apparent in the plot.
+A small `fraction = 0.1` lets LOWESS follow fine-scale spatial structure without smearing the transitions between methylated and unmethylated regions. `intervals.confidence = 0.95` produces uncertainty bands that naturally widen at positions with sparser CpG coverage, making low-confidence segments immediately apparent in the plot.
 
 ```cpp
 #include <fastlowess.hpp>
@@ -35,7 +35,11 @@ int main() {
     }
 
     // positions and observed are std::vector<double>
-    fastlowess::Lowess model({ .fraction = 0.1, .iterations = 3, .confidence_intervals = 0.95 });
+    fastlowess::LowessOptions options;
+    options.fraction = 0.1;
+    options.iterations = 3;
+    options.intervals.confidence = 0.95;
+    fastlowess::Lowess model(options);
     auto result = model.fit(positions, observed).value();
 
     // Smoothed profile in result.y_vector()

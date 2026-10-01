@@ -109,7 +109,7 @@ int main() {
     opts.cv.method = "kfold";
     opts.cv.k = 5;
     opts.cv.fractions = {0.3, 0.5, 0.7};
-    opts.cv.seed = 42;
+    opts.seed = 42;
 
     fastlowess::Lowess model(opts);
     auto result = model.fit(x, y).value();

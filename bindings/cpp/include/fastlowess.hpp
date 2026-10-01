@@ -50,8 +50,13 @@ struct CVOptions {
   std::vector<double> fractions;
   std::string method = "kfold";
   int k = detail::k_default_cv_k;
-  /// Zero means no seed (random fold assignment).
-  uint64_t seed = 0;
+};
+
+struct IntervalsOptions {
+  double confidence = NAN;
+  double prediction = NAN;
+  /// Zero disables bootstrap refits.
+  unsigned long bootstrap = 0;
 };
 
 inline bool hasOutput(const std::vector<std::string> &outputs,
@@ -142,9 +147,9 @@ struct LowessOptions {
   std::string boundary_policy = "extend";
   std::string zero_weight_fallback = "use_local_mean";
 
-  double confidence_intervals = NAN; ///< Confidence level (NaN = disabled)
-  double prediction_intervals = NAN; ///< Prediction level (NaN = disabled)
-  double auto_converge = NAN;        ///< Auto-convergence threshold
+  IntervalsOptions intervals;
+  std::optional<uint64_t> seed;
+  double auto_converge = NAN; ///< Auto-convergence threshold
 
   /// Optional result components: diagnostics, residuals, weights, derivative,
   /// se, and sorted.
@@ -186,7 +191,7 @@ struct StreamingOptions : public LowessOptions {
  *
  * Online LOWESS processes one point at a time, so it has no `parallel` or
  * `backend` option, and diagnostics/residuals are always computed for free.
- * `return_se`/`confidence_intervals`/`prediction_intervals` require
+ * `outputs = {"se"}` or `intervals.confidence`/`intervals.prediction` require
  * `update_mode = "full"`.
  */
 struct OnlineOptions {
@@ -205,10 +210,8 @@ struct OnlineOptions {
   /// Optional result components: "weights", "derivative", and/or "se".
   /// "se" requires `update_mode = "full"`.
   std::vector<std::string> outputs;
-  double confidence_intervals = NAN; ///< Confidence level (NaN = disabled).
-                                     ///< Requires `update_mode = "full"`.
-  double prediction_intervals = NAN; ///< Prediction level (NaN = disabled).
-                                     ///< Requires `update_mode = "full"`.
+  IntervalsOptions intervals;
+  std::optional<uint64_t> seed;
 
   /// Policy for non-finite (NaN/Inf) `x`/`y` values passed to add_point():
   /// "error" (default) or "drop".
@@ -340,8 +343,8 @@ private:
 struct PredictOptions {
   /// Optional prediction components: "se" and/or "derivative".
   std::vector<std::string> outputs;
-  double confidence_level = NAN; ///< Confidence level (NaN = disabled)
-  double prediction_level = NAN; ///< Prediction level (NaN = disabled)
+  IntervalsOptions intervals;
+  std::optional<uint64_t> seed;
   /// Behavior for query points outside the training range ("clamp", "linear",
   /// "error").
   std::string extrapolation = "clamp";
@@ -514,11 +517,12 @@ public:
                         const PredictOptions &options = {}) const {
     const auto result = cpp_predict(
         ptr_, new_x.data(), static_cast<unsigned long>(new_x.size()),
-        hasOutput(options.outputs, "se") ? 1 : 0, options.confidence_level,
-        options.prediction_level,
+        hasOutput(options.outputs, "se") ? 1 : 0, options.intervals.confidence,
+        options.intervals.prediction,
         hasOutput(options.outputs, "derivative") ? 1 : 0,
         options.extrapolation.c_str(), options.max_extrapolation_distance,
-        options.max_neighbor_distance);
+        options.max_neighbor_distance, options.intervals.bootstrap,
+        options.seed.value_or(0), options.seed.has_value() ? 1 : 0);
     return PredictResult(result);
   }
 
@@ -704,7 +708,7 @@ public:
         options.fraction, options.iterations, options.delta,
         options.weight_function.c_str(), options.robustness_method.c_str(),
         options.scaling_method.c_str(), options.boundary_policy.c_str(),
-        options.confidence_intervals, options.prediction_intervals,
+        options.intervals.confidence, options.intervals.prediction,
         hasOutput(options.outputs, "diagnostics") ? 1 : 0,
         hasOutput(options.outputs, "residuals") ? 1 : 0,
         hasOutput(options.outputs, "weights") ? 1 : 0,
@@ -716,8 +720,11 @@ public:
         hasOutput(options.outputs, "se") ? 1 : 0,
         hasOutput(options.outputs, "sorted") ? 1 : 0, options.backend.c_str(),
         options.missing.c_str(), options.retain_model ? 1 : 0);
-    if (options.cv.seed > 0) {
-      cpp_lowess_set_cv_seed(ptr_, static_cast<unsigned long>(options.cv.seed));
+    if (options.seed.has_value()) {
+      cpp_lowess_set_seed(ptr_, *options.seed);
+    }
+    if (options.intervals.bootstrap > 0) {
+      cpp_lowess_set_bootstrap(ptr_, options.intervals.bootstrap);
     }
   }
 
@@ -793,8 +800,9 @@ public:
         options.zero_weight_fallback.c_str(), options.auto_converge,
         options.parallel ? 1 : 0, options.chunk_size, options.overlap,
         options.merge_strategy.c_str(), options.missing.c_str(),
-        hasOutput(options.outputs, "se") ? 1 : 0, options.confidence_intervals,
-        options.prediction_intervals);
+        hasOutput(options.outputs, "se") ? 1 : 0, options.intervals.confidence,
+        options.intervals.prediction, options.intervals.bootstrap,
+        options.seed.value_or(0), options.seed.has_value() ? 1 : 0);
   }
 
   ~StreamingLowess() {
@@ -875,8 +883,9 @@ public:
         options.zero_weight_fallback.c_str(), options.auto_converge,
         options.window_capacity, options.min_points,
         options.update_mode.c_str(), options.missing.c_str(),
-        hasOutput(options.outputs, "se") ? 1 : 0, options.confidence_intervals,
-        options.prediction_intervals);
+        hasOutput(options.outputs, "se") ? 1 : 0, options.intervals.confidence,
+        options.intervals.prediction, options.intervals.bootstrap,
+        options.seed.value_or(0), options.seed.has_value() ? 1 : 0);
   }
 
   ~OnlineLowess() {

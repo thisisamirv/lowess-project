@@ -36,10 +36,10 @@ int main() {
     }
 
 
-    fastlowess::Lowess model({
-        .fraction = 0.5,
-        .confidence_intervals = 0.95
-    });
+    fastlowess::LowessOptions options;
+    options.fraction = 0.5;
+    options.intervals.confidence = 0.95;
+    fastlowess::Lowess model(options);
     auto result = model.fit(x, y).value();
 
     auto ci_lower = result.confidence_lower();
@@ -74,7 +74,10 @@ int main() {
         y[i] = std::sin(x[i]) + 0.1;
     }
 
-    fastlowess::Lowess model({ .fraction = 0.5, .prediction_intervals = 0.95});
+    fastlowess::LowessOptions options;
+    options.fraction = 0.5;
+    options.intervals.prediction = 0.95;
+    fastlowess::Lowess model(options);
     auto result = model.fit(x, y).value();
 
     std::cout << "95% PI: [" << result.prediction_lower()[0] << ", " << result.prediction_upper()[0] << "]\n";
@@ -106,7 +109,11 @@ int main() {
         y[i] = std::sin(x[i]) + 0.1;
     }
 
-    fastlowess::Lowess model({ .fraction = 0.5, .confidence_intervals = 0.95, .prediction_intervals = 0.95});
+    fastlowess::LowessOptions options;
+    options.fraction = 0.5;
+    options.intervals.confidence = 0.95;
+    options.intervals.prediction = 0.95;
+    fastlowess::Lowess model(options);
     auto result = model.fit(x, y).value();
 
     std::cout << "95% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
@@ -144,7 +151,9 @@ int main() {
         y[i] = std::sin(x[i]) + 0.1;
     }
 
-    fastlowess::Lowess model({ .confidence_intervals = 0.99});
+    fastlowess::LowessOptions options;
+    options.intervals.confidence = 0.99;
+    fastlowess::Lowess model(options);
     auto result = model.fit(x, y).value();
 
     std::cout << "99% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
@@ -154,6 +163,58 @@ int main() {
 
 ```output
 99% CI: [0.317464, 0.444303]
+```
+
+---
+
+## Residual Bootstrap
+
+Set `intervals.bootstrap` to at least 2 to replace analytic intervals with residual-bootstrap refits. `seed` is an optional outer setting shared with CV for Batch; on Streaming and Online it seeds each chunk or full-update window. Online bootstrap requires `update_mode = "full"`.
+
+```cpp
+#include <fastlowess.hpp>
+#include <cmath>
+#include <vector>
+
+int main() {
+    std::vector<double> x(30), y(30);
+    for (int i = 0; i < 30; ++i) {
+        x[i] = i * 0.1;
+        y[i] = std::sin(x[i]) + 0.1 * std::cos(7.0 * x[i]);
+    }
+
+    fastlowess::LowessOptions batch_options;
+    batch_options.intervals.confidence = 0.95;
+    batch_options.intervals.prediction = 0.95;
+    batch_options.intervals.bootstrap = 20;
+    batch_options.seed = 42;
+    fastlowess::Lowess batch(batch_options);
+    auto fitted = batch.fit(x, y).value();
+    if (fitted.standard_errors().size() != x.size()) return 1;
+
+    fastlowess::StreamingOptions streaming_options;
+    streaming_options.chunk_size = 30;
+    streaming_options.intervals.confidence = 0.95;
+    streaming_options.intervals.bootstrap = 20;
+    streaming_options.seed = 42;
+    fastlowess::StreamingLowess streaming(streaming_options);
+    auto chunk = streaming.process_chunk(x, y).value();
+    if (chunk.confidence_lower().empty()) return 1;
+
+    fastlowess::OnlineOptions online_options;
+    online_options.min_points = 5;
+    online_options.update_mode = "full";
+    online_options.intervals.prediction = 0.95;
+    online_options.intervals.bootstrap = 20;
+    online_options.seed = 42;
+    fastlowess::OnlineLowess online(online_options);
+    bool has_bounds = false;
+    for (int i = 0; i < 30; ++i) {
+        auto output = online.add_point(x[i], y[i]).value();
+        if (output.has_value()) has_bounds = std::isfinite(output.prediction_lower());
+    }
+    return has_bounds ? 0 : 1;
+}
 ```
 
 ---

@@ -107,6 +107,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **C++:**
 
+- Breaking change: grouped confidence/prediction levels and residual bootstrap counts under `intervals` for Batch, Streaming, Online, and Predict; moved the CV seed to one optional outer `seed` shared with fit-time bootstrap. Added seeded bootstrap prediction for retained models and native coverage for all adapters.
 - Breaking change: replaced flat `return_*`/`cv_*` fields with grouped `outputs` and nested `cv` options; prediction outputs are grouped as well.
 - Declared the public wrapper's C++17 requirement for `std::optional`.
 - Represent unavailable diagnostics as empty `std::optional<double>` values instead of `NaN` sentinels.
