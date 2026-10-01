@@ -30,7 +30,9 @@ fn main() -> Result<(), LowessError> {
     let model = Lowess::new()
         .fraction(0.1)
         .iterations(3)
-        .confidence_intervals(0.95)
+        .intervals(IntervalsBuilder::new()
+            .confidence(0.95)
+        )
         .build()?;
 
     let result = model.fit(&positions, &observed)?;

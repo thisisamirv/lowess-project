@@ -20,8 +20,7 @@ fn test_parallel_interval_estimation() {
     let seq_model = Lowess::new()
         .fraction(0.3)
         .iterations(2)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))
         .parallel(false)
         .build()
         .unwrap();
@@ -32,8 +31,7 @@ fn test_parallel_interval_estimation() {
     let par_model = Lowess::new()
         .fraction(0.3)
         .iterations(2)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))
         .parallel(true)
         .build()
         .unwrap();
@@ -82,10 +80,13 @@ fn test_parallel_bootstrap_matches_sequential() {
         Lowess::new()
             .fraction(0.3)
             .iterations(1)
-            .confidence_intervals(0.95)
-            .prediction_intervals(0.9)
-            .bootstrap_intervals(300)
-            .bootstrap_seed(11)
+            .intervals(
+                IntervalsBuilder::new()
+                    .confidence(0.95)
+                    .prediction(0.9)
+                    .bootstrap(300)
+                    .seed(11),
+            )
             .parallel(parallel)
             .build()
             .unwrap()
@@ -116,10 +117,13 @@ fn test_streaming_bootstrap_parallel_matches_sequential() {
             .iterations(0)
             .chunk_size(20)
             .overlap(4)
-            .confidence_intervals(0.95)
-            .prediction_intervals(0.9)
-            .bootstrap_intervals(40)
-            .bootstrap_seed(11)
+            .intervals(
+                IntervalsBuilder::new()
+                    .confidence(0.95)
+                    .prediction(0.9)
+                    .bootstrap(40)
+                    .seed(11),
+            )
             .parallel(parallel)
             .build()
             .unwrap();
@@ -147,10 +151,13 @@ fn test_online_bootstrap_full_update() {
         .update_mode("full")
         .window_capacity(10)
         .min_points(5)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.9)
-        .bootstrap_intervals(40)
-        .bootstrap_seed(7)
+        .intervals(
+            IntervalsBuilder::new()
+                .confidence(0.95)
+                .prediction(0.9)
+                .bootstrap(40)
+                .seed(7),
+        )
         .build()
         .unwrap();
     for idx in 0..12 {

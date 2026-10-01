@@ -26,7 +26,11 @@ fn main() -> Result<(), LowessError> {
 
 
     let model = Lowess::new()
-        .cv(CVBuilder::method("kfold").k(5).fractions(vec![0.2, 0.3, 0.5, 0.7]))
+        .cv(CVBuilder::new()
+            .method("kfold")
+            .k(5)
+            .fraction(vec![0.2, 0.3, 0.5, 0.7])
+        )
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -63,7 +67,10 @@ fn main() -> Result<(), LowessError> {
     let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
     let model = Lowess::new()
-        .cv(CVBuilder::method("loocv").fractions(vec![0.2, 0.3, 0.5, 0.7]))
+        .cv(CVBuilder::new()
+            .method("loocv")
+            .fraction(vec![0.2, 0.3, 0.5, 0.7])
+        )
         .build()?;
     let result = model.fit(&x, &y)?;
 
@@ -92,7 +99,12 @@ fn main() -> Result<(), LowessError> {
     let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
     let model = Lowess::new()
-        .cv(CVBuilder::method("kfold").k(5).fractions(vec![0.3, 0.5, 0.7]).seed(42))
+        .cv(CVBuilder::new()
+            .method("kfold")
+            .k(5)
+            .fraction(vec![0.3, 0.5, 0.7])
+            .seed(42)
+        )
         .build()?;
     let result = model.fit(&x, &y)?;
 
@@ -145,7 +157,11 @@ fn main() -> Result<(), LowessError> {
 
     // Example output
     let model = Lowess::new()
-        .cv(CVBuilder::method("kfold").k(5).fractions(vec![0.1, 0.3, 0.5, 0.7]))
+        .cv(CVBuilder::new()
+            .method("kfold")
+            .k(5)
+            .fraction(vec![0.1, 0.3, 0.5, 0.7])
+        )
         .build()?;
 
     let result = model.fit(&x, &y)?;

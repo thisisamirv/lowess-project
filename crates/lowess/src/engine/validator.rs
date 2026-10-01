@@ -251,8 +251,8 @@ impl Validator {
         Ok(())
     }
 
-    // Validate that `OnlineLowess`'s interval type (return_se()/confidence_intervals()/
-    // prediction_intervals()) is only combined with `update_mode("full")`. The default
+    // Validate that `OnlineLowess`'s interval type (standard errors or `.intervals(...)`)
+    // is only combined with `update_mode("full")`. The default
     // `"incremental"` mode bypasses the full executor pipeline for speed, so standard
     // errors are never computed there, and would otherwise silently leave
     // `standard_error` as `None`.

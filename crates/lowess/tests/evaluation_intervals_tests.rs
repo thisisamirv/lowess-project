@@ -384,7 +384,7 @@ fn test_interval_method_workflow() {
 fn test_interval_edge_cases() {
     let lowess = Lowess::<f64>::new()
         .fraction(1.0)
-        .confidence_intervals(0.95)
+        .intervals(IntervalsBuilder::new().confidence(0.95))
         .build()
         .unwrap();
 
@@ -512,6 +512,105 @@ fn test_intervals_degenerate_se() {
 
 // ============================================================================
 // Residual Bootstrap Tests
+
+#[test]
+fn test_grouped_intervals_reproduce_seeded_output() {
+    let x: Vec<f64> = (0..30).map(|i| i as f64 * 0.2).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .map(|&xi| xi.sin() + 0.2 * (xi * 7.0).sin())
+        .collect();
+    let fit = || {
+        Lowess::new()
+            .fraction(0.5)
+            .iterations(0)
+            .intervals(
+                IntervalsBuilder::new()
+                    .confidence(0.95)
+                    .prediction(0.95)
+                    .bootstrap(40)
+                    .seed(7),
+            )
+            .build()
+            .unwrap()
+            .fit(&x, &y)
+            .unwrap()
+    };
+    let (first, second) = (fit(), fit());
+    assert_eq!(first.y, second.y);
+    assert_eq!(first.standard_errors, second.standard_errors);
+    assert_eq!(first.confidence_lower, second.confidence_lower);
+    assert_eq!(first.confidence_upper, second.confidence_upper);
+    assert_eq!(first.prediction_lower, second.prediction_lower);
+    assert_eq!(first.prediction_upper, second.prediction_upper);
+}
+
+#[test]
+fn test_grouped_intervals_work_in_streaming_and_online() {
+    let x: Vec<f64> = (0..15).map(|i| i as f64 * 0.2).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin()).collect();
+    let mut streaming = StreamingLowess::new()
+        .chunk_size(15)
+        .overlap(2)
+        .intervals(IntervalsBuilder::new().bootstrap(20).seed(7))
+        .build()
+        .unwrap();
+    let streamed = streaming.process_chunk(&x, &y).unwrap();
+    assert_eq!(
+        streamed.standard_errors.as_ref().unwrap().len(),
+        streamed.y.len()
+    );
+    assert!(streamed.confidence_lower.is_none());
+
+    let mut online = OnlineLowess::new()
+        .update_mode("full")
+        .min_points(3)
+        .intervals(
+            IntervalsBuilder::new()
+                .prediction(0.95)
+                .bootstrap(20)
+                .seed(7),
+        )
+        .build()
+        .unwrap();
+    for (&xi, &yi) in x.iter().zip(&y) {
+        if let Some(output) = online.add_point(xi, yi).unwrap() {
+            assert!(output.standard_error.is_some());
+            assert!(output.prediction_lower.is_some());
+            assert!(output.confidence_lower.is_none());
+        }
+    }
+}
+
+#[test]
+fn test_grouped_intervals_preserve_validation() {
+    let invalid = Lowess::<f64>::new()
+        .intervals(IntervalsBuilder::new().confidence(0.95).bootstrap(1))
+        .build()
+        .err();
+    assert_eq!(invalid, Some(LowessError::InvalidBootstrapSamples(1)));
+
+    let incremental = OnlineLowess::<f64>::new()
+        .intervals(IntervalsBuilder::new().bootstrap(20))
+        .build()
+        .err();
+    assert_eq!(
+        incremental,
+        Some(LowessError::StandardErrorRequiresFullUpdateMode)
+    );
+
+    let repeated = Lowess::<f64>::new()
+        .intervals(IntervalsBuilder::new().confidence(0.90))
+        .intervals(IntervalsBuilder::new().confidence(0.95))
+        .build()
+        .err();
+    assert_eq!(
+        repeated,
+        Some(LowessError::DuplicateParameter {
+            parameter: "intervals"
+        })
+    );
+}
 // ============================================================================
 
 fn noisy_sine(n: usize, skewed: bool) -> (Vec<f64>, Vec<f64>) {
@@ -542,10 +641,13 @@ fn test_bootstrap_intervals_shape_and_ordering() {
     let res = Lowess::new()
         .fraction(0.3)
         .iterations(0)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
-        .bootstrap_intervals(200)
-        .bootstrap_seed(7)
+        .intervals(
+            IntervalsBuilder::new()
+                .confidence(0.95)
+                .prediction(0.95)
+                .bootstrap(200)
+                .seed(7),
+        )
         .adapter(Batch)
         .build()
         .unwrap()
@@ -579,9 +681,12 @@ fn test_bootstrap_is_reproducible_with_seed() {
     let run = |seed| {
         Lowess::new()
             .fraction(0.4)
-            .confidence_intervals(0.9)
-            .bootstrap_intervals(50)
-            .bootstrap_seed(seed)
+            .intervals(
+                IntervalsBuilder::new()
+                    .confidence(0.9)
+                    .bootstrap(50)
+                    .seed(seed),
+            )
             .adapter(Batch)
             .build()
             .unwrap()
@@ -600,7 +705,11 @@ fn test_bootstrap_se_matches_analytic_magnitude() {
     let (x, y) = noisy_sine(200, false);
     let fit = |boot: bool| {
         let b = Lowess::new().fraction(0.3).iterations(0).return_se();
-        let b = if boot { b.bootstrap_intervals(400) } else { b };
+        let b = if boot {
+            b.intervals(IntervalsBuilder::new().bootstrap(400))
+        } else {
+            b
+        };
         b.adapter(Batch)
             .build()
             .unwrap()
@@ -625,8 +734,7 @@ fn test_bootstrap_prediction_interval_reflects_skew() {
     let res = Lowess::new()
         .fraction(0.3)
         .iterations(0)
-        .prediction_intervals(0.9)
-        .bootstrap_intervals(300)
+        .intervals(IntervalsBuilder::new().prediction(0.9).bootstrap(300))
         .adapter(Batch)
         .build()
         .unwrap()
@@ -645,7 +753,7 @@ fn test_bootstrap_prediction_interval_reflects_skew() {
 #[test]
 fn test_bootstrap_invalid_sample_count() {
     let err = Lowess::<f64>::new()
-        .bootstrap_intervals(1)
+        .intervals(IntervalsBuilder::new().bootstrap(1))
         .adapter(Batch)
         .build()
         .err();
@@ -656,7 +764,7 @@ fn test_bootstrap_invalid_sample_count() {
 #[test]
 fn test_bootstrap_online_requires_full_update() {
     let err = OnlineLowess::<f64>::new()
-        .bootstrap_intervals(10)
+        .intervals(IntervalsBuilder::new().bootstrap(10))
         .build()
         .err();
     assert_eq!(err, Some(LowessError::StandardErrorRequiresFullUpdateMode));
@@ -676,10 +784,13 @@ fn test_bootstrap_online_full_matches_batch_window() {
         .window_capacity(10)
         .min_points(5)
         .update_mode("full")
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.9)
-        .bootstrap_intervals(40)
-        .bootstrap_seed(7)
+        .intervals(
+            IntervalsBuilder::new()
+                .confidence(0.95)
+                .prediction(0.9)
+                .bootstrap(40)
+                .seed(7),
+        )
         .build()
         .unwrap();
 
@@ -695,10 +806,13 @@ fn test_bootstrap_online_full_matches_batch_window() {
             .fraction(0.6)
             .iterations(0)
             .delta(0.0)
-            .confidence_intervals(0.95)
-            .prediction_intervals(0.9)
-            .bootstrap_intervals(40)
-            .bootstrap_seed(7)
+            .intervals(
+                IntervalsBuilder::new()
+                    .confidence(0.95)
+                    .prediction(0.9)
+                    .bootstrap(40)
+                    .seed(7),
+            )
             .build()
             .unwrap()
             .fit(&x[start..=idx], &y[start..=idx])
@@ -731,7 +845,7 @@ fn test_bootstrap_online_full_matches_batch_window() {
 fn test_bootstrap_online_invalid_samples() {
     let err = OnlineLowess::<f64>::new()
         .update_mode("full")
-        .bootstrap_intervals(1)
+        .intervals(IntervalsBuilder::new().bootstrap(1))
         .build()
         .err();
     assert_eq!(err, Some(LowessError::InvalidBootstrapSamples(1)));
@@ -742,8 +856,7 @@ fn test_bootstrap_online_se_without_interval_levels() {
     let mut online = OnlineLowess::new()
         .update_mode("full")
         .min_points(3)
-        .bootstrap_intervals(20)
-        .bootstrap_seed(7)
+        .intervals(IntervalsBuilder::new().bootstrap(20).seed(7))
         .build()
         .unwrap();
     for idx in 0..5 {
@@ -772,10 +885,13 @@ fn test_bootstrap_streaming_matches_combined_batch_windows() {
         .chunk_size(15)
         .overlap(3)
         .merge_strategy("take_last")
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.9)
-        .bootstrap_intervals(40)
-        .bootstrap_seed(7)
+        .intervals(
+            IntervalsBuilder::new()
+                .confidence(0.95)
+                .prediction(0.9)
+                .bootstrap(40)
+                .seed(7),
+        )
         .build()
         .unwrap();
 
@@ -788,10 +904,13 @@ fn test_bootstrap_streaming_matches_combined_batch_windows() {
             .fraction(0.6)
             .iterations(0)
             .delta(0.0)
-            .confidence_intervals(0.95)
-            .prediction_intervals(0.9)
-            .bootstrap_intervals(40)
-            .bootstrap_seed(7)
+            .intervals(
+                IntervalsBuilder::new()
+                    .confidence(0.95)
+                    .prediction(0.9)
+                    .bootstrap(40)
+                    .seed(7),
+            )
             .build()
             .unwrap()
             .fit(&x[start..end], &y[start..end])
@@ -829,7 +948,7 @@ fn test_bootstrap_streaming_matches_combined_batch_windows() {
 #[test]
 fn test_bootstrap_streaming_invalid_samples() {
     let err = StreamingLowess::<f64>::new()
-        .bootstrap_intervals(1)
+        .intervals(IntervalsBuilder::new().bootstrap(1))
         .build()
         .err();
     assert_eq!(err, Some(LowessError::InvalidBootstrapSamples(1)));
@@ -842,8 +961,7 @@ fn test_bootstrap_streaming_se_without_interval_levels() {
     let mut model = StreamingLowess::new()
         .chunk_size(12)
         .overlap(2)
-        .bootstrap_intervals(20)
-        .bootstrap_seed(7)
+        .intervals(IntervalsBuilder::new().bootstrap(20).seed(7))
         .build()
         .unwrap();
     let output = model.process_chunk(&x, &y).unwrap();

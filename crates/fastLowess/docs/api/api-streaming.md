@@ -97,10 +97,7 @@ Fraction used: 0.5
 | `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
 | `outputs([&str])` | `&[&str]` | `[]` | Select optional result components: `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"`, `"se"` |
-| `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95); populates `confidence_lower`/`confidence_upper` |
-| `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95); populates `prediction_lower`/`prediction_upper` |
-| `bootstrap_intervals(usize)` | `usize` | disabled | Residual-bootstrap refits per combined chunk; replaces analytic SEs and intervals |
-| `bootstrap_seed(u64)` | `u64` | fixed default | Seed for per-chunk resampling; alone enables 1000 replicates |
+| `intervals(IntervalsBuilder<f64>)` | `IntervalsBuilder<f64>` | disabled | Group CI, PI, bootstrap refits, and seed |
 | `parallel(bool)` | `bool` | `true` | Enable parallel execution |
 | `chunk_size(usize)` | `usize` | `5000` | Data chunk size |
 | `overlap(usize)` | `usize` | `chunk_size / 10` | Overlap between chunks |
@@ -204,7 +201,7 @@ Convergence tolerance for early stopping of robustness iterations. `NaN` (defaul
 
 *See: [`Diagnostics`](crate::doc::api#diagnosticst)*
 
-Include a `Diagnostics` object (RMSE, MAE, R2, residual_sd) in the result. `effective_df`/`aic`/`aicc` require per-chunk hat-matrix leverage to be threaded into the cumulative diagnostics computation across chunk boundaries, which the current `DiagnosticsState` doesn't do (even with `return_se()`/`confidence_intervals()`/`prediction_intervals()` set), so they're always `None` here.
+Include a `Diagnostics` object (RMSE, MAE, R2, residual_sd) in the result. `effective_df`/`aic`/`aicc` require per-chunk hat-matrix leverage to be threaded into the cumulative diagnostics computation across chunk boundaries, which the current `DiagnosticsState` doesn't do (even with `"se"` or `.intervals(...)` requested), so they're always `None` here.
 
 - `false` (default) — leaves `result.diagnostics` as `None`
 - `true` — populates `result.diagnostics`
@@ -239,17 +236,11 @@ Computes standard errors per chunk the same way Batch does, then merges the over
 - `false` (default) — leaves `result.standard_errors` as `None`
 - `true` — populates it
 
-### confidence_intervals
+### intervals
 
 *See: [Intervals](crate::doc::guide::intervals)*
 
-Confidence level for the confidence interval around the mean response (e.g. `0.95`), populating `result.confidence_lower`/`result.confidence_upper`. Computed per chunk via `IntervalMethod::compute_intervals` (same as Batch) and merged across overlap boundaries via `merge_strategy`. `NaN` (default) disables confidence intervals.
-
-### prediction_intervals
-
-*See: [Intervals](crate::doc::guide::intervals)*
-
-Confidence level for the prediction interval for new observations (e.g. `0.95`), populating `result.prediction_lower`/`result.prediction_upper`. Same per-chunk computation and overlap-merging as `confidence_intervals`. `NaN` (default) disables prediction intervals.
+Configure confidence and/or prediction bounds with `.intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))`. Optional `.bootstrap(n).seed(seed)` replaces analytic intervals with per-chunk residual-bootstrap estimates. Bounds and standard errors are merged across overlap boundaries via `merge_strategy`. With `parallel(true)`, bootstrap refits run concurrently.
 
 ### parallel
 
@@ -292,11 +283,11 @@ Returned by `process_chunk()` and `finalize()`.
 | `y` | `Vec<T>` | Smoothed y values |
 | `fraction_used` | `T` | Fraction used |
 | `iterations_used` | `Option<usize>` | Robustness iterations actually performed |
-| `standard_errors` | `Option<Vec<T>>` | Per-point standard errors (if `return_se()`, `confidence_intervals()`, or `prediction_intervals()` was set) |
-| `confidence_lower` | `Option<Vec<T>>` | Lower confidence bounds (if `confidence_intervals()` was set) |
-| `confidence_upper` | `Option<Vec<T>>` | Upper confidence bounds (if `confidence_intervals()` was set) |
-| `prediction_lower` | `Option<Vec<T>>` | Lower prediction bounds (if `prediction_intervals()` was set) |
-| `prediction_upper` | `Option<Vec<T>>` | Upper prediction bounds (if `prediction_intervals()` was set) |
+| `standard_errors` | `Option<Vec<T>>` | Per-point standard errors (if `"se"` or `.intervals(...)` was requested) |
+| `confidence_lower` | `Option<Vec<T>>` | Lower confidence bounds (if `.confidence(level)` was set) |
+| `confidence_upper` | `Option<Vec<T>>` | Upper confidence bounds (if `.confidence(level)` was set) |
+| `prediction_lower` | `Option<Vec<T>>` | Lower prediction bounds (if `.prediction(level)` was set) |
+| `prediction_upper` | `Option<Vec<T>>` | Upper prediction bounds (if `.prediction(level)` was set) |
 | `residuals` | `Option<Vec<T>>` | Residuals (if `return_residuals()`) |
 | `robustness_weights` | `Option<Vec<T>>` | Robustness weights (if `return_robustness_weights()`) |
 | `cv_scores` | `Option<Vec<T>>` | Always `None` (Batch only) |

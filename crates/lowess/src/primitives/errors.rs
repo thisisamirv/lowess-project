@@ -166,7 +166,7 @@ pub enum LowessError {
         max_distance: f64,
     },
 
-    // `.return_se()`/`.confidence_intervals()`/`.prediction_intervals()` was requested on
+    // standard errors or `.intervals(...)` was requested on
     // `OnlineLowess` but `update_mode` isn't `"full"` (the default `"incremental"` mode
     // bypasses the full executor pipeline for speed, so standard errors are never
     // computed there). Previously this combination silently left `standard_error` as
@@ -288,7 +288,7 @@ impl Display for LowessError {
             ),
             Self::StandardErrorRequiresFullUpdateMode => write!(
                 f,
-                "return_se()/confidence_intervals()/prediction_intervals() requires \
+                "standard errors or intervals require \
                  update_mode(\"full\") on OnlineLowess; the default \"incremental\" mode \
                  never computes standard errors"
             ),

@@ -97,10 +97,7 @@ fn main() -> Result<(), LowessError> {
 | `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
 | `outputs([&str])` | `&[&str]` | `[]` | Select optional result components: `"weights"`, `"derivative"`, `"se"` (`"se"` requires `update_mode("full")`) |
-| `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95); populates `confidence_lower`/`confidence_upper` (requires `update_mode("full")`) |
-| `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95); populates `prediction_lower`/`prediction_upper` (requires `update_mode("full")`) |
-| `bootstrap_intervals(usize)` | `usize` | disabled | Bootstrap refits of the current window for SEs/intervals (requires `update_mode("full")`) |
-| `bootstrap_seed(u64)` | `u64` | fixed default | Seed for window resampling; alone enables 1000 replicates (requires `update_mode("full")`) |
+| `intervals(IntervalsBuilder<T>)` | `IntervalsBuilder<T>` | disabled | Group CI, PI, bootstrap refits, and seed via `IntervalsBuilder::new().confidence(level).prediction(level).bootstrap(n).seed(seed)` (`update_mode("full")` required) |
 | `window_capacity(usize)` | `usize` | `1000` | Max points in sliding window |
 | `min_points(usize)` | `usize` | `2` | Min points before smoothing starts |
 | `update_mode(...)` | `update_mode` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
@@ -215,17 +212,11 @@ OnlineLowess::<f64>::new().outputs(["weights", "derivative", "se"]);
 
 Unknown names are collected and reported together by `.build()` as `LowessError::ParseErrors`.
 
-### confidence_intervals
+### intervals
 
 *See: [Intervals](crate::doc::guide::intervals)*
 
-Confidence level for the confidence interval around the mean response at the latest point (e.g. `0.95`), populating `output.confidence_lower`/`output.confidence_upper`. Same `update_mode("full")` requirement as `"se"` (enforced at `.build()` with `LowessError::StandardErrorRequiresFullUpdateMode`). `NaN` (default) disables confidence intervals.
-
-### prediction_intervals
-
-*See: [Intervals](crate::doc::guide::intervals)*
-
-Confidence level for the prediction interval for a new observation at the latest point (e.g. `0.95`), populating `output.prediction_lower`/`output.prediction_upper`. Same `update_mode("full")` requirement as `"se"`. `NaN` (default) disables prediction intervals.
+Use `.intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))` to return bounds for the latest point. Optional `.bootstrap(n).seed(seed)` bootstraps the current sliding window instead of computing analytic intervals. Online requires `update_mode("full")`; the default incremental mode rejects intervals at `.build()` with `LowessError::StandardErrorRequiresFullUpdateMode`.
 
 ### window_capacity
 
@@ -254,8 +245,8 @@ Returned by `add_point()` inside `Option`. Is `None` while the window is still f
 | --- | --- | --- |
 | `y` | `T` | Smoothed value for the latest point |
 | `standard_error` | `Option<T>` | Populated when `"se"` is requested (requires `update_mode("full")`, enforced at `.build()`); otherwise always `None` |
-| `confidence_lower` / `confidence_upper` | `Option<T>` | Confidence interval bounds around the mean response, if `confidence_intervals(level)` was set (requires `update_mode("full")`) |
-| `prediction_lower` / `prediction_upper` | `Option<T>` | Prediction interval bounds for a new observation, if `prediction_intervals(level)` was set (requires `update_mode("full")`) |
+| `confidence_lower` / `confidence_upper` | `Option<T>` | Mean-response bounds if `.confidence(level)` was set (requires `update_mode("full")`) |
+| `prediction_lower` / `prediction_upper` | `Option<T>` | New-observation bounds if `.prediction(level)` was set (requires `update_mode("full")`) |
 | `residual` | `Option<T>` | Residual y − smoothed; always present (there is no `"residuals"` output for Online) |
 | `robustness_weight` | `Option<T>` | Robustness weight, if `"weights"` was requested |
 | `iterations_used` | `Option<usize>` | Robustness iterations performed |

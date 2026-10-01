@@ -26,7 +26,7 @@
 //! - **Adapters**
 //!   - [Choosing an Adapter](doc::guide::adapter_choice)
 //! - **Analysis**
-//!   - [Intervals](doc::guide::intervals) (analytic, or residual-bootstrap via `.bootstrap_intervals()`)
+//!   - [Intervals](doc::guide::intervals) (analytic or residual-bootstrap via `.intervals(...)`)
 //!   - [Cross-Validation](doc::guide::cross_validation)
 //!   - [Prediction](doc::guide::predict)
 //! - **Customization**
@@ -110,16 +110,17 @@
 //!         "derivative",                                // Include per-point local slope
 //!         "sorted"                                     // Sort output ascending by x
 //!     ])
-//!     .confidence_intervals(0.95)                      // 95% confidence intervals
-//!     .prediction_intervals(0.95)                      // 95% prediction intervals
-//!     .bootstrap_intervals(1000)                       // Residual bootstrap instead of analytic intervals
-//!     .bootstrap_seed(42)                              // Seed for reproducible bootstrap intervals
+//!     .intervals(IntervalsBuilder::new()                // Group interval settings
+//!         .confidence(0.95)                            // 95% confidence intervals
+//!         .prediction(0.95)                            // 95% prediction intervals
+//!         .bootstrap(1000)                             // Residual bootstrap instead of analytic intervals
+//!         .seed(42))                                   // Seed for reproducible bootstrap intervals
 //!     .retain_model(true)                              // Retain state for out-of-sample predict()
-//!     .cv(
-//!         CVBuilder::method("kfold").                 // Cross-validation method: "kfold" or "loocv"
-//!         k(5).                                       // Number of folds for k-fold CV
-//!         fractions(vec![0.3, 0.7]).                  // Candidate bandwidth fractions to evaluate
-//!         seed(123)                                   // Reproducible fold splitting seed
+//!     .cv(CVBuilder::new()
+//!         .method("kfold")                            // CV method: "kfold" or "loocv"
+//!         .k(5)                                       // Number of folds for k-fold CV
+//!         .fraction(vec![0.3, 0.7])                   // Candidate bandwidth fractions to evaluate
+//!         .seed(123)                                  // Reproducible fold splitting seed
 //!     )
 //!     .build()?;
 //!
@@ -294,15 +295,15 @@ mod adapters;
 // High-level fluent API for LOWESS smoothing.
 mod api;
 
-// The type `LowessBuilder::cv` takes. Kept out of the prelude (callers pass the
-// result of `CVBuilder::method(...).fractions(...)` without naming it), but it
-// must remain publicly reachable so `cv`'s signature is fully public.
-pub use crate::api::CVOptions;
+// Export option types used by public builder signatures. `CVOptions` stays out
+// of the prelude; `IntervalsBuilder` is also exported there for fluent use.
+pub use crate::api::{CVOptions, IntervalsBuilder};
 
 // Standard LOWESS prelude.
 pub mod prelude {
     pub use crate::api::{
-        CVBuilder, Lowess, LowessError, LowessResult, OnlineLowess, Predict, StreamingLowess,
+        CVBuilder, IntervalsBuilder, Lowess, LowessError, LowessResult, OnlineLowess, Predict,
+        StreamingLowess,
     };
 }
 

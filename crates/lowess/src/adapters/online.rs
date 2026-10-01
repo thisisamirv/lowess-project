@@ -182,8 +182,7 @@ impl<T: Float> OnlineLowessBuilder<T> {
         Validator::validate_window_capacity(self.window_capacity, 3)?;
         Validator::validate_min_points(self.min_points, self.window_capacity)?;
 
-        // Validate that return_se()/confidence_intervals()/prediction_intervals() is
-        // only combined with update_mode("full")
+        // Validate that standard errors and intervals are only combined with update_mode("full")
         Validator::validate_online_se_update_mode(
             self.interval_type
                 .or_else(|| self.bootstrap.map(|_| IntervalMethod::se())),
@@ -222,12 +221,12 @@ pub struct OnlineOutput<T> {
     pub residual: Option<T>,
 
     // Confidence interval bounds around the mean response for the latest point (`Full`
-    // update mode only, via `.confidence_intervals(level)`).
+    // update mode only, via `.intervals(IntervalsBuilder::new().confidence(level))`).
     pub confidence_lower: Option<T>,
     pub confidence_upper: Option<T>,
 
     // Prediction interval bounds for a new observation at the latest point (`Full`
-    // update mode only, via `.prediction_intervals(level)`).
+    // update mode only, via `.intervals(IntervalsBuilder::new().prediction(level))`).
     pub prediction_lower: Option<T>,
     pub prediction_upper: Option<T>,
 

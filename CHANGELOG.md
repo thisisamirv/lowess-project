@@ -16,14 +16,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **lowess:**
 
+- Added `.intervals(IntervalsBuilder::new().confidence(level).prediction(level).bootstrap(n).seed(seed))` to configure analytic or residual-bootstrap intervals as one group in Batch, Streaming, and full-update Online. `IntervalsBuilder` is available from the crate root and prelude.
 - Added `LowessBuilder::outputs(names)` as a grouped replacement for the individual output toggles. Unknown names are collected and reported together by `.build()`.
 - Added grouped cross-validation configuration through `CVBuilder` and `.cv(...)`. `CVBuilder` is in the prelude; the internal `CVOptions` result type remains at the crate root.
 - Added `PredictBuilder::outputs(names)` in both Rust crates, supporting `"se"` and `"derivative"` as a grouped replacement for `.return_se()` and `.return_derivative()`.
-- Added residual-bootstrap standard errors and percentile confidence/prediction intervals via `.bootstrap_intervals(n_boot)` and `.bootstrap_seed(seed)` (Batch, per-chunk Streaming, and full-update Online per sliding window; also available through `fastLowess`). A distribution-free alternative to the analytic intervals when residual normality is questionable. Online incremental mode rejects it with `StandardErrorRequiresFullUpdateMode`; `n_boot < 2` returns the new `InvalidBootstrapSamples` error. Documented in the crate-level docs and in `crates/lowess/docs/guide/intervals.md`. Bootstrap refits are handed to a new `custom_bootstrap_pass` hook in batches of 256, with all resampling done beforehand so results don't depend on how refits are scheduled.
+- Added residual-bootstrap standard errors and percentile confidence/prediction intervals via `.intervals(IntervalsBuilder::new().bootstrap(n).seed(seed))` (Batch, per-chunk Streaming, and full-update Online per sliding window; also available through `fastLowess`). A distribution-free alternative to the analytic intervals when residual normality is questionable. Online incremental mode rejects it with `StandardErrorRequiresFullUpdateMode`; `n < 2` returns the new `InvalidBootstrapSamples` error. Documented in the crate-level docs and in `crates/lowess/docs/guide/intervals.md`. Bootstrap refits are handed to a new `custom_bootstrap_pass` hook in batches of 256, with all resampling done beforehand so results don't depend on how refits are scheduled.
 
 **fastLowess:**
 
-- Added residual-bootstrap intervals to Batch `Lowess`, `StreamingLowess`, and full-update `OnlineLowess` via `.bootstrap_intervals(n_boot)`/`.bootstrap_seed(seed)`. Batch and Streaming refits run concurrently via `bootstrap_pass_parallel` (Rayon) when `parallel` is on and match sequential results; GPU and Online refits run sequentially. Streaming bootstraps each combined chunk with its incoming overlap; Online bootstraps each sliding window. Documented in the crate-level docs and in `crates/fastLowess/docs/guide/intervals.md`.
+- Added `.intervals(IntervalsBuilder::new()...)` on Batch, Streaming, and Online Rust entry points, matching the lowess crate's grouped interval configuration.
+- Added residual-bootstrap intervals to Batch `Lowess`, `StreamingLowess`, and full-update `OnlineLowess` via `.intervals(IntervalsBuilder::new().bootstrap(n).seed(seed))`. Batch and Streaming refits run concurrently via `bootstrap_pass_parallel` (Rayon) when `parallel` is on and match sequential results; GPU and Online refits run sequentially. Streaming bootstraps each combined chunk with its incoming overlap; Online bootstraps each sliding window. Documented in the crate-level docs and in `crates/fastLowess/docs/guide/intervals.md`.
 - Added `tests/binding_support_tests.rs` (gated on the `dev` feature) covering repeated FFI buffer allocate/read/free cycles, optional buffers, and null-pointer freeing.
 
 **Go:**
@@ -75,6 +77,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **lowess:**
 
+- Breaking change: removed the individual interval and bootstrap setters in favor of `.intervals(IntervalsBuilder::new()...)`.
+- Breaking change: replaced `CVBuilder::method(...).fractions(...)` with `CVBuilder::new().method(...).fraction(...)`; k-fold with five folds remains the default. Migrated `fastLowess` and validation callers.
 - Removed 62 redundant `#[doc(hidden)]` attributes from private engine/adapter modules; public-API annotations remain unchanged.
 - Replaced the cross-validation candidate-fit `unwrap()` with error propagation through sequential CPU, parallel CPU, and GPU CV paths.
 - Replaced the `iteration_loop_with_callback` clippy suppression with a typed options bundle for its iteration controls and callbacks.
@@ -84,6 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **fastLowess:**
 
+- Breaking change: removed individual interval and bootstrap methods from the Rust Batch, Streaming, and Online wrappers; use `.intervals(IntervalsBuilder::new()...)`.
 - Breaking change: migrated wrappers and binding translation from individual `return_*`/`cv_*` calls to grouped `.outputs([...])` and `.cv(CVBuilder...)` configuration.
 - Replaced `std::mem::forget` with `Box::into_raw` in `vec_to_raw_ptr`, making the FFI ownership transfer explicit; bindings still release it through `free_raw_f64_buffer`.
 - Implemented `std::error::Error` for `BindingError`.

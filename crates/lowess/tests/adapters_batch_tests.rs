@@ -719,7 +719,7 @@ fn test_batch_standard_errors() {
 
     let result = Lowess::new()
         .fraction(0.3)
-        .confidence_intervals(0.95)
+        .intervals(IntervalsBuilder::new().confidence(0.95))
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -749,8 +749,7 @@ fn test_batch_confidence_and_prediction_intervals() {
 
     let result = Lowess::new()
         .fraction(0.5)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -855,7 +854,10 @@ fn test_batch_cv_kfold() {
     let fractions = vec![0.2, 0.5, 0.8];
 
     let result = Lowess::new()
-        .cv(CVBuilder::method("kfold").k(3).fractions(fractions.clone()))
+        .cv(CVBuilder::new()
+            .method("kfold")
+            .k(3)
+            .fraction(fractions.clone()))
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -889,9 +891,10 @@ fn test_batch_cv_reproducibility() {
 
     // Run 1
     let result1 = Lowess::new()
-        .cv(CVBuilder::method("kfold")
+        .cv(CVBuilder::new()
+            .method("kfold")
             .k(5)
-            .fractions(fractions.clone())
+            .fraction(fractions.clone())
             .seed(seed))
         .build()
         .unwrap()
@@ -900,9 +903,10 @@ fn test_batch_cv_reproducibility() {
 
     // Run 2 (same seed)
     let result2 = Lowess::new()
-        .cv(CVBuilder::method("kfold")
+        .cv(CVBuilder::new()
+            .method("kfold")
             .k(5)
-            .fractions(fractions.clone())
+            .fraction(fractions.clone())
             .seed(seed))
         .build()
         .unwrap()
@@ -911,9 +915,10 @@ fn test_batch_cv_reproducibility() {
 
     // Run 3 (different seed)
     let result3 = Lowess::new()
-        .cv(CVBuilder::method("kfold")
+        .cv(CVBuilder::new()
+            .method("kfold")
             .k(5)
-            .fractions(fractions.clone())
+            .fraction(fractions.clone())
             .seed(seed + 1))
         .build()
         .unwrap()
@@ -944,7 +949,7 @@ fn test_batch_cv_loocv() {
     let fractions = vec![0.5, 0.8];
 
     let result = Lowess::new()
-        .cv(CVBuilder::method("loocv").fractions(fractions.clone()))
+        .cv(CVBuilder::new().method("loocv").fraction(fractions.clone()))
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -1080,8 +1085,7 @@ fn test_batch_all_features_combined() {
         .iterations(3)
         .weight_function("tricube")
         .robustness_method("bisquare")
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))
         .outputs(["diagnostics", "residuals", "weights"])
         .build()
         .unwrap()

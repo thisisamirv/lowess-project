@@ -745,13 +745,13 @@ fn test_online_full_mode_no_se_by_default() {
     }
 }
 
-/// `.confidence_intervals(level)` should populate `confidence_lower`/`confidence_upper`
+/// `.intervals(IntervalsBuilder::new().confidence(level))` populates confidence bounds
 /// (and `standard_error`, since it's needed to derive them) in `Full` update mode.
 #[test]
 fn test_online_full_mode_confidence_intervals() {
     let mut processor = OnlineLowess::new()
         .fraction(0.9)
-        .confidence_intervals(0.95)
+        .intervals(IntervalsBuilder::new().confidence(0.95))
         .window_capacity(30)
         .min_points(10)
         .update_mode("full")
@@ -783,13 +783,13 @@ fn test_online_full_mode_confidence_intervals() {
     );
 }
 
-/// `.prediction_intervals(level)` should populate `prediction_lower`/`prediction_upper`
+/// `.intervals(IntervalsBuilder::new().prediction(level))` populates prediction bounds
 /// in `Full` update mode.
 #[test]
 fn test_online_full_mode_prediction_intervals() {
     let mut processor = OnlineLowess::new()
         .fraction(0.9)
-        .prediction_intervals(0.95)
+        .intervals(IntervalsBuilder::new().prediction(0.95))
         .window_capacity(30)
         .min_points(10)
         .update_mode("full")

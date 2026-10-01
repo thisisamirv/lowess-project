@@ -97,10 +97,7 @@ Fraction used: 0.5
 | `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
 | `outputs([&str])` | `&[&str]` | `[]` | Select optional result components: `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"`, `"se"` |
-| `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95); populates `confidence_lower`/`confidence_upper` |
-| `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95); populates `prediction_lower`/`prediction_upper` |
-| `bootstrap_intervals(usize)` | `usize` | disabled | Residual-bootstrap refits per combined chunk; replaces analytic SEs and intervals |
-| `bootstrap_seed(u64)` | `u64` | fixed default | Seed for per-chunk resampling; alone enables 1000 replicates |
+| `intervals(IntervalsBuilder<T>)` | `IntervalsBuilder<T>` | disabled | Group CI, PI, bootstrap refits, and seed via `IntervalsBuilder::new().confidence(level).prediction(level).bootstrap(n).seed(seed)` |
 | `chunk_size(usize)` | `usize` | `5000` | Data chunk size |
 | `overlap(usize)` | `usize` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy(...)` | `merge_strategy` | `"weighted_average"` | Strategy for blending overlap regions |
@@ -219,17 +216,11 @@ StreamingLowess::<f64>::new().outputs(["diagnostics", "residuals", "weights", "d
 
 Unknown names are collected and reported together by `.build()` as `LowessError::ParseErrors`.
 
-### confidence_intervals
+### intervals
 
 *See: [Intervals](crate::doc::guide::intervals)*
 
-Confidence level for the confidence interval around the mean response (e.g. `0.95`), populating `result.confidence_lower`/`result.confidence_upper`. Computed per chunk via `IntervalMethod::compute_intervals` (same as Batch) and merged across overlap boundaries via `merge_strategy`. `NaN` (default) disables confidence intervals.
-
-### prediction_intervals
-
-*See: [Intervals](crate::doc::guide::intervals)*
-
-Confidence level for the prediction interval for new observations (e.g. `0.95`), populating `result.prediction_lower`/`result.prediction_upper`. Same per-chunk computation and overlap-merging as `confidence_intervals`. `NaN` (default) disables prediction intervals.
+Configure confidence and/or prediction bounds with `.intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))`. Optional `.bootstrap(n).seed(seed)` replaces analytic intervals with per-chunk residual-bootstrap estimates. Bounds and standard errors are merged across overlap boundaries via `merge_strategy`. Without a seed, bootstrap uses a fixed default; `.seed(seed)` alone enables 1000 refits.
 
 ### chunk_size
 
@@ -265,11 +256,11 @@ Returned by `process_chunk()` and `finalize()`.
 | `y` | `Vec<T>` | Smoothed y values |
 | `fraction_used` | `T` | Fraction used |
 | `iterations_used` | `Option<usize>` | Robustness iterations actually performed |
-| `standard_errors` | `Option<Vec<T>>` | Per-point standard errors (if `"se"`, `confidence_intervals()`, or `prediction_intervals()` was requested) |
-| `confidence_lower` | `Option<Vec<T>>` | Lower confidence bounds (if `confidence_intervals()` was set) |
-| `confidence_upper` | `Option<Vec<T>>` | Upper confidence bounds (if `confidence_intervals()` was set) |
-| `prediction_lower` | `Option<Vec<T>>` | Lower prediction bounds (if `prediction_intervals()` was set) |
-| `prediction_upper` | `Option<Vec<T>>` | Upper prediction bounds (if `prediction_intervals()` was set) |
+| `standard_errors` | `Option<Vec<T>>` | Per-point standard errors (if `"se"` or `.intervals(...)` was requested) |
+| `confidence_lower` | `Option<Vec<T>>` | Lower confidence bounds (if `.confidence(level)` was set) |
+| `confidence_upper` | `Option<Vec<T>>` | Upper confidence bounds (if `.confidence(level)` was set) |
+| `prediction_lower` | `Option<Vec<T>>` | Lower prediction bounds (if `.prediction(level)` was set) |
+| `prediction_upper` | `Option<Vec<T>>` | Upper prediction bounds (if `.prediction(level)` was set) |
 | `residuals` | `Option<Vec<T>>` | Residuals (if `"residuals"` was requested) |
 | `robustness_weights` | `Option<Vec<T>>` | Robustness weights (if `"weights"` was requested) |
 | `cv_scores` | `Option<Vec<T>>` | Always `None` (Batch only) |

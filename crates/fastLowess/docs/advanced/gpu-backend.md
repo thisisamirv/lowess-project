@@ -77,7 +77,9 @@ use fastLowess::prelude::*;
 fn main() -> Result<(), LowessError> {
     let model = Lowess::new()
         .backend("gpu")
-        .confidence_intervals(0.95)
+        .intervals(IntervalsBuilder::new()
+            .confidence(0.95)
+        )
         .build()?;
 
     Ok(())

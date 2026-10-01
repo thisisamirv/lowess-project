@@ -97,10 +97,7 @@ fn main() -> Result<(), LowessError> {
 | `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
 | `outputs([&str])` | `&[&str]` | `[]` | Select `"weights"`, `"derivative"`, and/or `"se"`; `"se"` requires `update_mode("full")` |
-| `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95); populates `confidence_lower`/`confidence_upper` (requires `update_mode("full")`) |
-| `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95); populates `prediction_lower`/`prediction_upper` (requires `update_mode("full")`) |
-| `bootstrap_intervals(usize)` | `usize` | disabled | Bootstrap refits of the current window for SEs/intervals (requires `update_mode("full")`) |
-| `bootstrap_seed(u64)` | `u64` | fixed default | Seed for window resampling; alone enables 1000 replicates (requires `update_mode("full")`) |
+| `intervals(IntervalsBuilder<f64>)` | `IntervalsBuilder<f64>` | disabled | Group CI, PI, bootstrap refits, and seed (`update_mode("full")` required) |
 | `window_capacity(usize)` | `usize` | `1000` | Max points in sliding window |
 | `min_points(usize)` | `usize` | `2` | Min points before smoothing starts |
 | `update_mode(...)` | `update_mode` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
@@ -215,22 +212,16 @@ OnlineLowess::new().outputs(["weights", "derivative", "se"]);
 
 *See: [Intervals](crate::doc::guide::intervals)*
 
-Populates `output.standard_error` — but only when combined with `.update_mode("full")`. The fast `"incremental"` path (the default) bypasses the full executor pipeline for speed and never computes standard errors, so combining `"se"` (or `.confidence_intervals()`/`.prediction_intervals()`) with anything other than `"full"` fails at `.build()` with `LowessError::StandardErrorRequiresFullUpdateMode`, rather than silently leaving `standard_error` as `None`.
+Populates `output.standard_error` — but only when combined with `.update_mode("full")`. The fast `"incremental"` path (the default) bypasses the full executor pipeline for speed and never computes standard errors, so combining `"se"` (or `.intervals(...)`) with anything other than `"full"` fails at `.build()` with `LowessError::StandardErrorRequiresFullUpdateMode`, rather than silently leaving `standard_error` as `None`.
 
 - `false` (default) — leaves `output.standard_error` as `None`
 - `true` — populates `output.standard_error`, and requires `update_mode("full")`
 
-### confidence_intervals
+### intervals
 
 *See: [Intervals](crate::doc::guide::intervals)*
 
-Confidence level for the confidence interval around the mean response at the latest point (e.g. `0.95`), populating `output.confidence_lower`/`output.confidence_upper`. Same `update_mode("full")` requirement as `return_se()` (enforced at `.build()` with `LowessError::StandardErrorRequiresFullUpdateMode`). `NaN` (default) disables confidence intervals.
-
-### prediction_intervals
-
-*See: [Intervals](crate::doc::guide::intervals)*
-
-Confidence level for the prediction interval for a new observation at the latest point (e.g. `0.95`), populating `output.prediction_lower`/`output.prediction_upper`. Same `update_mode("full")` requirement as `return_se()`. `NaN` (default) disables prediction intervals.
+Use `.intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))` to return bounds for the latest point. Optional `.bootstrap(n).seed(seed)` bootstraps the current sliding window instead of computing analytic intervals. Online requires `update_mode("full")`; the default incremental mode rejects intervals at `.build()` with `LowessError::StandardErrorRequiresFullUpdateMode`.
 
 ### window_capacity
 
@@ -259,8 +250,8 @@ Returned by `add_point()` inside `Option`. Is `None` while the window is still f
 | --- | --- | --- |
 | `y` | `T` | Smoothed value for the latest point |
 | `standard_error` | `Option<T>` | Populated when `"se"` is set (requires `update_mode("full")`, enforced at `.build()`); otherwise always `None` |
-| `confidence_lower` / `confidence_upper` | `Option<T>` | Confidence interval bounds around the mean response, if `confidence_intervals(level)` was set (requires `update_mode("full")`) |
-| `prediction_lower` / `prediction_upper` | `Option<T>` | Prediction interval bounds for a new observation, if `prediction_intervals(level)` was set (requires `update_mode("full")`) |
+| `confidence_lower` / `confidence_upper` | `Option<T>` | Mean-response bounds if `.confidence(level)` was set (requires `update_mode("full")`) |
+| `prediction_lower` / `prediction_upper` | `Option<T>` | New-observation bounds if `.prediction(level)` was set (requires `update_mode("full")`) |
 | `residual` | `Option<T>` | Residual y − smoothed; always present (there is no `"residuals"` output for Online) |
 | `robustness_weight` | `Option<T>` | Robustness weight, if `"weights"` was set |
 | `iterations_used` | `Option<usize>` | Robustness iterations performed |

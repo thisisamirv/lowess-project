@@ -19,6 +19,7 @@ use lowess::internals::api::Online as BaseOnline;
 use lowess::internals::api::Streaming as BaseStreaming;
 
 // Publicly re-exported types
+pub use lowess::IntervalsBuilder;
 pub use lowess::internals::api::CVBuilder;
 pub use lowess::internals::api::LowessBuilder;
 pub use lowess::internals::engine::output::LowessResult;
@@ -157,6 +158,10 @@ macro_rules! impl_common_builder {
                 self.0 = self.0.outputs(names);
                 self
             }
+            pub fn intervals(mut self, options: IntervalsBuilder<f64>) -> Self {
+                self.0 = self.0.intervals(options);
+                self
+            }
         }
     };
 }
@@ -177,24 +182,8 @@ impl Lowess {
         self.0 = self.0.custom_weights(w);
         self
     }
-    pub fn confidence_intervals(mut self, level: f64) -> Self {
-        self.0 = self.0.confidence_intervals(level);
-        self
-    }
-    pub fn prediction_intervals(mut self, level: f64) -> Self {
-        self.0 = self.0.prediction_intervals(level);
-        self
-    }
     pub fn cv(mut self, options: lowess::CVOptions<f64>) -> Self {
         self.0 = self.0.cv(options);
-        self
-    }
-    pub fn bootstrap_intervals(mut self, n_boot: usize) -> Self {
-        self.0 = self.0.bootstrap_intervals(n_boot);
-        self
-    }
-    pub fn bootstrap_seed(mut self, seed: u64) -> Self {
-        self.0 = self.0.bootstrap_seed(seed);
         self
     }
     pub fn retain_model(mut self, retain: bool) -> Self {
@@ -226,22 +215,6 @@ impl StreamingLowess {
         self.0 = self.0.merge_strategy(s);
         self
     }
-    pub fn confidence_intervals(mut self, level: f64) -> Self {
-        self.0 = self.0.confidence_intervals(level);
-        self
-    }
-    pub fn prediction_intervals(mut self, level: f64) -> Self {
-        self.0 = self.0.prediction_intervals(level);
-        self
-    }
-    pub fn bootstrap_intervals(mut self, n_boot: usize) -> Self {
-        self.0 = self.0.bootstrap_intervals(n_boot);
-        self
-    }
-    pub fn bootstrap_seed(mut self, seed: u64) -> Self {
-        self.0 = self.0.bootstrap_seed(seed);
-        self
-    }
 
     pub fn build(self) -> Result<ParallelStreamingLowess<f64>, LowessError> {
         Streaming::convert(self.0).build()
@@ -262,22 +235,6 @@ impl OnlineLowess {
     }
     pub fn update_mode(mut self, s: &str) -> Self {
         self.0 = self.0.update_mode(s);
-        self
-    }
-    pub fn confidence_intervals(mut self, level: f64) -> Self {
-        self.0 = self.0.confidence_intervals(level);
-        self
-    }
-    pub fn prediction_intervals(mut self, level: f64) -> Self {
-        self.0 = self.0.prediction_intervals(level);
-        self
-    }
-    pub fn bootstrap_intervals(mut self, n_boot: usize) -> Self {
-        self.0 = self.0.bootstrap_intervals(n_boot);
-        self
-    }
-    pub fn bootstrap_seed(mut self, seed: u64) -> Self {
-        self.0 = self.0.bootstrap_seed(seed);
         self
     }
 

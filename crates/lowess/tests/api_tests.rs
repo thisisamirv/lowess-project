@@ -25,7 +25,7 @@ use approx::assert_relative_eq;
 use std::fmt::Write;
 
 use lowess::internals::algorithms::robustness::RobustnessMethod;
-use lowess::internals::api::{Batch, CVBuilder, Lowess, Online, Streaming};
+use lowess::internals::api::{Batch, CVBuilder, IntervalsBuilder, Lowess, Online, Streaming};
 use lowess::internals::engine::output::LowessResult;
 use lowess::internals::engine::validator::Validator;
 use lowess::internals::evaluation::diagnostics::Diagnostics;
@@ -163,7 +163,10 @@ fn test_validate_empty_cv_fractions() {
     // K-Fold with empty fractions
     let fracs: [f64; 0] = [];
     let res = Lowess::<f64>::new()
-        .cv(CVBuilder::method("kfold").k(3).fractions(fracs.to_vec()))
+        .cv(CVBuilder::new()
+            .method("kfold")
+            .k(3)
+            .fraction(fracs.to_vec()))
         .adapter(Batch)
         .build();
 
@@ -180,14 +183,14 @@ fn test_validate_empty_cv_fractions() {
 fn test_validate_invalid_fractions() {
     // Fraction <= 0
     let bad1 = Lowess::<f64>::new()
-        .cv(CVBuilder::method("kfold").k(3).fractions(vec![0.0f64]))
+        .cv(CVBuilder::new().method("kfold").k(3).fraction(vec![0.0f64]))
         .adapter(Batch)
         .build();
     assert!(matches!(bad1, Err(LowessError::InvalidFraction(_))));
 
     // Fraction > 1
     let bad2 = Lowess::<f64>::new()
-        .cv(CVBuilder::method("kfold").k(3).fractions(vec![1.5f64]))
+        .cv(CVBuilder::new().method("kfold").k(3).fraction(vec![1.5f64]))
         .adapter(Batch)
         .build();
     assert!(matches!(bad2, Err(LowessError::InvalidFraction(_))));
@@ -201,7 +204,7 @@ fn test_validate_invalid_confidence_level() {
     // Level > 1.0 should be rejected
     let got = Lowess::<f64>::new()
         .fraction(0.5)
-        .confidence_intervals(2.0)
+        .intervals(IntervalsBuilder::new().confidence(2.0))
         .iterations(0)
         .adapter(Batch)
         .build();
@@ -412,8 +415,7 @@ fn test_fit_with_intervals_and_diagnostics() {
 
     let res = Lowess::<f64>::new()
         .fraction(1.0)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))
         .outputs(["diagnostics", "residuals"])
         .iterations(0)
         .adapter(Batch)
@@ -445,7 +447,7 @@ fn test_prediction_intervals_only() {
 
     let res = Lowess::<f64>::new()
         .fraction(1.0)
-        .prediction_intervals(0.95)
+        .intervals(IntervalsBuilder::new().prediction(0.95))
         .iterations(0)
         .adapter(Batch)
         .build()
@@ -477,7 +479,7 @@ fn test_confidence_intervals_only() {
 
     let res = Lowess::<f64>::new()
         .fraction(1.0)
-        .confidence_intervals(0.95)
+        .intervals(IntervalsBuilder::new().confidence(0.95))
         .iterations(0)
         .adapter(Batch)
         .build()
@@ -639,7 +641,10 @@ fn test_cross_validate_kfold() {
     let fracs = vec![0.2, 0.4];
 
     let res = Lowess::<f64>::new()
-        .cv(CVBuilder::method("kfold").k(3).fractions(fracs.clone()))
+        .cv(CVBuilder::new()
+            .method("kfold")
+            .k(3)
+            .fraction(fracs.clone()))
         .iterations(0)
         .adapter(Batch)
         .build()
@@ -662,7 +667,7 @@ fn test_cross_validate_loocv() {
     let fractions = vec![0.3, 0.6];
 
     let res = Lowess::<f64>::new()
-        .cv(CVBuilder::method("loocv").fractions(fractions.clone()))
+        .cv(CVBuilder::new().method("loocv").fraction(fractions.clone()))
         .iterations(0)
         .adapter(Batch)
         .build()
@@ -833,8 +838,7 @@ fn test_builder_all_parameters_set() {
         .weight_function("tricube")
         .robustness_method("bisquare")
         .outputs(["se", "residuals", "weights", "diagnostics"])
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))
         .adapter(Batch)
         .build()
         .unwrap()
@@ -959,7 +963,7 @@ fn test_interval_level_boundaries() {
     // Very low confidence level
     let result_low = Lowess::new()
         .fraction(0.5)
-        .confidence_intervals(0.001)
+        .intervals(IntervalsBuilder::new().confidence(0.001))
         .adapter(Batch)
         .build()
         .unwrap()
@@ -970,7 +974,7 @@ fn test_interval_level_boundaries() {
     // Very high confidence level
     let result_high = Lowess::new()
         .fraction(0.5)
-        .confidence_intervals(0.999)
+        .intervals(IntervalsBuilder::new().confidence(0.999))
         .adapter(Batch)
         .build()
         .unwrap()
@@ -1031,15 +1035,16 @@ fn test_outputs_unknown_name_errors() {
     );
 }
 
-/// `.cv(CVBuilder::method("kfold").k(5).fractions(...).seed(123))` runs k-fold CV.
+/// `.cv(CVBuilder::new().method("kfold").k(5).fraction(...).seed(123))` runs k-fold CV.
 #[test]
 fn test_cv_builder_grouped() {
     let (x, y) = linear_series(100, 2.0, 1.0);
     let result = Lowess::new()
         .fraction(0.5)
-        .cv(CVBuilder::method("kfold")
+        .cv(CVBuilder::new()
+            .method("kfold")
             .k(5)
-            .fractions(vec![0.3, 0.5, 0.7])
+            .fraction(vec![0.3, 0.5, 0.7])
             .seed(123))
         .adapter(Batch)
         .build()
@@ -1048,6 +1053,45 @@ fn test_cv_builder_grouped() {
         .unwrap();
     assert!(result.cv_scores.is_some());
     assert_eq!(result.cv_scores.unwrap().len(), 3);
+}
+
+#[test]
+fn test_cv_builder_new_methods_and_validation() {
+    let (x, y) = linear_series(30, 2.0, 1.0);
+    let fit = |options| {
+        Lowess::new()
+            .cv(options)
+            .build()
+            .unwrap()
+            .fit(&x, &y)
+            .unwrap()
+    };
+
+    let fractions = vec![0.3, 0.5, 0.7];
+    let default = fit(CVBuilder::new().fraction(fractions.clone()).seed(42));
+    let explicit = fit(CVBuilder::new()
+        .method("kfold")
+        .fraction(fractions.clone())
+        .seed(42));
+    assert_eq!(default.fraction_used, explicit.fraction_used);
+    assert_eq!(default.cv_scores, explicit.cv_scores);
+
+    let loocv = fit(CVBuilder::new().method("loocv").fraction(fractions.clone()));
+    let alias_loocv = fit(CVBuilder::new().method("loo_cv").fraction(fractions));
+    assert_eq!(loocv.fraction_used, alias_loocv.fraction_used);
+    assert_eq!(loocv.cv_scores, alias_loocv.cv_scores);
+
+    let invalid = Lowess::<f64>::new()
+        .cv(CVBuilder::new().method("invalid").fraction(vec![0.3]))
+        .build()
+        .err();
+    assert!(matches!(
+        invalid,
+        Some(LowessError::InvalidOption {
+            option: "cv_method",
+            ..
+        })
+    ));
 }
 
 /// Test zero iterations with different robustness methods.

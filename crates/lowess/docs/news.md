@@ -10,10 +10,13 @@ This changelog includes end-user changes only. For internal development notes, s
 * Added `LowessBuilder::outputs(names)` as a grouped replacement for the individual output toggles. Unknown names are collected and reported together by `.build()`.
 * Added grouped cross-validation configuration through `CVBuilder` and `.cv(...)`.
 * Added `PredictBuilder::outputs(names)` to group prediction outputs such as standard errors and derivatives.
-* Added residual-bootstrap standard errors and percentile confidence/prediction intervals via `.bootstrap_intervals(n_boot)` and `.bootstrap_seed(seed)` (Batch, per-chunk Streaming, and full-update Online per sliding window). Online incremental mode rejects them at `.build()`.
+* Added residual-bootstrap standard errors and percentile confidence/prediction intervals via `.intervals(IntervalsBuilder::new().bootstrap(n).seed(seed))` (Batch, per-chunk Streaming, and full-update Online per sliding window). Online incremental mode rejects them at `.build()`.
+* Added grouped interval configuration via `.intervals(IntervalsBuilder::new().confidence(level).prediction(level).bootstrap(n).seed(seed))`.
 
 ### Changed
 
+* Breaking change: removed individual `confidence_intervals`, `prediction_intervals`, `bootstrap_intervals`, and `bootstrap_seed` setters from the Rust fitting builders; configure them via `.intervals(IntervalsBuilder::new()...)`.
+* Breaking change: replaced `CVBuilder::method(...).fractions(...)` with `CVBuilder::new().method(...).fraction(...)` (k-fold, `k = 5` by default; `"loocv"` selects leave-one-out).
 * Marked `WeightFunction` as non-exhaustive so future variants do not break downstream exhaustive matches.
 * Removed the `wide` SIMD dependency and the `WLSSolver` trait methods it backed: they were superseded when the fitting path was changed to preserve R's exact arithmetic order, leaving them unused.
 

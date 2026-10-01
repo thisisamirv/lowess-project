@@ -92,9 +92,10 @@ fn test_gpu_cv_reduction() {
     // GPU Build
     let model = Lowess::new()
         .backend(GPU)
-        .cv(CVBuilder::method("kfold")
+        .cv(CVBuilder::new()
+            .method("kfold")
             .k(5)
-            .fractions(vec![0.1, 0.2, 0.5]))
+            .fraction(vec![0.1, 0.2, 0.5]))
         .delta(0.0) // Force exact fit
         .build()
         .unwrap();
@@ -107,9 +108,10 @@ fn test_gpu_cv_reduction() {
         // CPU Build to compare
         let cpu_model = Lowess::new()
             .backend(CPU)
-            .cv(CVBuilder::method("kfold")
+            .cv(CVBuilder::new()
+                .method("kfold")
                 .k(5)
-                .fractions(vec![0.1, 0.2, 0.5]))
+                .fraction(vec![0.1, 0.2, 0.5]))
             .build()
             .unwrap();
         let cpu_res = cpu_model.fit(&x, &y).unwrap();
@@ -866,8 +868,7 @@ fn test_cpu_gpu_interval_equivalence() {
     let cpu_res = Lowess::new()
         .fraction(0.3)
         .iterations(3)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))
         .backend(CPU)
         .boundary_policy(BoundaryPolicy::NoBoundary)
         .build()
@@ -879,8 +880,7 @@ fn test_cpu_gpu_interval_equivalence() {
     let gpu_res = Lowess::new()
         .fraction(0.3)
         .iterations(3)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))
         .backend(GPU)
         .boundary_policy(BoundaryPolicy::NoBoundary)
         .build()
@@ -1149,9 +1149,10 @@ fn test_gpu_cv() {
     // GPU Cross Validation using 5-fold CV with 2 candidate fractions
     let model = Lowess::new()
         .backend(GPU)
-        .cv(CVBuilder::method("kfold")
+        .cv(CVBuilder::new()
+            .method("kfold")
             .k(5)
-            .fractions(vec![0.3, 0.7])
+            .fraction(vec![0.3, 0.7])
             .seed(42))
         .build()
         .unwrap();

@@ -75,12 +75,9 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
 | `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
-| `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95) |
-| `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95) |
-| `bootstrap_intervals(usize)` | `usize` | disabled | Residual-bootstrap replicates; replaces analytic SEs/intervals (Online requires `update_mode("full")`) |
-| `bootstrap_seed(u64)` | `u64` | fixed default | Resampling seed for `bootstrap_intervals` |
+| `intervals(IntervalsBuilder<T>)` | `IntervalsBuilder<T>` | disabled | Group CI, PI, bootstrap refits, and seed via `IntervalsBuilder::new().confidence(level).prediction(level).bootstrap(n).seed(seed)` |
 | `outputs([&str])` | `&[&str]` | `[]` | Select optional result components: `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"`, `"se"`, `"sorted"` |
-| `cv(CVOptions)` | `CVOptions` | disabled | Cross-validation config built via `CVBuilder::method("kfold"\|"loocv").k(n).fractions(vec![..]).seed(n)` |
+| `cv(CVOptions)` | `CVOptions` | disabled | Cross-validation config built via `CVBuilder::new().method("kfold").k(n).fraction(vec![..]).seed(n)` |
 | `custom_weights(Vec<T>)` | `Vec<T: Float>` | `None` | Per-observation weights |
 | `retain_model(bool)` | `bool` | `false` | Retain training data, enabling `Predict::call()` on the result |
 
@@ -176,27 +173,24 @@ Policy for handling non-finite (NaN/Inf) values in `x`/`y` (and, in Batch, `cust
 
 Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
 
-### confidence_intervals
+### intervals
 
-*See: [Intervals](crate::doc::guide::intervals)*
+Group confidence and prediction levels with optional residual-bootstrap refits and seed. `IntervalsBuilder` is in the prelude; start every configuration with `IntervalsBuilder::new()`. Both interval types share one coverage level, so use the same level for confidence and prediction. Bootstrap refits replace analytic standard errors; `n < 2` returns `InvalidBootstrapSamples`. Calling `.seed(seed)` without `.bootstrap(n)` enables 1000 refits, and omitting the seed uses a fixed default.
 
-Confidence level for the confidence interval around the mean response (e.g. `0.95`). `NaN` (default) disables confidence intervals.
+```rust
+use lowess::prelude::*;
 
-### prediction_intervals
-
-*See: [Intervals](crate::doc::guide::intervals)*
-
-Confidence level for the prediction interval for new observations (e.g. `0.95`). `NaN` (default) disables prediction intervals.
-
-### bootstrap_intervals
-
-*See: [Intervals](crate::doc::guide::intervals)*
-
-Number of residual-bootstrap refits used instead of the analytic normal-theory standard errors and intervals. Batch, Streaming (per combined chunk), or Online (per sliding window, with `update_mode("full")`). Values below 2 are `InvalidBootstrapSamples`. If no interval type was set, this also enables standard errors. Off by default.
-
-### bootstrap_seed
-
-Seed for bootstrap resampling. A fixed default is used when omitted, so bootstrap output is reproducible either way. Calling this without `bootstrap_intervals` enables the bootstrap with 1000 replicates.
+let model = Lowess::new()
+    .intervals(IntervalsBuilder::new()
+        .confidence(0.95)
+        .prediction(0.95)
+        .bootstrap(40)
+        .seed(42)
+    )
+    .build()?;
+# let _ = model;
+# Result::<(), LowessError>::Ok(())
+```
 
 ### outputs
 
@@ -228,12 +222,17 @@ Cross-validation is configured with a single `.cv(...)` call whose argument is b
 ```rust
 use lowess::prelude::*;
 
-Lowess::new().cv(CVBuilder::method("kfold").k(5).fractions(vec![0.3, 0.5, 0.7]).seed(42));
+Lowess::new().cv(CVBuilder::new()
+    .method("kfold")
+    .k(5)
+    .fraction(vec![0.3, 0.5, 0.7])
+    .seed(42)
+);
 ```
 
-- `CVBuilder::method("kfold" | "loocv")` — CV strategy: `"kfold"` (fast) or `"loocv"` (slow, exhaustive).
+- `CVBuilder::new()` — k-fold CV with `k = 5`; `.method("loocv")` selects leave-one-out.
 - `.k(n)` — number of folds for k-fold CV (ignored for `"loocv"`).
-- `.fractions(vec![..])` — candidate fractions to evaluate (required; CV is disabled unless this is set).
+- `.fraction(vec![..])` — candidate fractions to evaluate (required; CV is disabled unless this is set).
 - `.seed(n)` — seed for reproducible k-fold shuffling (ignored for `"loocv"`).
 
 ### custom_weights

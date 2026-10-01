@@ -106,9 +106,9 @@ pub type Lowess<T = f64> = LowessBuilder<T, BatchMode>;
 pub type StreamingLowess<T = f64> = LowessBuilder<T, StreamingMode>;
 pub type OnlineLowess<T = f64> = LowessBuilder<T, OnlineMode>;
 
-// Intermediate cross-validation builder produced by `CVBuilder::method(...)`:
+// Intermediate cross-validation builder produced by `CVBuilder::new()`:
 // carries the method, fold count, and seed while awaiting the (required)
-// candidate fractions. Finalized with `.fractions(...)` into a `CVOptions`.
+// candidate fractions. Finalized with `.fraction(...)` into a `CVOptions`.
 #[derive(Debug, Clone)]
 pub struct CVBuilder {
     method: String,
@@ -117,15 +117,19 @@ pub struct CVBuilder {
 }
 
 impl CVBuilder {
-    // Start a cross-validation options chain. Accepts the same case-insensitive
-    // strings as `cv_method`: "kfold" (or "k_fold", "k-fold"), "loocv" (or
-    // "loo_cv", "loo-cv").
-    pub fn method(name: &str) -> Self {
+    /// Start cross-validation with k-fold (k = 5); candidate fractions are still required.
+    pub fn new() -> Self {
         Self {
-            method: name.to_string(),
+            method: "kfold".to_string(),
             k: 5,
             seed: None,
         }
+    }
+
+    /// Select k-fold or leave-one-out CV; invalid names are rejected by `build()`.
+    pub fn method(mut self, name: &str) -> Self {
+        self.method = name.to_string();
+        self
     }
 
     // Set the number of folds for k-fold cross-validation.
@@ -141,7 +145,7 @@ impl CVBuilder {
     }
 
     // Provide the candidate fractions and produce the final `CVOptions`.
-    pub fn fractions<T: Float>(self, fractions: Vec<T>) -> CVOptions<T> {
+    pub fn fraction<T: Float>(self, fractions: Vec<T>) -> CVOptions<T> {
         CVOptions {
             method: self.method,
             k: self.k,
@@ -151,8 +155,14 @@ impl CVBuilder {
     }
 }
 
+impl Default for CVBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 // Fully-specified cross-validation options, passed to `LowessBuilder::cv`.
-// Produced by `CVBuilder::fractions(...)`; callers never name this type.
+// Produced by `CVBuilder::fraction(...)`; callers never name this type.
 #[derive(Debug, Clone)]
 pub struct CVOptions<T> {
     method: String,
@@ -172,6 +182,57 @@ impl<T: Float> CVOptions<T> {
     pub fn seed(mut self, seed: u64) -> Self {
         self.seed = Some(seed);
         self
+    }
+}
+
+/// Grouped confidence, prediction, and bootstrap settings for [`LowessBuilder::intervals`].
+#[derive(Debug, Clone, Copy)]
+pub struct IntervalsBuilder<T> {
+    confidence: Option<T>,
+    prediction: Option<T>,
+    bootstrap: Option<usize>,
+    seed: Option<u64>,
+}
+
+impl<T: Float> IntervalsBuilder<T> {
+    /// Start an interval configuration without bounds (e.g., for bootstrap standard errors only).
+    pub fn new() -> Self {
+        Self {
+            confidence: None,
+            prediction: None,
+            bootstrap: None,
+            seed: None,
+        }
+    }
+
+    /// Request confidence intervals at the given coverage level.
+    pub fn confidence(mut self, level: T) -> Self {
+        self.confidence = Some(level);
+        self
+    }
+
+    /// Request prediction intervals at the given coverage level.
+    pub fn prediction(mut self, level: T) -> Self {
+        self.prediction = Some(level);
+        self
+    }
+
+    /// Replace analytic intervals with residual-bootstrap refits.
+    pub fn bootstrap(mut self, n_boot: usize) -> Self {
+        self.bootstrap = Some(n_boot);
+        self
+    }
+
+    /// Set a reproducible bootstrap seed (enables bootstrap if needed).
+    pub fn seed(mut self, seed: u64) -> Self {
+        self.seed = Some(seed);
+        self
+    }
+}
+
+impl<T: Float> Default for IntervalsBuilder<T> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -525,10 +586,27 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
         self
     }
 
+    /// Configure analytic or residual-bootstrap intervals as one group.
+    pub fn intervals(mut self, options: IntervalsBuilder<T>) -> Self {
+        if let Some(level) = options.confidence {
+            self = self.confidence_intervals(level);
+        }
+        if let Some(level) = options.prediction {
+            self = self.prediction_intervals(level);
+        }
+        if let Some(n_boot) = options.bootstrap {
+            self = self.bootstrap_intervals(n_boot);
+        }
+        if let Some(seed) = options.seed {
+            self = self.bootstrap_seed(seed);
+        }
+        self
+    }
+
     // Enable confidence intervals at the specified level (e.g., 0.95).
-    pub fn confidence_intervals(mut self, level: T) -> Self {
+    fn confidence_intervals(mut self, level: T) -> Self {
         if self.interval_type.as_ref().is_some_and(|it| it.confidence) {
-            self.duplicate_param = Some("confidence_intervals");
+            self.duplicate_param = Some("intervals");
         }
         self.interval_type = Some(match self.interval_type {
             Some(existing) if existing.prediction => IntervalMethod {
@@ -543,9 +621,9 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
     }
 
     // Enable prediction intervals at the specified level.
-    pub fn prediction_intervals(mut self, level: T) -> Self {
+    fn prediction_intervals(mut self, level: T) -> Self {
         if self.interval_type.as_ref().is_some_and(|it| it.prediction) {
-            self.duplicate_param = Some("prediction_intervals");
+            self.duplicate_param = Some("intervals");
         }
         self.interval_type = Some(match self.interval_type {
             Some(existing) if existing.confidence => IntervalMethod {
@@ -564,9 +642,9 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
     // analytic normal-theory formulas (Batch, Streaming, or full-update Online). Useful when residuals are skewed or
     // heavy-tailed; costs `n_boot` extra fits. Enables standard errors if no interval
     // type was requested.
-    pub fn bootstrap_intervals(mut self, n_boot: usize) -> Self {
+    fn bootstrap_intervals(mut self, n_boot: usize) -> Self {
         if self.bootstrap.is_some() {
-            self.duplicate_param = Some("bootstrap_intervals");
+            self.duplicate_param = Some("intervals");
         }
         let seed = self.bootstrap.and_then(|b| b.seed);
         self.bootstrap = Some(BootstrapConfig { n_boot, seed });
@@ -577,7 +655,7 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
     }
 
     // Set the seed for bootstrap resampling (a fixed default seed is used otherwise).
-    pub fn bootstrap_seed(mut self, seed: u64) -> Self {
+    fn bootstrap_seed(mut self, seed: u64) -> Self {
         match self.bootstrap.as_mut() {
             Some(b) => b.seed = Some(seed),
             None => {
@@ -626,7 +704,7 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
     }
 
     // Configure cross-validation from a `CVOptions` built via `CVBuilder`,
-    // e.g. `.cv(CVBuilder::method("kfold").k(5).fractions(vec![0.3, 0.7]).seed(123))`.
+    // e.g. `.cv(CVBuilder::new().method("kfold").k(5).fraction(vec![0.3, 0.7]).seed(123))`.
     pub fn cv(mut self, options: CVOptions<T>) -> Self {
         if self.cv_fractions.is_some() || self.cv_method_str.is_some() {
             self.duplicate_param = Some("cv");

@@ -916,7 +916,7 @@ fn test_streaming_return_se_single_chunk() {
     }
 }
 
-/// `.confidence_intervals()`/`.prediction_intervals()` should populate bounds across
+/// `.intervals(...)` should populate confidence and prediction bounds across
 /// multiple chunks, exercising overlap merging (mirroring `return_derivative`'s own
 /// multi-chunk test).
 #[test]
@@ -926,8 +926,7 @@ fn test_streaming_confidence_and_prediction_intervals_multi_chunk() {
 
     let mut processor = StreamingLowess::new()
         .fraction(0.9)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))
         .chunk_size(10)
         .overlap(2)
         .build()
@@ -961,7 +960,7 @@ fn test_streaming_confidence_and_prediction_intervals_multi_chunk() {
     }
 }
 
-/// Without `"se"`/`.confidence_intervals()`/`.prediction_intervals()`, all
+/// Without `"se"` or `.intervals(...)`, all
 /// interval-related fields should stay `None`.
 #[test]
 fn test_streaming_no_intervals_by_default() {

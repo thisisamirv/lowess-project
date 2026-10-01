@@ -33,7 +33,9 @@ fn main() -> Result<(), LowessError> {
 
     let model = Lowess::new()
         .fraction(0.5)
-        .confidence_intervals(0.95)  // 95% CI
+        .intervals(IntervalsBuilder::new()
+            .confidence(0.95)
+        )  // 95% CI
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -73,7 +75,9 @@ fn main() -> Result<(), LowessError> {
 
     let model = Lowess::new()
         .fraction(0.5)
-        .prediction_intervals(0.95)  // 95% PI
+        .intervals(IntervalsBuilder::new()
+            .prediction(0.95)
+        )  // 95% PI
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -107,8 +111,10 @@ fn main() -> Result<(), LowessError> {
 
     let model = Lowess::new()
         .fraction(0.5)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(IntervalsBuilder::new()
+            .confidence(0.95)
+            .prediction(0.95)
+        )
         .build()?;
     let result = model.fit(&x, &y)?;
 
@@ -146,7 +152,9 @@ fn main() -> Result<(), LowessError> {
 
     // 99% confidence interval
     let model = Lowess::new()
-        .confidence_intervals(0.99)
+        .intervals(IntervalsBuilder::new()
+            .confidence(0.99)
+        )
         .build()?;
     let result = model.fit(&x, &y)?;
 
@@ -199,13 +207,13 @@ Point 2: SE = 0.0258
 
 ## Bootstrap Intervals
 
-The intervals above are analytic: a local-linear standard error times a normal z-score. That assumes roughly normal residuals. `.bootstrap_intervals(n_boot)` replaces it with a residual bootstrap (Batch, Streaming, or full-update Online), which does not:
+The intervals above are analytic: a local-linear standard error times a normal z-score. That assumes roughly normal residuals. `.intervals(IntervalsBuilder::new().bootstrap(n_boot))` replaces them with a residual bootstrap (Batch, Streaming, or full-update Online), which does not:
 
 1. Fit once, and center the residuals.
 2. Refit `n_boot` times on `y_hat + residuals drawn with replacement` (same `x` and smoothing settings; cross-validation is not repeated).
 3. Per point, the standard error is the sample standard deviation of those refits. A confidence interval is their percentile interval. A prediction interval is the percentile interval of each refit plus a freshly drawn residual, so skewed noise produces an asymmetric tail.
 
-`.bootstrap_seed(seed)` fixes the draws. If omitted, a fixed default seed is used, so results are reproducible either way. Fewer than 2 replicates is rejected at `.build()` as `InvalidBootstrapSamples`. In Streaming, each combined chunk (including its incoming overlap) is bootstrapped independently with the same seed; bounds and SEs are then merged according to `merge_strategy`. These are local chunk intervals, not whole-stream bootstrap intervals. In Online, each full update bootstraps the current sliding window with the same seed and returns only the newest point's SE and bounds (starting at 3 points). The default incremental mode rejects bootstrap with `StandardErrorRequiresFullUpdateMode`.
+`.seed(seed)` fixes the draws. If omitted, a fixed default seed is used, so results are reproducible either way. Fewer than 2 replicates is rejected at `.build()` as `InvalidBootstrapSamples`. In Streaming, each combined chunk (including its incoming overlap) is bootstrapped independently with the same seed; bounds and SEs are then merged according to `merge_strategy`. These are local chunk intervals, not whole-stream bootstrap intervals. In Online, each full update bootstraps the current sliding window with the same seed and returns only the newest point's SE and bounds (starting at 3 points). The default incremental mode rejects bootstrap with `StandardErrorRequiresFullUpdateMode`.
 
 With `parallel(true)` (the default) Batch and Streaming refits run concurrently and match a one-at-a-time run. GPU Batch, Online, and `parallel(false)` refit one replicate at a time; a GPU refit still uses the GPU fit pass. Each replicate is a full refit, so this is much slower than the analytic intervals. It replaces `result.standard_errors` in Batch/Streaming or `output.standard_error` in Online when `"se"` or an interval was requested.
 
@@ -220,10 +228,12 @@ fn main() -> Result<(), LowessError> {
     let model = Lowess::new()
         .fraction(0.5)
         .iterations(0)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
-        .bootstrap_intervals(40)
-        .bootstrap_seed(7)
+        .intervals(IntervalsBuilder::new()
+            .confidence(0.95)
+            .prediction(0.95)
+            .bootstrap(40)
+            .seed(7)
+        )
         .build()?;
     let result = model.fit(&x, &y)?;
 
@@ -262,9 +272,11 @@ fn main() -> Result<(), LowessError> {
     let mut model = StreamingLowess::new()
         .chunk_size(15)
         .overlap(3)
-        .confidence_intervals(0.95)
-        .bootstrap_intervals(40)
-        .bootstrap_seed(7)
+        .intervals(IntervalsBuilder::new()
+            .confidence(0.95)
+            .bootstrap(40)
+            .seed(7)
+        )
         .build()?;
     let first = model.process_chunk(&x[..15], &y[..15])?;
     let second = model.process_chunk(&x[15..], &y[15..])?;
@@ -289,10 +301,12 @@ fn main() -> Result<(), LowessError> {
         .update_mode("full")
         .window_capacity(10)
         .min_points(3)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
-        .bootstrap_intervals(40)
-        .bootstrap_seed(7)
+        .intervals(IntervalsBuilder::new()
+            .confidence(0.95)
+            .prediction(0.95)
+            .bootstrap(40)
+            .seed(7)
+        )
         .build()?;
     for i in 0..12 {
         let x = i as f64 * 0.2;

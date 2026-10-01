@@ -95,7 +95,7 @@ fn wls_std_errors_scale_linearly() {
         let res = Lowess::new()
             .fraction(0.3)
             .iterations(0)
-            .confidence_intervals(0.95)
+            .intervals(IntervalsBuilder::new().confidence(0.95))
             .build()
             .unwrap()
             .fit(&x, &y)
@@ -135,13 +135,13 @@ fn kfold_with_k_equal_n_matches_loocv() {
         .collect();
 
     let loo = Lowess::new()
-        .cv(CVBuilder::method("loocv").fractions(vec![0.3]))
+        .cv(CVBuilder::new().method("loocv").fraction(vec![0.3]))
         .build()
         .unwrap()
         .fit(&x, &y)
         .unwrap();
     let kfold = Lowess::new()
-        .cv(CVBuilder::method("kfold").k(n).fractions(vec![0.3]))
+        .cv(CVBuilder::new().method("kfold").k(n).fraction(vec![0.3]))
         .build()
         .unwrap()
         .fit(&x, &y)

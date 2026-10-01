@@ -43,7 +43,7 @@ fn reported_se_is_calibrated_on_linear_truth() {
             let res = Lowess::new()
                 .fraction(frac)
                 .iterations(0)
-                .confidence_intervals(0.95)
+                .intervals(IntervalsBuilder::new().confidence(0.95))
                 .build()
                 .unwrap()
                 .fit(&x, &y)

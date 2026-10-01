@@ -7,10 +7,11 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Added
 
-* Added residual-bootstrap standard errors and percentile confidence/prediction intervals via `.bootstrap_intervals(n_boot)` and `.bootstrap_seed(seed)` (Batch, per-chunk Streaming, and full-update Online per sliding window). With `parallel(true)` Batch and Streaming refits run concurrently and match a sequential run; Online refits sequentially. Online incremental mode rejects them at `.build()`.
+* Added residual-bootstrap standard errors and percentile confidence/prediction intervals via `.intervals(IntervalsBuilder::new().bootstrap(n).seed(seed))` (Batch, per-chunk Streaming, and full-update Online per sliding window). With `parallel(true)` Batch and Streaming refits run concurrently and match a sequential run; Online refits sequentially. Online incremental mode rejects them at `.build()`.
 
 ### Changed
 
+* Breaking change: removed individual `confidence_intervals`, `prediction_intervals`, `bootstrap_intervals`, and `bootstrap_seed` Rust wrapper methods; use `.intervals(IntervalsBuilder::new()...)` instead.
 * Breaking change: replaced individual `return_*` and `cv_*` options with grouped `.outputs([...])` and `.cv(CVBuilder...)` configuration.
 
 ### Fixed

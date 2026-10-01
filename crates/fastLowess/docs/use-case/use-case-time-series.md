@@ -97,8 +97,10 @@ fn main() -> Result<(), LowessError> {
     let model = Lowess::new()
         .fraction(0.2)
         .iterations(3)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(IntervalsBuilder::new()
+            .confidence(0.95)
+            .prediction(0.95)
+        )
         .build()?;
 
     let result = model.fit(&t, &y)?;
@@ -199,7 +201,9 @@ fn main() -> Result<(), LowessError> {
     let model = Lowess::new()
         .fraction(0.3)
         .iterations(3)
-        .confidence_intervals(0.95)
+        .intervals(IntervalsBuilder::new()
+            .confidence(0.95)
+        )
         .outputs(["diagnostics"])
         .build()?;
 

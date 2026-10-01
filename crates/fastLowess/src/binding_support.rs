@@ -693,7 +693,9 @@ pub fn apply_cross_validation(
 
     match method.to_lowercase().as_str() {
         "simple" | "loo" | "loocv" | "leave_one_out" => {
-            let mut options = CVBuilder::method("loocv").fractions(fractions.to_vec());
+            let mut options = CVBuilder::new()
+                .method("loocv")
+                .fraction(fractions.to_vec());
             if let Some(s) = seed {
                 options = options.seed(s);
             }
@@ -701,9 +703,10 @@ pub fn apply_cross_validation(
             Ok(builder)
         }
         "kfold" | "k_fold" | "k-fold" => {
-            let mut options = CVBuilder::method("kfold")
+            let mut options = CVBuilder::new()
+                .method("kfold")
                 .k(k)
-                .fractions(fractions.to_vec());
+                .fraction(fractions.to_vec());
             if let Some(s) = seed {
                 options = options.seed(s);
             }
@@ -844,11 +847,15 @@ pub fn apply_typed_builder_options(
     if let Some(cw) = options.custom_weights {
         builder = builder.custom_weights(cw);
     }
-    if let Some(ci) = options.confidence_intervals {
-        builder = builder.confidence_intervals(ci);
-    }
-    if let Some(pi) = options.prediction_intervals {
-        builder = builder.prediction_intervals(pi);
+    if options.confidence_intervals.is_some() || options.prediction_intervals.is_some() {
+        let mut intervals = lowess::IntervalsBuilder::new();
+        if let Some(ci) = options.confidence_intervals {
+            intervals = intervals.confidence(ci);
+        }
+        if let Some(pi) = options.prediction_intervals {
+            intervals = intervals.prediction(pi);
+        }
+        builder = builder.intervals(intervals);
     }
     if let Some(par) = options.parallel {
         builder = builder.parallel(par);
