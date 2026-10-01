@@ -22,6 +22,20 @@ usable_x <- function(x, min_length = 2L) {
     length(x) >= min_length
 }
 
+test_that("cmad noise-floor guard handles unsorted x", {
+    x <- c(18.696686858311296, 5.791397113353014, -61.549769470468163, 71.320148417726159)
+    y <- c(-11.987563783981185, 0, 0, 0)
+    fraction <- 0.964674779062625
+    iterations <- 168L
+    ord <- order(x)
+
+    expect_true(cmad_is_noise_floor(x[ord], y[ord], fraction, iterations))
+    expect_identical(
+        cmad_is_noise_floor(x, y, fraction, iterations),
+        cmad_is_noise_floor(x[ord], y[ord], fraction, iterations)
+    )
+})
+
 test_that("matches stats::lowess for randomized inputs (property-based)", {
     property <- function(xy, fraction, iterations) {
         if (!usable_x(xy[[1]])) {

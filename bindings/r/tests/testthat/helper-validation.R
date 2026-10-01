@@ -111,6 +111,9 @@ cmad_is_noise_floor <- function(x, y, fraction, iterations, guard = 100) {
     if (iterations < 1L) {
         return(FALSE)
     }
+    ord <- order(x)
+    x <- as.double(x[ord])
+    y <- as.double(y[ord])
     n <- length(x)
     eps <- .Machine$double.eps
     scale <- max(1, max(abs(y)))
@@ -151,6 +154,9 @@ reference_is_ulp_unstable <- function(
     tolerance,
     trials = 1000L
 ) {
+    ord <- order(x)
+    x <- as.double(x[ord])
+    y <- as.double(y[ord])
     n <- length(x)
     eps <- .Machine$double.eps
     x_ulp <- ifelse(x == 0, eps, abs(x) * eps)
