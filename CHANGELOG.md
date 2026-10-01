@@ -155,6 +155,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **fastLowess:**
 
 - Used the serial delta scan below the parallel-benefit threshold so small inputs preserve the exact arithmetic order required by `stats::lowess` robustness edge cases.
+- Fixed tied x-values being refit individually on the parallel path when `delta` is `0` (including the `delta = 0.01 * range` that `stats::lowess` derives for zero-range input). `stats::lowess` copies a fitted value across a run of tied x-values, so each refit point picked up its own narrower window: for all-tied input the final point returned its two-point window mean instead of the shared fit, and the resulting residuals then diverged through the robustness iterations.
 
 **Java:**
 

@@ -463,6 +463,14 @@ fn fit_all_points_parallel<T>(
             custom_weights,
         );
     }
+
+    // R's lowess copies a fitted value across a run of tied x-values instead of refitting
+    // each one against its own narrower window, so collapse those runs to match.
+    for i in 1..n {
+        if x[i] == x[i - 1] {
+            y_smooth[i] = y_smooth[i - 1];
+        }
+    }
 }
 
 // Standard parallel fit (original implementation).
