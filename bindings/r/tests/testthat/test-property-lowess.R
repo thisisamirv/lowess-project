@@ -15,11 +15,6 @@
 # This complements the fixed scenarios in test-validation.R: randomized
 # comparisons can expose divergences at iteration counts not covered by any
 # single hand-picked case.
-#
-# Iteration counts stop at 25: beyond roughly that many robustness passes,
-# tied-x inputs reach a known unresolved divergence from `stats::lowess` at a
-# rate of about 0.01%, where a ~1e-10 difference crosses a bisquare hard cutoff
-# and is amplified. Raising this bound re-exposes it.
 
 # quickcheck shrinks below the declared minimum length, so the two-point
 # minimum that both `stats::lowess` and this package require is enforced here.
@@ -38,7 +33,7 @@ test_that("matches stats::lowess for randomized inputs (property-based)", {
             fraction = fraction,
             iterations = iterations,
             zero_weight_fallback = "return_original",
-            tolerance = 1e-8
+            tolerance = 1e-10
         ))
     }
 
@@ -48,7 +43,7 @@ test_that("matches stats::lowess for randomized inputs (property-based)", {
             quickcheck::double_bounded(-100, 100, len = c(2L, 40L))
         ),
         fraction = quickcheck::double_bounded(0.05, 1.0, len = 1L),
-        iterations = quickcheck::integer_bounded(0L, 25L, len = 1L),
+        iterations = quickcheck::integer_bounded(0L, 300L, len = 1L),
         property = property,
         tests = 200L,
         discards = 1000L
@@ -67,7 +62,7 @@ test_that("matches stats::lowess for randomized sorted output", {
             iterations = iterations,
             sorted = TRUE,
             zero_weight_fallback = "return_original",
-            tolerance = 1e-8
+            tolerance = 1e-10
         ))
     }
 
@@ -101,7 +96,7 @@ test_that("matches stats::lowess for tied x-values (property-based)", {
             iterations = iterations,
             sorted = TRUE,
             zero_weight_fallback = "return_original",
-            tolerance = 1e-8
+            tolerance = 1e-10
         ))
     }
 
@@ -112,7 +107,7 @@ test_that("matches stats::lowess for tied x-values (property-based)", {
         ),
         levels = quickcheck::integer_bounded(1L, 8L, len = 1L),
         fraction = quickcheck::double_bounded(0.05, 1.0, len = 1L),
-        iterations = quickcheck::integer_bounded(0L, 25L, len = 1L),
+        iterations = quickcheck::integer_bounded(0L, 300L, len = 1L),
         property = property,
         tests = 200L,
         discards = 1000L
@@ -147,7 +142,7 @@ test_that("matches initial stats::lowess fits for sparse one-spike responses", {
             iterations = iterations,
             sorted = TRUE,
             zero_weight_fallback = "return_original",
-            tolerance = 1e-8
+            tolerance = 1e-10
         ))
     }
 
@@ -157,7 +152,7 @@ test_that("matches initial stats::lowess fits for sparse one-spike responses", {
         spike_magnitude = quickcheck::double_bounded(1e-4, 100, len = 1L),
         spike_negative = quickcheck::logical_(len = 1L),
         fraction = quickcheck::double_bounded(0.05, 1.0, len = 1L),
-        iterations = quickcheck::integer_bounded(0L, 25L, len = 1L),
+        iterations = quickcheck::integer_bounded(0L, 300L, len = 1L),
         property = property,
         tests = 200L,
         discards = 1000L

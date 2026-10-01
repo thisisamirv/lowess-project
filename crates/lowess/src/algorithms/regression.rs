@@ -419,7 +419,6 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
             let tied_count = T::from(tied_end - self.window.left + 1).unwrap_or(T::one());
 
             let mut sum_w = T::zero();
-            let mut sum_wy = T::zero();
             let mut j = self.window.left;
             while j <= tied_end {
                 let w_base = if self.use_robustness {
@@ -432,13 +431,23 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
                 } else {
                     w_base
                 };
+                self.weights[j] = w;
                 sum_w = sum_w + w;
-                sum_wy = sum_wy + w * self.y[j];
                 j += 1;
             }
 
             if sum_w > T::zero() {
-                return Some((sum_wy / sum_w, T::zero()));
+                // `lowest` divides each window weight by their sum before accumulating the
+                // fitted value. Dividing the weighted sum at the end instead is equivalent
+                // in exact arithmetic but rounds differently, and the robustness iteration
+                // amplifies that difference geometrically.
+                let mut fitted = T::zero();
+                let mut j = self.window.left;
+                while j <= tied_end {
+                    fitted = fitted + (self.weights[j] / sum_w) * self.y[j];
+                    j += 1;
+                }
+                return Some((fitted, T::zero()));
             } else {
                 return match self.zero_weight_fallback {
                     ZeroWeightFallback::UseLocalMean => {
