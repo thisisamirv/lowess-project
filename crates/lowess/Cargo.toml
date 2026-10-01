@@ -32,6 +32,7 @@ num-traits = { version = "0.2", features = ["libm"] }
 
 [dev-dependencies]
 approx = "0.5"
+ndarray = "0.17"
 
 [features]
 default = ["std"]

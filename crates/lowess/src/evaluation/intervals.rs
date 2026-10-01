@@ -517,9 +517,6 @@ pub const DEFAULT_BOOTSTRAP_SEED: u64 = 0x5EED_B007;
 // Minimum number of bootstrap replicates (needed for a sample standard deviation).
 pub const MIN_BOOTSTRAP_SAMPLES: usize = 2;
 
-// Replicate count used when only `bootstrap_seed()` is called.
-pub const DEFAULT_BOOTSTRAP_SAMPLES: usize = 1000;
-
 // Replicates handed to the refit callback at once (bounds memory, gives parallel passes work).
 pub const BOOTSTRAP_BATCH_SIZE: usize = 256;
 

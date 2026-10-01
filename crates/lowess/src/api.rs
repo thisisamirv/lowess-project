@@ -28,7 +28,7 @@ use crate::adapters::streaming::StreamingLowessBuilder;
 use crate::engine::executor::{CVPassFn, IntervalPassFn, SmoothPassFn};
 use crate::engine::predict::{ExtrapolationPolicy, PredictPassFn};
 use crate::evaluation::cv::CVKind;
-use crate::evaluation::intervals::{BootstrapConfig, DEFAULT_BOOTSTRAP_SAMPLES, IntervalMethod};
+use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod};
 use crate::primitives::backend::Backend;
 
 // Publicly re-exported types
@@ -107,13 +107,12 @@ pub type StreamingLowess<T = f64> = LowessBuilder<T, StreamingMode>;
 pub type OnlineLowess<T = f64> = LowessBuilder<T, OnlineMode>;
 
 // Intermediate cross-validation builder produced by `CVBuilder::new()`:
-// carries the method, fold count, and seed while awaiting the (required)
+// carries the method and fold count while awaiting the (required)
 // candidate fractions. Finalized with `.fraction(...)` into a `CVOptions`.
 #[derive(Debug, Clone)]
 pub struct CVBuilder {
     method: String,
     k: usize,
-    seed: Option<u64>,
 }
 
 impl CVBuilder {
@@ -122,7 +121,6 @@ impl CVBuilder {
         Self {
             method: "kfold".to_string(),
             k: 5,
-            seed: None,
         }
     }
 
@@ -138,18 +136,11 @@ impl CVBuilder {
         self
     }
 
-    // Set a random seed for reproducible fold assignment.
-    pub fn seed(mut self, seed: u64) -> Self {
-        self.seed = Some(seed);
-        self
-    }
-
     // Provide the candidate fractions and produce the final `CVOptions`.
     pub fn fraction<T: Float>(self, fractions: Vec<T>) -> CVOptions<T> {
         CVOptions {
             method: self.method,
             k: self.k,
-            seed: self.seed,
             fractions,
         }
     }
@@ -167,7 +158,6 @@ impl Default for CVBuilder {
 pub struct CVOptions<T> {
     method: String,
     k: usize,
-    seed: Option<u64>,
     fractions: Vec<T>,
 }
 
@@ -175,12 +165,6 @@ impl<T: Float> CVOptions<T> {
     // Set the number of folds for k-fold cross-validation.
     pub fn k(mut self, k: usize) -> Self {
         self.k = k;
-        self
-    }
-
-    // Set a random seed for reproducible fold assignment.
-    pub fn seed(mut self, seed: u64) -> Self {
-        self.seed = Some(seed);
         self
     }
 }
@@ -191,7 +175,6 @@ pub struct IntervalsBuilder<T> {
     confidence: Option<T>,
     prediction: Option<T>,
     bootstrap: Option<usize>,
-    seed: Option<u64>,
 }
 
 impl<T: Float> IntervalsBuilder<T> {
@@ -201,7 +184,6 @@ impl<T: Float> IntervalsBuilder<T> {
             confidence: None,
             prediction: None,
             bootstrap: None,
-            seed: None,
         }
     }
 
@@ -220,12 +202,6 @@ impl<T: Float> IntervalsBuilder<T> {
     /// Replace analytic intervals with residual-bootstrap refits.
     pub fn bootstrap(mut self, n_boot: usize) -> Self {
         self.bootstrap = Some(n_boot);
-        self
-    }
-
-    /// Set a reproducible bootstrap seed (enables bootstrap if needed).
-    pub fn seed(mut self, seed: u64) -> Self {
-        self.seed = Some(seed);
         self
     }
 }
@@ -275,8 +251,8 @@ pub struct LowessBuilder<T, Mode = BatchMode> {
     // K value for K-fold CV (default: 5).
     pub cv_k_val: usize,
 
-    // CV seed for reproducibility.
-    pub(crate) cv_seed: Option<u64>,
+    // Reproducible seed shared by cross-validation and residual bootstrap.
+    pub(crate) seed: Option<u64>,
 
     // Relative convergence tolerance.
     pub auto_converge: Option<T>,
@@ -401,7 +377,7 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
             cv_kind: None,
             cv_method_str: None,
             cv_k_val: 5,
-            cv_seed: None,
+            seed: None,
             auto_converge: None,
             return_diagnostics: None,
             compute_residuals: None,
@@ -586,6 +562,12 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
         self
     }
 
+    /// Set one seed for cross-validation and residual bootstrap, when enabled.
+    pub fn seed(mut self, seed: u64) -> Self {
+        self.seed = Some(seed);
+        self
+    }
+
     /// Configure analytic or residual-bootstrap intervals as one group.
     pub fn intervals(mut self, options: IntervalsBuilder<T>) -> Self {
         if let Some(level) = options.confidence {
@@ -596,9 +578,6 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
         }
         if let Some(n_boot) = options.bootstrap {
             self = self.bootstrap_intervals(n_boot);
-        }
-        if let Some(seed) = options.seed {
-            self = self.bootstrap_seed(seed);
         }
         self
     }
@@ -646,27 +625,9 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
         if self.bootstrap.is_some() {
             self.duplicate_param = Some("intervals");
         }
-        let seed = self.bootstrap.and_then(|b| b.seed);
-        self.bootstrap = Some(BootstrapConfig { n_boot, seed });
+        self.bootstrap = Some(BootstrapConfig { n_boot, seed: None });
         if self.interval_type.is_none() {
             self.interval_type = Some(IntervalMethod::se());
-        }
-        self
-    }
-
-    // Set the seed for bootstrap resampling (a fixed default seed is used otherwise).
-    fn bootstrap_seed(mut self, seed: u64) -> Self {
-        match self.bootstrap.as_mut() {
-            Some(b) => b.seed = Some(seed),
-            None => {
-                self.bootstrap = Some(BootstrapConfig {
-                    n_boot: DEFAULT_BOOTSTRAP_SAMPLES,
-                    seed: Some(seed),
-                });
-                if self.interval_type.is_none() {
-                    self.interval_type = Some(IntervalMethod::se());
-                }
-            }
         }
         self
     }
@@ -697,14 +658,8 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
         self
     }
 
-    // Set the random seed for reproducible K-fold fold splitting.
-    pub fn cv_seed(mut self, seed: u64) -> Self {
-        self.cv_seed = Some(seed);
-        self
-    }
-
     // Configure cross-validation from a `CVOptions` built via `CVBuilder`,
-    // e.g. `.cv(CVBuilder::new().method("kfold").k(5).fraction(vec![0.3, 0.7]).seed(123))`.
+    // e.g. `.cv(CVBuilder::new().method("kfold").k(5).fraction(vec![0.3, 0.7])).seed(123)`.
     pub fn cv(mut self, options: CVOptions<T>) -> Self {
         if self.cv_fractions.is_some() || self.cv_method_str.is_some() {
             self.duplicate_param = Some("cv");
@@ -712,7 +667,6 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
         self.cv_method_str = Some(options.method);
         self.cv_k_val = options.k;
         self.cv_fractions = Some(options.fractions);
-        self.cv_seed = options.seed;
         self
     }
 
@@ -908,14 +862,17 @@ impl<T: Float> LowessAdapter<T> for Batch {
         if let Some(it) = builder.interval_type {
             result.interval_type = Some(it);
         }
-        result.bootstrap = builder.bootstrap;
+        result.bootstrap = builder.bootstrap.map(|mut bootstrap| {
+            bootstrap.seed = builder.seed;
+            bootstrap
+        });
         if let Some(cvf) = builder.cv_fractions {
             result.cv_fractions = Some(cvf);
         }
         if let Some(cvk) = builder.cv_kind {
             result.cv_kind = Some(cvk);
         }
-        result.cv_seed = builder.cv_seed;
+        result.cv_seed = builder.seed;
         // Convert string-based CV method (from cv_method()/cv_k() builder methods)
         if result.cv_kind.is_none()
             && let Some(method_str) = builder.cv_method_str
@@ -1068,7 +1025,10 @@ impl<T: Float> LowessAdapter<T> for Streaming {
         if let Some(it) = builder.interval_type {
             result.interval_type = Some(it);
         }
-        result.bootstrap = builder.bootstrap;
+        result.bootstrap = builder.bootstrap.map(|mut bootstrap| {
+            bootstrap.seed = builder.seed;
+            bootstrap
+        });
         if let Some(ac) = builder.auto_converge {
             result.auto_converge = Some(ac);
         }
@@ -1178,7 +1138,10 @@ impl<T: Float> LowessAdapter<T> for Online {
         if let Some(it) = builder.interval_type {
             result.interval_type = Some(it);
         }
-        result.bootstrap = builder.bootstrap;
+        result.bootstrap = builder.bootstrap.map(|mut bootstrap| {
+            bootstrap.seed = builder.seed;
+            bootstrap
+        });
         if let Some(ac) = builder.auto_converge {
             result.auto_converge = Some(ac);
         }

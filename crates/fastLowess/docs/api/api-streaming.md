@@ -88,20 +88,21 @@ Fraction used: 0.5
 | --- | --- | --- | --- |
 | `fraction(T)` | `T: Float` | `0.67` | Smoothing fraction (bandwidth) |
 | `iterations(usize)` | `usize` | `3` | Number of robustifying iterations |
-| `delta(T)` | `T: Float` | `NaN` | Interpolation distance (`NaN` auto-sets it to 0.0 in Streaming, i.e. interpolation disabled) |
 | `weight_function(...)` | `weight_function` | `"tricube"` | Weight function name |
 | `robustness_method(...)` | `robustness_method` | `"bisquare"` | Robustness method name |
-| `scaling_method(...)` | `scaling_method` | `"mad"` | Residual scaling method |
-| `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
+| `delta(T)` | `T: Float` | `NaN` | Interpolation distance (`NaN` auto-sets it to 0.0 in Streaming, i.e. interpolation disabled) |
 | `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
-| `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
+| `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
+| `scaling_method(...)` | `scaling_method` | `"mad"` | Residual scaling method |
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
-| `outputs([&str])` | `&[&str]` | `[]` | Select optional result components: `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"`, `"se"` |
-| `intervals(IntervalsBuilder<f64>)` | `IntervalsBuilder<f64>` | disabled | Group CI, PI, bootstrap refits, and seed |
-| `parallel(bool)` | `bool` | `true` | Enable parallel execution |
+| `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
 | `chunk_size(usize)` | `usize` | `5000` | Data chunk size |
 | `overlap(usize)` | `usize` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy(...)` | `merge_strategy` | `"weighted_average"` | Strategy for blending overlap regions |
+| `parallel(bool)` | `bool` | `true` | Enable parallel execution |
+| `outputs([&str])` | `&[&str]` | `[]` | Select optional result components: `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"`, `"se"` |
+| `intervals(IntervalsBuilder<f64>)` | `IntervalsBuilder<f64>` | disabled | Group CI, PI, and bootstrap refits |
+| `seed(u64)` | `u64` | unset | Bootstrap resampling seed when bootstrap is enabled |
 
 Cross-validation, GPU `backend`, `custom_weights`, and `"sorted"` are Batch-only and not available here; see [fastLowess](crate::doc::api) for those. Analytic or bootstrap standard errors and confidence/prediction intervals are computed per combined chunk (including the previous overlap), then blended across overlap regions via `merge_strategy` like `y`/`derivative` are. Bootstrap draws use the same seed for each chunk; these are local chunk intervals, not whole-stream intervals. With `parallel(true)`, refits run concurrently. Fewer than 2 replicates returns `InvalidBootstrapSamples` at `.build()`.
 
@@ -240,7 +241,7 @@ Computes standard errors per chunk the same way Batch does, then merges the over
 
 *See: [Intervals](crate::doc::guide::intervals)*
 
-Configure confidence and/or prediction bounds with `.intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))`. Optional `.bootstrap(n).seed(seed)` replaces analytic intervals with per-chunk residual-bootstrap estimates. Bounds and standard errors are merged across overlap boundaries via `merge_strategy`. With `parallel(true)`, bootstrap refits run concurrently.
+Configure confidence and/or prediction bounds with `.intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))`. Optional `.bootstrap(n)` replaces analytic intervals with per-chunk residual-bootstrap estimates; set `.seed(seed)` on `StreamingLowess::new()` to control draws. A seed alone does not enable bootstrap. Bounds and standard errors are merged across overlap boundaries via `merge_strategy`. With `parallel(true)`, bootstrap refits run concurrently.
 
 ### parallel
 

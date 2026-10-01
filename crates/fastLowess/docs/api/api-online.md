@@ -88,19 +88,20 @@ fn main() -> Result<(), LowessError> {
 | --- | --- | --- | --- |
 | `fraction(T)` | `T: Float` | `0.67` | Smoothing fraction (bandwidth) |
 | `iterations(usize)` | `usize` | `0` | Number of robustifying iterations (requires `update_mode("full")`) |
-| `delta(T)` | `T: Float` | `NaN` | Interpolation distance (`NaN` auto-sets it to 0.0 in Online, i.e. interpolation disabled) |
 | `weight_function(...)` | `weight_function` | `"tricube"` | Weight function name |
 | `robustness_method(...)` | `robustness_method` | `"bisquare"` | Robustness method name |
-| `scaling_method(...)` | `scaling_method` | `"mad"` | Residual scaling method |
-| `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
+| `delta(T)` | `T: Float` | `NaN` | Interpolation distance (`NaN` auto-sets it to 0.0 in Online, i.e. interpolation disabled) |
 | `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
-| `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
+| `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
+| `scaling_method(...)` | `scaling_method` | `"mad"` | Residual scaling method |
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
-| `outputs([&str])` | `&[&str]` | `[]` | Select `"weights"`, `"derivative"`, and/or `"se"`; `"se"` requires `update_mode("full")` |
-| `intervals(IntervalsBuilder<f64>)` | `IntervalsBuilder<f64>` | disabled | Group CI, PI, bootstrap refits, and seed (`update_mode("full")` required) |
+| `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `window_capacity(usize)` | `usize` | `1000` | Max points in sliding window |
 | `min_points(usize)` | `usize` | `2` | Min points before smoothing starts |
 | `update_mode(...)` | `update_mode` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
+| `outputs([&str])` | `&[&str]` | `[]` | Select `"weights"`, `"derivative"`, and/or `"se"`; `"se"` requires `update_mode("full")` |
+| `intervals(IntervalsBuilder<f64>)` | `IntervalsBuilder<f64>` | disabled | Group CI, PI, and bootstrap refits (`update_mode("full")` required) |
+| `seed(u64)` | `u64` | unset | Bootstrap resampling seed when bootstrap is enabled |
 
 Cross-validation, GPU `backend`, `custom_weights`, `"sorted"`, `"diagnostics"`, `"residuals"`, and `parallel()` are Batch-only (or Batch/Streaming-only) and not available here. Bootstrap is available with `update_mode("full")` only: after at least 3 points are in the window, each update resamples the current window with the same seed and returns its newest point's bootstrap SE and requested bounds. Online refits are sequential. The default incremental mode rejects it at `.build()` with `StandardErrorRequiresFullUpdateMode`; fewer than 2 replicates returns `InvalidBootstrapSamples`.
 
@@ -221,7 +222,7 @@ Populates `output.standard_error` — but only when combined with `.update_mode(
 
 *See: [Intervals](crate::doc::guide::intervals)*
 
-Use `.intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))` to return bounds for the latest point. Optional `.bootstrap(n).seed(seed)` bootstraps the current sliding window instead of computing analytic intervals. Online requires `update_mode("full")`; the default incremental mode rejects intervals at `.build()` with `LowessError::StandardErrorRequiresFullUpdateMode`.
+Use `.intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))` to return bounds for the latest point. Optional `.bootstrap(n)` bootstraps the current sliding window instead of computing analytic intervals; set `.seed(seed)` on `OnlineLowess::new()` to control its draws. A seed alone does not enable bootstrap. Online requires `update_mode("full")`; the default incremental mode rejects intervals at `.build()` with `LowessError::StandardErrorRequiresFullUpdateMode`.
 
 ### window_capacity
 

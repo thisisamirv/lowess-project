@@ -80,12 +80,12 @@ fn test_parallel_bootstrap_matches_sequential() {
         Lowess::new()
             .fraction(0.3)
             .iterations(1)
+            .seed(11)
             .intervals(
                 IntervalsBuilder::new()
                     .confidence(0.95)
                     .prediction(0.9)
-                    .bootstrap(300)
-                    .seed(11),
+                    .bootstrap(300),
             )
             .parallel(parallel)
             .build()
@@ -115,14 +115,14 @@ fn test_streaming_bootstrap_parallel_matches_sequential() {
         let mut model = fastLowess::prelude::StreamingLowess::new()
             .fraction(0.6)
             .iterations(0)
+            .seed(11)
             .chunk_size(20)
             .overlap(4)
             .intervals(
                 IntervalsBuilder::new()
                     .confidence(0.95)
                     .prediction(0.9)
-                    .bootstrap(40)
-                    .seed(11),
+                    .bootstrap(40),
             )
             .parallel(parallel)
             .build()
@@ -151,12 +151,12 @@ fn test_online_bootstrap_full_update() {
         .update_mode("full")
         .window_capacity(10)
         .min_points(5)
+        .seed(7)
         .intervals(
             IntervalsBuilder::new()
                 .confidence(0.95)
                 .prediction(0.9)
-                .bootstrap(40)
-                .seed(7),
+                .bootstrap(40),
         )
         .build()
         .unwrap();

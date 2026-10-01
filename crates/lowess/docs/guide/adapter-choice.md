@@ -47,11 +47,11 @@ fn main() -> Result<(), LowessError> {
     let model = Lowess::new()
         .fraction(0.5f64)
         .iterations(3usize)
+        .outputs(["diagnostics"])
         .intervals(IntervalsBuilder::new()
             .confidence(0.95f64)
             .prediction(0.95f64)
         )
-        .outputs(["diagnostics"])
         .build()?;
     let result = model.fit(&x, &y)?;
     let mid = n / 2;

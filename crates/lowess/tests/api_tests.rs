@@ -1035,17 +1035,17 @@ fn test_outputs_unknown_name_errors() {
     );
 }
 
-/// `.cv(CVBuilder::new().method("kfold").k(5).fraction(...).seed(123))` runs k-fold CV.
+/// `.seed(123).cv(CVBuilder::new().method("kfold").k(5).fraction(...))` runs k-fold CV.
 #[test]
 fn test_cv_builder_grouped() {
     let (x, y) = linear_series(100, 2.0, 1.0);
     let result = Lowess::new()
         .fraction(0.5)
+        .seed(123)
         .cv(CVBuilder::new()
             .method("kfold")
             .k(5)
-            .fraction(vec![0.3, 0.5, 0.7])
-            .seed(123))
+            .fraction(vec![0.3, 0.5, 0.7]))
         .adapter(Batch)
         .build()
         .unwrap()
@@ -1060,6 +1060,7 @@ fn test_cv_builder_new_methods_and_validation() {
     let (x, y) = linear_series(30, 2.0, 1.0);
     let fit = |options| {
         Lowess::new()
+            .seed(42)
             .cv(options)
             .build()
             .unwrap()
@@ -1068,11 +1069,8 @@ fn test_cv_builder_new_methods_and_validation() {
     };
 
     let fractions = vec![0.3, 0.5, 0.7];
-    let default = fit(CVBuilder::new().fraction(fractions.clone()).seed(42));
-    let explicit = fit(CVBuilder::new()
-        .method("kfold")
-        .fraction(fractions.clone())
-        .seed(42));
+    let default = fit(CVBuilder::new().fraction(fractions.clone()));
+    let explicit = fit(CVBuilder::new().method("kfold").fraction(fractions.clone()));
     assert_eq!(default.fraction_used, explicit.fraction_used);
     assert_eq!(default.cv_scores, explicit.cv_scores);
 
@@ -1092,6 +1090,52 @@ fn test_cv_builder_new_methods_and_validation() {
             ..
         })
     ));
+}
+
+#[test]
+fn test_one_seed_controls_cv_and_bootstrap_independent_of_order() {
+    let x: Vec<f64> = (0..40).map(|i| i as f64 * 0.2).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .map(|&xi| xi.sin() + 0.1 * (xi * 7.0).sin())
+        .collect();
+    let fit = |seed: u64, seed_first: bool| {
+        let builder = Lowess::new().iterations(0);
+        let builder = if seed_first {
+            builder.seed(seed)
+        } else {
+            builder
+        };
+        let builder = builder
+            .cv(CVBuilder::new()
+                .method("kfold")
+                .k(5)
+                .fraction(vec![0.3, 0.5]))
+            .intervals(IntervalsBuilder::new().confidence(0.95).bootstrap(40));
+        let builder = if seed_first {
+            builder
+        } else {
+            builder.seed(seed)
+        };
+        builder.build().unwrap().fit(&x, &y).unwrap()
+    };
+    let (first, last) = (fit(123, true), fit(123, false));
+    assert_eq!(first.cv_scores, last.cv_scores);
+    assert_eq!(first.fraction_used, last.fraction_used);
+    assert_eq!(first.standard_errors, last.standard_errors);
+    assert_eq!(first.confidence_lower, last.confidence_lower);
+
+    let different = fit(124, true);
+    assert_ne!(first.cv_scores, different.cv_scores);
+    assert_ne!(first.confidence_lower, different.confidence_lower);
+
+    let seeded_only = Lowess::new()
+        .seed(123)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    assert!(seeded_only.standard_errors.is_none());
 }
 
 /// Test zero iterations with different robustness methods.

@@ -684,6 +684,9 @@ pub fn apply_cross_validation(
     k: Option<usize>,
     seed: Option<u64>,
 ) -> Result<LowessBuilder<f64>, String> {
+    if let Some(seed) = seed {
+        builder = builder.seed(seed);
+    }
     let Some(fractions) = fractions else {
         return Ok(builder);
     };
@@ -693,23 +696,17 @@ pub fn apply_cross_validation(
 
     match method.to_lowercase().as_str() {
         "simple" | "loo" | "loocv" | "leave_one_out" => {
-            let mut options = CVBuilder::new()
+            let options = CVBuilder::new()
                 .method("loocv")
                 .fraction(fractions.to_vec());
-            if let Some(s) = seed {
-                options = options.seed(s);
-            }
             builder = builder.cv(options);
             Ok(builder)
         }
         "kfold" | "k_fold" | "k-fold" => {
-            let mut options = CVBuilder::new()
+            let options = CVBuilder::new()
                 .method("kfold")
                 .k(k)
                 .fraction(fractions.to_vec());
-            if let Some(s) = seed {
-                options = options.seed(s);
-            }
             builder = builder.cv(options);
             Ok(builder)
         }

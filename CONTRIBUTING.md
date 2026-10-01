@@ -17,7 +17,6 @@ The Batch adapter already covers a comprehensive set of options (kernels, robust
 
 - **Adaptive/automatic fraction selection**: CV-based bandwidth selection currently requires hand-picking a `cv_fractions` grid. A continuous search (e.g. golden-section over `(0, 1]` minimizing CV error or AICc) would remove the hardest tuning decision.
 - **STL-style seasonal-trend decomposition**: Cleveland's STL is built from repeated LOWESS passes (trend + seasonal + remainder); none of the current adapters offer this, despite already having the necessary primitives.
-- **Bootstrap-based intervals**: an alternative to the existing analytic hat-matrix SE-based confidence/prediction intervals, useful when the residual-normality assumption is questionable.
 
 **Streaming:**
 

@@ -704,11 +704,11 @@ fn run_cv_comparison() -> Result<(), Box<dyn Error>> {
 
     // 2. K-Fold (5 folds)
     let kfold_result = Lowess::new()
+        .seed(42)
         .cv(CVBuilder::new()
             .method("kfold")
             .k(5)
-            .fraction(candidate_fractions.to_vec())
-            .seed(42))
+            .fraction(candidate_fractions.to_vec()))
         .build()
         .unwrap()
         .fit(&x, &y)

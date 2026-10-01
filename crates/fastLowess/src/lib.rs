@@ -45,7 +45,7 @@
 //! - **News**
 //!   - [Release Notes](doc::news)
 //!
-//! ## Quick Start
+//! ## Quick Start (Batch)
 //!
 //! ### Typical Use
 //!
@@ -95,39 +95,39 @@
 //!
 //! // Build model with all features enabled
 //! let model = Lowess::new()
-//!     .fraction(0.5)                                   // Use 50% of data for each local fit
-//!     .iterations(3)                                   // 3 robustness iterations
-//!     .weight_function("tricube")                      // Kernel function
-//!     .robustness_method("bisquare")                   // Outlier handling
-//!     .delta(0.01)                                     // Interpolation optimization
-//!     .zero_weight_fallback("use_local_mean")          // Fallback policy
-//!     .boundary_policy("extend")                       // Boundary handling policy
-//!     .scaling_method("mad")                           // Robust scale estimation
-//!     .auto_converge(1e-6)                             // Auto-convergence threshold
-//!     .missing("error")                                // Reject non-finite (NaN/Inf) input
-//!     .custom_weights(vec![1.0; 8])                    // Per-observation case weights
-//!     .parallel(true)                                  // Rayon-parallel execution (default)
-//!     .backend("cpu")                                  // Execution backend                          // Retain state for out-of-sample predict()
+//!     .fraction(0.5)                                  // Use 50% of data for each local fit
+//!     .iterations(3)                                  // 3 robustness iterations
+//!     .weight_function("tricube")                     // Kernel function
+//!     .robustness_method("bisquare")                  // Outlier handling
+//!     .delta(0.01)                                    // Interpolation optimization
+//!     .zero_weight_fallback("use_local_mean")         // Fallback policy
+//!     .boundary_policy("extend")                      // Boundary handling policy
+//!     .scaling_method("mad")                          // Robust scale estimation
+//!     .auto_converge(1e-6)                            // Auto-convergence threshold
+//!     .missing("error")                               // Reject non-finite (NaN/Inf) input
+//!     .parallel(true)                                 // Rayon-parallel execution (default)
+//!     .backend("cpu")                                 // Execution backend
 //!     .outputs([
-//!         "se",                                        // Standard errors
-//!         "diagnostics",                               // Fit quality metrics
-//!         "residuals",                                 // Include residuals
-//!         "weights",                                   // Include robustness weights
-//!         "derivative",                                // Include per-point local slope
-//!         "sorted"                                     // Sort output ascending by x
+//!         "se",                                       // Standard errors
+//!         "diagnostics",                              // Fit quality metrics
+//!         "residuals",                                // Include residuals
+//!         "weights",                                  // Include robustness weights
+//!         "derivative",                               // Include per-point local slope
+//!         "sorted"                                    // Sort output ascending by x
 //!     ])
 //!     .intervals(IntervalsBuilder::new()
-//!         .confidence(0.95)                            // 95% confidence intervals
-//!         .prediction(0.95)                            // 95% prediction intervals
-//!         .bootstrap(1000)                             // Residual bootstrap instead of analytic intervals
-//!         .seed(42))                                   // Seed for reproducible bootstrap intervals
-//!     .retain_model(true)                              // Retain state for out-of-sample predict()
+//!         .confidence(0.95)                           // 95% confidence intervals
+//!         .prediction(0.95)                           // 95% prediction intervals
+//!         .bootstrap(1000)                            // Residual bootstrap instead of analytic intervals
+//!     )
 //!     .cv(CVBuilder::new()
 //!         .method("kfold")                            // CV method: "kfold" or "loocv"
 //!         .k(5)                                       // Number of folds for k-fold CV
 //!         .fraction(vec![0.3, 0.7])                   // Candidate bandwidth fractions to evaluate
-//!         .seed(123)                                  // Reproducible fold splitting seed
 //!     )
+//!     .seed(123)                                      // Shared CV and bootstrap seed
+//!     .retain_model(true)                             // Retain state for out-of-sample predict()
+//!     .custom_weights(vec![1.0; 8])                   // Per-observation case weights
 //!     .build()?;
 //!
 //! let result = model.fit(&x, &y)?;
@@ -234,6 +234,262 @@
 //! - **Zero-copy**: Pass data directly from your numerical pipeline.
 //! - **Consistency**: If your project already uses `ndarray`, `fastLowess` fits right in.
 //! - **Performance**: Optimized internal operations using `ndarray` primitives.
+//!
+//! ## Quick Start (Streaming)
+//!
+//! ### Typical Use
+//!
+//! Process a dataset in chunks, then flush the points retained for overlap:
+//!
+//! ```rust
+//! use fastLowess::prelude::*;
+//!
+//! let x: Vec<f64> = (0..20).map(|i| i as f64).collect();
+//! let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
+//! let mut model = StreamingLowess::new()
+//!     .fraction(0.5)
+//!     .chunk_size(10)
+//!     .overlap(2)
+//!     .build()?;
+//!
+//! let mut emitted = 0;
+//! for (xs, ys) in x.chunks(10).zip(y.chunks(10)) {
+//!     emitted += model.process_chunk(xs, ys)?.y.len();
+//! }
+//! emitted += model.finalize()?.y.len();
+//! println!("Smoothed {emitted} points across two chunks");
+//! # assert_eq!(emitted, x.len());
+//! # Result::<(), LowessError>::Ok(())
+//! ```
+//!
+//! ```text
+//! Smoothed 20 points across two chunks
+//! ```
+//!
+//! ### Full Features
+//!
+//! Configure uncertainty estimates and optional outputs per chunk:
+//!
+//! ```rust
+//! use fastLowess::prelude::*;
+//!
+//! let x: Vec<f64> = (0..20).map(|i| i as f64 * 0.2).collect();
+//! let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1 * (xi * 5.0).sin()).collect();
+//! let mut model = StreamingLowess::new()
+//!     .fraction(0.6)                          // Local smoothing span
+//!     .iterations(1)                          // Robustness iterations
+//!     .chunk_size(10)                         // Points per input chunk
+//!     .overlap(2)                             // Points retained between chunks
+//!     .merge_strategy("weighted_average")     // Blend estimates in the overlap
+//!     .parallel(true)                         // Parallel CPU fits and bootstrap refits
+//!     .outputs([
+//!         "se",                               // Standard errors
+//!         "diagnostics",                      // Cumulative fit diagnostics
+//!         "residuals",                        // Observed minus fitted values
+//!         "weights",                          // Final robustness weights
+//!         "derivative"                        // Local slope at each point
+//!     ])
+//!     .intervals(IntervalsBuilder::new()
+//!         .confidence(0.95)                   // 95% confidence intervals
+//!         .prediction(0.95)                   // 95% prediction intervals
+//!         .bootstrap(20)                      // Residual-bootstrap refits per chunk
+//!     )
+//!     .seed(7)                                // Reproducible bootstrap draws
+//!     .build()?;
+//!
+//! let first = model.process_chunk(&x[..10], &y[..10])?;
+//! # assert!(first.standard_errors.is_some());
+//! # assert!(first.confidence_lower.is_some());
+//! # assert!(first.prediction_upper.is_some());
+//! # assert!(first.derivative.is_some());
+//! let second = model.process_chunk(&x[10..], &y[10..])?;
+//! let final_chunk = model.finalize()?;
+//! let emitted = first.y.len() + second.y.len() + final_chunk.y.len();
+//! println!("Streaming intervals: {emitted} points");
+//! # assert_eq!(emitted, x.len());
+//! # Result::<(), LowessError>::Ok(())
+//! ```
+//!
+//! ```text
+//! Streaming intervals: 20 points
+//! ```
+//!
+//! ### Result and Error Handling
+//!
+//! `process_chunk()` and `finalize()` return `Result<LowessResult<T>, LowessError>`.
+//! A mismatched chunk is rejected without silently dropping points:
+//!
+//! ```rust
+//! use fastLowess::prelude::*;
+//!
+//! let mut model = StreamingLowess::new().chunk_size(10).overlap(2).build()?;
+//! let invalid = model.process_chunk(&[1.0, 2.0], &[3.0]);
+//! assert!(invalid.is_err());
+//! let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
+//! let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi).collect();
+//! let chunk = model.process_chunk(&x, &y)?;
+//! let tail = model.finalize()?;
+//! println!("Recovered {} points", chunk.y.len() + tail.y.len());
+//! # Result::<(), LowessError>::Ok(())
+//! ```
+//!
+//! ```text
+//! Recovered 10 points
+//! ```
+//!
+//! ### ndarray Integration
+//!
+//! Contiguous ndarray arrays can be passed chunk by chunk without copying:
+//!
+//! ```rust
+//! use fastLowess::prelude::*;
+//! use ndarray::Array1;
+//!
+//! let x = Array1::from_vec((0..20).map(|i| i as f64).collect());
+//! let y = x.mapv(|xi| 2.0 * xi + 1.0);
+//! let mut model = StreamingLowess::new().chunk_size(10).overlap(2).build()?;
+//! let mut emitted = 0;
+//! for (xs, ys) in x.as_slice().unwrap().chunks(10).zip(y.as_slice().unwrap().chunks(10)) {
+//!     emitted += model.process_chunk(xs, ys)?.y.len();
+//! }
+//! emitted += model.finalize()?.y.len();
+//! println!("Streaming ndarray points: {emitted}");
+//! # assert_eq!(emitted, x.len());
+//! # Result::<(), LowessError>::Ok(())
+//! ```
+//!
+//! ```text
+//! Streaming ndarray points: 20
+//! ```
+//!
+//! ## Quick Start (Online)
+//!
+//! ### Typical Use
+//!
+//! Add points to a sliding window; updates begin once `min_points` is reached:
+//!
+//! ```rust
+//! use fastLowess::prelude::*;
+//!
+//! let x = [1.0, 2.0, 3.0, 4.0, 5.0];
+//! let y = [2.0, 4.0, 6.0, 8.0, 10.0];
+//! let mut model = OnlineLowess::new()
+//!     .fraction(0.5)
+//!     .window_capacity(5)
+//!     .min_points(3)
+//!     .build()?;
+//!
+//! let mut updates = 0;
+//! let mut latest = None;
+//! for (&xi, &yi) in x.iter().zip(&y) {
+//!     if let Some(output) = model.add_point(xi, yi)? {
+//!         updates += 1;
+//!         latest = Some(output.y);
+//!     }
+//! }
+//! let latest = latest.expect("the window has enough points");
+//! println!("Online updates: {updates}; latest estimate: {latest:.1}");
+//! # assert_eq!(updates, 3);
+//! # assert!((latest - 10.0).abs() < 1e-8);
+//! # Result::<(), LowessError>::Ok(())
+//! ```
+//!
+//! ```text
+//! Online updates: 3; latest estimate: 10.0
+//! ```
+//!
+//! ### Full Features
+//!
+//! Full updates support robust fitting and uncertainty estimates for each latest point:
+//!
+//! ```rust
+//! use fastLowess::prelude::*;
+//!
+//! let mut model = OnlineLowess::new()
+//!     .fraction(0.7)                          // Local smoothing span
+//!     .iterations(1)                          // Robustness iterations
+//!     .window_capacity(20)                    // Maximum sliding-window size
+//!     .min_points(5)                          // Wait for five points before smoothing
+//!     .update_mode("full")                    // Refit the whole window for intervals
+//!     .outputs([
+//!         "se",                               // Latest-point standard error
+//!         "weights",                          // Latest-point robustness weight
+//!         "derivative"                        // Latest-point local slope
+//!     ])
+//!     .intervals(IntervalsBuilder::new()
+//!         .confidence(0.95)                   // 95% confidence interval
+//!         .prediction(0.95)                   // 95% prediction interval
+//!         .bootstrap(20)                      // Refit the current window 20 times
+//!     )
+//!     .seed(7)                                // Reproducible bootstrap draws
+//!     .build()?;
+//!
+//! let mut updates = 0;
+//! for i in 0..12 {
+//!     let x = i as f64 * 0.2;
+//!     if let Some(output) = model.add_point(x, x.sin() + 0.1 * (5.0 * x).sin())? {
+//!         updates += 1;
+//!         assert!(output.standard_error.is_some());
+//!         assert!(output.confidence_lower.is_some());
+//!         assert!(output.prediction_upper.is_some());
+//!         assert!(output.derivative.is_some());
+//!     }
+//! }
+//! println!("Online full updates: {updates}");
+//! # assert_eq!(updates, 8);
+//! # Result::<(), LowessError>::Ok(())
+//! ```
+//!
+//! ```text
+//! Online full updates: 8
+//! ```
+//!
+//! ### Result and Error Handling
+//!
+//! `build()` and `add_point()` return `Result`; `add_point()` returns `None` until
+//! `min_points` is reached. Bulk updates also reject mismatched input lengths:
+//!
+//! ```rust
+//! use fastLowess::prelude::*;
+//!
+//! let invalid = OnlineLowess::new()
+//!     .intervals(IntervalsBuilder::new().confidence(0.95))
+//!     .build();
+//! assert!(matches!(invalid, Err(LowessError::StandardErrorRequiresFullUpdateMode)));
+//!
+//! let mut model = OnlineLowess::new().window_capacity(5).min_points(3).build()?;
+//! let mismatched = model.add_points(&[1.0, 2.0][..], &[2.0][..]);
+//! assert!(matches!(mismatched, Err(LowessError::InvalidInput(_))));
+//! let outputs = model.add_points(&[1.0, 2.0, 3.0][..], &[2.0, 4.0, 6.0][..])?;
+//! println!("Ready online outputs: {}", outputs.iter().flatten().count());
+//! # Result::<(), LowessError>::Ok(())
+//! ```
+//!
+//! ```text
+//! Ready online outputs: 1
+//! ```
+//!
+//! ### ndarray Integration
+//!
+//! `add_points()` accepts ndarray arrays and returns one optional update per point:
+//!
+//! ```rust
+//! use fastLowess::prelude::*;
+//! use ndarray::Array1;
+//!
+//! let x = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+//! let y = x.mapv(|xi| 2.0 * xi);
+//! let mut model = OnlineLowess::new().window_capacity(5).min_points(3).build()?;
+//! let outputs = model.add_points(&x, &y)?;
+//! let ready = outputs.iter().flatten().count();
+//! println!("Online ndarray updates: {ready}");
+//! # assert_eq!(ready, 3);
+//! # Result::<(), LowessError>::Ok(())
+//! ```
+//!
+//! ```text
+//! Online ndarray updates: 3
+//! ```
 //!
 //!
 //! ## References

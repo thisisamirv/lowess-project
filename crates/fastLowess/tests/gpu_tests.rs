@@ -6,7 +6,7 @@ use ScalingMethod::Mean;
 use WeightFunction::{Biweight, Cosine, Epanechnikov, Gaussian, Triangle, Tricube, Uniform};
 use approx::assert_abs_diff_eq;
 use fastLowess::internals::engine::gpu::{GLOBAL_EXECUTOR, GpuConfig, GpuExecutor};
-use fastLowess::prelude::CVBuilder;
+use fastLowess::prelude::{CVBuilder, IntervalsBuilder};
 use lowess::internals::algorithms::robustness::RobustnessMethod;
 use lowess::internals::math::boundary::BoundaryPolicy;
 use lowess::internals::math::kernel::WeightFunction;
@@ -1149,11 +1149,11 @@ fn test_gpu_cv() {
     // GPU Cross Validation using 5-fold CV with 2 candidate fractions
     let model = Lowess::new()
         .backend(GPU)
+        .seed(42)
         .cv(CVBuilder::new()
             .method("kfold")
             .k(5)
-            .fraction(vec![0.3, 0.7])
-            .seed(42))
+            .fraction(vec![0.3, 0.7]))
         .build()
         .unwrap();
 

@@ -103,8 +103,8 @@ fn main() -> Result<(), LowessError> {
             .method("kfold")
             .k(5)
             .fraction(vec![0.3, 0.5, 0.7])
-            .seed(42)
         )
+        .seed(42)
         .build()?;
     let result = model.fit(&x, &y)?;
 

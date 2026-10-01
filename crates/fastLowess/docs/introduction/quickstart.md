@@ -51,11 +51,11 @@ fn main() -> Result<(), LowessError> {
     let model = Lowess::new()
         .fraction(0.5)
         .iterations(3)
+        .outputs(["diagnostics"])
         .intervals(IntervalsBuilder::new()
             .confidence(0.95)
             .prediction(0.95)
         )  // 95% CI and PI
-        .outputs(["diagnostics"])
         .build()?;
 
     let result = model.fit(&x, &y)?;

@@ -213,7 +213,7 @@ The intervals above are analytic: a local-linear standard error times a normal z
 2. Refit `n_boot` times on `y_hat + residuals drawn with replacement` (same `x` and smoothing settings; cross-validation is not repeated).
 3. Per point, the standard error is the sample standard deviation of those refits. A confidence interval is their percentile interval. A prediction interval is the percentile interval of each refit plus a freshly drawn residual, so skewed noise produces an asymmetric tail.
 
-`.seed(seed)` fixes the draws. If omitted, a fixed default seed is used, so results are reproducible either way. Fewer than 2 replicates is rejected at `.build()` as `InvalidBootstrapSamples`. In Streaming, each combined chunk (including its incoming overlap) is bootstrapped independently with the same seed; bounds and SEs are then merged according to `merge_strategy`. These are local chunk intervals, not whole-stream bootstrap intervals. In Online, each full update bootstraps the current sliding window with the same seed and returns only the newest point's SE and bounds (starting at 3 points). The default incremental mode rejects bootstrap with `StandardErrorRequiresFullUpdateMode`.
+Set `.seed(seed)` on the outer model builder to seed both CV and bootstrap. If omitted, bootstrap uses its fixed default seed, so results are reproducible either way; setting a seed alone does not enable bootstrap. Fewer than 2 replicates is rejected at `.build()` as `InvalidBootstrapSamples`. In Streaming, each combined chunk (including its incoming overlap) is bootstrapped independently with the same seed; bounds and SEs are then merged according to `merge_strategy`. These are local chunk intervals, not whole-stream bootstrap intervals. In Online, each full update bootstraps the current sliding window with the same seed and returns only the newest point's SE and bounds (starting at 3 points). The default incremental mode rejects bootstrap with `StandardErrorRequiresFullUpdateMode`.
 
 Each replicate is a full refit, so this is much slower than the analytic intervals. It replaces `result.standard_errors` in Batch/Streaming or `output.standard_error` in Online when `"se"` or an interval was requested.
 
@@ -232,8 +232,8 @@ fn main() -> Result<(), LowessError> {
             .confidence(0.95)
             .prediction(0.95)
             .bootstrap(40)
-            .seed(7)
         )
+        .seed(7)
         .build()?;
     let result = model.fit(&x, &y)?;
 
@@ -275,8 +275,8 @@ fn main() -> Result<(), LowessError> {
         .intervals(IntervalsBuilder::new()
             .confidence(0.95)
             .bootstrap(40)
-            .seed(7)
         )
+        .seed(7)
         .build()?;
     let first = model.process_chunk(&x[..15], &y[..15])?;
     let second = model.process_chunk(&x[15..], &y[15..])?;
@@ -298,15 +298,15 @@ use lowess::prelude::*;
 
 fn main() -> Result<(), LowessError> {
     let mut model = OnlineLowess::new()
-        .update_mode("full")
         .window_capacity(10)
         .min_points(3)
+        .update_mode("full")
         .intervals(IntervalsBuilder::new()
             .confidence(0.95)
             .prediction(0.95)
             .bootstrap(40)
-            .seed(7)
         )
+        .seed(7)
         .build()?;
     for i in 0..12 {
         let x = i as f64 * 0.2;

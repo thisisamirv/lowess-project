@@ -150,6 +150,10 @@ macro_rules! impl_common_builder {
                 self.0 = self.0.auto_converge(tol);
                 self
             }
+            pub fn seed(mut self, seed: u64) -> Self {
+                self.0 = self.0.seed(seed);
+                self
+            }
             pub fn outputs<I, S>(mut self, names: I) -> Self
             where
                 I: IntoIterator<Item = S>,

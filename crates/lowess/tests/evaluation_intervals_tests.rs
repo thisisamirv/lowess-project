@@ -524,12 +524,12 @@ fn test_grouped_intervals_reproduce_seeded_output() {
         Lowess::new()
             .fraction(0.5)
             .iterations(0)
+            .seed(7)
             .intervals(
                 IntervalsBuilder::new()
                     .confidence(0.95)
                     .prediction(0.95)
-                    .bootstrap(40)
-                    .seed(7),
+                    .bootstrap(40),
             )
             .build()
             .unwrap()
@@ -552,7 +552,8 @@ fn test_grouped_intervals_work_in_streaming_and_online() {
     let mut streaming = StreamingLowess::new()
         .chunk_size(15)
         .overlap(2)
-        .intervals(IntervalsBuilder::new().bootstrap(20).seed(7))
+        .seed(7)
+        .intervals(IntervalsBuilder::new().bootstrap(20))
         .build()
         .unwrap();
     let streamed = streaming.process_chunk(&x, &y).unwrap();
@@ -565,12 +566,8 @@ fn test_grouped_intervals_work_in_streaming_and_online() {
     let mut online = OnlineLowess::new()
         .update_mode("full")
         .min_points(3)
-        .intervals(
-            IntervalsBuilder::new()
-                .prediction(0.95)
-                .bootstrap(20)
-                .seed(7),
-        )
+        .seed(7)
+        .intervals(IntervalsBuilder::new().prediction(0.95).bootstrap(20))
         .build()
         .unwrap();
     for (&xi, &yi) in x.iter().zip(&y) {
@@ -641,12 +638,12 @@ fn test_bootstrap_intervals_shape_and_ordering() {
     let res = Lowess::new()
         .fraction(0.3)
         .iterations(0)
+        .seed(7)
         .intervals(
             IntervalsBuilder::new()
                 .confidence(0.95)
                 .prediction(0.95)
-                .bootstrap(200)
-                .seed(7),
+                .bootstrap(200),
         )
         .adapter(Batch)
         .build()
@@ -681,12 +678,8 @@ fn test_bootstrap_is_reproducible_with_seed() {
     let run = |seed| {
         Lowess::new()
             .fraction(0.4)
-            .intervals(
-                IntervalsBuilder::new()
-                    .confidence(0.9)
-                    .bootstrap(50)
-                    .seed(seed),
-            )
+            .seed(seed)
+            .intervals(IntervalsBuilder::new().confidence(0.9).bootstrap(50))
             .adapter(Batch)
             .build()
             .unwrap()
@@ -781,6 +774,7 @@ fn test_bootstrap_online_full_matches_batch_window() {
         .fraction(0.6)
         .iterations(0)
         .delta(0.0)
+        .seed(7)
         .window_capacity(10)
         .min_points(5)
         .update_mode("full")
@@ -788,8 +782,7 @@ fn test_bootstrap_online_full_matches_batch_window() {
             IntervalsBuilder::new()
                 .confidence(0.95)
                 .prediction(0.9)
-                .bootstrap(40)
-                .seed(7),
+                .bootstrap(40),
         )
         .build()
         .unwrap();
@@ -806,12 +799,12 @@ fn test_bootstrap_online_full_matches_batch_window() {
             .fraction(0.6)
             .iterations(0)
             .delta(0.0)
+            .seed(7)
             .intervals(
                 IntervalsBuilder::new()
                     .confidence(0.95)
                     .prediction(0.9)
-                    .bootstrap(40)
-                    .seed(7),
+                    .bootstrap(40),
             )
             .build()
             .unwrap()
@@ -856,7 +849,8 @@ fn test_bootstrap_online_se_without_interval_levels() {
     let mut online = OnlineLowess::new()
         .update_mode("full")
         .min_points(3)
-        .intervals(IntervalsBuilder::new().bootstrap(20).seed(7))
+        .seed(7)
+        .intervals(IntervalsBuilder::new().bootstrap(20))
         .build()
         .unwrap();
     for idx in 0..5 {
@@ -882,6 +876,7 @@ fn test_bootstrap_streaming_matches_combined_batch_windows() {
         .fraction(0.6)
         .iterations(0)
         .delta(0.0)
+        .seed(7)
         .chunk_size(15)
         .overlap(3)
         .merge_strategy("take_last")
@@ -889,8 +884,7 @@ fn test_bootstrap_streaming_matches_combined_batch_windows() {
             IntervalsBuilder::new()
                 .confidence(0.95)
                 .prediction(0.9)
-                .bootstrap(40)
-                .seed(7),
+                .bootstrap(40),
         )
         .build()
         .unwrap();
@@ -904,12 +898,12 @@ fn test_bootstrap_streaming_matches_combined_batch_windows() {
             .fraction(0.6)
             .iterations(0)
             .delta(0.0)
+            .seed(7)
             .intervals(
                 IntervalsBuilder::new()
                     .confidence(0.95)
                     .prediction(0.9)
-                    .bootstrap(40)
-                    .seed(7),
+                    .bootstrap(40),
             )
             .build()
             .unwrap()
@@ -961,7 +955,8 @@ fn test_bootstrap_streaming_se_without_interval_levels() {
     let mut model = StreamingLowess::new()
         .chunk_size(12)
         .overlap(2)
-        .intervals(IntervalsBuilder::new().bootstrap(20).seed(7))
+        .seed(7)
+        .intervals(IntervalsBuilder::new().bootstrap(20))
         .build()
         .unwrap();
     let output = model.process_chunk(&x, &y).unwrap();

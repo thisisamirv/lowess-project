@@ -201,10 +201,10 @@ fn main() -> Result<(), LowessError> {
     let model = Lowess::new()
         .fraction(0.3)
         .iterations(3)
+        .outputs(["diagnostics"])
         .intervals(IntervalsBuilder::new()
             .confidence(0.95)
         )
-        .outputs(["diagnostics"])
         .build()?;
 
     let result = model.fit(&hours, &expression)?;

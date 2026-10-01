@@ -67,21 +67,22 @@ These chained methods configure the builder. They correspond to the "Options Str
 | --- | --- | --- | --- |
 | `fraction(T)` | `T: Float` | `0.67` | Smoothing fraction (bandwidth) |
 | `iterations(usize)` | `usize` | `3` | Number of robustifying iterations |
-| `delta(T)` | `T: Float` | `NaN` | Interpolation distance (`NaN` auto-sets it to 1% of the x-range) |
 | `weight_function(...)` | `weight_function` | `"tricube"` | Weight function |
 | `robustness_method(...)` | `robustness_method` | `"bisquare"` | Robustness method |
-| `scaling_method(...)` | `scaling_method` | `"mad"` | Residual scaling method |
-| `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
+| `delta(T)` | `T: Float` | `NaN` | Interpolation distance (`NaN` auto-sets it to 1% of the x-range) |
 | `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
-| `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
+| `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
+| `scaling_method(...)` | `scaling_method` | `"mad"` | Residual scaling method |
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
-| `intervals(IntervalsBuilder<f64>)` | `IntervalsBuilder<f64>` | disabled | Group confidence, prediction, bootstrap refits, and seed |
-| `outputs([&str])` | `&[&str]` | `[]` | Select optional result components: `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"`, `"se"`, `"sorted"` |
+| `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
 | `parallel(bool)` | `bool` | `true` | Enable parallel execution |
 | `backend(...)` | `Backend` | `CPU` | `fastLowess` only: `CPU` or `GPU` |
-| `cv(CVOptions)` | `CVOptions` | disabled | CV config built with `CVBuilder::new().method("kfold").k(n).fraction(vec![..]).seed(n)` |
-| `custom_weights(Vec<T>)` | `Vec<T: Float>` | `None` | Per-observation weights |
+| `outputs([&str])` | `&[&str]` | `[]` | Select optional result components: `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"`, `"se"`, `"sorted"` |
+| `intervals(IntervalsBuilder<f64>)` | `IntervalsBuilder<f64>` | disabled | Group confidence, prediction, and bootstrap refits |
+| `cv(CVOptions)` | `CVOptions` | disabled | CV config built with `CVBuilder::new().method("kfold").k(n).fraction(vec![..])`; set seed on the outer builder |
+| `seed(u64)` | `u64` | unset | Shared seed for CV folds and bootstrap resampling when enabled |
 | `retain_model(bool)` | `bool` | `false` | Retain training data, enabling `Predict::call()` on the result |
+| `custom_weights(Vec<T>)` | `Vec<T: Float>` | `None` | Per-observation weights |
 
 ## Options
 
@@ -179,7 +180,7 @@ Convergence tolerance for early stopping of robustness iterations. `NaN` (defaul
 
 *See: [Intervals](crate::doc::guide::intervals)*
 
-Use `.intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95).bootstrap(1000).seed(42))` to select confidence and prediction bounds and optionally replace analytic standard errors with residual-bootstrap refits. Calling `.seed(42)` without `.bootstrap(n)` enables 1000 refits; otherwise a fixed default seed is used. `n < 2` returns `InvalidBootstrapSamples`. Batch and Streaming refits run concurrently with `parallel(true)`; Online and GPU Batch refits run sequentially. Online requires `update_mode("full")`.
+Use `.intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95).bootstrap(1000))` to select confidence and prediction bounds and optionally replace analytic standard errors with residual-bootstrap refits. Set `.seed(42)` on `Lowess::new()` to seed both CV and bootstrap. Without it, each feature retains its own default seed; setting a seed alone does not enable bootstrap. `n < 2` returns `InvalidBootstrapSamples`. Batch and Streaming refits run concurrently with `parallel(true)`; Online and GPU Batch refits run sequentially. Online requires `update_mode("full")`.
 
 ### outputs
 
@@ -243,7 +244,7 @@ The `fastLowess` crate provides an optional GPU-accelerated backend using `wgpu`
 - `CVBuilder::new()`: k-fold CV with `k = 5` by default; `.method("loocv")` selects leave-one-out CV.
 - `.k(n)`: Number of folds for k-fold CV; ignored for `"loocv"`.
 - `.fraction(vec![..])`: Candidate fractions to evaluate; required.
-- `.seed(n)`: Seed for reproducible k-fold shuffling; ignored for `"loocv"`.
+- `Lowess::new().seed(n)`: Shared seed for reproducible k-fold shuffling and bootstrap draws; CV ignores it for `"loocv"`.
 
 ### custom_weights
 
