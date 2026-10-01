@@ -1,16 +1,19 @@
 //! Confidence and prediction intervals for LOWESS smoothing.
 //!
 //! This module provides tools for quantifying uncertainty in LOWESS smoothing
-//! through standard errors, confidence intervals, and prediction intervals.
+//! through standard errors, confidence intervals, and prediction intervals,
+//! either analytically (normal theory) or via a residual bootstrap.
 // ## srrstats Compliance
 //
 // @srrstats {RE5.0} Confidence intervals for the mean smoothed function.
 // Prediction intervals for new observations.
 // Acklam's rational approximation for inverse normal CDF (z-scores).
+// Residual-bootstrap percentile intervals and bootstrap standard errors.
 
 // External dependencies
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+use core::cmp::Ordering;
 use num_traits::Float;
 #[cfg(feature = "std")]
 use std::vec::Vec;
@@ -504,4 +507,195 @@ impl<T: Float> IntervalMethod<T> {
             num / den
         }
     }
+}
+
+// Residual bootstrap
+
+// Seed used when none is supplied, so bootstrap output is reproducible by default.
+pub const DEFAULT_BOOTSTRAP_SEED: u64 = 0x5EED_B007;
+
+// Minimum number of bootstrap replicates (needed for a sample standard deviation).
+pub const MIN_BOOTSTRAP_SAMPLES: usize = 2;
+
+// Replicate count used when only `bootstrap_seed()` is called.
+pub const DEFAULT_BOOTSTRAP_SAMPLES: usize = 1000;
+
+// Replicates handed to the refit callback at once (bounds memory, gives parallel passes work).
+pub const BOOTSTRAP_BATCH_SIZE: usize = 256;
+
+// Minimal no-std PRNG (64-bit LCG) for bootstrap resampling.
+#[derive(Debug, Clone)]
+struct SimpleRng {
+    state: u64,
+}
+
+impl SimpleRng {
+    fn new(seed: u64) -> Self {
+        Self { state: seed }
+    }
+
+    fn next_u32(&mut self) -> u32 {
+        self.state = self.state.wrapping_mul(6364136223846793005).wrapping_add(1);
+        (self.state >> 32) as u32
+    }
+
+    // Uniform index in `0..n` (Lemire multiply-shift; bias is negligible for n << 2^32).
+    fn next_index(&mut self, n: usize) -> usize {
+        ((self.next_u32() as u64 * n as u64) >> 32) as usize
+    }
+}
+
+// Residual-bootstrap configuration.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct BootstrapConfig {
+    // Number of bootstrap replicates (refits).
+    pub n_boot: usize,
+
+    // PRNG seed; `None` uses `DEFAULT_BOOTSTRAP_SEED`.
+    pub seed: Option<u64>,
+}
+
+// Bootstrap standard errors and percentile intervals (all in the fit's point order).
+#[derive(Debug, Clone)]
+pub struct BootstrapOutput<T> {
+    pub std_errors: Vec<T>,
+    pub confidence_lower: Option<Vec<T>>,
+    pub confidence_upper: Option<Vec<T>>,
+    pub prediction_lower: Option<Vec<T>>,
+    pub prediction_upper: Option<Vec<T>>,
+}
+
+impl BootstrapConfig {
+    // Run the residual bootstrap.
+    //
+    // For each replicate `b`, builds `y*_i = y_hat_i + e*_i` with `e*` drawn with
+    // replacement from the centered residuals, and refits via `refit` (same x, same
+    // smoothing configuration), which receives up to `BOOTSTRAP_BATCH_SIZE` replicates
+    // at a time and returns one fit per replicate. Then, per point:
+    // - SE = sample SD of the replicate fits `y_hat*_b`;
+    // - CI = percentile interval of `y_hat*_b`;
+    // - PI = percentile interval of `y_hat*_b + e**_b` (a fresh residual draw), which
+    //   combines estimation uncertainty with the empirical (non-normal) noise.
+    pub fn compute<T, F>(
+        &self,
+        method: &IntervalMethod<T>,
+        y_smooth: &[T],
+        residuals: &[T],
+        mut refit: F,
+    ) -> Result<BootstrapOutput<T>, LowessError>
+    where
+        T: Float,
+        F: FnMut(&[Vec<T>]) -> Result<Vec<Vec<T>>, LowessError>,
+    {
+        if self.n_boot < MIN_BOOTSTRAP_SAMPLES {
+            return Err(LowessError::InvalidBootstrapSamples(self.n_boot));
+        }
+
+        let n = y_smooth.len();
+        let b = self.n_boot;
+        let mut rng = SimpleRng::new(self.seed.unwrap_or(DEFAULT_BOOTSTRAP_SEED));
+
+        let n_t = T::from(n).unwrap();
+        let mean_r = residuals.iter().fold(T::zero(), |acc, &r| acc + r) / n_t;
+        let centered: Vec<T> = residuals.iter().map(|&r| r - mean_r).collect();
+
+        // Point-major layout (`fits[i * b + k]`) so each point's replicates are contiguous.
+        let mut fits: Vec<T> = Vec::new();
+        fits.resize(n * b, T::zero());
+
+        // Draws happen here, in replicate order, so results don't depend on how `refit` schedules work.
+        let mut done = 0;
+        while done < b {
+            let len = BOOTSTRAP_BATCH_SIZE.min(b - done);
+            let batch: Vec<Vec<T>> = (0..len)
+                .map(|_| {
+                    y_smooth
+                        .iter()
+                        .map(|&yh| yh + centered[rng.next_index(n)])
+                        .collect()
+                })
+                .collect();
+            let batch_fits = refit(&batch)?;
+            for (j, fit) in batch_fits.iter().enumerate().take(len) {
+                for (i, &f) in fit.iter().enumerate().take(n) {
+                    fits[i * b + done + j] = f;
+                }
+            }
+            done += len;
+        }
+
+        let half_alpha = (T::one() - method.level) / T::from(2.0).unwrap();
+        let q_lo = half_alpha;
+        let q_hi = T::one() - half_alpha;
+        let b_t = T::from(b).unwrap();
+
+        let mut std_errors = Vec::with_capacity(n);
+        let (mut cl, mut cu) = (Vec::new(), Vec::new());
+        let (mut pl, mut pu) = (Vec::new(), Vec::new());
+        let mut pred: Vec<T> = Vec::new();
+        if method.prediction {
+            pred.resize(b, T::zero());
+        }
+
+        for i in 0..n {
+            let col = &mut fits[i * b..(i + 1) * b];
+
+            let mean = col.iter().fold(T::zero(), |acc, &v| acc + v) / b_t;
+            let ss = col
+                .iter()
+                .fold(T::zero(), |acc, &v| acc + (v - mean) * (v - mean));
+            std_errors.push((ss / (b_t - T::one())).sqrt());
+
+            if method.prediction {
+                for (p, &f) in pred.iter_mut().zip(col.iter()) {
+                    *p = f + centered[rng.next_index(n)];
+                }
+                sort_floats(&mut pred);
+                pl.push(quantile_sorted(&pred, q_lo));
+                pu.push(quantile_sorted(&pred, q_hi));
+            }
+
+            if method.confidence {
+                sort_floats(col);
+                cl.push(quantile_sorted(col, q_lo));
+                cu.push(quantile_sorted(col, q_hi));
+            }
+        }
+
+        let (confidence_lower, confidence_upper) = if method.confidence {
+            (Some(cl), Some(cu))
+        } else {
+            (None, None)
+        };
+        let (prediction_lower, prediction_upper) = if method.prediction {
+            (Some(pl), Some(pu))
+        } else {
+            (None, None)
+        };
+
+        Ok(BootstrapOutput {
+            std_errors,
+            confidence_lower,
+            confidence_upper,
+            prediction_lower,
+            prediction_upper,
+        })
+    }
+}
+
+fn sort_floats<T: Float>(v: &mut [T]) {
+    v.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+}
+
+// Linearly interpolated quantile of sorted data (Hyndman & Fan type 7, R's default).
+fn quantile_sorted<T: Float>(sorted: &[T], q: T) -> T {
+    let n = sorted.len();
+    if n == 1 {
+        return sorted[0];
+    }
+    let h = q * T::from(n - 1).unwrap();
+    let lo = h.floor().to_usize().unwrap_or(0).min(n - 1);
+    let hi = (lo + 1).min(n - 1);
+    let frac = h - T::from(lo).unwrap();
+    sorted[lo] + frac * (sorted[hi] - sorted[lo])
 }

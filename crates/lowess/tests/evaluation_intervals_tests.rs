@@ -7,6 +7,7 @@
 //! - Prediction intervals
 //! - Z-score approximation
 //! - Interval validation
+//! - Residual-bootstrap standard errors and intervals
 //!
 //! ## Test Organization
 //!
@@ -19,6 +20,7 @@
 use approx::assert_relative_eq;
 use lowess::prelude::*;
 
+use lowess::internals::api::{Batch, Online, Streaming};
 use lowess::internals::engine::validator::Validator;
 use lowess::internals::evaluation::intervals::IntervalMethod;
 use lowess::internals::primitives::errors::LowessError;
@@ -506,4 +508,175 @@ fn test_intervals_degenerate_se() {
     // Width should be clamped to EPS
     assert!(cuv[0] > clv[0]);
     assert_relative_eq!(cuv[0] - clv[0], 1e-12, epsilon = 1e-15);
+}
+
+// ============================================================================
+// Residual Bootstrap Tests
+// ============================================================================
+
+fn noisy_sine(n: usize, skewed: bool) -> (Vec<f64>, Vec<f64>) {
+    let mut state: u64 = 12345;
+    let mut uniform = || {
+        state = state
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
+        ((state >> 11) as f64) / ((1u64 << 53) as f64)
+    };
+    let x: Vec<f64> = (0..n).map(|i| i as f64 / n as f64 * 6.0).collect();
+    let y = x
+        .iter()
+        .map(|&xi| {
+            let u: f64 = uniform().max(1e-12);
+            // Exponential(1) - 1 is mean-zero and right-skewed; uniform is symmetric.
+            let e = if skewed { -u.ln() - 1.0 } else { u - 0.5 };
+            xi.sin() + 0.3 * e
+        })
+        .collect();
+    (x, y)
+}
+
+/// Bootstrap SEs and intervals have the right length, are finite, and nest (PI contains CI).
+#[test]
+fn test_bootstrap_intervals_shape_and_ordering() {
+    let (x, y) = noisy_sine(120, false);
+    let res = Lowess::new()
+        .fraction(0.3)
+        .iterations(0)
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.95)
+        .bootstrap_intervals(200)
+        .bootstrap_seed(7)
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let se = res.standard_errors.as_ref().unwrap();
+    let (cl, cu) = (
+        res.confidence_lower.as_ref().unwrap(),
+        res.confidence_upper.as_ref().unwrap(),
+    );
+    let (pl, pu) = (
+        res.prediction_lower.as_ref().unwrap(),
+        res.prediction_upper.as_ref().unwrap(),
+    );
+    assert_eq!(se.len(), x.len());
+    for i in 0..x.len() {
+        assert!(se[i] > 0.0 && se[i].is_finite());
+        assert!(cl[i] < cu[i]);
+        assert!(
+            pl[i] <= cl[i] && cu[i] <= pu[i],
+            "PI should contain CI at {i}"
+        );
+    }
+}
+
+/// The same seed reproduces the intervals; a different seed does not.
+#[test]
+fn test_bootstrap_is_reproducible_with_seed() {
+    let (x, y) = noisy_sine(80, false);
+    let run = |seed| {
+        Lowess::new()
+            .fraction(0.4)
+            .confidence_intervals(0.9)
+            .bootstrap_intervals(50)
+            .bootstrap_seed(seed)
+            .adapter(Batch)
+            .build()
+            .unwrap()
+            .fit(&x, &y)
+            .unwrap()
+            .confidence_lower
+            .unwrap()
+    };
+    assert_eq!(run(1), run(1));
+    assert_ne!(run(1), run(2));
+}
+
+/// Bootstrap SEs agree in magnitude with the analytic ones on symmetric noise.
+#[test]
+fn test_bootstrap_se_matches_analytic_magnitude() {
+    let (x, y) = noisy_sine(200, false);
+    let fit = |boot: bool| {
+        let b = Lowess::new().fraction(0.3).iterations(0).return_se();
+        let b = if boot { b.bootstrap_intervals(400) } else { b };
+        b.adapter(Batch)
+            .build()
+            .unwrap()
+            .fit(&x, &y)
+            .unwrap()
+            .standard_errors
+            .unwrap()
+    };
+    let (analytic, boot) = (fit(false), fit(true));
+    let mean = |v: &[f64]| v.iter().sum::<f64>() / v.len() as f64;
+    let ratio = mean(&boot) / mean(&analytic);
+    assert!(
+        (0.5..2.0).contains(&ratio),
+        "bootstrap/analytic SE ratio {ratio} out of range"
+    );
+}
+
+/// Right-skewed noise produces a longer upper prediction-interval tail.
+#[test]
+fn test_bootstrap_prediction_interval_reflects_skew() {
+    let (x, y) = noisy_sine(300, true);
+    let res = Lowess::new()
+        .fraction(0.3)
+        .iterations(0)
+        .prediction_intervals(0.9)
+        .bootstrap_intervals(300)
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    let (pl, pu) = (res.prediction_lower.unwrap(), res.prediction_upper.unwrap());
+    let upper: f64 = pu.iter().zip(&res.y).map(|(u, f)| u - f).sum();
+    let lower: f64 = res.y.iter().zip(&pl).map(|(f, l)| f - l).sum();
+    assert!(
+        upper > lower,
+        "right-skewed noise should give a longer upper PI tail ({upper} vs {lower})"
+    );
+}
+
+/// Fewer than 2 bootstrap replicates is rejected at build time.
+#[test]
+fn test_bootstrap_invalid_sample_count() {
+    let err = Lowess::<f64>::new()
+        .bootstrap_intervals(1)
+        .adapter(Batch)
+        .build()
+        .err();
+    assert_eq!(err, Some(LowessError::InvalidBootstrapSamples(1)));
+}
+
+/// Streaming and Online do not support the bootstrap.
+#[test]
+fn test_bootstrap_rejected_on_streaming_and_online() {
+    let s = Lowess::<f64>::new()
+        .bootstrap_intervals(10)
+        .adapter(Streaming)
+        .build()
+        .err();
+    assert!(matches!(
+        s,
+        Some(LowessError::UnsupportedFeature {
+            adapter: "Streaming",
+            ..
+        })
+    ));
+    let o = Lowess::<f64>::new()
+        .bootstrap_intervals(10)
+        .adapter(Online)
+        .build()
+        .err();
+    assert!(matches!(
+        o,
+        Some(LowessError::UnsupportedFeature {
+            adapter: "Online",
+            ..
+        })
+    ));
 }

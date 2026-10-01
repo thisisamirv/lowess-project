@@ -28,7 +28,7 @@
 //!   - [Choosing an Adapter](doc::guide::adapter_choice)
 #![cfg_attr(feature = "gpu", doc = "  - [GPU Backend](doc::advanced::gpu_backend)")]
 //! - **Analysis**
-//!   - [Intervals](doc::guide::intervals)
+//!   - [Intervals](doc::guide::intervals) (analytic, or residual-bootstrap via `.bootstrap_intervals()`)
 //!   - [Cross-Validation](doc::guide::cross_validation)
 //!   - [Prediction](doc::guide::predict)
 //! - **Customization**
@@ -118,6 +118,8 @@
 //!     ])
 //!     .confidence_intervals(0.95)                      // 95% confidence intervals
 //!     .prediction_intervals(0.95)                      // 95% prediction intervals
+//!     .bootstrap_intervals(1000)                       // Residual bootstrap instead of analytic intervals
+//!     .bootstrap_seed(42)                              // Seed for reproducible bootstrap intervals
 //!     .retain_model(true)                              // Retain state for out-of-sample predict()
 //!     .cv(
 //!         CVBuilder::method("kfold").                 // Cross-validation method: "kfold" or "loocv"

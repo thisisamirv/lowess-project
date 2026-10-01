@@ -75,6 +75,8 @@ Standard LOWESS is sensitive to outliers. **Robustness iterations** downweight p
 - Use **confidence intervals** to show where the true trend likely lies
 - Use **prediction intervals** to show where new data points might fall
 
+Those bands are analytic (normal-theory) by default. `.bootstrap_intervals()` replaces them with a residual bootstrap when that assumption is doubtful. Bootstrap is Batch only; see [Intervals](crate::doc::guide::intervals).
+
 ---
 
 ## Execution Modes

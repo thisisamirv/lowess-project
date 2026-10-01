@@ -18,7 +18,7 @@ use crate::engine::gpu::{cross_validate_gpu, fit_pass_gpu};
 #[cfg(feature = "cpu")]
 use crate::evaluation::cv::cv_pass_parallel;
 #[cfg(feature = "cpu")]
-use crate::evaluation::intervals::interval_pass_parallel;
+use crate::evaluation::intervals::{bootstrap_pass_parallel, interval_pass_parallel};
 use crate::input::LowessInput;
 
 // External dependencies
@@ -130,6 +130,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelBatchLowess<T
                         builder.custom_interval_pass = Some(interval_pass_parallel);
                         builder.custom_predict_pass = Some(predict_pass_parallel);
                         builder.custom_derivative_pass = Some(derivative_pass_parallel);
+                        builder.custom_bootstrap_pass = Some(bootstrap_pass_parallel);
                     } else {
                         // Resets - though they are None by default
                         // but explicitly clearing just in case
@@ -138,6 +139,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelBatchLowess<T
                         builder.custom_interval_pass = None;
                         builder.custom_predict_pass = None;
                         builder.custom_derivative_pass = None;
+                        builder.custom_bootstrap_pass = None;
                     }
                 }
                 #[cfg(not(feature = "cpu"))]
@@ -148,6 +150,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelBatchLowess<T
                     builder.custom_interval_pass = None;
                     builder.custom_predict_pass = None;
                     builder.custom_derivative_pass = None;
+                    builder.custom_bootstrap_pass = None;
                 }
             }
             Backend::GPU => {
@@ -156,6 +159,8 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelBatchLowess<T
                     builder.custom_fit_pass = Some(fit_pass_gpu);
                     builder.custom_cv_pass = Some(cross_validate_gpu);
                     builder.delegate_boundary_handling = true;
+                    // Replicates share the single GPU device, so they refit one at a time.
+                    builder.custom_bootstrap_pass = None;
                 }
                 #[cfg(not(feature = "gpu"))]
                 {

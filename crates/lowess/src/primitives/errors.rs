@@ -56,6 +56,9 @@ pub enum LowessError {
     // Interval coverage level must be strictly between 0 and 1.
     InvalidIntervals(f64),
 
+    // Number of bootstrap replicates must be at least 2.
+    InvalidBootstrapSamples(usize),
+
     // Convergence tolerance must be positive and finite.
     InvalidTolerance(f64),
 
@@ -200,6 +203,9 @@ impl Display for LowessError {
             }
             Self::InvalidIntervals(level) => {
                 write!(f, "Invalid interval level: {level} (must be > 0 and < 1)")
+            }
+            Self::InvalidBootstrapSamples(n) => {
+                write!(f, "Invalid bootstrap sample count: {n} (must be >= 2)")
             }
             Self::InvalidTolerance(tol) => {
                 write!(f, "Invalid tolerance: {tol} (must be > 0 and finite)")

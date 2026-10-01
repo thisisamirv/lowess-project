@@ -6,19 +6,27 @@
 // ## srrstats Compliance
 //
 // @srrstats {RE5.0} Parallel SE computation for confidence/prediction intervals.
-// @srrstats {G3.0} Rayon par_iter for pointwise interval estimation.
+// @srrstats {G3.0} Rayon par_iter for pointwise interval estimation and bootstrap refits.
 
 // External dependencies
 #[cfg(feature = "cpu")]
 use num_traits::Float;
 #[cfg(feature = "cpu")]
 use rayon::prelude::*;
+#[cfg(feature = "cpu")]
+use std::fmt::Debug;
 
 // Export dependencies from lowess crate
+#[cfg(feature = "cpu")]
+use lowess::internals::algorithms::regression::WLSSolver;
+#[cfg(feature = "cpu")]
+use lowess::internals::engine::executor::{LowessConfig, LowessExecutor};
 #[cfg(feature = "cpu")]
 use lowess::internals::evaluation::intervals::IntervalMethod;
 #[cfg(feature = "cpu")]
 use lowess::internals::math::kernel::WeightFunction;
+#[cfg(feature = "cpu")]
+use lowess::internals::primitives::errors::LowessError;
 #[cfg(feature = "cpu")]
 use lowess::internals::primitives::window::Window;
 
@@ -104,5 +112,30 @@ where
 
             IntervalMethod::compute_se(sum_w, sum_w_r2, s1, s2, t0, t1, t2)
         })
+        .collect()
+}
+
+// Refit residual-bootstrap replicates in parallel (one replicate per task).
+#[cfg(feature = "cpu")]
+pub fn bootstrap_pass_parallel<T>(
+    x: &[T],
+    replicates: &[Vec<T>],
+    config: &LowessConfig<T>,
+) -> Result<Vec<Vec<T>>, LowessError>
+where
+    T: Float + WLSSolver + Debug + Send + Sync + 'static,
+{
+    // Parallelism is across replicates, so each refit runs its own passes sequentially.
+    let mut refit = config.clone();
+    refit.parallel = false;
+    refit.custom_smooth_pass = None;
+    refit.custom_cv_pass = None;
+    refit.custom_interval_pass = None;
+    refit.custom_derivative_pass = None;
+    refit.custom_predict_pass = None;
+
+    replicates
+        .par_iter()
+        .map(|y_star| LowessExecutor::run_with_config(x, y_star, refit.clone()).map(|r| r.smoothed))
         .collect()
 }

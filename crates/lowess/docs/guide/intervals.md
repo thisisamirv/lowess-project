@@ -8,7 +8,7 @@ Confidence and prediction intervals for uncertainty quantification.
 ![Confidence and Prediction Intervals](https://raw.githubusercontent.com/thisisamirv/lowess-project/main/crates/lowess/assets/diagrams/intervals_comparison.svg)
 
 !!! note "Adapter support"
-    Confidence and prediction intervals are available in **Batch** mode, **Streaming** mode (computed per chunk and merged across overlap boundaries via `merge_strategy`, like `y`/`derivative`), and **Online** mode when `update_mode("full")` is set (`.build()` errors if combined with the default `"incremental"` mode).
+    Analytic confidence and prediction intervals are available in **Batch** mode, **Streaming** mode (computed per chunk and merged across overlap boundaries via `merge_strategy`, like `y`/`derivative`), and **Online** mode when `update_mode("full")` is set (`.build()` errors if combined with the default `"incremental"` mode). Residual-bootstrap intervals (`.bootstrap_intervals()`) are **Batch only**.
 
 | Type | Represents | Width | Use |
 | --- | --- | --- | --- |
@@ -197,13 +197,66 @@ Point 2: SE = 0.0258
 
 ---
 
+## Bootstrap Intervals
+
+The intervals above are analytic: a local-linear standard error times a normal z-score. That assumes roughly normal residuals. `.bootstrap_intervals(n_boot)` replaces it with a residual bootstrap (Batch only), which does not:
+
+1. Fit once, and center the residuals.
+2. Refit `n_boot` times on `y_hat + residuals drawn with replacement` (same `x` and smoothing settings; cross-validation is not repeated).
+3. Per point, the standard error is the sample standard deviation of those refits. A confidence interval is their percentile interval. A prediction interval is the percentile interval of each refit plus a freshly drawn residual, so skewed noise produces an asymmetric tail.
+
+`.bootstrap_seed(seed)` fixes the draws. If omitted, a fixed default seed is used, so results are reproducible either way. Fewer than 2 replicates is rejected at `.build()` as `InvalidBootstrapSamples`. Streaming and Online reject bootstrap with `UnsupportedFeature`.
+
+Each replicate is a full refit, so this is much slower than the analytic intervals. It also replaces `result.standard_errors` when `"se"` or an interval was requested.
+
+```rust
+use lowess::prelude::*;
+
+fn main() -> Result<(), LowessError> {
+    let n = 40usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|xi| xi.sin()).collect();
+
+    let model = Lowess::new()
+        .fraction(0.5)
+        .iterations(0)
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.95)
+        .bootstrap_intervals(40)
+        .bootstrap_seed(7)
+        .build()?;
+    let result = model.fit(&x, &y)?;
+
+    let (lo, hi) = (
+        &result.confidence_lower.unwrap(),
+        &result.confidence_upper.unwrap(),
+    );
+    let (plo, phi) = (
+        &result.prediction_lower.unwrap(),
+        &result.prediction_upper.unwrap(),
+    );
+    println!(
+        "x={:.0}: y={:.2} CI [{:.2}, {:.2}] PI [{:.2}, {:.2}]",
+        result.x[0], result.y[0], lo[0], hi[0], plo[0], phi[0]
+    );
+    Ok(())
+}
+```
+
+```output
+x=0: y=0.07 CI [-0.53, 0.66] PI [-1.14, 1.08]
+```
+
+---
+
 ## Availability
 
-!!! note "Supported In All Three Adapters"
-    Confidence and prediction intervals are available in **Batch**, **Streaming** (see [Streaming Adapter](crate::doc::api::streaming)), and **Online** mode (`update_mode("full")` only — see [Online Adapter](crate::doc::api::online)).
+!!! note "Analytic intervals in all three adapters"
+    Analytic confidence and prediction intervals are available in **Batch**, **Streaming** (see [Streaming Adapter](crate::doc::api::streaming)), and **Online** mode (`update_mode("full")` only — see [Online Adapter](crate::doc::api::online)). Residual-bootstrap intervals are Batch only.
 
 | Feature | Batch | Streaming | Online |
 | --- | --- | --- | --- |
 | Confidence intervals | ✓ | ✓ | ✓ (`update_mode("full")` only) |
 | Prediction intervals | ✓ | ✓ | ✓ (`update_mode("full")` only) |
 | Standard errors | ✓ | ✓ | ✓ (`update_mode("full")` only) |
+| Residual bootstrap | ✓ | — | — |

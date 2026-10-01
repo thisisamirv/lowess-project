@@ -93,6 +93,13 @@ pub type DerivativePassFn<T> = fn(
     Option<&[T]>,   // custom_weights
 ) -> Vec<T>; // derivative
 
+// Signature for custom bootstrap refit pass function
+pub type BootstrapPassFn<T> = fn(
+    &[T],             // x
+    &[Vec<T>],        // resampled y replicates
+    &LowessConfig<T>, // config for the refits
+) -> Result<Vec<Vec<T>>, LowessError>; // smoothed fit per replicate
+
 // Result tuple from an iteration loop or fit pass.
 #[allow(clippy::type_complexity)]
 pub type IterationResult<T> = (

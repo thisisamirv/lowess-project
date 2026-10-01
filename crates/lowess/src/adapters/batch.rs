@@ -23,7 +23,7 @@ use crate::algorithms::interpolation::calculate_delta;
 use crate::algorithms::regression::{WLSSolver, ZeroWeightFallback};
 use crate::algorithms::robustness::RobustnessMethod;
 use crate::engine::executor::{
-    CVPassFn, DerivativePassFn, FitPassFn, IntervalPassFn, SmoothPassFn,
+    BootstrapPassFn, CVPassFn, DerivativePassFn, FitPassFn, IntervalPassFn, SmoothPassFn,
 };
 use crate::engine::executor::{LowessConfig, LowessExecutor};
 use crate::engine::output::LowessResult;
@@ -31,7 +31,7 @@ use crate::engine::predict::PredictPassFn;
 use crate::engine::validator::{MissingPolicy, Validator};
 use crate::evaluation::cv::CVKind;
 use crate::evaluation::diagnostics::Diagnostics;
-use crate::evaluation::intervals::IntervalMethod;
+use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod, MIN_BOOTSTRAP_SAMPLES};
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
 use crate::math::kernel::WeightFunction;
@@ -60,6 +60,9 @@ pub struct BatchLowessBuilder<T: Float> {
 
     // Confidence/Prediction interval configuration
     pub interval_type: Option<IntervalMethod<T>>,
+
+    // Use residual-bootstrap SEs/intervals instead of the analytic ones.
+    pub bootstrap: Option<BootstrapConfig>,
 
     // Fractions for cross-validation
     pub cv_fractions: Option<Vec<T>>,
@@ -142,6 +145,9 @@ pub struct BatchLowessBuilder<T: Float> {
 
     // Custom (e.g. parallel) predict pass function.
     pub custom_predict_pass: Option<PredictPassFn<T>>,
+
+    // Custom (e.g. parallel) bootstrap refit pass function.
+    pub custom_bootstrap_pass: Option<BootstrapPassFn<T>>,
 }
 
 impl<T: Float> Default for BatchLowessBuilder<T> {
@@ -160,6 +166,7 @@ impl<T: Float> BatchLowessBuilder<T> {
             weight_function: DEFAULT_WEIGHT_FUNCTION_ENUM,
             robustness_method: DEFAULT_ROBUSTNESS_METHOD_ENUM,
             interval_type: None,
+            bootstrap: None,
             cv_fractions: None,
             cv_kind: None,
             cv_seed: DEFAULT_CV_SEED,
@@ -186,6 +193,7 @@ impl<T: Float> BatchLowessBuilder<T> {
             custom_weights: None,
             retain_model: DEFAULT_RETAIN_MODEL,
             custom_predict_pass: None,
+            custom_bootstrap_pass: None,
         }
     }
 
@@ -212,6 +220,11 @@ impl<T: Float> BatchLowessBuilder<T> {
         // Validate interval type
         if let Some(ref method) = self.interval_type {
             Validator::validate_interval_level(method.level)?;
+        }
+        if let Some(bc) = self.bootstrap
+            && bc.n_boot < MIN_BOOTSTRAP_SAMPLES
+        {
+            return Err(LowessError::InvalidBootstrapSamples(bc.n_boot));
         }
 
         // Validate CV fractions and method
@@ -277,6 +290,11 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
 
         let zw_flag: u8 = self.config.zero_weight_fallback.to_u8();
 
+        let bootstrap = self
+            .config
+            .bootstrap
+            .filter(|_| self.config.interval_type.is_some());
+
         // Configure batch execution
         let config = LowessConfig {
             fraction: Some(self.config.fraction),
@@ -288,7 +306,12 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
             cv_fractions: self.config.cv_fractions,
             cv_kind: self.config.cv_kind,
             auto_converge: self.config.auto_converge,
-            return_variance: self.config.interval_type,
+            // Bootstrap replaces the analytic SE pass entirely.
+            return_variance: if bootstrap.is_some() {
+                None
+            } else {
+                self.config.interval_type
+            },
             boundary_policy: self.config.boundary_policy,
             scaling_method: self.config.scaling_method,
             return_derivative: self.config.return_derivative,
@@ -309,11 +332,21 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
             custom_predict_pass: self.config.custom_predict_pass,
         };
 
+        // Refit config for bootstrap replicates: same smoother, CV-selected fraction fixed later.
+        let boot_base = bootstrap.map(|_| {
+            let mut c = config.clone();
+            c.cv_fractions = None;
+            c.cv_kind = None;
+            c.return_derivative = false;
+            c.retain_model = false;
+            c
+        });
+
         // Execute unified LOWESS
         let result = LowessExecutor::run_with_config(&sorted.x, &sorted.y, config)?;
 
         let y_smooth = result.smoothed;
-        let std_errors = result.std_errors;
+        let mut std_errors = result.std_errors;
         let iterations_used = result.iterations;
         let fraction_used = result.used_fraction;
         let cv_scores = result.cv_scores;
@@ -329,6 +362,26 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
                 .zip(y_smooth.iter())
                 .map(|(&orig, &smoothed_val)| orig - smoothed_val)
                 .collect()
+        };
+
+        let boot_out = match (bootstrap, boot_base, &self.config.interval_type) {
+            (Some(bc), Some(mut base), Some(method)) => {
+                base.fraction = Some(fraction_used);
+                let pass = self.config.custom_bootstrap_pass;
+                let out = bc.compute(method, &y_smooth, &residuals, |replicates| match pass {
+                    Some(p) => p(&sorted.x, replicates, &base),
+                    None => replicates
+                        .iter()
+                        .map(|y_star| {
+                            LowessExecutor::run_with_config(&sorted.x, y_star, base.clone())
+                                .map(|r| r.smoothed)
+                        })
+                        .collect(),
+                })?;
+                std_errors = Some(out.std_errors.clone());
+                Some(out)
+            }
+            _ => None,
         };
 
         // Get robustness weights from executor result (final iteration weights)
@@ -352,8 +405,14 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
 
         // Compute intervals
         let (conf_lower, conf_upper, pred_lower, pred_upper) =
-            match (&self.config.interval_type, &std_errors) {
-                (Some(method), Some(se)) => {
+            match (&self.config.interval_type, &std_errors, boot_out) {
+                (_, _, Some(b)) => (
+                    b.confidence_lower,
+                    b.confidence_upper,
+                    b.prediction_lower,
+                    b.prediction_upper,
+                ),
+                (Some(method), Some(se), None) => {
                     // Check if result already has computed intervals (e.g. from GPU)
                     if result.confidence_lower.is_some() || result.prediction_lower.is_some() {
                         (

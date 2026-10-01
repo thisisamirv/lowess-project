@@ -5,6 +5,10 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ## \[Unreleased\]
 
+### Added
+
+* Added residual-bootstrap standard errors and percentile confidence/prediction intervals via `.bootstrap_intervals(n_boot)` and `.bootstrap_seed(seed)` (Batch only). With `parallel(true)` the refits run concurrently and match a sequential run. Streaming and Online reject them at `.build()`.
+
 ### Changed
 
 * Breaking change: replaced individual `return_*` and `cv_*` options with grouped `.outputs([...])` and `.cv(CVBuilder...)` configuration.

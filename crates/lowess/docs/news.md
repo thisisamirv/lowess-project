@@ -10,6 +10,7 @@ This changelog includes end-user changes only. For internal development notes, s
 * Added `LowessBuilder::outputs(names)` as a grouped replacement for the individual output toggles. Unknown names are collected and reported together by `.build()`.
 * Added grouped cross-validation configuration through `CVBuilder` and `.cv(...)`.
 * Added `PredictBuilder::outputs(names)` to group prediction outputs such as standard errors and derivatives.
+* Added residual-bootstrap standard errors and percentile confidence/prediction intervals via `.bootstrap_intervals(n_boot)` and `.bootstrap_seed(seed)` (Batch only). Streaming and Online reject them at `.build()`.
 
 ### Changed
 

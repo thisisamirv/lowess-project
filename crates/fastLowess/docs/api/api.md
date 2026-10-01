@@ -77,6 +77,8 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
 | `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95) |
 | `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95) |
+| `bootstrap_intervals(usize)` | `usize` | disabled | Residual-bootstrap replicates; replaces the analytic SEs/intervals (Batch only; parallel refits when `parallel` is on) |
+| `bootstrap_seed(u64)` | `u64` | fixed default | Resampling seed for `bootstrap_intervals` |
 | `outputs([&str])` | `&[&str]` | `[]` | Select optional result components: `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"`, `"se"`, `"sorted"` |
 | `parallel(bool)` | `bool` | `true` | Enable parallel execution |
 | `backend(...)` | `Backend` | `CPU` | `fastLowess` only: `CPU` or `GPU` |
@@ -187,6 +189,16 @@ Confidence level for the confidence interval around the mean response (e.g. `0.9
 *See: [Intervals](crate::doc::guide::intervals)*
 
 Confidence level for the prediction interval for new observations (e.g. `0.95`). `NaN` (default) disables prediction intervals.
+
+### bootstrap_intervals
+
+*See: [Intervals](crate::doc::guide::intervals)*
+
+Number of residual-bootstrap refits used instead of the analytic normal-theory standard errors and intervals. Batch only: Streaming and Online reject it at `.build()` with `UnsupportedFeature`. Values below 2 are `InvalidBootstrapSamples`. If no interval type was set, this also enables standard errors. Off by default. With `parallel(true)` (the default) the refits run concurrently and match a sequential run; GPU and `parallel(false)` refit one replicate at a time.
+
+### bootstrap_seed
+
+Seed for bootstrap resampling. A fixed default is used when omitted, so bootstrap output is reproducible either way. Calling this without `bootstrap_intervals` enables the bootstrap with 1000 replicates.
 
 ### outputs
 

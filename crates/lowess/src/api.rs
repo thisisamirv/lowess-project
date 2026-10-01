@@ -28,7 +28,7 @@ use crate::adapters::streaming::StreamingLowessBuilder;
 use crate::engine::executor::{CVPassFn, IntervalPassFn, SmoothPassFn};
 use crate::engine::predict::{ExtrapolationPolicy, PredictPassFn};
 use crate::evaluation::cv::CVKind;
-use crate::evaluation::intervals::IntervalMethod;
+use crate::evaluation::intervals::{BootstrapConfig, DEFAULT_BOOTSTRAP_SAMPLES, IntervalMethod};
 use crate::primitives::backend::Backend;
 
 // Publicly re-exported types
@@ -199,6 +199,9 @@ pub struct LowessBuilder<T, Mode = BatchMode> {
     // interval estimation configuration.
     pub interval_type: Option<IntervalMethod<T>>,
 
+    // Residual-bootstrap SEs/intervals instead of analytic ones (Batch only).
+    pub bootstrap: Option<BootstrapConfig>,
+
     // Candidate bandwidths for cross-validation.
     pub cv_fractions: Option<Vec<T>>,
 
@@ -332,6 +335,7 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
             robustness_method: None,
             scaling_method: None,
             interval_type: None,
+            bootstrap: None,
             cv_fractions: None,
             cv_kind: None,
             cv_method_str: None,
@@ -552,6 +556,40 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
             },
             _ => IntervalMethod::prediction(level),
         });
+        self
+    }
+
+    // Compute standard errors and any requested confidence/prediction intervals by a
+    // residual bootstrap with `n_boot` refits (percentile intervals) instead of the
+    // analytic normal-theory formulas (Batch only). Useful when residuals are skewed or
+    // heavy-tailed; costs `n_boot` extra fits. Enables standard errors if no interval
+    // type was requested.
+    pub fn bootstrap_intervals(mut self, n_boot: usize) -> Self {
+        if self.bootstrap.is_some() {
+            self.duplicate_param = Some("bootstrap_intervals");
+        }
+        let seed = self.bootstrap.and_then(|b| b.seed);
+        self.bootstrap = Some(BootstrapConfig { n_boot, seed });
+        if self.interval_type.is_none() {
+            self.interval_type = Some(IntervalMethod::se());
+        }
+        self
+    }
+
+    // Set the seed for bootstrap resampling (a fixed default seed is used otherwise).
+    pub fn bootstrap_seed(mut self, seed: u64) -> Self {
+        match self.bootstrap.as_mut() {
+            Some(b) => b.seed = Some(seed),
+            None => {
+                self.bootstrap = Some(BootstrapConfig {
+                    n_boot: DEFAULT_BOOTSTRAP_SAMPLES,
+                    seed: Some(seed),
+                });
+                if self.interval_type.is_none() {
+                    self.interval_type = Some(IntervalMethod::se());
+                }
+            }
+        }
         self
     }
 
@@ -792,6 +830,7 @@ impl<T: Float> LowessAdapter<T> for Batch {
         if let Some(it) = builder.interval_type {
             result.interval_type = Some(it);
         }
+        result.bootstrap = builder.bootstrap;
         if let Some(cvf) = builder.cv_fractions {
             result.cv_fractions = Some(cvf);
         }
@@ -975,6 +1014,12 @@ impl<T: Float> LowessAdapter<T> for Streaming {
             result.parallel = Some(p);
         }
         result.duplicate_param = builder.duplicate_param;
+        if builder.bootstrap.is_some() {
+            result.deferred_error = Some(LowessError::UnsupportedFeature {
+                adapter: "Streaming",
+                feature: "bootstrap_intervals",
+            });
+        }
         if result.deferred_error.is_none() && !builder.parse_errors.is_empty() {
             result.deferred_error = Some(LowessError::ParseErrors(builder.parse_errors));
         }
@@ -1081,6 +1126,12 @@ impl<T: Float> LowessAdapter<T> for Online {
             result.custom_interval_pass = Some(ip);
         }
         result.duplicate_param = builder.duplicate_param;
+        if builder.bootstrap.is_some() {
+            result.deferred_error = Some(LowessError::UnsupportedFeature {
+                adapter: "Online",
+                feature: "bootstrap_intervals",
+            });
+        }
         if result.deferred_error.is_none() && !builder.parse_errors.is_empty() {
             result.deferred_error = Some(LowessError::ParseErrors(builder.parse_errors));
         }

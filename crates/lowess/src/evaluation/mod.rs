@@ -11,5 +11,5 @@ pub mod cv;
 // Diagnostic metrics for fit quality assessment.
 pub mod diagnostics;
 
-// Confidence and prediction interval computation.
+// Confidence and prediction interval computation (analytic and bootstrap).
 pub mod intervals;

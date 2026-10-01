@@ -189,6 +189,14 @@ impl Lowess {
         self.0 = self.0.cv(options);
         self
     }
+    pub fn bootstrap_intervals(mut self, n_boot: usize) -> Self {
+        self.0 = self.0.bootstrap_intervals(n_boot);
+        self
+    }
+    pub fn bootstrap_seed(mut self, seed: u64) -> Self {
+        self.0 = self.0.bootstrap_seed(seed);
+        self
+    }
     pub fn retain_model(mut self, retain: bool) -> Self {
         self.0 = self.0.retain_model(retain);
         self

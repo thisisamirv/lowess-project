@@ -64,3 +64,41 @@ fn test_parallel_interval_estimation() {
 
     println!("Parallel and Sequential Intervals match exactly!");
 }
+
+/// Parallel bootstrap refits must reproduce the sequential bootstrap exactly, since
+/// resampling happens before the refits are scheduled. 300 replicates spans two batches.
+#[test]
+fn test_parallel_bootstrap_matches_sequential() {
+    let n = 120;
+    let x_vec: Vec<f64> = (0..n).map(|i| i as f64 * 0.1).collect();
+    let y_vec: Vec<f64> = x_vec
+        .iter()
+        .map(|&xi| xi.sin() + 0.2 * (xi * 7.0).sin())
+        .collect();
+    let x = Array1::from_vec(x_vec);
+    let y = Array1::from_vec(y_vec);
+
+    let fit = |parallel: bool| {
+        Lowess::new()
+            .fraction(0.3)
+            .iterations(1)
+            .confidence_intervals(0.95)
+            .prediction_intervals(0.9)
+            .bootstrap_intervals(300)
+            .bootstrap_seed(11)
+            .parallel(parallel)
+            .build()
+            .unwrap()
+            .fit(&x, &y)
+            .unwrap()
+    };
+    let (seq, par) = (fit(false), fit(true));
+
+    assert_eq!(par.y, seq.y);
+    assert_eq!(par.standard_errors, seq.standard_errors);
+    assert_eq!(par.confidence_lower, seq.confidence_lower);
+    assert_eq!(par.confidence_upper, seq.confidence_upper);
+    assert_eq!(par.prediction_lower, seq.prediction_lower);
+    assert_eq!(par.prediction_upper, seq.prediction_upper);
+    assert!(par.standard_errors.unwrap().iter().all(|&s| s > 0.0));
+}

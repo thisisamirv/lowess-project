@@ -104,7 +104,7 @@ Fraction used: 0.5
 | `overlap(usize)` | `usize` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy(...)` | `merge_strategy` | `"weighted_average"` | Strategy for blending overlap regions |
 
-Cross-validation, GPU `backend`, `custom_weights`, and `"sorted"` are Batch-only and not available here; see [fastLowess](crate::doc::api) for those. Standard errors and confidence/prediction intervals are computed per chunk the same way Batch computes them, then blended across overlap regions via `merge_strategy` like `y`/`derivative` are.
+Cross-validation, GPU `backend`, `custom_weights`, `"sorted"`, and `bootstrap_intervals`/`bootstrap_seed` are Batch-only and not available here (bootstrap is rejected at `.build()` with `UnsupportedFeature`); see [fastLowess](crate::doc::api) for those. Standard errors and confidence/prediction intervals are computed per chunk the same way Batch computes them, then blended across overlap regions via `merge_strategy` like `y`/`derivative` are.
 
 ## Options
 
