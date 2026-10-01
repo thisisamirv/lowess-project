@@ -20,7 +20,7 @@
 use approx::assert_relative_eq;
 use lowess::prelude::*;
 
-use lowess::internals::api::{Batch, Online, Streaming};
+use lowess::internals::api::{Batch, Online};
 use lowess::internals::engine::validator::Validator;
 use lowess::internals::evaluation::intervals::IntervalMethod;
 use lowess::internals::primitives::errors::LowessError;
@@ -652,21 +652,9 @@ fn test_bootstrap_invalid_sample_count() {
     assert_eq!(err, Some(LowessError::InvalidBootstrapSamples(1)));
 }
 
-/// Streaming and Online do not support the bootstrap.
+/// Online does not support the bootstrap.
 #[test]
-fn test_bootstrap_rejected_on_streaming_and_online() {
-    let s = Lowess::<f64>::new()
-        .bootstrap_intervals(10)
-        .adapter(Streaming)
-        .build()
-        .err();
-    assert!(matches!(
-        s,
-        Some(LowessError::UnsupportedFeature {
-            adapter: "Streaming",
-            ..
-        })
-    ));
+fn test_bootstrap_rejected_on_online() {
     let o = Lowess::<f64>::new()
         .bootstrap_intervals(10)
         .adapter(Online)
@@ -679,4 +667,102 @@ fn test_bootstrap_rejected_on_streaming_and_online() {
             ..
         })
     ));
+}
+
+#[test]
+fn test_bootstrap_streaming_matches_combined_batch_windows() {
+    let x: Vec<f64> = (0..30).map(|i| i as f64 * 0.2).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .map(|&xi| xi.sin() + 0.2 * (xi * 7.0).sin())
+        .collect();
+    let mut streaming = StreamingLowess::<f64>::new()
+        .fraction(0.6)
+        .iterations(0)
+        .delta(0.0)
+        .chunk_size(15)
+        .overlap(3)
+        .merge_strategy("take_last")
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.9)
+        .bootstrap_intervals(40)
+        .bootstrap_seed(7)
+        .build()
+        .unwrap();
+
+    for (start, end) in [(0, 15), (12, 30)] {
+        let chunk_start = if start == 0 { 0 } else { 15 };
+        let output = streaming
+            .process_chunk(&x[chunk_start..end], &y[chunk_start..end])
+            .unwrap();
+        let batch = Lowess::<f64>::new()
+            .fraction(0.6)
+            .iterations(0)
+            .delta(0.0)
+            .confidence_intervals(0.95)
+            .prediction_intervals(0.9)
+            .bootstrap_intervals(40)
+            .bootstrap_seed(7)
+            .build()
+            .unwrap()
+            .fit(&x[start..end], &y[start..end])
+            .unwrap();
+        let n = output.y.len();
+        assert_eq!(output.x, batch.x[..n]);
+        assert_eq!(
+            output.standard_errors.as_ref().unwrap(),
+            &batch.standard_errors.unwrap()[..n]
+        );
+        assert_eq!(
+            output.confidence_lower.as_ref().unwrap(),
+            &batch.confidence_lower.unwrap()[..n]
+        );
+        assert_eq!(
+            output.confidence_upper.as_ref().unwrap(),
+            &batch.confidence_upper.unwrap()[..n]
+        );
+        assert_eq!(
+            output.prediction_lower.as_ref().unwrap(),
+            &batch.prediction_lower.unwrap()[..n]
+        );
+        assert_eq!(
+            output.prediction_upper.as_ref().unwrap(),
+            &batch.prediction_upper.unwrap()[..n]
+        );
+    }
+    let tail = streaming.finalize().unwrap();
+    assert_eq!(tail.x, x[27..]);
+    assert_eq!(tail.standard_errors.as_ref().unwrap().len(), 3);
+    assert_eq!(tail.confidence_lower.as_ref().unwrap().len(), 3);
+    assert_eq!(tail.prediction_upper.as_ref().unwrap().len(), 3);
+}
+
+#[test]
+fn test_bootstrap_streaming_invalid_samples() {
+    let err = StreamingLowess::<f64>::new()
+        .bootstrap_intervals(1)
+        .build()
+        .err();
+    assert_eq!(err, Some(LowessError::InvalidBootstrapSamples(1)));
+}
+
+#[test]
+fn test_bootstrap_streaming_se_without_interval_levels() {
+    let x: Vec<f64> = (0..12).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin()).collect();
+    let mut model = StreamingLowess::new()
+        .chunk_size(12)
+        .overlap(2)
+        .bootstrap_intervals(20)
+        .bootstrap_seed(7)
+        .build()
+        .unwrap();
+    let output = model.process_chunk(&x, &y).unwrap();
+    assert_eq!(
+        output.standard_errors.as_ref().unwrap().len(),
+        output.y.len()
+    );
+    assert!(output.confidence_lower.is_none());
+    assert!(output.prediction_lower.is_none());
+    assert_eq!(model.finalize().unwrap().standard_errors.unwrap().len(), 2);
 }

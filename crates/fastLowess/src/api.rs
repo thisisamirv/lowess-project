@@ -234,6 +234,14 @@ impl StreamingLowess {
         self.0 = self.0.prediction_intervals(level);
         self
     }
+    pub fn bootstrap_intervals(mut self, n_boot: usize) -> Self {
+        self.0 = self.0.bootstrap_intervals(n_boot);
+        self
+    }
+    pub fn bootstrap_seed(mut self, seed: u64) -> Self {
+        self.0 = self.0.bootstrap_seed(seed);
+        self
+    }
 
     pub fn build(self) -> Result<ParallelStreamingLowess<f64>, LowessError> {
         Streaming::convert(self.0).build()

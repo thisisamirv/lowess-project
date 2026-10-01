@@ -103,7 +103,7 @@ fn main() -> Result<(), LowessError> {
 | `min_points(usize)` | `usize` | `2` | Min points before smoothing starts |
 | `update_mode(...)` | `update_mode` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
 
-Cross-validation, GPU `backend`, `custom_weights`, `"sorted"`, `"diagnostics"`, `"residuals"`, `parallel()`, and `bootstrap_intervals`/`bootstrap_seed` are Batch-only (or Batch/Streaming-only) and not available here (bootstrap is rejected at `.build()` with `UnsupportedFeature`); see [fastLowess](crate::doc::api) for those.
+Cross-validation, GPU `backend`, `custom_weights`, `"sorted"`, `"diagnostics"`, `"residuals"`, and `parallel()` are Batch-only (or Batch/Streaming-only) and not available here. `bootstrap_intervals`/`bootstrap_seed` are available in Batch and Streaming but rejected here at `.build()` with `UnsupportedFeature`; see [fastLowess](crate::doc::api).
 
 ## Options
 

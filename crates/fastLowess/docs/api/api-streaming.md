@@ -99,12 +99,14 @@ Fraction used: 0.5
 | `outputs([&str])` | `&[&str]` | `[]` | Select optional result components: `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"`, `"se"` |
 | `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95); populates `confidence_lower`/`confidence_upper` |
 | `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95); populates `prediction_lower`/`prediction_upper` |
+| `bootstrap_intervals(usize)` | `usize` | disabled | Residual-bootstrap refits per combined chunk; replaces analytic SEs and intervals |
+| `bootstrap_seed(u64)` | `u64` | fixed default | Seed for per-chunk resampling; alone enables 1000 replicates |
 | `parallel(bool)` | `bool` | `true` | Enable parallel execution |
 | `chunk_size(usize)` | `usize` | `5000` | Data chunk size |
 | `overlap(usize)` | `usize` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy(...)` | `merge_strategy` | `"weighted_average"` | Strategy for blending overlap regions |
 
-Cross-validation, GPU `backend`, `custom_weights`, `"sorted"`, and `bootstrap_intervals`/`bootstrap_seed` are Batch-only and not available here (bootstrap is rejected at `.build()` with `UnsupportedFeature`); see [fastLowess](crate::doc::api) for those. Standard errors and confidence/prediction intervals are computed per chunk the same way Batch computes them, then blended across overlap regions via `merge_strategy` like `y`/`derivative` are.
+Cross-validation, GPU `backend`, `custom_weights`, and `"sorted"` are Batch-only and not available here; see [fastLowess](crate::doc::api) for those. Analytic or bootstrap standard errors and confidence/prediction intervals are computed per combined chunk (including the previous overlap), then blended across overlap regions via `merge_strategy` like `y`/`derivative` are. Bootstrap draws use the same seed for each chunk; these are local chunk intervals, not whole-stream intervals. With `parallel(true)`, refits run concurrently. Fewer than 2 replicates returns `InvalidBootstrapSamples` at `.build()`.
 
 ## Options
 

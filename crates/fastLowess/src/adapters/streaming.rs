@@ -12,6 +12,8 @@
 // Internal dependencies
 #[cfg(feature = "cpu")]
 use crate::engine::executor::{derivative_pass_parallel, smooth_pass_parallel};
+#[cfg(feature = "cpu")]
+use crate::evaluation::intervals::bootstrap_pass_parallel;
 
 // External dependencies
 use num_traits::Float;
@@ -86,15 +88,18 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelStreamingLowe
             if builder.parallel.unwrap_or(true) {
                 builder.custom_smooth_pass = Some(smooth_pass_parallel);
                 builder.custom_derivative_pass = Some(derivative_pass_parallel);
+                builder.custom_bootstrap_pass = Some(bootstrap_pass_parallel);
             } else {
                 builder.custom_smooth_pass = None;
                 builder.custom_derivative_pass = None;
+                builder.custom_bootstrap_pass = None;
             }
         }
         #[cfg(not(feature = "cpu"))]
         {
             builder.custom_smooth_pass = None;
             builder.custom_derivative_pass = None;
+            builder.custom_bootstrap_pass = None;
         }
 
         // Delegate execution to the base implementation

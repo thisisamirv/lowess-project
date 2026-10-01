@@ -7,7 +7,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Added
 
-* Added residual-bootstrap standard errors and percentile confidence/prediction intervals via `.bootstrap_intervals(n_boot)` and `.bootstrap_seed(seed)` (Batch only). With `parallel(true)` the refits run concurrently and match a sequential run. Streaming and Online reject them at `.build()`.
+* Added residual-bootstrap standard errors and percentile confidence/prediction intervals via `.bootstrap_intervals(n_boot)` and `.bootstrap_seed(seed)` (Batch and per-chunk Streaming). With `parallel(true)` the refits run concurrently and match a sequential run. Online rejects them at `.build()`.
 
 ### Changed
 

@@ -199,7 +199,7 @@ pub struct LowessBuilder<T, Mode = BatchMode> {
     // interval estimation configuration.
     pub interval_type: Option<IntervalMethod<T>>,
 
-    // Residual-bootstrap SEs/intervals instead of analytic ones (Batch only).
+    // Residual-bootstrap SEs/intervals instead of analytic ones (Batch/Streaming).
     pub bootstrap: Option<BootstrapConfig>,
 
     // Candidate bandwidths for cross-validation.
@@ -561,7 +561,7 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
 
     // Compute standard errors and any requested confidence/prediction intervals by a
     // residual bootstrap with `n_boot` refits (percentile intervals) instead of the
-    // analytic normal-theory formulas (Batch only). Useful when residuals are skewed or
+    // analytic normal-theory formulas (Batch or Streaming). Useful when residuals are skewed or
     // heavy-tailed; costs `n_boot` extra fits. Enables standard errors if no interval
     // type was requested.
     pub fn bootstrap_intervals(mut self, n_boot: usize) -> Self {
@@ -990,6 +990,7 @@ impl<T: Float> LowessAdapter<T> for Streaming {
         if let Some(it) = builder.interval_type {
             result.interval_type = Some(it);
         }
+        result.bootstrap = builder.bootstrap;
         if let Some(ac) = builder.auto_converge {
             result.auto_converge = Some(ac);
         }
@@ -1014,12 +1015,6 @@ impl<T: Float> LowessAdapter<T> for Streaming {
             result.parallel = Some(p);
         }
         result.duplicate_param = builder.duplicate_param;
-        if builder.bootstrap.is_some() {
-            result.deferred_error = Some(LowessError::UnsupportedFeature {
-                adapter: "Streaming",
-                feature: "bootstrap_intervals",
-            });
-        }
         if result.deferred_error.is_none() && !builder.parse_errors.is_empty() {
             result.deferred_error = Some(LowessError::ParseErrors(builder.parse_errors));
         }

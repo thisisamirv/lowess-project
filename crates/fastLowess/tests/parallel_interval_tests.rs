@@ -102,3 +102,41 @@ fn test_parallel_bootstrap_matches_sequential() {
     assert_eq!(par.prediction_upper, seq.prediction_upper);
     assert!(par.standard_errors.unwrap().iter().all(|&s| s > 0.0));
 }
+
+#[test]
+fn test_streaming_bootstrap_parallel_matches_sequential() {
+    let x: Vec<f64> = (0..40).map(|i| i as f64 * 0.2).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .map(|&xi| xi.sin() + 0.1 * (xi * 5.0).sin())
+        .collect();
+    let fit = |parallel| {
+        let mut model = fastLowess::prelude::StreamingLowess::new()
+            .fraction(0.6)
+            .iterations(0)
+            .chunk_size(20)
+            .overlap(4)
+            .confidence_intervals(0.95)
+            .prediction_intervals(0.9)
+            .bootstrap_intervals(40)
+            .bootstrap_seed(11)
+            .parallel(parallel)
+            .build()
+            .unwrap();
+        let first = model.process_chunk(&x[..20], &y[..20]).unwrap();
+        let second = model.process_chunk(&x[20..], &y[20..]).unwrap();
+        let tail = model.finalize().unwrap();
+        [first, second, tail]
+    };
+
+    let sequential = fit(false);
+    let parallel = fit(true);
+    for (seq, par) in sequential.iter().zip(parallel.iter()) {
+        assert_eq!(par.y, seq.y);
+        assert_eq!(par.standard_errors, seq.standard_errors);
+        assert_eq!(par.confidence_lower, seq.confidence_lower);
+        assert_eq!(par.confidence_upper, seq.confidence_upper);
+        assert_eq!(par.prediction_lower, seq.prediction_lower);
+        assert_eq!(par.prediction_upper, seq.prediction_upper);
+    }
+}

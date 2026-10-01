@@ -8,7 +8,7 @@ Confidence and prediction intervals for uncertainty quantification.
 ![Confidence and Prediction Intervals](https://raw.githubusercontent.com/thisisamirv/lowess-project/main/crates/fastLowess/assets/diagrams/intervals_comparison.svg)
 
 !!! note "Adapter support"
-    Analytic confidence and prediction intervals are available in **Batch** mode, **Streaming** mode (computed per chunk and merged across overlap boundaries via `merge_strategy`, like `y`/`derivative`), and **Online** mode when `update_mode("full")` is set (`.build()` errors if combined with the default `"incremental"` mode). Residual-bootstrap intervals (`.bootstrap_intervals()`) are **Batch only**.
+    Analytic confidence and prediction intervals are available in **Batch** mode, **Streaming** mode (computed per chunk and merged across overlap boundaries via `merge_strategy`, like `y`/`derivative`), and **Online** mode when `update_mode("full")` is set (`.build()` errors if combined with the default `"incremental"` mode). Residual-bootstrap intervals (`.bootstrap_intervals()`) are available in **Batch and Streaming**.
 
 | Type | Represents | Width | Use |
 | --- | --- | --- | --- |
@@ -199,13 +199,13 @@ Point 2: SE = 0.0258
 
 ## Bootstrap Intervals
 
-The intervals above are analytic: a local-linear standard error times a normal z-score. That assumes roughly normal residuals. `.bootstrap_intervals(n_boot)` replaces it with a residual bootstrap (Batch only), which does not:
+The intervals above are analytic: a local-linear standard error times a normal z-score. That assumes roughly normal residuals. `.bootstrap_intervals(n_boot)` replaces it with a residual bootstrap (Batch or Streaming), which does not:
 
 1. Fit once, and center the residuals.
 2. Refit `n_boot` times on `y_hat + residuals drawn with replacement` (same `x` and smoothing settings; cross-validation is not repeated).
 3. Per point, the standard error is the sample standard deviation of those refits. A confidence interval is their percentile interval. A prediction interval is the percentile interval of each refit plus a freshly drawn residual, so skewed noise produces an asymmetric tail.
 
-`.bootstrap_seed(seed)` fixes the draws. If omitted, a fixed default seed is used, so results are reproducible either way. Fewer than 2 replicates is rejected at `.build()` as `InvalidBootstrapSamples`. Streaming and Online reject bootstrap with `UnsupportedFeature`.
+`.bootstrap_seed(seed)` fixes the draws. If omitted, a fixed default seed is used, so results are reproducible either way. Fewer than 2 replicates is rejected at `.build()` as `InvalidBootstrapSamples`. Online rejects bootstrap with `UnsupportedFeature`. In Streaming, each combined chunk (including its incoming overlap) is bootstrapped independently with the same seed; bounds and SEs are then merged according to `merge_strategy`. These are local chunk intervals, not whole-stream bootstrap intervals.
 
 With `parallel(true)` (the default) those refits run concurrently and match a one-at-a-time run. GPU and `parallel(false)` refit one replicate at a time; a GPU refit still uses the GPU fit pass. Each replicate is a full refit, so this is much slower than the analytic intervals. It also replaces `result.standard_errors` when `"se"` or an interval was requested.
 
@@ -249,14 +249,42 @@ x=0: y=0.07 CI [-0.53, 0.66] PI [-1.14, 1.08]
 
 ---
 
+## Streaming Bootstrap
+
+Streaming refits each combined chunk with its incoming overlap, then merges the resulting bounds. The seed is restarted for each chunk; this does not bootstrap the entire stream as one dataset. In fastLowess, replicate refits run concurrently by default.
+
+```rust
+use fastLowess::prelude::*;
+
+fn main() -> Result<(), LowessError> {
+    let x: Vec<f64> = (0..30).map(|i| i as f64 * 0.2).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin()).collect();
+    let mut model = StreamingLowess::new()
+        .chunk_size(15)
+        .overlap(3)
+        .confidence_intervals(0.95)
+        .bootstrap_intervals(40)
+        .bootstrap_seed(7)
+        .build()?;
+    let first = model.process_chunk(&x[..15], &y[..15])?;
+    let second = model.process_chunk(&x[15..], &y[15..])?;
+    let tail = model.finalize()?;
+    assert_eq!(first.y.len() + second.y.len() + tail.y.len(), x.len());
+    assert!(second.confidence_lower.is_some());
+    Ok(())
+}
+```
+
+---
+
 ## Availability
 
 !!! note "Analytic intervals in all three adapters"
-    Analytic confidence and prediction intervals are available in **Batch**, **Streaming** (see [Streaming Adapter](crate::doc::api::streaming)), and **Online** mode (`update_mode("full")` only — see [Online Adapter](crate::doc::api::online)). Residual-bootstrap intervals are Batch only. With `parallel(true)` the bootstrap refits run concurrently.
+    Analytic confidence and prediction intervals are available in **Batch**, **Streaming** (see [Streaming Adapter](crate::doc::api::streaming)), and **Online** mode (`update_mode("full")` only — see [Online Adapter](crate::doc::api::online)). Residual-bootstrap intervals are available in Batch and per-chunk Streaming. With `parallel(true)` the bootstrap refits run concurrently.
 
 | Feature | Batch | Streaming | Online |
 | --- | --- | --- | --- |
 | Confidence intervals | ✓ | ✓ | ✓ (`update_mode("full")` only) |
 | Prediction intervals | ✓ | ✓ | ✓ (`update_mode("full")` only) |
 | Standard errors | ✓ | ✓ | ✓ (`update_mode("full")` only) |
-| Residual bootstrap | ✓ | — | — |
+| Residual bootstrap | ✓ | ✓ (per chunk) | — |

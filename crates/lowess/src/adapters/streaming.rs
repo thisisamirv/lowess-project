@@ -24,13 +24,13 @@ use crate::algorithms::defaults::*;
 use crate::algorithms::regression::{WLSSolver, ZeroWeightFallback};
 use crate::algorithms::robustness::RobustnessMethod;
 use crate::engine::executor::{
-    CVPassFn, DerivativePassFn, FitPassFn, IntervalPassFn, SmoothPassFn,
+    BootstrapPassFn, CVPassFn, DerivativePassFn, FitPassFn, IntervalPassFn, SmoothPassFn,
 };
 use crate::engine::executor::{LowessConfig, LowessExecutor};
 use crate::engine::output::LowessResult;
 use crate::engine::validator::{MissingPolicy, Validator};
 use crate::evaluation::diagnostics::DiagnosticsState;
-use crate::evaluation::intervals::IntervalMethod;
+use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod, MIN_BOOTSTRAP_SAMPLES};
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
 use crate::math::kernel::WeightFunction;
@@ -111,6 +111,9 @@ pub struct StreamingLowessBuilder<T: Float> {
     // Interval estimation method (standard errors/confidence/prediction intervals).
     pub interval_type: Option<IntervalMethod<T>>,
 
+    // Residual bootstrap on each combined overlap and chunk fit.
+    pub bootstrap: Option<BootstrapConfig>,
+
     // Policy for handling non-finite (NaN/Inf) values in input data
     pub missing: MissingPolicy,
 
@@ -128,6 +131,9 @@ pub struct StreamingLowessBuilder<T: Float> {
 
     // Custom interval estimation pass function.
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
+
+    // Custom bootstrap refit pass function.
+    pub custom_bootstrap_pass: Option<BootstrapPassFn<T>>,
 
     // Custom fit pass function.
     pub custom_fit_pass: Option<FitPassFn<T>>,
@@ -168,12 +174,14 @@ impl<T: Float> StreamingLowessBuilder<T> {
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
             return_derivative: DEFAULT_RETURN_DERIVATIVE,
             interval_type: None,
+            bootstrap: None,
             auto_converge: default_auto_converge(),
             missing: DEFAULT_MISSING_POLICY_ENUM,
             deferred_error: None,
             custom_smooth_pass: None,
             custom_cv_pass: None,
             custom_interval_pass: None,
+            custom_bootstrap_pass: None,
             custom_fit_pass: None,
             custom_derivative_pass: None,
             parallel: None,
@@ -204,6 +212,12 @@ impl<T: Float> StreamingLowessBuilder<T> {
 
         // Validate overlap
         Validator::validate_overlap(self.overlap, self.chunk_size)?;
+
+        if let Some(bc) = self.bootstrap
+            && bc.n_boot < MIN_BOOTSTRAP_SAMPLES
+        {
+            return Err(LowessError::InvalidBootstrapSamples(bc.n_boot));
+        }
 
         let has_diag = self.return_diagnostics;
         let overlap = self.overlap;
@@ -305,7 +319,11 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             cv_fractions: None,
             cv_kind: None,
             auto_converge: self.config.auto_converge,
-            return_variance: self.config.interval_type,
+            return_variance: if self.config.bootstrap.is_some() {
+                None
+            } else {
+                self.config.interval_type
+            },
             cv_seed: None,
             return_derivative: self.config.return_derivative,
             // ++++++++++++++++++++++++++++++++++++++
@@ -333,21 +351,53 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
         let smoothed = result.smoothed;
         let robustness_weights = result.robustness_weights;
         let derivative = result.derivative;
-        let std_errors = result.std_errors;
+        let mut std_errors = result.std_errors;
         let iterations = result.iterations.unwrap_or(0);
 
-        // Confidence/prediction interval bounds over the whole combined (overlap +
-        // new) array, computed the same way Batch does (`IntervalMethod::compute_intervals`,
-        // needing residuals over that same combined array regardless of whether
-        // `compute_residuals` was requested for output).
         let (conf_lower_full, conf_upper_full, pred_lower_full, pred_upper_full) =
-            if let (Some(method), Some(se)) = (&self.config.interval_type, std_errors.as_ref()) {
+            if let Some(method) = &self.config.interval_type {
                 let interval_residuals: Vec<T> = combined_y
                     .iter()
                     .zip(smoothed.iter())
                     .map(|(&yi, &si)| yi - si)
                     .collect();
-                method.compute_intervals(&smoothed, se, &interval_residuals)?
+                if let Some(bc) = self.config.bootstrap {
+                    let mut refit = config.clone();
+                    refit.return_variance = None;
+                    refit.return_derivative = false;
+                    let pass = self.config.custom_bootstrap_pass;
+                    let out =
+                        bc.compute(
+                            method,
+                            &smoothed,
+                            &interval_residuals,
+                            |replicates| match pass {
+                                Some(p) => p(&combined_x, replicates, &refit),
+                                None => replicates
+                                    .iter()
+                                    .map(|y_star| {
+                                        LowessExecutor::run_with_config(
+                                            &combined_x,
+                                            y_star,
+                                            refit.clone(),
+                                        )
+                                        .map(|r| r.smoothed)
+                                    })
+                                    .collect(),
+                            },
+                        )?;
+                    std_errors = Some(out.std_errors);
+                    (
+                        out.confidence_lower,
+                        out.confidence_upper,
+                        out.prediction_lower,
+                        out.prediction_upper,
+                    )
+                } else if let Some(se) = std_errors.as_ref() {
+                    method.compute_intervals(&smoothed, se, &interval_residuals)?
+                } else {
+                    (None, None, None, None)
+                }
             } else {
                 (None, None, None, None)
             };
