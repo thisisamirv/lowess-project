@@ -34,7 +34,302 @@
       <small>Source: <a href="https://github.com/thisisamirv/lowess-project/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
-  </main></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="rfastlowess-development-version">rfastlowess (development version)<a class="anchor" aria-label="anchor" href="#rfastlowess-development-version"></a></h2>
+<div class="section level3">
+<h3 id="added-development-version">Added<a class="anchor" aria-label="anchor" href="#added-development-version"></a></h3>
+<ul><li>Added <code><a href="../reference/cv_opts.html">cv_opts()</a></code> to configure grouped cross-validation options for <code>Lowess(cv = ...)</code>.</li>
+<li>Added an “Alternative Software” vignette comparing <code>rfastlowess</code> with <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-development-version">Changed<a class="anchor" aria-label="anchor" href="#changed-development-version"></a></h3>
+<ul><li>Breaking change: replaced individual <code>return_*</code> arguments with grouped <code>outputs</code>, and replaced <code><a href="../reference/Lowess.html">Lowess()</a></code>’s four <code>cv_*</code> arguments with <code>cv = cv_opts(...)</code>.</li>
+<li>Represent unavailable diagnostic metrics as R <code>NA</code> rather than generic <code>NaN</code> values.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-development-version">Fixed<a class="anchor" aria-label="anchor" href="#fixed-development-version"></a></h3>
+<ul><li>Fixed the default <code>boundary_policy</code> (<code>"extend"</code>) letting synthetic boundary points bias the shared robustness scale estimate used to reweight every point, compounding across robustness iterations.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="4.1.0" id="rfastlowess-410">rfastlowess 4.1.0<a class="anchor" aria-label="anchor" href="#rfastlowess-410"></a></h2>
+<div class="section level3">
+<h3 id="added-4-1-0">Added<a class="anchor" aria-label="anchor" href="#added-4-1-0"></a></h3>
+<ul><li>Added <code>retain_model</code> and <code><a href="../reference/predict.Lowess.html">predict.Lowess()</a></code> for out-of-sample prediction.</li>
+<li>Added <code>return_derivative</code> to <code><a href="../reference/Lowess.html">Lowess()</a></code>, <code><a href="../reference/StreamingLowess.html">StreamingLowess()</a></code>, and <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code>.</li>
+<li>Added standard errors and confidence/prediction intervals to <code><a href="../reference/StreamingLowess.html">StreamingLowess()</a></code> and <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code>; online intervals require <code>update_mode = "full"</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-4-1-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-4-1-0"></a></h3>
+<ul><li>Changed the <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code> default <code>iterations</code> from <code>3</code> to <code>0</code>, matching non-robust incremental updates; robustness iterations require <code>update_mode = "full"</code>.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="4.0.0" id="rfastlowess-400">rfastlowess 4.0.0<a class="anchor" aria-label="anchor" href="#rfastlowess-400"></a></h2>
+<div class="section level3">
+<h3 id="added-4-0-0">Added<a class="anchor" aria-label="anchor" href="#added-4-0-0"></a></h3>
+<ul><li>Added <code>return_sorted</code> to <code><a href="../reference/Lowess.html">Lowess()</a></code>.</li>
+<li>Added a <code>missing</code> option to <code><a href="../reference/Lowess.html">Lowess()</a></code>, <code><a href="../reference/StreamingLowess.html">StreamingLowess()</a></code>, and <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code> for non-finite inputs.</li>
+<li>Added support for installing a locally built GPU artifact with <code><a href="../reference/install_gpu.html">install_gpu()</a></code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-4-0-0">Changed<a class="anchor" aria-label="anchor" href="#changed-4-0-0"></a></h3>
+<ul><li>Breaking change: removed <code>return_diagnostics</code>, <code>return_residuals</code>, and <code>parallel</code> from the <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code> constructor; these options had no effect in online mode.</li>
+<li>Breaking change: removed <code>confidence_intervals</code> and <code>prediction_intervals</code> from <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code> and <code><a href="../reference/StreamingLowess.html">StreamingLowess()</a></code> constructors because those options were not computed.</li>
+<li>Breaking change: the streaming overlap default now resolves dynamically to <code>chunk_size / 10</code>, clamped to <code>[1, chunk_size - 10]</code>, instead of a fixed <code>500</code>.</li>
+<li>Improved the R API documentation, including the overlap default.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-4-0-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-4-0-0"></a></h3>
+<ul><li>Fixed the real-time vignette example failing with two data points by aligning its minimum point count with the library’s minimum of two.</li>
+<li>Fixed <code><a href="../reference/install_gpu.html">install_gpu()</a></code> replacing a loaded shared library in place; it now installs through a temporary file and atomic rename.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="3.2.1" id="rfastlowess-321">rfastlowess 3.2.1<a class="anchor" aria-label="anchor" href="#rfastlowess-321"></a></h2>
+<div class="section level3">
+<h3 id="changed-3-2-1">Changed<a class="anchor" aria-label="anchor" href="#changed-3-2-1"></a></h3>
+<ul><li>Clarified that results are returned in input order, even though the algorithm sorts internally.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="3.2.0" id="rfastlowess-320">rfastlowess 3.2.0<a class="anchor" aria-label="anchor" href="#rfastlowess-320"></a></h2>
+<div class="section level3">
+<h3 id="changed-3-2-0">Changed<a class="anchor" aria-label="anchor" href="#changed-3-2-0"></a></h3>
+<ul><li>Expanded and reorganized the R documentation with parameter guidance, examples, and clearer adapter-selection advice.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-3-2-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-3-2-0"></a></h3>
+<ul><li>Corrected the <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code> defaults to <code>min_points = 2L</code> and <code>update_mode = "incremental"</code>.</li>
+<li>Corrected the Handling Outliers example to use a fraction that downweights the injected outlier.</li>
+<li>Improved the Online, streaming, merge, robustness, and use-case examples so they show representative output and run successfully.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="3.1.0" id="rfastlowess-310">rfastlowess 3.1.0<a class="anchor" aria-label="anchor" href="#rfastlowess-310"></a></h2>
+<div class="section level3">
+<h3 id="changed-3-1-0">Changed<a class="anchor" aria-label="anchor" href="#changed-3-1-0"></a></h3>
+<ul><li>Moved R documentation to GitHub Pages using pkgdown and updated the README with package-specific guidance.</li>
+<li>Lowered the minimum supported R version to 4.4.0.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-3-1-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-3-1-0"></a></h3>
+<ul><li>Fixed extra positional arguments being accepted outside the initial positional argument; constructors now reject unnamed arguments in later positions.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="3.0.0" id="rfastlowess-300">rfastlowess 3.0.0<a class="anchor" aria-label="anchor" href="#rfastlowess-300"></a></h2>
+<div class="section level3">
+<h3 id="added-3-0-0">Added<a class="anchor" aria-label="anchor" href="#added-3-0-0"></a></h3>
+<ul><li>Added an opt-in GPU backend through the <code>gpu</code> Cargo feature and <code><a href="../reference/install_gpu.html">install_gpu()</a></code> to download a prebuilt GPU library; using it requires restarting R.</li>
+<li>Added S3 generics <code><a href="../reference/fit.html">fit()</a></code>, <code><a href="../reference/process_chunk.html">process_chunk()</a></code>, <code><a href="../reference/finalize.html">finalize()</a></code>, and <code><a href="../reference/add_point.html">add_point()</a></code>, replacing the previous list-closure API.</li>
+<li>Added cross-reference links in the API documentation to the corresponding user guides.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-3-0-0">Changed<a class="anchor" aria-label="anchor" href="#changed-3-0-0"></a></h3>
+<ul><li>Breaking change: renamed the <code>smoothed</code> and <code>std_error</code> fields returned by <code>OnlineLowess()$add_point()</code> to <code>y</code> and <code>standard_error</code>.</li>
+<li>Breaking change: added <code>...</code> to <code><a href="../reference/Lowess.html">Lowess()</a></code>, <code><a href="../reference/StreamingLowess.html">StreamingLowess()</a></code>, and <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code> so optional arguments must be named.</li>
+<li>Set the minimum supported R version to 4.6.</li>
+<li>Organized Streaming and Online API documentation and tutorials into dedicated user-guide pages.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="2.0.0" id="rfastlowess-200">rfastlowess 2.0.0<a class="anchor" aria-label="anchor" href="#rfastlowess-200"></a></h2>
+<div class="section level3">
+<h3 id="added-2-0-0">Added<a class="anchor" aria-label="anchor" href="#added-2-0-0"></a></h3>
+<ul><li>Added <code>custom_weights</code> to batch fitting for non-negative per-observation weights.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-2-0-0">Changed<a class="anchor" aria-label="anchor" href="#changed-2-0-0"></a></h3>
+<ul><li>Breaking change: replaced vector-based <code>OnlineLowess()$add_points(x, y)</code> with scalar <code>add_point(x, y)</code>, which processes one point at a time and returns <code>NULL</code> until enough points are available.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.3.0" id="rfastlowess-130">rfastlowess 1.3.0<a class="anchor" aria-label="anchor" href="#rfastlowess-130"></a></h2>
+<div class="section level3">
+<h3 id="fixed-1-3-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-1-3-0"></a></h3>
+<ul><li>Registered the extendr panic hook so Rust panics are reported as R errors instead of crashing the R session.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.2.0" id="rfastlowess-120">rfastlowess 1.2.0<a class="anchor" aria-label="anchor" href="#rfastlowess-120"></a></h2>
+<div class="section level3">
+<h3 id="added-1-2-0">Added<a class="anchor" aria-label="anchor" href="#added-1-2-0"></a></h3>
+<ul><li>Added <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> examples for <code>LowessResult</code> objects.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.1.2" id="rfastlowess-112">rfastlowess 1.1.2<a class="anchor" aria-label="anchor" href="#rfastlowess-112"></a></h2>
+<ul><li>Under-the-hood maintenance; no changes to the public API or runtime behavior.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.1.1" id="rfastlowess-111">rfastlowess 1.1.1<a class="anchor" aria-label="anchor" href="#rfastlowess-111"></a></h2>
+<div class="section level3">
+<h3 id="fixed-1-1-1">Fixed<a class="anchor" aria-label="anchor" href="#fixed-1-1-1"></a></h3>
+<ul><li>Fixed GPU configuration and initialization problems, and improved recovery after missing hardware/drivers or earlier GPU execution errors.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.1.0" id="rfastlowess-110">rfastlowess 1.1.0<a class="anchor" aria-label="anchor" href="#rfastlowess-110"></a></h2>
+<div class="section level3">
+<h3 id="added-1-1-0">Added<a class="anchor" aria-label="anchor" href="#added-1-1-0"></a></h3>
+<ul><li>Expanded GPU fitting support to selectable kernels, robustness and scaling methods, boundary policies, automatic convergence, prediction, and cross-validation.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-1-1-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-1-1-0"></a></h3>
+<ul><li>Fixed the <code>Extend</code> boundary policy not being applied and improved numerical precision through coordinate centering.</li>
+<li>Fixed GPU integer overflow, initialization failures, and resource exhaustion.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.0.0" id="rfastlowess-100">rfastlowess 1.0.0<a class="anchor" aria-label="anchor" href="#rfastlowess-100"></a></h2>
+<div class="section level3">
+<h3 id="added-1-0-0">Added<a class="anchor" aria-label="anchor" href="#added-1-0-0"></a></h3>
+<ul><li>Added the <code>mean</code> scaling method (Mean Absolute Deviation).</li>
+<li>Added <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods for <code>LowessResult</code> objects.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-1-0-0">Changed<a class="anchor" aria-label="anchor" href="#changed-1-0-0"></a></h3>
+<ul><li>Breaking change: returned <code>LowessResult</code> S3 objects instead of raw vectors.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.99.9" id="rfastlowess-0999">rfastlowess 0.99.9<a class="anchor" aria-label="anchor" href="#rfastlowess-0999"></a></h2>
+<div class="section level3">
+<h3 id="added-0-99-9">Added<a class="anchor" aria-label="anchor" href="#added-0-99-9"></a></h3>
+<ul><li>Made the package available on conda-forge as <code>r-rfastlowess</code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-0-99-9">Changed<a class="anchor" aria-label="anchor" href="#changed-0-99-9"></a></h3>
+<ul><li>Introduced class-based builders for streaming and online processing.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.99.8" id="rfastlowess-0998">rfastlowess 0.99.8<a class="anchor" aria-label="anchor" href="#rfastlowess-0998"></a></h2>
+<ul><li>Under-the-hood maintenance; no changes to the public API or runtime behavior.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.99.7" id="rfastlowess-0997">rfastlowess 0.99.7<a class="anchor" aria-label="anchor" href="#rfastlowess-0997"></a></h2>
+<div class="section level3">
+<h3 id="fixed-0-99-7">Fixed<a class="anchor" aria-label="anchor" href="#fixed-0-99-7"></a></h3>
+<ul><li>Fixed links in the shared project README.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.99.6" id="rfastlowess-0996">rfastlowess 0.99.6<a class="anchor" aria-label="anchor" href="#rfastlowess-0996"></a></h2>
+<div class="section level3">
+<h3 id="fixed-0-99-6">Fixed<a class="anchor" aria-label="anchor" href="#fixed-0-99-6"></a></h3>
+<ul><li>Fixed formatting and links in the shared project README.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.99.5" id="rfastlowess-0995">rfastlowess 0.99.5<a class="anchor" aria-label="anchor" href="#rfastlowess-0995"></a></h2>
+<div class="section level3">
+<h3 id="changed-0-99-5">Changed<a class="anchor" aria-label="anchor" href="#changed-0-99-5"></a></h3>
+<ul><li>Reduced the published package size by excluding development-only files.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.99.2" id="rfastlowess-0992">rfastlowess 0.99.2<a class="anchor" aria-label="anchor" href="#rfastlowess-0992"></a></h2>
+<div class="section level3">
+<h3 id="added-0-99-2">Added<a class="anchor" aria-label="anchor" href="#added-0-99-2"></a></h3>
+<ul><li>Added a pkgdown documentation site and examples for exported functions.</li>
+<li>Added input validation for exported functions.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-0-99-2">Changed<a class="anchor" aria-label="anchor" href="#changed-0-99-2"></a></h3>
+<ul><li>Breaking change: renamed exported functions to avoid conflicts with base R.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-0-99-2">Fixed<a class="anchor" aria-label="anchor" href="#fixed-0-99-2"></a></h3>
+<ul><li>Fixed package startup messages.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.99.1" id="rfastlowess-0991">rfastlowess 0.99.1<a class="anchor" aria-label="anchor" href="#rfastlowess-0991"></a></h2>
+<div class="section level3">
+<h3 id="changed-0-99-1">Changed<a class="anchor" aria-label="anchor" href="#changed-0-99-1"></a></h3>
+<ul><li>Prepared the R package for Bioconductor submission.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.99.0" id="rfastlowess-0990">rfastlowess 0.99.0<a class="anchor" aria-label="anchor" href="#rfastlowess-0990"></a></h2>
+<div class="section level3">
+<h3 id="added-0-99-0">Added<a class="anchor" aria-label="anchor" href="#added-0-99-0"></a></h3>
+<ul><li>Added <code>NoBoundary</code> boundary handling and <code>MAD</code>/<code>MAR</code> scaling methods from fastLowess v0.4.0.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-0-99-0">Changed<a class="anchor" aria-label="anchor" href="#changed-0-99-0"></a></h3>
+<ul><li>Changed the license from AGPL-3.0-or-later to dual MIT OR Apache-2.0.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.7.0" id="rfastlowess-070">rfastlowess 0.7.0<a class="anchor" aria-label="anchor" href="#rfastlowess-070"></a></h2>
+<div class="section level3">
+<h3 id="added-0-7-0">Added<a class="anchor" aria-label="anchor" href="#added-0-7-0"></a></h3>
+<ul><li>Added <code>NoBoundary</code> handling and <code>MAD</code>/<code>MAR</code> scaling methods to the underlying LOWESS core.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-0-7-0">Changed<a class="anchor" aria-label="anchor" href="#changed-0-7-0"></a></h3>
+<ul><li>Improved fitting and cross-validation performance through SIMD accumulation, reusable buffers, and optimized window and scale calculations.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.0" id="rfastlowess-060">rfastlowess 0.6.0<a class="anchor" aria-label="anchor" href="#rfastlowess-060"></a></h2>
+<div class="section level3">
+<h3 id="added-0-6-0">Added<a class="anchor" aria-label="anchor" href="#added-0-6-0"></a></h3>
+<ul><li>Added a seed option for reproducible k-fold cross-validation.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-0-6-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-0-6-0"></a></h3>
+<ul><li>Fixed Batch and Streaming adapter conversion behavior in the LOWESS core.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.5.3" id="rfastlowess-053">rfastlowess 0.5.3<a class="anchor" aria-label="anchor" href="#rfastlowess-053"></a></h2>
+<div class="section level3">
+<h3 id="changed-0-5-3">Changed<a class="anchor" aria-label="anchor" href="#changed-0-5-3"></a></h3>
+<ul><li>Improved fitting and cross-validation performance by optimizing sorting, window operations, robust scale estimation, regression, and delta interpolation.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.4.0" id="rfastlowess-040">rfastlowess 0.4.0<a class="anchor" aria-label="anchor" href="#rfastlowess-040"></a></h2>
+<div class="section level3">
+<h3 id="added-0-4-0">Added<a class="anchor" aria-label="anchor" href="#added-0-4-0"></a></h3>
+<ul><li>Added support for fastLowess v0.4.0 fitting and cross-validation improvements.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-0-4-0">Changed<a class="anchor" aria-label="anchor" href="#changed-0-4-0"></a></h3>
+<ul><li>Changed the license from AGPL-3.0-or-later to dual MIT OR Apache-2.0.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.3.0" id="rfastlowess-030">rfastlowess 0.3.0<a class="anchor" aria-label="anchor" href="#rfastlowess-030"></a></h2>
+<div class="section level3">
+<h3 id="added-0-3-0">Added<a class="anchor" aria-label="anchor" href="#added-0-3-0"></a></h3>
+<ul><li>Added installation from R-universe without requiring Rust.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-0-3-0">Changed<a class="anchor" aria-label="anchor" href="#changed-0-3-0"></a></h3>
+<ul><li>Updated the cross-validation API for fastLowess v0.3.0.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.0" id="rfastlowess-020">rfastlowess 0.2.0<a class="anchor" aria-label="anchor" href="#rfastlowess-020"></a></h2>
+<div class="section level3">
+<h3 id="added-0-2-0">Added<a class="anchor" aria-label="anchor" href="#added-0-2-0"></a></h3>
+<ul><li>Added support for fastLowess v0.2.0 fitting improvements.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.0" id="rfastlowess-010">rfastlowess 0.1.0<a class="anchor" aria-label="anchor" href="#rfastlowess-010"></a></h2>
+<div class="section level3">
+<h3 id="added-0-1-0">Added<a class="anchor" aria-label="anchor" href="#added-0-1-0"></a></h3>
+<ul><li>Initial R binding for fastLowess.</li>
+</ul></div>
+</div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">
