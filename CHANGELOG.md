@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Node.js:**
 
 - Added grouped `outputs` arrays and nested `cv` option objects for batch, streaming, online, and prediction configuration while preserving legacy fields.
+- Added a grouped `intervals` option (`confidence`, `prediction`, `bootstrap`) with residual-bootstrap intervals across `Lowess`, `StreamingLowess`, full-update `OnlineLowess`, and `LowessResult.predict()`.
 
 **Python:**
 
@@ -76,6 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **WASM:**
 
 - Added grouped `outputs` arrays and nested `cv` option objects for batch, streaming, online, and prediction configuration while preserving legacy fields.
+- Added a grouped `intervals` option (`confidence`, `prediction`, `bootstrap`) with residual-bootstrap intervals across `Lowess`, `StreamingLowess`, full-update `OnlineLowess`, and `LowessResult.predict()`, plus TypeScript declarations for `IntervalsOptions`, `CVOptions`, and `LowessResult.predict()`.
 
 ### Changed
 
@@ -132,6 +134,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Node.js:**
 
+- Breaking change: replaced `confidence_intervals`/`prediction_intervals` (and `predict()`'s `confidence_level`/`prediction_level`) with `intervals`; removed `cv_fractions`/`cv_method`/`cv_k`/`cv_seed` and `cv.seed` in favor of `cv: { method, k, fractions }` plus one outer `seed` shared by CV and fit-time bootstrap. `predict()` has its own `seed`. Negative seeds throw.
 - Updated `oxlint` to v1.86.0.
 
 **Python:**
@@ -150,6 +153,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **WASM:**
 
+- Breaking change: replaced `confidence_intervals`/`prediction_intervals` (and `predict()`'s `confidence_level`/`prediction_level`) with `intervals`; removed `cv_fractions`/`cv_method`/`cv_k`/`cv_seed` and `cv.seed` in favor of `cv: { method, k, fractions }` plus one outer `seed` shared by CV and fit-time bootstrap. `predict()` has its own `seed`.
 - Updated `oxlint` to v1.86.0.
 
 ### Fixed
@@ -162,6 +166,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Go:**
 
 - Declared cgo seed arguments as `unsigned long long` so the Go type checker sees `C.ulonglong`. `uint64_t` was not exported as `C.uint64_t`.
+
+**Node.js:**
+
+- Fixed `OnlineLowess` and `LowessResult.predict()` silently ignoring `outputs`; online `"weights"`/`"derivative"`/`"se"` and prediction `"se"`/`"derivative"` are now applied.
+
+**WASM:**
+
+- Fixed `OnlineLowess` silently ignoring `outputs`; `"weights"`, `"derivative"`, and `"se"` are now applied.
 
 **lowess:**
 

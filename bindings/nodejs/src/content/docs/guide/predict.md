@@ -20,28 +20,25 @@ Requires `retain_model: true` on the constructor before `fit()`, otherwise `pred
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `outputs` | `string[]` | `[]` | Select `"se"` and/or `"derivative"` |
-| `confidence_level` | `number` | disabled | Confidence interval coverage level (e.g. `0.95`) |
-| `prediction_level` | `number` | disabled | Prediction interval coverage level (e.g. `0.95`) |
-| `outputs` | `string[]` | `[]` | Select `"se"` and/or `"derivative"` |
+| `intervals` | `object` | `null` | Grouped `confidence`, `prediction`, and optional `bootstrap` options |
+| `seed` | `number` | `null` | Reproducible prediction-time bootstrap draws; `0` is valid |
 | `extrapolation` | `string` | `"clamp"` | Behavior for query points outside the training `x`-range |
 | `max_extrapolation_distance` | `number` | disabled | Under `"linear"` extrapolation, the max allowed distance beyond the training boundary before erroring |
 | `max_neighbor_distance` | `number` | disabled | Max allowed distance to the farthest training point in a query's local window before erroring |
 
-### return_se
+### outputs
 
-Computes standard errors for each query point, using the retained model's residual scale and per-point leverage. Required for `confidence_level`/`prediction_level` to be populated. `false` by default.
+Request `"se"` for standard errors (from the retained model's residual scale and per-point leverage) and `"derivative"` for the local slope at each query point. Analytic intervals compute their required standard errors even without an explicit `"se"` output.
 
-### confidence_level
+### intervals
 
-Confidence level for the confidence interval around the mean response at each query point (e.g. `0.95`). Uses the same z-score convention as `fit()`'s own confidence intervals. Disabled by default.
+An object such as `{ confidence: 0.95, prediction: 0.95, bootstrap: 200 }`. `confidence` bounds the mean response and `prediction` bounds a new observation at each query point. Without bootstrap, these use normal-theory standard errors and the retained residual scale.
 
-### prediction_level
+Set `bootstrap` to at least `2` to resample the retained Batch residuals, refit the model, and calculate query-point percentile intervals and standard errors.
 
-Confidence level for the prediction interval for a new observation at each query point (e.g. `0.95`). Widens using the same MAD-based residual scale `fit()` uses for its own intervals. Disabled by default.
+### seed
 
-### return_derivative
-
-Includes the local fit's derivative (slope) at each query point in the output. `false` by default.
+Seeds prediction-time bootstrap draws, independently of the fit/CV `seed` on `Lowess`. It does not enable bootstrap by itself.
 
 ### extrapolation
 
@@ -100,7 +97,29 @@ console.log(prediction.y, prediction.standard_errors, prediction.derivative);
 ```
 
 ```output
-Float64Array(1) [ 5.1 ] null null
+Float64Array(1) [ 5.1 ] Float64Array(1) [ 0 ] Float64Array(1) [ 2.2 ]
+```
+
+### Bootstrap Intervals
+
+```javascript
+const { Lowess } = require('fastlowess');
+
+const x = new Float64Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+const y = new Float64Array([2.1, 4.0, 6.2, 8.0, 10.1, 11.8, 14.2, 16.1, 17.9, 20.2]);
+
+const model = new Lowess({ fraction: 0.7, retain_model: true });
+const result = model.fit(x, y);
+
+const prediction = result.predict(new Float64Array([2.5, 4.5]), {
+    intervals: { confidence: 0.95, prediction: 0.95, bootstrap: 200 },
+    seed: 7,
+});
+console.log("CI present:", prediction.confidence_lower !== null);
+```
+
+```output
+CI present: true
 ```
 
 ### Linear Extrapolation

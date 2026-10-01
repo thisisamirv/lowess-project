@@ -80,7 +80,8 @@ const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const model = new fl.Lowess({
-    cv: { method: "kfold", k: 5, fractions: [0.3, 0.5, 0.7], seed: 42 }
+    cv: { method: "kfold", k: 5, fractions: [0.3, 0.5, 0.7] },
+    seed: 42
 });
 const result = model.fit(x, y);
 console.log("Fraction used:", result.fraction_used);

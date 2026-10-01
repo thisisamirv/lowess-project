@@ -77,8 +77,7 @@ const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 const model = new Lowess({
     fraction: 0.2,
     iterations: 3,
-    confidence_intervals: 0.95,
-    prediction_intervals: 0.95
+    intervals: { confidence: 0.95, prediction: 0.95 }
 });
 const result = model.fit(x, y);
 console.log(`95% PI: [${result.prediction_lower[0].toFixed(4)}, ${result.prediction_upper[0].toFixed(4)}]`);
@@ -145,7 +144,7 @@ const { Lowess } = require('fastlowess-wasm');
 
 const hours = Float64Array.from({ length: 49 }, (_, i) => i * 0.5);
 const expression = Float64Array.from(hours, (h, i) => 100.0 * (1.0 + 0.5 * Math.sin(h * Math.PI / 12)) + (((i * 7 + 3) % 1.7) - 0.85) * 10.0);
-const model = new Lowess({ fraction: 0.3, iterations: 3, confidence_intervals: 0.95, outputs: ["diagnostics"] });
+const model = new Lowess({ fraction: 0.3, iterations: 3, outputs: ["diagnostics"], intervals: { confidence: 0.95 } });
 const result = model.fit(hours, expression);
 
 console.log("R2:", result.diagnostics.r_squared.toFixed(4));

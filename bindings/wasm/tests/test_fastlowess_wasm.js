@@ -223,12 +223,11 @@ test('WASM online missing: "drop" ignores non-finite point', () => {
     assert.ok(res === undefined || res === null);
 });
 
-test('WASM streaming: return_se/confidence_intervals/prediction_intervals', () => {
+test('WASM streaming: return_se and grouped intervals', () => {
     const streamer = new fastlowess.StreamingLowess({
         fraction: 0.2,
         return_se: true,
-        confidence_intervals: 0.95,
-        prediction_intervals: 0.95
+        intervals: { confidence: 0.95, prediction: 0.95 }
     }, {
         chunk_size: 50
     });
@@ -248,7 +247,7 @@ test('WASM streaming: return_se/confidence_intervals/prediction_intervals', () =
     assert.ok(finalResult.standard_errors !== undefined);
 });
 
-test('WASM online: return_se/confidence_intervals/prediction_intervals requires update_mode "full"', () => {
+test('WASM online: return_se and intervals require update_mode "full"', () => {
     assert.throws(() => {
         new fastlowess.OnlineLowess({
             fraction: 0.5,
@@ -260,12 +259,11 @@ test('WASM online: return_se/confidence_intervals/prediction_intervals requires 
     });
 });
 
-test('WASM online: return_se/confidence_intervals/prediction_intervals', () => {
+test('WASM online: return_se and grouped intervals', () => {
     const online = new fastlowess.OnlineLowess({
         fraction: 0.5,
         return_se: true,
-        confidence_intervals: 0.95,
-        prediction_intervals: 0.95
+        intervals: { confidence: 0.95, prediction: 0.95 }
     }, {
         window_capacity: 10,
         min_points: 3,
@@ -286,4 +284,103 @@ test('WASM online: return_se/confidence_intervals/prediction_intervals', () => {
     assert.ok(last.confidence_upper !== undefined);
     assert.ok(last.prediction_lower !== undefined);
     assert.ok(last.prediction_upper !== undefined);
+});
+
+function wavy(n, step = 1) {
+    const x = new Float64Array(Array.from({ length: n }, (_, i) => i * step));
+    const y = x.map((v) => Math.sin(v * 0.1) + 0.1 * Math.cos(0.7 * v));
+    return { x, y };
+}
+
+// Results are views into WASM memory; copy before comparing across calls.
+const copy = (arr) => Array.from(arr);
+const bootstrapIntervals = { confidence: 0.95, prediction: 0.95, bootstrap: 20 };
+
+test('WASM batch: shared seed reproduces CV scores and bootstrap intervals', () => {
+    const { x, y } = wavy(40);
+    const runs = [0, 1].map(() => {
+        const result = new fastlowess.Lowess({
+            intervals: bootstrapIntervals,
+            cv: { method: 'kfold', k: 4, fractions: [0.3, 0.5, 0.7] },
+            seed: 0
+        }).fit(x, y);
+        return {
+            cv: copy(result.cv_scores),
+            lower: copy(result.confidence_lower),
+            se: result.standard_errors.length,
+            pi: result.prediction_upper.length
+        };
+    });
+    assert.deepStrictEqual(runs[0], runs[1]);
+    assert.strictEqual(runs[0].se, x.length);
+    assert.strictEqual(runs[0].pi, x.length);
+});
+
+test('WASM batch: negative seed and single bootstrap replicate are rejected', () => {
+    const { x, y } = wavy(20);
+    assert.throws(() => new fastlowess.Lowess({ seed: -1 }).fit(x, y));
+    assert.throws(() => new fastlowess.Lowess({
+        intervals: { confidence: 0.95, bootstrap: 1 }
+    }).fit(x, y));
+});
+
+test('WASM streaming: seeded bootstrap intervals', () => {
+    const { x, y } = wavy(30, 0.1);
+    const lower = [0, 1].map(() => copy(new fastlowess.StreamingLowess(
+        { intervals: bootstrapIntervals, seed: 42 },
+        { chunk_size: x.length }
+    ).process_chunk(x, y).confidence_lower));
+    assert.ok(lower[0].length > 0);
+    assert.deepStrictEqual(lower[0], lower[1]);
+});
+
+test('WASM online: seeded bootstrap intervals require update_mode "full"', () => {
+    const { x, y } = wavy(12, 0.1);
+    const bounds = [0, 1].map(() => {
+        const online = new fastlowess.OnlineLowess(
+            { fraction: 0.5, intervals: bootstrapIntervals, seed: 0 },
+            { window_capacity: 20, min_points: 5, update_mode: 'full' }
+        );
+        let last = null;
+        for (let i = 0; i < x.length; i++) {
+            last = online.add_point(x[i], y[i]) ?? last;
+        }
+        return [last.confidence_lower, last.prediction_upper];
+    });
+    assert.ok(bounds[0].every((v) => v !== undefined));
+    assert.deepStrictEqual(bounds[0], bounds[1]);
+    assert.throws(() => new fastlowess.OnlineLowess({ intervals: bootstrapIntervals }));
+});
+
+test('WASM predict: grouped outputs, intervals, and seeded bootstrap', () => {
+    const { x, y } = wavy(30);
+    const result = new fastlowess.Lowess({ retain_model: true }).fit(x, y);
+    const newX = new Float64Array([2.5, 10.5, 20.5]);
+
+    const analytic = result.predict(newX, {
+        outputs: ['se', 'derivative'],
+        intervals: { confidence: 0.95, prediction: 0.95 }
+    });
+    assert.strictEqual(analytic.standard_errors.length, newX.length);
+    assert.strictEqual(analytic.derivative.length, newX.length);
+    assert.strictEqual(analytic.prediction_lower.length, newX.length);
+
+    const opts = { intervals: { confidence: 0.95, bootstrap: 20 }, seed: 7 };
+    assert.deepStrictEqual(
+        copy(result.predict(newX, opts).confidence_lower),
+        copy(result.predict(newX, opts).confidence_lower)
+    );
+});
+
+test('WASM online: outputs option is applied', () => {
+    const online = new fastlowess.OnlineLowess(
+        { outputs: ['weights', 'derivative'] },
+        { window_capacity: 10, min_points: 3 }
+    );
+    let last = null;
+    for (let i = 0; i < 6; i++) {
+        last = online.add_point(i, i * 2) ?? last;
+    }
+    assert.ok(last.derivative !== undefined);
+    assert.ok(last.robustness_weight !== undefined);
 });

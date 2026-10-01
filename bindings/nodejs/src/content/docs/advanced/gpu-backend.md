@@ -89,7 +89,7 @@ Once GPU support is available, request it by setting the backend option on the b
 ```javascript
 const { Lowess } = require('fastlowess');
 
-const model = new Lowess({ fraction: 0.5, backend: "gpu", confidence_intervals: 0.95 });
+const model = new Lowess({ fraction: 0.5, backend: "gpu", intervals: { confidence: 0.95 } });
 const result = model.fit(x, y);
 ```
 

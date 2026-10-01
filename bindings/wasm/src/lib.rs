@@ -15,12 +15,36 @@ pub fn init_panic_hook() {
 
 #[wasm_bindgen(typescript_custom_section)]
 const TS_TYPES: &'static str = r#"
+/** Grouped confidence/prediction levels and optional residual-bootstrap refits. */
+export interface IntervalsOptions {
+    /** Confidence level for the mean response (e.g. 0.95). Disabled when absent. */
+    confidence?: number;
+    /** Prediction level for a new observation (e.g. 0.95). Disabled when absent. */
+    prediction?: number;
+    /** Residual-bootstrap refits (at least 2); 0 or absent keeps analytic intervals. */
+    bootstrap?: number;
+}
+
+/** Grouped cross-validation configuration. Seed k-fold shuffling with the outer `seed`. */
+export interface CVOptions {
+    /** CV method ("kfold" or "loocv"). Default: "kfold". */
+    method?: string;
+    /** Number of folds for k-fold CV. Default: 5. */
+    k?: number;
+    /** Candidate smoothing fractions. */
+    fractions: number[];
+}
+
 /** Configuration options for LOWESS smoothing. */
 export interface SmoothOptions {
-    /** Optional output components: diagnostics, residuals, weights, derivative, se, sorted. */
+    /** Optional output components: se, diagnostics, residuals, weights, derivative, sorted. */
     outputs?: string[];
+    /** Grouped confidence/prediction levels and optional residual-bootstrap refits. */
+    intervals?: IntervalsOptions;
     /** Grouped cross-validation configuration. */
-    cv?: { fractions: number[]; method?: string; k?: number; seed?: number };
+    cv?: CVOptions;
+    /** Shared seed for k-fold CV and residual bootstrap; 0 is valid. Does not enable either by itself. */
+    seed?: number;
     /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
     fraction?: number;
     /** Number of robustness iterations. Default: 3. */
@@ -47,24 +71,12 @@ export interface SmoothOptions {
     return_derivative?: boolean;
     /** Compute diagnostics (RMSE, MAE, R2, etc.). Ignored by OnlineLowess (it has no diagnostics field). Default: false. */
     return_diagnostics?: boolean;
-    /** Include standard errors in result. Batch (Lowess) only; ignored by StreamingLowess/OnlineLowess. Default: false. */
+    /** Include standard errors in result. Default: false. */
     return_se?: boolean;
     /** Return results sorted ascending by x instead of in original input order. Batch (Lowess) only; ignored by StreamingLowess/OnlineLowess. Default: false. */
     return_sorted?: boolean;
-    /** Confidence interval level (e.g. 0.95). Batch (Lowess) only; ignored by StreamingLowess/OnlineLowess. Disabled when absent. */
-    confidence_intervals?: number;
-    /** Prediction interval level (e.g. 0.95). Batch (Lowess) only; ignored by StreamingLowess/OnlineLowess. Disabled when absent. */
-    prediction_intervals?: number;
     /** Enable parallel execution. Ignored by OnlineLowess (it processes one point at a time). Default: true. */
     parallel?: boolean;
-    /** Fractions to test for cross-validation. Batch (Lowess) only; ignored by StreamingLowess/OnlineLowess. CV disabled when absent. */
-    cv_fractions?: number[];
-    /** CV method ("kfold" or "loocv"). Batch (Lowess) only; ignored by StreamingLowess/OnlineLowess. Default: "kfold". */
-    cv_method?: string;
-    /** Number of folds for k-fold CV. Batch (Lowess) only; ignored by StreamingLowess/OnlineLowess. Default: 5. */
-    cv_k?: number;
-    /** Random seed for CV fold assignment. Batch (Lowess) only; ignored by StreamingLowess/OnlineLowess. */
-    cv_seed?: number;
     /** Policy for non-finite (NaN/Inf) values in input data ("error", "drop"). Default: "error". */
     missing?: string;
     /** Retain the fitted model's training data, enabling `LowessResult.predict()`. Batch (Lowess) only. Default: false. */
@@ -77,12 +89,12 @@ export interface PredictOptions {
     outputs?: string[];
     /** Include standard errors in the output. Default: false. */
     return_se?: boolean;
-    /** Confidence interval coverage level (e.g. 0.95). Disabled when absent. */
-    confidence_level?: number;
-    /** Prediction interval coverage level (e.g. 0.95). Disabled when absent. */
-    prediction_level?: number;
     /** Include the local fit's derivative (slope) in the output. Default: false. */
     return_derivative?: boolean;
+    /** Grouped confidence/prediction levels and optional residual-bootstrap refits. */
+    intervals?: IntervalsOptions;
+    /** Prediction-time bootstrap seed, independent of the fit seed. */
+    seed?: number;
     /** Behavior for query points outside the training range ("clamp", "linear", "error"). Default: "clamp". */
     extrapolation?: string;
     /** Under "linear" extrapolation, the maximum allowed distance beyond the training boundary before `predict()` errors instead of returning an unbounded value. */
@@ -109,6 +121,11 @@ export interface PredictOutput {
     readonly derivative: Float64Array | undefined;
 }
 
+export interface LowessResult {
+    /** Evaluate the fitted model at out-of-sample query points. Requires `retain_model: true`. */
+    predict(newX: Float64Array, options?: PredictOptions): PredictOutput;
+}
+
 /** Configuration options for streaming LOWESS smoothing. A subset of `SmoothOptions`: cross-validation and `return_sorted` have no equivalent here. */
 export interface StreamingSmoothOptions {
     /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
@@ -129,6 +146,12 @@ export interface StreamingSmoothOptions {
     scaling_method?: string;
     /** Auto-convergence tolerance. Disabled when absent. */
     auto_converge?: number;
+    /** Optional output components: se, diagnostics, residuals, weights, derivative. */
+    outputs?: string[];
+    /** Confidence/prediction levels and per-chunk residual-bootstrap refits. */
+    intervals?: IntervalsOptions;
+    /** Bootstrap seed; each combined chunk restarts from it. */
+    seed?: number;
     /** Include residuals in result. Default: false. */
     return_residuals?: boolean;
     /** Include robustness weights in result. Default: false. */
@@ -139,17 +162,13 @@ export interface StreamingSmoothOptions {
     return_diagnostics?: boolean;
     /** Compute standard errors. Default: false. */
     return_se?: boolean;
-    /** Calculate confidence intervals (e.g., 0.95). Default: undefined. */
-    confidence_intervals?: number;
-    /** Calculate prediction intervals. Default: undefined. */
-    prediction_intervals?: number;
     /** Enable parallel execution. Default: true. */
     parallel?: boolean;
     /** Policy for non-finite (NaN/Inf) values in each chunk ("error", "drop"). Default: "error". */
     missing?: string;
 }
 
-/** Configuration options for online LOWESS smoothing. A subset of `SmoothOptions`: diagnostics, residuals, parallel execution, cross-validation, and `return_sorted` have no equivalent here. `return_se`/`confidence_intervals`/`prediction_intervals` require `update_mode = "full"`. */
+/** Configuration options for online LOWESS smoothing. A subset of `SmoothOptions`: diagnostics, residuals, parallel execution, cross-validation, and `return_sorted` have no equivalent here. `return_se` and `intervals` require `update_mode = "full"`. */
 export interface OnlineSmoothOptions {
     /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
     fraction?: number;
@@ -169,6 +188,12 @@ export interface OnlineSmoothOptions {
     scaling_method?: string;
     /** Auto-convergence tolerance. Disabled when absent. */
     auto_converge?: number;
+    /** Optional output components: se, weights, derivative. */
+    outputs?: string[];
+    /** Confidence/prediction levels and per-window residual-bootstrap refits. Requires `update_mode = "full"`. */
+    intervals?: IntervalsOptions;
+    /** Bootstrap seed; each full-update window restarts from it. */
+    seed?: number;
     /** Include robustness weights in result. Default: false. */
     return_robustness_weights?: boolean;
     /** Include the latest point's local fit derivative (slope) in result. Default: false. */
@@ -177,10 +202,6 @@ export interface OnlineSmoothOptions {
     missing?: string;
     /** Compute standard errors. Requires `update_mode = "full"`. Default: false. */
     return_se?: boolean;
-    /** Calculate confidence intervals (e.g., 0.95). Requires `update_mode = "full"`. Default: undefined. */
-    confidence_intervals?: number;
-    /** Calculate prediction intervals. Requires `update_mode = "full"`. Default: undefined. */
-    prediction_intervals?: number;
 }
 
 /** Configuration options for streaming LOWESS. */
@@ -249,6 +270,7 @@ use ::fastLowess::internals::LowessBuilder;
 use ::fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use ::fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
 use ::fastLowess::internals::binding_support as shared_parse;
+use ::fastLowess::prelude::IntervalsBuilder;
 use ::fastLowess::prelude::LowessResult as InnerLowessResult;
 
 fn to_js_error(err: shared_parse::BindingError) -> JsValue {
@@ -267,6 +289,31 @@ fn has_output(outputs: Option<&Vec<String>>, name: &str) -> bool {
     outputs.is_some_and(|values| values.iter().any(|value| value == name))
 }
 
+fn bootstrap_count(intervals: Option<&IntervalsOptionsJs>) -> Option<usize> {
+    intervals.and_then(|iv| iv.bootstrap).filter(|&n| n > 0)
+}
+
+fn apply_bootstrap_and_seed(
+    mut builder: LowessBuilder<f64>,
+    intervals: Option<&IntervalsOptionsJs>,
+    seed: Option<u64>,
+) -> LowessBuilder<f64> {
+    if let Some(n_boot) = bootstrap_count(intervals) {
+        builder = builder.intervals(IntervalsBuilder::new().bootstrap(n_boot));
+    }
+    if let Some(seed) = seed {
+        builder = builder.seed(seed);
+    }
+    builder
+}
+
+#[derive(Deserialize, Default)]
+pub struct IntervalsOptionsJs {
+    pub confidence: Option<f64>,
+    pub prediction: Option<f64>,
+    pub bootstrap: Option<usize>,
+}
+
 #[derive(Deserialize)]
 pub struct SmoothOptions {
     pub fraction: Option<f64>,
@@ -279,40 +326,35 @@ pub struct SmoothOptions {
     pub scaling_method: Option<String>,
     pub auto_converge: Option<f64>,
     pub outputs: Option<Vec<String>>,
+    pub intervals: Option<IntervalsOptionsJs>,
     pub cv: Option<CVOptionsJs>,
+    pub seed: Option<u64>,
     pub return_residuals: Option<bool>,
     pub return_robustness_weights: Option<bool>,
     pub return_derivative: Option<bool>,
     pub return_diagnostics: Option<bool>,
     pub return_se: Option<bool>,
     pub return_sorted: Option<bool>,
-    pub confidence_intervals: Option<f64>,
-    pub prediction_intervals: Option<f64>,
     #[serde(rename = "parallel")]
     pub parallel: Option<bool>,
-    pub cv_fractions: Option<Vec<f64>>,
-    pub cv_method: Option<String>,
-    pub cv_k: Option<u32>,
-    pub cv_seed: Option<u64>,
     pub missing: Option<String>,
     pub retain_model: Option<bool>,
 }
 
 #[derive(Deserialize)]
 pub struct CVOptionsJs {
-    pub fractions: Vec<f64>,
     pub method: Option<String>,
     pub k: Option<u32>,
-    pub seed: Option<u64>,
+    pub fractions: Vec<f64>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 pub struct PredictOptionsJs {
     pub outputs: Option<Vec<String>>,
     pub return_se: Option<bool>,
-    pub confidence_level: Option<f64>,
-    pub prediction_level: Option<f64>,
     pub return_derivative: Option<bool>,
+    pub intervals: Option<IntervalsOptionsJs>,
+    pub seed: Option<u64>,
     pub extrapolation: Option<String>,
     pub max_extrapolation_distance: Option<f64>,
     pub max_neighbor_distance: Option<f64>,
@@ -344,6 +386,8 @@ pub struct StreamingSmoothOptions {
     pub scaling_method: Option<String>,
     pub auto_converge: Option<f64>,
     pub outputs: Option<Vec<String>>,
+    pub intervals: Option<IntervalsOptionsJs>,
+    pub seed: Option<u64>,
     pub return_residuals: Option<bool>,
     pub return_robustness_weights: Option<bool>,
     pub return_derivative: Option<bool>,
@@ -351,8 +395,6 @@ pub struct StreamingSmoothOptions {
     pub parallel: Option<bool>,
     pub missing: Option<String>,
     pub return_se: Option<bool>,
-    pub confidence_intervals: Option<f64>,
-    pub prediction_intervals: Option<f64>,
 }
 
 #[derive(Deserialize)]
@@ -367,12 +409,12 @@ pub struct OnlineSmoothOptions {
     pub scaling_method: Option<String>,
     pub auto_converge: Option<f64>,
     pub outputs: Option<Vec<String>>,
+    pub intervals: Option<IntervalsOptionsJs>,
+    pub seed: Option<u64>,
     pub return_robustness_weights: Option<bool>,
     pub return_derivative: Option<bool>,
     pub missing: Option<String>,
     pub return_se: Option<bool>,
-    pub confidence_intervals: Option<f64>,
-    pub prediction_intervals: Option<f64>,
 }
 
 #[wasm_bindgen]
@@ -579,35 +621,29 @@ impl LowessResult {
         options: JsValue,
     ) -> Result<PredictOutput, JsValue> {
         let opts: PredictOptionsJs = if options.is_undefined() || options.is_null() {
-            PredictOptionsJs {
-                outputs: None,
-                return_se: None,
-                confidence_level: None,
-                prediction_level: None,
-                return_derivative: None,
-                extrapolation: None,
-                max_extrapolation_distance: None,
-                max_neighbor_distance: None,
-            }
+            PredictOptionsJs::default()
         } else {
             serde_wasm_bindgen::from_value(options)?
         };
         let new_x_vec = new_x.to_vec();
-        let output = map_invalid_arg(shared_parse::run_predict(
-            &self.inner,
-            &new_x_vec,
+        let intervals = opts.intervals.as_ref();
+        let query = shared_parse::build_predict_options_with_bootstrap(
             shared_parse::PredictOptionSet {
                 return_se: opts.return_se.unwrap_or(false)
                     || has_output(opts.outputs.as_ref(), "se"),
-                confidence_level: opts.confidence_level,
-                prediction_level: opts.prediction_level,
+                confidence_level: intervals.and_then(|iv| iv.confidence),
+                prediction_level: intervals.and_then(|iv| iv.prediction),
                 return_derivative: opts.return_derivative.unwrap_or(false)
                     || has_output(opts.outputs.as_ref(), "derivative"),
                 extrapolation: opts.extrapolation.as_deref(),
                 max_extrapolation_distance: opts.max_extrapolation_distance,
                 max_neighbor_distance: opts.max_neighbor_distance,
             },
-        ))?;
+            bootstrap_count(intervals),
+            opts.seed,
+        )
+        .map_err(to_js_error)?;
+        let output = map_invalid_arg(query.call(&self.inner, &new_x_vec))?;
         Ok(PredictOutput { inner: output })
     }
 }
@@ -706,29 +742,12 @@ impl Lowess {
     }
 }
 
-/// Which adapter `options_to_builder` is configuring a builder for.
-///
-/// `return_diagnostics`/`return_residuals`/`parallel` are no-ops for Online
-/// (it processes one point at a time and has no diagnostics), so they're
-/// dropped there. `return_sorted`/`confidence_intervals`/
-/// `prediction_intervals`/`return_se`/`cv_fractions`/`cv_method`/`cv_k`/
-/// `cv_seed` are Batch-only and dropped for both Streaming and Online.
 /// Build a `LowessBuilder` from Batch options, applying every field.
 fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LowessBuilder<f64>, JsValue> {
     let mut builder = LowessBuilder::<f64>::new();
     if let Some(opts) = opts {
         let cv = opts.cv.as_ref();
-        let cv_fractions = cv
-            .map(|value| value.fractions.as_slice())
-            .or(opts.cv_fractions.as_deref());
-        let cv_method = cv
-            .and_then(|value| value.method.as_deref())
-            .or(opts.cv_method.as_deref());
-        let cv_k = cv
-            .and_then(|value| value.k)
-            .map(|value| value as usize)
-            .or(opts.cv_k.map(|value| value as usize));
-        let cv_seed = cv.and_then(|value| value.seed).or(opts.cv_seed);
+        let intervals = opts.intervals.as_ref();
         builder = map_invalid_arg(shared_parse::apply_builder_options(
             builder,
             shared_parse::BuilderOptionSet {
@@ -751,15 +770,14 @@ fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LowessBuilder
                     || has_output(opts.outputs.as_ref(), "se"),
                 return_sorted: opts.return_sorted.unwrap_or(false)
                     || has_output(opts.outputs.as_ref(), "sorted"),
-                confidence_intervals: opts.confidence_intervals,
-                prediction_intervals: opts.prediction_intervals,
+                confidence_intervals: intervals.and_then(|iv| iv.confidence),
+                prediction_intervals: intervals.and_then(|iv| iv.prediction),
                 parallel: opts.parallel,
                 backend: None,
                 missing: opts.missing.as_deref(),
-                cv_fractions,
-                cv_method,
-                cv_k,
-                cv_seed,
+                cv_fractions: cv.map(|value| value.fractions.as_slice()),
+                cv_method: cv.and_then(|value| value.method.as_deref()),
+                cv_k: cv.and_then(|value| value.k).map(|value| value as usize),
                 retain_model: opts.retain_model,
                 ..Default::default()
             },
@@ -769,6 +787,7 @@ fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LowessBuilder
         {
             builder = builder.return_derivative();
         }
+        builder = apply_bootstrap_and_seed(builder, intervals, opts.seed);
     }
     Ok(builder)
 }
@@ -799,8 +818,8 @@ fn streaming_options_to_builder(
                     || has_output(opts.outputs.as_ref(), "diagnostics"),
                 return_se: opts.return_se.unwrap_or(false)
                     || has_output(opts.outputs.as_ref(), "se"),
-                confidence_intervals: opts.confidence_intervals,
-                prediction_intervals: opts.prediction_intervals,
+                confidence_intervals: opts.intervals.as_ref().and_then(|iv| iv.confidence),
+                prediction_intervals: opts.intervals.as_ref().and_then(|iv| iv.prediction),
                 parallel: opts.parallel,
                 missing: opts.missing.as_deref(),
                 ..Default::default()
@@ -811,6 +830,7 @@ fn streaming_options_to_builder(
         {
             builder = builder.return_derivative();
         }
+        builder = apply_bootstrap_and_seed(builder, opts.intervals.as_ref(), opts.seed);
     }
     Ok(builder)
 }
@@ -833,17 +853,22 @@ fn online_options_to_builder(
                 boundary_policy: opts.boundary_policy.as_deref(),
                 scaling_method: opts.scaling_method.as_deref(),
                 auto_converge: opts.auto_converge,
-                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
-                return_se: opts.return_se.unwrap_or(false),
-                confidence_intervals: opts.confidence_intervals,
-                prediction_intervals: opts.prediction_intervals,
+                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "weights"),
+                return_se: opts.return_se.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "se"),
+                confidence_intervals: opts.intervals.as_ref().and_then(|iv| iv.confidence),
+                prediction_intervals: opts.intervals.as_ref().and_then(|iv| iv.prediction),
                 missing: opts.missing.as_deref(),
                 ..Default::default()
             },
         ))?;
-        if opts.return_derivative.unwrap_or(false) {
+        if opts.return_derivative.unwrap_or(false)
+            || has_output(opts.outputs.as_ref(), "derivative")
+        {
             builder = builder.return_derivative();
         }
+        builder = apply_bootstrap_and_seed(builder, opts.intervals.as_ref(), opts.seed);
     }
     Ok(builder)
 }

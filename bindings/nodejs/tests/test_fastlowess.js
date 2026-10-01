@@ -266,12 +266,11 @@ test('online missing: "drop" ignores non-finite point', () => {
     assert.strictEqual(res, null);
 });
 
-test('streaming: return_se/confidence_intervals/prediction_intervals', () => {
+test('streaming: return_se and grouped intervals', () => {
     const streamer = new fastlowess.StreamingLowess({
         fraction: 0.2,
         return_se: true,
-        confidence_intervals: 0.95,
-        prediction_intervals: 0.95
+        intervals: { confidence: 0.95, prediction: 0.95 }
     }, {
         chunk_size: 50
     });
@@ -291,7 +290,7 @@ test('streaming: return_se/confidence_intervals/prediction_intervals', () => {
     assert.ok(finalResult.standard_errors !== null);
 });
 
-test('online: return_se/confidence_intervals/prediction_intervals requires update_mode "full"', () => {
+test('online: return_se and intervals require update_mode "full"', () => {
     assert.throws(() => {
         new fastlowess.OnlineLowess({
             fraction: 0.5,
@@ -303,12 +302,11 @@ test('online: return_se/confidence_intervals/prediction_intervals requires updat
     });
 });
 
-test('online: return_se/confidence_intervals/prediction_intervals', () => {
+test('online: return_se and grouped intervals', () => {
     const online = new fastlowess.OnlineLowess({
         fraction: 0.5,
         return_se: true,
-        confidence_intervals: 0.95,
-        prediction_intervals: 0.95
+        intervals: { confidence: 0.95, prediction: 0.95 }
     }, {
         window_capacity: 10,
         min_points: 3,
@@ -329,4 +327,81 @@ test('online: return_se/confidence_intervals/prediction_intervals', () => {
     assert.ok(last.confidence_upper !== null);
     assert.ok(last.prediction_lower !== null);
     assert.ok(last.prediction_upper !== null);
+});
+
+function wavy(n, step = 1) {
+    const x = new Float64Array(Array.from({ length: n }, (_, i) => i * step));
+    const y = x.map((v) => Math.sin(v * 0.1) + 0.1 * Math.cos(0.7 * v));
+    return { x, y };
+}
+
+const bootstrapIntervals = { confidence: 0.95, prediction: 0.95, bootstrap: 20 };
+
+test('batch: shared seed reproduces CV scores and bootstrap intervals', () => {
+    const { x, y } = wavy(40);
+    const runs = [0, 1].map(() => new fastlowess.Lowess({
+        intervals: bootstrapIntervals,
+        cv: { method: 'kfold', k: 4, fractions: [0.3, 0.5, 0.7] },
+        seed: 0
+    }).fit(x, y));
+    assert.deepStrictEqual(runs[0].cv_scores, runs[1].cv_scores);
+    assert.deepStrictEqual(runs[0].confidence_lower, runs[1].confidence_lower);
+    assert.strictEqual(runs[0].standard_errors.length, x.length);
+    assert.strictEqual(runs[0].prediction_upper.length, x.length);
+});
+
+test('batch: negative seed and single bootstrap replicate are rejected', () => {
+    const { x, y } = wavy(20);
+    assert.throws(() => new fastlowess.Lowess({ seed: -1 }).fit(x, y));
+    assert.throws(() => new fastlowess.Lowess({
+        intervals: { confidence: 0.95, bootstrap: 1 }
+    }).fit(x, y));
+});
+
+test('streaming: seeded bootstrap intervals', () => {
+    const { x, y } = wavy(30, 0.1);
+    const lower = [0, 1].map(() => new fastlowess.StreamingLowess(
+        { intervals: bootstrapIntervals, seed: 42 },
+        { chunk_size: x.length }
+    ).process_chunk(x, y).confidence_lower);
+    assert.ok(lower[0] !== null);
+    assert.deepStrictEqual(lower[0], lower[1]);
+});
+
+test('online: seeded bootstrap intervals require update_mode "full"', () => {
+    const { x, y } = wavy(12, 0.1);
+    const bounds = [0, 1].map(() => {
+        const online = new fastlowess.OnlineLowess(
+            { fraction: 0.5, intervals: bootstrapIntervals, seed: 0 },
+            { window_capacity: 20, min_points: 5, update_mode: 'full' }
+        );
+        let last = null;
+        for (let i = 0; i < x.length; i++) {
+            last = online.add_point(x[i], y[i]) ?? last;
+        }
+        return [last.confidence_lower, last.prediction_upper];
+    });
+    assert.ok(bounds[0].every((v) => v !== null));
+    assert.deepStrictEqual(bounds[0], bounds[1]);
+    assert.throws(() => new fastlowess.OnlineLowess({ intervals: bootstrapIntervals }));
+});
+
+test('predict: grouped outputs, intervals, and seeded bootstrap', () => {
+    const { x, y } = wavy(30);
+    const result = new fastlowess.Lowess({ retain_model: true }).fit(x, y);
+    const newX = new Float64Array([2.5, 10.5, 20.5]);
+
+    const analytic = result.predict(newX, {
+        outputs: ['se', 'derivative'],
+        intervals: { confidence: 0.95, prediction: 0.95 }
+    });
+    assert.strictEqual(analytic.standard_errors.length, newX.length);
+    assert.strictEqual(analytic.derivative.length, newX.length);
+    assert.strictEqual(analytic.prediction_lower.length, newX.length);
+
+    const opts = { intervals: { confidence: 0.95, bootstrap: 20 }, seed: 7 };
+    assert.deepStrictEqual(
+        result.predict(newX, opts).confidence_lower,
+        result.predict(newX, opts).confidence_lower
+    );
 });

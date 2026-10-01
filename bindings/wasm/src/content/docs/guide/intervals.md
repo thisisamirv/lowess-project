@@ -30,7 +30,7 @@ const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
-const model = new Lowess({fraction: 0.5, confidence_intervals: 0.95});
+const model = new Lowess({fraction: 0.5, intervals: {confidence: 0.95}});
 const result = model.fit(x, y);
 
 result.y.slice(0, 5).forEach((y, i) => {
@@ -59,7 +59,7 @@ const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
-const model = new Lowess({fraction: 0.5, prediction_intervals: 0.95});
+const model = new Lowess({fraction: 0.5, intervals: {prediction: 0.95}});
 const result = model.fit(x, y);
 console.log(`Prediction bounds: [${result.prediction_lower[0]}, ${result.prediction_upper[0]}]`);
 ```
@@ -82,8 +82,7 @@ const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const model = new Lowess({fraction: 0.5,
-    confidence_intervals: 0.95,
-    prediction_intervals: 0.95});
+    intervals: {confidence: 0.95, prediction: 0.95}});
 const result = model.fit(x, y);
 console.log("CI lower[0]:", result.confidence_lower[0].toFixed(4));
 ```
@@ -112,7 +111,7 @@ const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 // 99% confidence interval
-const model = new Lowess({confidence_intervals: 0.99});
+const model = new Lowess({intervals: {confidence: 0.99}});
 const result = model.fit(x, y);
 console.log("CI lower[0]:", result.confidence_lower[0].toFixed(4));
 ```
@@ -134,7 +133,7 @@ const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
-const model = new Lowess({confidence_intervals: 0.95});
+const model = new Lowess({intervals: {confidence: 0.95}});
 const result = model.fit(x, y);
 
 result.standard_errors.slice(0, 5).forEach((se, i) => {
@@ -152,6 +151,39 @@ Point 4: SE = 0.0271
 
 ---
 
+## Residual Bootstrap
+
+Set `bootstrap` to at least `2` to replace analytic uncertainty with residual-bootstrap refits. Batch shares its outer `seed` with CV; Streaming restarts the seed per combined chunk, and Online per full-update window. Online bootstrap requires `update_mode: "full"`.
+
+```javascript
+const { Lowess, StreamingLowess, OnlineLowess } = require('fastlowess-wasm');
+
+const x = Float64Array.from({ length: 30 }, (_, i) => i * 0.1);
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1 * Math.cos(7 * xi));
+const intervals = { confidence: 0.95, prediction: 0.95, bootstrap: 20 };
+
+const batch = new Lowess({ intervals, seed: 42 }).fit(x, y);
+console.log("Batch SEs:", batch.standard_errors.length);
+
+const stream = new StreamingLowess({ intervals, seed: 42 }, { chunk_size: x.length });
+console.log("Streaming CI present:", stream.process_chunk(x, y).confidence_lower !== undefined);
+
+const online = new OnlineLowess({ intervals, seed: 42 }, { min_points: 5, update_mode: "full" });
+let last = null;
+for (let i = 0; i < 12; i++) {
+    last = online.add_point(x[i], y[i]) ?? last;
+}
+console.log("Online PI present:", last.prediction_lower !== undefined);
+```
+
+```output
+Batch SEs: 30
+Streaming CI present: true
+Online PI present: true
+```
+
+---
+
 ## Availability
 
 :::note[Supported In All Three Adapters]
@@ -163,3 +195,4 @@ Confidence and prediction intervals are available in **Batch**, **Streaming**, a
 | Confidence intervals | ✓ | ✓ | ✓ (`update_mode: "full"` only) |
 | Prediction intervals | ✓ | ✓ | ✓ (`update_mode: "full"` only) |
 | Standard errors | ✓ | ✓ | ✓ (`update_mode: "full"` only) |
+| Residual bootstrap | ✓ | ✓ | ✓ (`update_mode: "full"` only) |

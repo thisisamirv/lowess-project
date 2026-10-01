@@ -64,22 +64,22 @@ Fraction used: 0.5
 | --- | --- | --- | --- |
 | `fraction` | `number` | `0.67` | Smoothing fraction (bandwidth) |
 | `iterations` | `number` | `3` | Number of robustifying iterations |
-| `delta` | `number` | `NaN` | Interpolation distance (`NaN` auto-sets it to 1% of the x-range) |
 | `weight_function` | `string` | `"tricube"` | Weight function name |
 | `robustness_method` | `string` | `"bisquare"` | Robustness method name |
-| `scaling_method` | `string` | `"mad"` | Residual scaling method |
-| `boundary_policy` | `string` | `"extend"` | Boundary handling policy |
+| `delta` | `number` | `NaN` | Interpolation distance (`NaN` auto-sets it to 1% of the x-range) |
 | `zero_weight_fallback` | `string` | `"use_local_mean"` | Zero-weight handling |
-| `missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
+| `boundary_policy` | `string` | `"extend"` | Boundary handling policy |
+| `scaling_method` | `string` | `"mad"` | Residual scaling method |
 | `auto_converge` | `number` | `null` | Auto-convergence tolerance |
-| `confidence_intervals` | `number` | `null` | Confidence level (e.g., 0.95) |
-| `prediction_intervals` | `number` | `null` | Prediction level (e.g., 0.95) |
-| `outputs` | `string[]` | `[]` | Select `diagnostics`, `residuals`, `weights`, `derivative`, `se`, and/or `sorted` |
+| `missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
 | `parallel` | `boolean` | `true` | Enable parallel execution |
 | `backend` | `string` | `"cpu"` | Execution backend (`"cpu"` or `"gpu"`); GPU requires the package to be built with the `gpu` Cargo feature |
-| `cv` | `object` | `null` | Grouped CV options: `fractions`, `method`, `k`, and `seed` |
+| `outputs` | `string[]` | `[]` | Select `se`, `diagnostics`, `residuals`, `weights`, `derivative`, and/or `sorted` |
+| `intervals` | `object` | `null` | Grouped interval options: `confidence`, `prediction`, and `bootstrap` |
+| `cv` | `object` | `null` | Grouped CV options: `method`, `k`, and `fractions` |
+| `seed` | `number` | `null` | Shared CV/bootstrap seed; `0` is a valid seed |
+| `retain_model` | `boolean` | `false` | Retain training data, enabling `result.predict()` |
 | `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`, not the options object |
-| `return_derivative` | `boolean` | `false` | Include the per-point local fit derivative (slope) in result |
 
 ## Options
 
@@ -105,10 +105,6 @@ Fraction used: 0.5
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-### delta
-
-Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to 1% of the x-range. Set it to `0` explicitly to disable interpolation and fit every point exactly.
-
 ### weight_function
 
 *See: [Weight Functions](../weighting/kernels.md)*
@@ -129,6 +125,20 @@ Points within `delta` of each other on the x-axis share the same local fit inste
 - `"huber"`
 - `"talwar"`
 
+### delta
+
+Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to 1% of the x-range. Set it to `0` explicitly to disable interpolation and fit every point exactly.
+
+### zero_weight_fallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
 ### boundary_policy
 
 *See: [Boundary Handling](../advanced/boundary.md)*
@@ -146,15 +156,11 @@ Points within `delta` of each other on the x-axis share the same local fit inste
 - `"mar"` (alias: `"median_absolute_residual"`)
 - `"mean"` (alias: `"mean_absolute_residual"`)
 
-### zero_weight_fallback
+### auto_converge
 
-Behavior when all neighborhood weights are zero:
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
 
-| Option | Behavior |
-| --- | --- |
-| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
-| `"return_original"` (alias: `"original"`) | Return the original y value |
-| `"return_none"` (alias: `"none"`) | Return `NaN` |
+Convergence tolerance for early stopping of robustness iterations. `null` (default) disables early stopping.
 
 ### missing
 
@@ -167,23 +173,61 @@ Policy for handling non-finite (NaN/Inf) values in `x`/`y` (and `custom_weights`
 
 **Note:** A length mismatch between `x` and `y` always errors, even under `"drop"`.
 
-### auto_converge
+### parallel
 
-*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+Enable multi-threaded execution via Rayon.
 
-Convergence tolerance for early stopping of robustness iterations. `null` (default) disables early stopping.
+- `true` (default) — parallelizes the local regression fits across CPU cores
+- `false` — forces single-threaded execution (useful for benchmarking or deterministic profiling)
 
-### confidence_intervals
+### backend
+
+*See: [GPU Backend](../advanced/gpu-backend.md)*
+
+The batch `Lowess` class can optionally run on a GPU-accelerated backend powered by `wgpu`, for high-throughput processing of large datasets (10k+ points).
+
+- `"cpu"` (default)
+- `"gpu"` — requires the package to be built with the `gpu` Cargo feature
+
+### intervals
 
 *See: [Intervals](../guide/intervals.md)*
 
-Confidence level for the confidence interval around the mean response (e.g. `0.95`). `null` (default) disables confidence intervals.
+An object such as `{ confidence: 0.95, prediction: 0.95, bootstrap: 200 }`. `confidence` bounds the mean response and `prediction` bounds a new observation; omitted levels disable that bound. `bootstrap` (at least `2`) replaces analytic intervals with residual-bootstrap standard errors and percentile bounds. `seed` controls fit-time bootstrap draws but does not enable bootstrap by itself.
 
-### prediction_intervals
+### CV Options
 
-*See: [Intervals](../guide/intervals.md)*
+*See: [Cross-Validation](../guide/cross-validation.md)*
 
-Confidence level for the prediction interval for new observations (e.g. `0.95`). `null` (default) disables prediction intervals.
+An object such as `{ method: "kfold", k: 5, fractions: [0.2, 0.3, 0.5] }`:
+
+- `method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
+- `k`: Number of folds for k-fold CV. Ignored when `method: "loocv"`.
+- `fractions`: Candidate fractions to evaluate. Required.
+
+Seed k-fold shuffling with the outer `seed` option, not inside `cv`.
+
+### seed
+
+One seed shared by k-fold CV shuffling and fit-time residual bootstrap. It does not enable either feature by itself; `null` (default) uses each feature's default, and `0` is a valid seed. Negative values throw.
+
+### retain_model
+
+*See: [Predict](../guide/predict.md)*
+
+Retains the fitted model's training data, enabling `result.predict(newX, options)` at out-of-sample query points. `false` (default) — no extra memory/copy cost unless requested.
+
+### custom_weights
+
+*See: [Custom Weights](../weighting/custom-weights.md)*
+
+Per-observation weights, passed to `fit()` rather than the options object.
+
+### return_se
+
+*See: [Intervals](../guide/intervals.md#standard-errors)*
+
+Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
 
 ### return_diagnostics
 
@@ -208,54 +252,17 @@ Include the final per-point robustness weights (from the last robustness iterati
 - `false` (default) — leaves `result.robustness_weights` as `null`
 - `true` — populates `result.robustness_weights`
 
-### return_se
-
-*See: [Intervals](../guide/intervals.md#standard-errors)*
-
-Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
-
-### return_sorted
-
-When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
-To get both orderings, sort the default result client-side (e.g. by the returned `x` array's sort order) instead of calling `fit()` twice.
-
-### parallel
-
-Enable multi-threaded execution via Rayon.
-
-- `true` (default) — parallelizes the local regression fits across CPU cores
-- `false` — forces single-threaded execution (useful for benchmarking or deterministic profiling)
-
-### backend
-
-*See: [GPU Backend](../advanced/gpu-backend.md)*
-
-The batch `Lowess` class can optionally run on a GPU-accelerated backend powered by `wgpu`, for high-throughput processing of large datasets (10k+ points).
-
-- `"cpu"` (default)
-- `"gpu"` — requires the package to be built with the `gpu` Cargo feature
-
-### CV Options
-
-*See: [Cross-Validation](../guide/cross-validation.md)*
-
-- `cv_method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cv_k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
-- `cv_k`: Number of folds for k-fold CV. Ignored when `cv_method="loocv"`.
-- `cv_fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
-- `cv_seed`: Seed for reproducible k-fold shuffling. `null` (default) uses a random seed.
-
-### custom_weights
-
-*See: [Custom Weights](../weighting/custom-weights.md)*
-
-Per-observation weights, passed to `fit()` rather than the options object.
-
 ### return_derivative
 
 Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `LowessResult.derivative`, enabling turning-point/rate-of-change analysis at effectively no extra computation cost.
 
 - `false` (default) — leaves `result.derivative` as `null`
 - `true` — populates it
+
+### return_sorted
+
+When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
+To get both orderings, sort the default result client-side (e.g. by the returned `x` array's sort order) instead of calling `fit()` twice.
 
 ## Result Structure
 

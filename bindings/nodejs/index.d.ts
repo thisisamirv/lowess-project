@@ -93,12 +93,14 @@ export declare class StreamingLowess {
   finalize(): LowessResult
 }
 
-/** Configuration options for LOWESS smoothing. */
+/** Grouped cross-validation configuration. Seed k-fold shuffling with the outer `seed`. */
 export interface CvOptions {
-  fractions: Array<number>
+  /** CV method ("kfold", "loocv"). Default: "kfold". */
   method?: string
+  /** Number of folds for k-fold CV. Default: 5. */
   k?: number
-  seed?: number
+  /** Candidate smoothing fractions. */
+  fractions: Array<number>
 }
 
 /** Diagnostic statistics for the LOWESS fit. */
@@ -121,6 +123,16 @@ export interface Diagnostics {
 
 /** True if this addon was built with the `gpu` Cargo feature enabled. */
 export declare function gpu_enabled(): boolean
+
+/** Grouped confidence/prediction levels and optional residual-bootstrap refits. */
+export interface IntervalsOptions {
+  /** Confidence level for the mean response (e.g. 0.95). Default: None. */
+  confidence?: number
+  /** Prediction level for a new observation (e.g. 0.95). Default: None. */
+  prediction?: number
+  /** Residual-bootstrap refits (at least 2); 0 or unset keeps analytic intervals. */
+  bootstrap?: number
+}
 
 /** Configuration options for online processing. */
 export interface OnlineOptions {
@@ -162,8 +174,7 @@ export interface OnlineOutput {
  * A subset of [`SmoothOptions`]: diagnostics, residuals, parallel execution,
  * cross-validation, `return_sorted`, and `backend` are all no-ops for online
  * processing (it handles one point at a time), so they aren't fields on
- * this type. `return_se`/`confidence_intervals`/`prediction_intervals`
- * require `update_mode = "full"`.
+ * this type. `return_se` and `intervals` require `update_mode = "full"`.
  */
 export interface OnlineSmoothOptions {
   /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
@@ -187,8 +198,15 @@ export interface OnlineSmoothOptions {
   scaling_method?: string
   /** Auto-convergence tolerance. Default: None. */
   auto_converge?: number
-  /** Optional output components: weights, derivative, se. */
+  /** Optional output components: se, weights, derivative. */
   outputs?: Array<string>
+  /**
+   * Confidence/prediction levels and per-window residual-bootstrap refits.
+   * Requires `update_mode = "full"`.
+   */
+  intervals?: IntervalsOptions
+  /** Bootstrap seed; each full-update window restarts from it. Default: None. */
+  seed?: number
   /** Return robustness weights in result. Default: false. */
   return_robustness_weights?: boolean
   /** Return the per-point local fit derivative (slope) in result. Default: false. */
@@ -197,22 +215,20 @@ export interface OnlineSmoothOptions {
   missing?: string
   /** Compute standard errors. Requires `update_mode = "full"`. Default: false. */
   return_se?: boolean
-  /** Calculate confidence intervals (e.g., 0.95). Requires `update_mode = "full"`. Default: None. */
-  confidence_intervals?: number
-  /** Calculate prediction intervals. Requires `update_mode = "full"`. Default: None. */
-  prediction_intervals?: number
 }
 
 /** Options for `LowessResult.predict()`. */
 export interface PredictOptions {
+  /** Optional output components: se, derivative. */
+  outputs?: Array<string>
   /** Include standard errors in the output. Default: false. */
   return_se?: boolean
-  /** Confidence interval coverage level (e.g. 0.95). Default: None. */
-  confidence_level?: number
-  /** Prediction interval coverage level (e.g. 0.95). Default: None. */
-  prediction_level?: number
   /** Include the local fit's derivative (slope) in the output. Default: false. */
   return_derivative?: boolean
+  /** Grouped confidence/prediction levels and optional residual-bootstrap refits. */
+  intervals?: IntervalsOptions
+  /** Prediction-time bootstrap seed, independent of the fit seed. Default: None. */
+  seed?: number
   /** Behavior for query points outside the training range ("clamp", "linear", "error"). Default: "clamp". */
   extrapolation?: string
   /**
@@ -249,10 +265,14 @@ export interface SmoothOptions {
   scaling_method?: string
   /** Auto-convergence tolerance. Default: None. */
   auto_converge?: number
-  /** Optional output components: diagnostics, residuals, weights, derivative, se, sorted. */
+  /** Optional output components: se, diagnostics, residuals, weights, derivative, sorted. */
   outputs?: Array<string>
+  /** Grouped confidence/prediction levels and optional residual-bootstrap refits. */
+  intervals?: IntervalsOptions
   /** Grouped cross-validation configuration. */
   cv?: CvOptions
+  /** Shared seed for k-fold CV and residual bootstrap; 0 is valid. Default: None. */
+  seed?: number
   /** Return residuals in result. Default: false. */
   return_residuals?: boolean
   /** Return robustness weights in result. Default: false. */
@@ -261,18 +281,6 @@ export interface SmoothOptions {
   return_derivative?: boolean
   /** Return diagnostics (RMSE, etc.). Default: false. */
   return_diagnostics?: boolean
-  /** Calculate confidence intervals (e.g., 0.95). Default: None. */
-  confidence_intervals?: number
-  /** Calculate prediction intervals. Default: None. */
-  prediction_intervals?: number
-  /** Fractions to use for cross-validation. */
-  cv_fractions?: Array<number>
-  /** CV method ("loocv", "kfold"). Default: "kfold". */
-  cv_method?: string
-  /** Number of folds for K-Fold CV. Default: 5. */
-  cv_k?: number
-  /** Random seed for reproducible K-Fold cross-validation. Default: None. */
-  cv_seed?: number
   /** Compute standard errors. Default: false. */
   return_se?: boolean
   /**
@@ -332,8 +340,12 @@ export interface StreamingSmoothOptions {
   scaling_method?: string
   /** Auto-convergence tolerance. Default: None. */
   auto_converge?: number
-  /** Optional output components: diagnostics, residuals, weights, derivative, se. */
+  /** Optional output components: se, diagnostics, residuals, weights, derivative. */
   outputs?: Array<string>
+  /** Confidence/prediction levels and per-chunk residual-bootstrap refits. */
+  intervals?: IntervalsOptions
+  /** Bootstrap seed; each combined chunk restarts from it. Default: None. */
+  seed?: number
   /** Return residuals in result. Default: false. */
   return_residuals?: boolean
   /** Return robustness weights in result. Default: false. */
@@ -344,10 +356,6 @@ export interface StreamingSmoothOptions {
   return_diagnostics?: boolean
   /** Compute standard errors. Default: false. */
   return_se?: boolean
-  /** Calculate confidence intervals (e.g., 0.95). Default: None. */
-  confidence_intervals?: number
-  /** Calculate prediction intervals. Default: None. */
-  prediction_intervals?: number
   /** Enable parallel execution. Default: true. */
   parallel?: boolean
   /** Policy for non-finite (NaN/Inf) values in each chunk ("error", "drop"). Default: "error". */

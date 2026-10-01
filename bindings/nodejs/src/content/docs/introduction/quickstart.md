@@ -40,9 +40,8 @@ const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 const model = new Lowess({
     fraction: 0.5,
     iterations: 3,
-    confidence_intervals: 0.95,
-    prediction_intervals: 0.95,
-    outputs: ["diagnostics"]
+    outputs: ["diagnostics"],
+    intervals: { confidence: 0.95, prediction: 0.95 }
 });
 const result = model.fit(x, y);
 
