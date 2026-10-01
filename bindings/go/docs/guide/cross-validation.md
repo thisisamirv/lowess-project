@@ -138,7 +138,7 @@ func main() {
  opts := fastlowess.DefaultOptions()
  opts.CV = &fastlowess.CVOptions{Method: "kfold", K: 5, Fractions: []float64{0.3, 0.5, 0.7}}
  seed := uint64(42)
- opts.CV.Seed = &seed
+ opts.Seed = &seed
 
  model, err := fastlowess.NewLowess(opts)
  if err != nil {

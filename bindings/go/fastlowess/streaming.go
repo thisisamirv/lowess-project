@@ -1,6 +1,7 @@
 package fastlowess
 
 /*
+#cgo CFLAGS: -I${SRCDIR}/../include
 #include "fastlowess_go.h"
 */
 import "C"
@@ -47,6 +48,10 @@ type StreamingOptions struct {
 	// Outputs selects optional result components: "diagnostics", "residuals",
 	// "weights", "derivative", and "se".
 	Outputs []string
+	// Intervals groups uncertainty levels and per-chunk residual-bootstrap refits.
+	Intervals *IntervalsOptions
+	// Seed makes bootstrap draws reproducible for each chunk; nil uses the default.
+	Seed *uint64
 
 	// ReturnDiagnostics requests fit-quality metrics (RMSE, MAE, R-squared, AIC, etc.).
 	ReturnDiagnostics bool
@@ -58,12 +63,6 @@ type StreamingOptions struct {
 	ReturnDerivative bool
 	// ReturnSE requests standard errors in the result.
 	ReturnSE bool
-	// ConfidenceIntervals is the confidence level for confidence intervals,
-	// e.g. 0.95. Nil disables confidence intervals.
-	ConfidenceIntervals *float64
-	// PredictionIntervals is the confidence level for prediction intervals,
-	// e.g. 0.95. Nil disables prediction intervals.
-	PredictionIntervals *float64
 	// Parallel enables parallel processing. Default: true.
 	Parallel bool
 
@@ -127,8 +126,17 @@ func NewStreamingLowess(opts StreamingOptions) (*StreamingLowess, error) {
 
 	delta, deltaSet := optPtr(opts.Delta)
 	autoConverge, autoConvergeSet := optPtr(opts.AutoConverge)
-	ci, ciSet := optPtr(opts.ConfidenceIntervals)
-	pi, piSet := optPtr(opts.PredictionIntervals)
+	var ci, pi *float64
+	var bootstrap uint
+	if opts.Intervals != nil {
+		ci, pi, bootstrap = opts.Intervals.Confidence, opts.Intervals.Prediction, opts.Intervals.Bootstrap
+	}
+	ciValue, ciSet := optPtr(ci)
+	piValue, piSet := optPtr(pi)
+	var seed uint64
+	if opts.Seed != nil {
+		seed = *opts.Seed
+	}
 
 	var ptr *C.fastlowess_GoStreamingLowess
 	var errMsg string
@@ -150,8 +158,9 @@ func NewStreamingLowess(opts StreamingOptions) (*StreamingLowess, error) {
 			missing,
 			boolToCInt(opts.ReturnDerivative || hasOutput(opts.Outputs, "derivative")),
 			boolToCInt(opts.ReturnSE || hasOutput(opts.Outputs, "se")),
-			optFloat(ci, ciSet),
-			optFloat(pi, piSet),
+			optFloat(ciValue, ciSet),
+			optFloat(piValue, piSet),
+			C.ulong(bootstrap), C.ulonglong(seed), boolToCInt(opts.Seed != nil),
 		)
 		if ptr == nil {
 			errMsg = lastError()

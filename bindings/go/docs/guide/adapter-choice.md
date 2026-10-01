@@ -60,12 +60,11 @@ func main() {
  opts := fastlowess.DefaultOptions()
  opts.Fraction = 0.5
  opts.Iterations = 3
- ci := 0.95
- opts.ConfidenceIntervals = &ci
- pi := 0.95
- opts.PredictionIntervals = &pi
- opts.Outputs = []string{"diagnostics"}
  opts.Parallel = true
+ opts.Outputs = []string{"diagnostics"}
+ ci := 0.95
+ pi := 0.95
+ opts.Intervals = &fastlowess.IntervalsOptions{Confidence: &ci, Prediction: &pi}
 
  model, err := fastlowess.NewLowess(opts)
  if err != nil {

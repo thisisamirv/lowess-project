@@ -132,12 +132,12 @@ type Result struct {
 	// Y is the smoothed y values (length N).
 	Y []float64
 
-	// StandardErrors is nil unless ReturnSE was requested.
+	// StandardErrors is nil unless ReturnSE, "se" in Outputs, or Intervals was requested.
 	StandardErrors []float64
-	// ConfidenceLower/ConfidenceUpper are nil unless ConfidenceIntervals was set.
+	// ConfidenceLower/ConfidenceUpper are nil unless Intervals.Confidence was set.
 	ConfidenceLower []float64
 	ConfidenceUpper []float64
-	// PredictionLower/PredictionUpper are nil unless PredictionIntervals was set.
+	// PredictionLower/PredictionUpper are nil unless Intervals.Prediction was set.
 	PredictionLower []float64
 	PredictionUpper []float64
 	// Residuals is nil unless ReturnResiduals was requested.
@@ -245,14 +245,10 @@ func (pm *PredictModel) Close() error {
 type PredictOptions struct {
 	// Outputs selects optional prediction components: "se" and/or "derivative".
 	Outputs []string
-	// ReturnSE requests standard errors in the output.
-	ReturnSE bool
-	// ConfidenceLevel is the confidence interval coverage level (e.g. 0.95). Nil disables it.
-	ConfidenceLevel *float64
-	// PredictionLevel is the prediction interval coverage level (e.g. 0.95). Nil disables it.
-	PredictionLevel *float64
-	// ReturnDerivative requests the local fit's derivative (slope) at each query point.
-	ReturnDerivative bool
+	// Intervals groups confidence/prediction bounds and optional bootstrap refits.
+	Intervals *IntervalsOptions
+	// Seed controls prediction-time bootstrap draws; nil uses the default.
+	Seed *uint64
 	// Extrapolation is the behavior for query points outside the training range:
 	// "clamp" (default), "linear", or "error".
 	Extrapolation string
@@ -270,15 +266,15 @@ type PredictOptions struct {
 type PredictResult struct {
 	// Y is the predicted value for each query point.
 	Y []float64
-	// StandardErrors is nil unless ReturnSE/ConfidenceLevel/PredictionLevel was set.
+	// StandardErrors is nil unless "se" or intervals were requested.
 	StandardErrors []float64
-	// ConfidenceLower/ConfidenceUpper are nil unless ConfidenceLevel was set.
+	// ConfidenceLower/ConfidenceUpper are nil unless Intervals.Confidence was set.
 	ConfidenceLower []float64
 	ConfidenceUpper []float64
-	// PredictionLower/PredictionUpper are nil unless PredictionLevel was set.
+	// PredictionLower/PredictionUpper are nil unless Intervals.Prediction was set.
 	PredictionLower []float64
 	PredictionUpper []float64
-	// Derivative is nil unless ReturnDerivative was requested (one value per query point).
+	// Derivative is nil unless "derivative" was requested (one value per query point).
 	Derivative []float64
 }
 
@@ -295,8 +291,17 @@ func (pm *PredictModel) Predict(newX []float64, opts PredictOptions) (PredictRes
 	extrap := cStringOrNil(opts.Extrapolation)
 	defer freeCString(extrap)
 
-	cl, clSet := optPtr(opts.ConfidenceLevel)
-	pl, plSet := optPtr(opts.PredictionLevel)
+	var cl, pl *float64
+	var bootstrap uint
+	if opts.Intervals != nil {
+		cl, pl, bootstrap = opts.Intervals.Confidence, opts.Intervals.Prediction, opts.Intervals.Bootstrap
+	}
+	clValue, clSet := optPtr(cl)
+	plValue, plSet := optPtr(pl)
+	var seed uint64
+	if opts.Seed != nil {
+		seed = *opts.Seed
+	}
 	maxExtrap, maxExtrapSet := optPtr(opts.MaxExtrapolationDistance)
 	maxNeighbor, maxNeighborSet := optPtr(opts.MaxNeighborDistance)
 	newXPtr, newXLen := cDoubles(newX)
@@ -304,13 +309,14 @@ func (pm *PredictModel) Predict(newX []float64, opts PredictOptions) (PredictRes
 	cres := C.go_predict(
 		pm.ptr,
 		newXPtr, newXLen,
-		boolToCInt(opts.ReturnSE || hasOutput(opts.Outputs, "se")),
-		optFloat(cl, clSet),
-		optFloat(pl, plSet),
-		boolToCInt(opts.ReturnDerivative || hasOutput(opts.Outputs, "derivative")),
+		boolToCInt(hasOutput(opts.Outputs, "se")),
+		optFloat(clValue, clSet),
+		optFloat(plValue, plSet),
+		boolToCInt(hasOutput(opts.Outputs, "derivative")),
 		extrap,
 		optFloat(maxExtrap, maxExtrapSet),
 		optFloat(maxNeighbor, maxNeighborSet),
+		C.ulong(bootstrap), C.ulonglong(seed), boolToCInt(opts.Seed != nil),
 	)
 	if cres.error != nil {
 		msg := C.GoString(cres.error)

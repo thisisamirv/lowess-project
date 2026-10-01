@@ -37,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Go:**
 
-- Added grouped `Outputs []string`, `CV *CVOptions`, and prediction `Outputs []string` options; legacy flat fields remain accepted during migration.
+- Added grouped `Outputs []string`, `CV *CVOptions`, and `Intervals *IntervalsOptions` for fitting and prediction, with residual-bootstrap intervals across Batch, Streaming, Online, and Predict.
 
 **Java:**
 
@@ -114,6 +114,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Go:**
 
+- Breaking change: moved the CV/bootstrap seed to one optional outer `Seed` on fit options, with a separate prediction-time `Seed` on `PredictOptions`; removed the older flat interval and CV fields.
 - Represent unavailable diagnostic metrics as `nil` optional values instead of `NaN` sentinels.
 - Bumped the pinned `golangci-lint` install-script version from `v2.13.2` to `v2.14.0`.
 
@@ -153,6 +154,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Skip comparison snippets when the optional `statsmodels` dependency is unavailable instead of failing verification.
 - Fixed C++ release CI staging the tracked Spack recipe despite the repository's broad `spack/` ignore rule.
+
+**Go:**
+
+- Declared cgo seed arguments as `unsigned long long` so the Go type checker sees `C.ulonglong`. `uint64_t` was not exported as `C.uint64_t`.
 
 **lowess:**
 

@@ -45,7 +45,7 @@ func main() {
  opts := fastlowess.DefaultOptions()
  opts.Fraction = 0.5
  ci := 0.95 // 95% CI
- opts.ConfidenceIntervals = &ci
+ opts.Intervals = &fastlowess.IntervalsOptions{Confidence: &ci}
 
  model, err := fastlowess.NewLowess(opts)
  if err != nil {
@@ -100,7 +100,7 @@ func main() {
  opts := fastlowess.DefaultOptions()
  opts.Fraction = 0.5
  pi := 0.95 // 95% PI
- opts.PredictionIntervals = &pi
+ opts.Intervals = &fastlowess.IntervalsOptions{Prediction: &pi}
 
  model, err := fastlowess.NewLowess(opts)
  if err != nil {
@@ -150,8 +150,7 @@ func main() {
  opts.Fraction = 0.5
  ci := 0.95
  pi := 0.95
- opts.ConfidenceIntervals = &ci
- opts.PredictionIntervals = &pi
+ opts.Intervals = &fastlowess.IntervalsOptions{Confidence: &ci, Prediction: &pi}
 
  model, err := fastlowess.NewLowess(opts)
  if err != nil {
@@ -206,7 +205,7 @@ func main() {
  // 99% confidence interval
  opts := fastlowess.DefaultOptions()
  ci := 0.99
- opts.ConfidenceIntervals = &ci
+ opts.Intervals = &fastlowess.IntervalsOptions{Confidence: &ci}
 
  model, err := fastlowess.NewLowess(opts)
  if err != nil {
@@ -224,6 +223,64 @@ func main() {
 
 ```output
 First lower CI bound (99%): 0.31746448671917393
+```
+
+---
+
+## Residual Bootstrap
+
+Set `Intervals.Bootstrap` to at least 2 to replace analytic uncertainty with residual-bootstrap refits. Batch shares its outer `Seed` with CV; Streaming restarts the seed per combined chunk, and Online per full-update window. Online bootstrap requires `UpdateMode = "full"`.
+
+```go
+package main
+
+import (
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v4"
+)
+
+func main() {
+ x, y := make([]float64, 30), make([]float64, 30)
+ for i := range x {
+  x[i] = float64(i) * 0.1
+  y[i] = math.Sin(x[i]) + 0.1*math.Cos(7*x[i])
+ }
+ level, seed := 0.95, uint64(42)
+ intervals := &fastlowess.IntervalsOptions{Confidence: &level, Prediction: &level, Bootstrap: 20}
+
+ batchOpts := fastlowess.DefaultOptions()
+ batchOpts.Intervals, batchOpts.Seed = intervals, &seed
+ batch, err := fastlowess.NewLowess(batchOpts)
+ if err != nil { panic(err) }
+ defer batch.Close()
+ fitted, err := batch.Fit(x, y)
+ if err != nil || len(fitted.StandardErrors) != len(x) { panic("batch bootstrap failed") }
+
+ streamOpts := fastlowess.DefaultStreamingOptions()
+ streamOpts.ChunkSize = len(x)
+ streamOpts.Intervals, streamOpts.Seed = intervals, &seed
+ stream, err := fastlowess.NewStreamingLowess(streamOpts)
+ if err != nil { panic(err) }
+ defer stream.Close()
+ chunk, err := stream.ProcessChunk(x, y)
+ if err != nil || len(chunk.ConfidenceLower) == 0 { panic("streaming bootstrap failed") }
+
+ onlineOpts := fastlowess.DefaultOnlineOptions()
+ onlineOpts.MinPoints = 5
+ onlineOpts.UpdateMode = "full"
+ onlineOpts.Intervals, onlineOpts.Seed = intervals, &seed
+ online, err := fastlowess.NewOnlineLowess(onlineOpts)
+ if err != nil { panic(err) }
+ defer online.Close()
+ ready := false
+ for i := range x[:12] {
+  point, ok, err := online.AddPoint(x[i], y[i])
+  if err != nil { panic(err) }
+  if ok { ready = !math.IsNaN(point.PredictionLower) }
+ }
+ if !ready { panic("online bootstrap failed") }
+}
 ```
 
 ---

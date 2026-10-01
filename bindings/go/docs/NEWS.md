@@ -12,9 +12,11 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Added
 
-* Added grouped `Outputs []string` and `CV *CVOptions` options, plus grouped prediction outputs; legacy flat fields remain accepted during migration.
+* Added grouped `Outputs []string`, `CV *CVOptions`, and `Intervals *IntervalsOptions` for fitting and prediction, including residual-bootstrap intervals for all adapters.
 
 ### Changed
+
+* Breaking change: replaced flat interval/CV fields and nested CV seed with grouped options and one outer `Seed *uint64` shared by fit-time CV and bootstrap. `PredictOptions` has its own `Seed` for prediction-time bootstrap.
 
 * Represent unavailable diagnostic metrics as `nil` optional values instead of `NaN` sentinels.
 

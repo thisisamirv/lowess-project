@@ -205,12 +205,20 @@ struct fastlowess_GoLowess *go_lowess_new(double fraction,
                                           int return_derivative);
 
 /**
- * Set CV seed for reproducible K-fold splits.
+ * Set one seed for CV and residual bootstrap.
  *
  * # Safety
  * ptr must be valid.
  */
-void go_lowess_set_cv_seed(struct fastlowess_GoLowess *ptr, unsigned long seed);
+void go_lowess_set_seed(struct fastlowess_GoLowess *ptr, unsigned long long seed);
+
+/**
+ * Configure residual-bootstrap refits for Batch intervals.
+ *
+ * # Safety
+ * `ptr` must be a valid pointer returned by `go_lowess_new`, or null.
+ */
+void go_lowess_set_bootstrap(struct fastlowess_GoLowess *ptr, unsigned long n_boot);
 
 /**
  * Fit the batch model.
@@ -252,7 +260,10 @@ struct fastlowess_GoPredictResult go_predict(struct fastlowess_GoPredictHandle *
                                              int return_derivative,
                                              const char *extrapolation,
                                              double max_extrapolation_distance,
-                                             double max_neighbor_distance);
+                                             double max_neighbor_distance,
+                                             unsigned long n_boot,
+                                             unsigned long long seed,
+                                             int has_seed);
 
 /**
  * Free a GoPredictResult's heap-allocated buffers.
@@ -296,7 +307,10 @@ struct fastlowess_GoStreamingLowess *go_streaming_new(double fraction,
                                                       int return_derivative,
                                                       int return_se,
                                                       double confidence_intervals,
-                                                      double prediction_intervals);
+                                                      double prediction_intervals,
+                                                      unsigned long n_boot,
+                                                      unsigned long long seed,
+                                                      int has_seed);
 
 /**
  * Process a chunk of data.
@@ -349,7 +363,10 @@ struct fastlowess_GoOnlineLowess *go_online_new(double fraction,
                                                 int return_derivative,
                                                 int return_se,
                                                 double confidence_intervals,
-                                                double prediction_intervals);
+                                                double prediction_intervals,
+                                                unsigned long n_boot,
+                                                unsigned long long seed,
+                                                int has_seed);
 
 /**
  * Add a single point to the model and return its smoothed value.

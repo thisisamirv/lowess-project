@@ -64,22 +64,23 @@ if ok {
 | --- | --- | --- | --- |
 | `Fraction` | `float64` | `0.67` | Smoothing fraction (bandwidth) |
 | `Iterations` | `int` | `0` | Number of robustifying iterations (requires `UpdateMode = "full"`) |
-| `Delta` | `*float64` | `nil` | Interpolation distance (`nil` auto-sets it to 0.0 in Online, i.e. interpolation disabled) |
 | `WeightFunction` | `string` | `"tricube"` | Weight function name |
 | `RobustnessMethod` | `string` | `"bisquare"` | Robustness method name |
-| `ScalingMethod` | `string` | `"mad"` | Residual scaling method |
-| `BoundaryPolicy` | `string` | `"extend"` | Boundary handling policy |
+| `Delta` | `*float64` | `nil` | Interpolation distance (`nil` auto-sets it to 0.0 in Online, i.e. interpolation disabled) |
 | `ZeroWeightFallback` | `string` | `"use_local_mean"` | Zero-weight handling |
-| `Missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
+| `BoundaryPolicy` | `string` | `"extend"` | Boundary handling policy |
+| `ScalingMethod` | `string` | `"mad"` | Residual scaling method |
 | `AutoConverge` | `*float64` | `nil` | Auto-convergence tolerance |
-| `ReturnRobustnessWeights` | `bool` | `false` | Include `RobustnessWeight` in result |
+| `Missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `WindowCapacity` | `int` | `1000` | Maximum number of recent points retained |
 | `MinPoints` | `int` | `2` | Minimum points required before output starts |
 | `UpdateMode` | `string` | `"incremental"` | How the window is updated as new points arrive |
-| `ReturnDerivative` | `bool` | `false` | Include the latest point's local fit derivative (slope) in the result |
+| `Outputs` | `[]string` | `nil` | Optional components: `se`, `weights`, `derivative` (`se` requires `UpdateMode = "full"`). |
+| `Intervals` | `*IntervalsOptions` | `nil` | Confidence/prediction levels and per-window bootstrap refits (`UpdateMode = "full"` only) |
+| `Seed` | `*uint64` | `nil` | Reproducible bootstrap draws for each full-update window |
 | `ReturnSE` | `bool` | `false` | Populate `StandardError` in the result (requires `UpdateMode = "full"`; errors if combined with `"incremental"`) |
-| `ConfidenceIntervals` | `*float64` | `nil` | Confidence level (e.g., 0.95); populates `ConfidenceLower`/`ConfidenceUpper` (requires `UpdateMode = "full"`) |
-| `PredictionIntervals` | `*float64` | `nil` | Prediction level (e.g., 0.95); populates `PredictionLower`/`PredictionUpper` (requires `UpdateMode = "full"`) |
+| `ReturnRobustnessWeights` | `bool` | `false` | Include `RobustnessWeight` in result |
+| `ReturnDerivative` | `bool` | `false` | Include the latest point's local fit derivative (slope) in the result |
 
 Cross-validation, GPU `Backend`, `CustomWeights`, `ReturnSorted`, `ReturnDiagnostics`, `ReturnResiduals`, and `Parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [API](api.md) for those.
 
@@ -107,10 +108,6 @@ Cross-validation, GPU `Backend`, `CustomWeights`, `ReturnSorted`, `ReturnDiagnos
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-### Delta
-
-Points within `Delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `nil` (default) auto-sets it to `0` in Online mode, i.e. interpolation is disabled and every point is fit exactly.
-
 ### WeightFunction
 
 *See: [Weight Functions](../weighting/kernels.md)*
@@ -131,22 +128,9 @@ Points within `Delta` of each other on the x-axis share the same local fit inste
 - `"huber"`
 - `"talwar"`
 
-### ScalingMethod
+### Delta
 
-*See: [Scaling Methods](../weighting/scaling.md)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### BoundaryPolicy
-
-*See: [Boundary Handling](../advanced/boundary.md)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
+Points within `Delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `nil` (default) auto-sets it to `0` in Online mode, i.e. interpolation is disabled and every point is fit exactly.
 
 ### ZeroWeightFallback
 
@@ -158,6 +142,29 @@ Behavior when all neighborhood weights are zero:
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
 
+### BoundaryPolicy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
+### ScalingMethod
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### AutoConverge
+
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. `nil` (default) disables early stopping.
+
 ### Missing
 
 Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `AddPoint`:
@@ -166,19 +173,6 @@ Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `AddPoint`
 | --- | --- |
 | `"error"` (default) | Return an error |
 | `"drop"` | Silently ignore the point — `AddPoint` returns `ok=false` instead of adding it to the window |
-
-### AutoConverge
-
-*See: [Robustness](../weighting/robustness.md#auto-convergence)*
-
-Convergence tolerance for early stopping of robustness iterations. `nil` (default) disables early stopping.
-
-### ReturnRobustnessWeights
-
-Include the robustness weight for the latest point (from the last robustness iteration) in the result.
-
-- `false` (default) — leaves `PointResult.RobustnessWeight` as `NaN`
-- `true` — populates `PointResult.RobustnessWeight`
 
 ### WindowCapacity
 
@@ -197,33 +191,34 @@ Minimum number of points required before smoothing starts. `AddPoint` returns `o
 | `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
 | `"full"` | `"resmooth"` | Recompute entire window | More accurate |
 
+### Intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Set `Intervals.Confidence` and/or `Intervals.Prediction` to a level such as `0.95`, or leave either nil to disable it. `Intervals.Bootstrap` (at least 2) refits the current full-update window for percentile bounds and standard errors. Set `Seed` for reproducible draws. All intervals require `UpdateMode = "full"`.
+
+### ReturnSE
+
+*See: [Intervals](../guide/intervals.md)*
+
+Populates `StandardError` — but only when combined with `UpdateMode = "full"`. The fast `"incremental"` path (the default) never computes standard errors, so combining `ReturnSE` or `Intervals` with anything other than `"full"` returns an error from `NewOnlineLowess`, rather than silently leaving `StandardError` as `NaN`.
+
+- `false` (default) — leaves `StandardError` as `NaN`
+- `true` — populates `StandardError`, and requires `UpdateMode = "full"`
+
+### ReturnRobustnessWeights
+
+Include the robustness weight for the latest point (from the last robustness iteration) in the result.
+
+- `false` (default) — leaves `PointResult.RobustnessWeight` as `NaN`
+- `true` — populates `PointResult.RobustnessWeight`
+
 ### ReturnDerivative
 
 Each point's local WLS fit already computes a slope internally; this exposes the latest point's slope (rate of change of the smoothed curve) in `PointResult.Derivative` at effectively no extra computation cost.
 
 - `false` (default) — leaves `PointResult.Derivative` as `NaN`
 - `true` — populates it
-
-### ReturnSE
-
-*See: [Intervals](../guide/intervals.md)*
-
-Populates `StandardError` — but only when combined with `UpdateMode = "full"`. The fast `"incremental"` path (the default) never computes standard errors, so combining `ReturnSE` (or `ConfidenceIntervals`/`PredictionIntervals`) with anything other than `"full"` returns an error from `NewOnlineLowess`, rather than silently leaving `StandardError` as `NaN`.
-
-- `false` (default) — leaves `StandardError` as `NaN`
-- `true` — populates `StandardError`, and requires `UpdateMode = "full"`
-
-### ConfidenceIntervals
-
-*See: [Intervals](../guide/intervals.md)*
-
-Confidence level for the confidence interval around the mean response at the latest point (e.g. `0.95`), populating `ConfidenceLower`/`ConfidenceUpper`. Same `UpdateMode = "full"` requirement as `ReturnSE`. `nil` (default) disables confidence intervals.
-
-### PredictionIntervals
-
-*See: [Intervals](../guide/intervals.md)*
-
-Confidence level for the prediction interval for a new observation at the latest point (e.g. `0.95`), populating `PredictionLower`/`PredictionUpper`. Same `UpdateMode = "full"` requirement as `ReturnSE`. `nil` (default) disables prediction intervals.
 
 ## Result Structure
 
@@ -235,8 +230,8 @@ Returned by `AddPoint` once the window has enough points (`ok == false` until th
 | --- | --- | --- |
 | `Y` | `float64` | Smoothed value for the latest point. |
 | `StandardError` | `float64` | Populated when `ReturnSE` is set (requires `UpdateMode = "full"`); `NaN` otherwise. |
-| `ConfidenceLower` / `ConfidenceUpper` | `float64` | Confidence interval bounds around the mean response, if `ConfidenceIntervals` was set (requires `UpdateMode = "full"`); `NaN` otherwise. |
-| `PredictionLower` / `PredictionUpper` | `float64` | Prediction interval bounds for a new observation, if `PredictionIntervals` was set (requires `UpdateMode = "full"`); `NaN` otherwise. |
+| `ConfidenceLower` / `ConfidenceUpper` | `float64` | Bounds around the mean response if `Intervals.Confidence` was set (full mode only); `NaN` otherwise. |
+| `PredictionLower` / `PredictionUpper` | `float64` | Bounds for a new observation if `Intervals.Prediction` was set (full mode only); `NaN` otherwise. |
 | `Residual` | `float64` | Residual y − smoothed; always populated (there is no `ReturnResiduals` option for Online). |
 | `RobustnessWeight` | `float64` | Robustness weight, if `ReturnRobustnessWeights` was set. |
 | `IterationsUsed` | `int` | Robustness iterations performed (`-1` if not applicable). |

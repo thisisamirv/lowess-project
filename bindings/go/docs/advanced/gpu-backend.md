@@ -85,7 +85,7 @@ Once GPU support is available, request it by setting `Backend` on the batch opti
 opts := fastlowess.DefaultOptions()
 opts.Backend = "gpu"
 ci := 0.95
-opts.ConfidenceIntervals = &ci
+opts.Intervals = &fastlowess.IntervalsOptions{Confidence: &ci}
 
 model, err := fastlowess.NewLowess(opts)
 if err != nil {

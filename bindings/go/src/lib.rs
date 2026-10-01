@@ -10,7 +10,7 @@
 
 use std::cell::RefCell;
 use std::ffi::CString;
-use std::os::raw::{c_char, c_double, c_int, c_ulong};
+use std::os::raw::{c_char, c_double, c_int, c_ulong, c_ulonglong};
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::ptr;
 use std::slice::from_raw_parts;
@@ -20,7 +20,7 @@ use fastLowess::internals::LowessBuilder;
 use fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
 use fastLowess::internals::binding_support as shared_parse;
-use fastLowess::prelude::LowessResult;
+use fastLowess::prelude::{IntervalsBuilder, LowessResult};
 
 thread_local! {
     #[allow(clippy::missing_const_for_thread_local)]
@@ -286,7 +286,8 @@ pub struct GoLowess {
     cv_fractions: Option<Vec<f64>>,
     cv_method: Option<String>,
     cv_k: usize,
-    cv_seed: Option<u64>,
+    seed: Option<u64>,
+    bootstrap: Option<usize>,
 }
 
 // Opaque handle to a Lowess streaming model.
@@ -425,21 +426,34 @@ pub unsafe extern "C" fn go_lowess_new(
             cv_fractions: cv_fractions_vec,
             cv_method: Some(cv_method_str),
             cv_k: cv_k_usize,
-            cv_seed: None,
+            seed: None,
+            bootstrap: None,
         }))
     })
 }
 
-/// Set CV seed for reproducible K-fold splits.
+/// Set one seed for CV and residual bootstrap.
 ///
 /// # Safety
 /// ptr must be valid.
 #[unsafe(no_mangle)]
-#[allow(clippy::useless_conversion)] // c_ulong is u32 on Windows, u64 on Linux/macOS
-pub unsafe extern "C" fn go_lowess_set_cv_seed(ptr: *mut GoLowess, seed: c_ulong) {
+pub unsafe extern "C" fn go_lowess_set_seed(ptr: *mut GoLowess, seed: c_ulonglong) {
     with_panic_void(|| {
         if !ptr.is_null() {
-            unsafe { (*ptr).cv_seed = Some(u64::from(seed)) };
+            unsafe { (*ptr).seed = Some(seed) };
+        }
+    });
+}
+
+/// Configure residual-bootstrap refits for Batch intervals.
+///
+/// # Safety
+/// `ptr` must be a valid pointer returned by `go_lowess_new`, or null.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn go_lowess_set_bootstrap(ptr: *mut GoLowess, n_boot: c_ulong) {
+    with_panic_void(|| {
+        if !ptr.is_null() {
+            unsafe { (*ptr).bootstrap = (n_boot > 0).then_some(n_boot as usize) };
         }
     });
 }
@@ -478,12 +492,17 @@ pub unsafe extern "C" fn go_lowess_fit(
                 lowess.cv_fractions.as_deref(),
                 lowess.cv_method.as_deref(),
                 Some(lowess.cv_k),
-                lowess.cv_seed,
+                lowess.seed,
             )) {
                 Ok(b) => b,
                 Err(e) => return e,
             };
 
+            let builder = if let Some(n_boot) = lowess.bootstrap {
+                builder.intervals(IntervalsBuilder::new().bootstrap(n_boot))
+            } else {
+                builder
+            };
             let model = match shared_parse::build_batch(builder, cw) {
                 Ok(m) => m,
                 Err(e) => return error_result(&e.message),
@@ -578,6 +597,9 @@ pub unsafe extern "C" fn go_predict(
     extrapolation: *const c_char,
     max_extrapolation_distance: c_double,
     max_neighbor_distance: c_double,
+    n_boot: c_ulong,
+    seed: c_ulonglong,
+    has_seed: c_int,
 ) -> GoPredictResult {
     match catch_unwind(AssertUnwindSafe(|| {
         if handle.is_null() {
@@ -591,7 +613,7 @@ pub unsafe extern "C" fn go_predict(
             .then_some(shared_parse::parse_c_str_or_default(extrapolation, "clamp"));
 
         let state = &(*handle).state;
-        let output = match shared_parse::run_predict_state(
+        let output = match shared_parse::run_predict_state_with_bootstrap(
             state,
             new_x_slice,
             shared_parse::PredictOptionSet {
@@ -605,6 +627,8 @@ pub unsafe extern "C" fn go_predict(
                 max_neighbor_distance: (!max_neighbor_distance.is_nan())
                     .then_some(max_neighbor_distance),
             },
+            (n_boot > 0).then_some(n_boot as usize),
+            (has_seed != 0).then_some(seed),
         ) {
             Ok(o) => o,
             Err(e) => return predict_error_result(&e.message),
@@ -691,6 +715,9 @@ pub unsafe extern "C" fn go_streaming_new(
     return_se: c_int,
     confidence_intervals: c_double,
     prediction_intervals: c_double,
+    n_boot: c_ulong,
+    seed: c_ulonglong,
+    has_seed: c_int,
 ) -> *mut GoStreamingLowess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -756,11 +783,17 @@ pub unsafe extern "C" fn go_streaming_new(
             Err(e) => return null_with_error(&e),
         };
 
-        let builder = if return_derivative != 0 {
+        let mut builder = if return_derivative != 0 {
             builder.return_derivative()
         } else {
             builder
         };
+        if n_boot > 0 {
+            builder = builder.intervals(IntervalsBuilder::new().bootstrap(n_boot as usize));
+        }
+        if has_seed != 0 {
+            builder = builder.seed(seed);
+        }
 
         let model = match shared_parse::build_streaming(
             builder,
@@ -870,6 +903,9 @@ pub unsafe extern "C" fn go_online_new(
     return_se: c_int,
     confidence_intervals: c_double,
     prediction_intervals: c_double,
+    n_boot: c_ulong,
+    seed: c_ulonglong,
+    has_seed: c_int,
 ) -> *mut GoOnlineLowess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -940,11 +976,17 @@ pub unsafe extern "C" fn go_online_new(
             Err(e) => return null_with_error(&e),
         };
 
-        let builder = if return_derivative != 0 {
+        let mut builder = if return_derivative != 0 {
             builder.return_derivative()
         } else {
             builder
         };
+        if n_boot > 0 {
+            builder = builder.intervals(IntervalsBuilder::new().bootstrap(n_boot as usize));
+        }
+        if has_seed != 0 {
+            builder = builder.seed(seed);
+        }
 
         let model = match shared_parse::build_online(
             builder,

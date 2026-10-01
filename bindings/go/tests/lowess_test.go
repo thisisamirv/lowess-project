@@ -2,6 +2,7 @@ package fastlowess_test
 
 import (
 	"math"
+	"slices"
 	"sort"
 	"testing"
 
@@ -187,7 +188,7 @@ func TestLowess(t *testing.T) {
 		opts := fastlowess.DefaultOptions()
 		opts.Fraction = 0.5
 		ci := 0.95
-		opts.ConfidenceIntervals = &ci
+		opts.Intervals = &fastlowess.IntervalsOptions{Confidence: &ci}
 		res := fitOrFatal(t, opts, x, y)
 
 		if len(res.ConfidenceLower) != len(x) || len(res.ConfidenceUpper) != len(x) {
@@ -206,7 +207,7 @@ func TestLowess(t *testing.T) {
 		opts := fastlowess.DefaultOptions()
 		opts.Fraction = 0.5
 		pi := 0.95
-		opts.PredictionIntervals = &pi
+		opts.Intervals = &fastlowess.IntervalsOptions{Prediction: &pi}
 		res := fitOrFatal(t, opts, x, y)
 
 		if len(res.PredictionLower) != len(x) || len(res.PredictionUpper) != len(x) {
@@ -582,8 +583,7 @@ func TestStreamingLowess(t *testing.T) {
 		opts.ChunkSize = 50
 		opts.ReturnSE = true
 		ci := 0.95
-		opts.ConfidenceIntervals = &ci
-		opts.PredictionIntervals = &ci
+		opts.Intervals = &fastlowess.IntervalsOptions{Confidence: &ci, Prediction: &ci}
 		model, err := fastlowess.NewStreamingLowess(opts)
 		if err != nil {
 			t.Fatalf("NewStreamingLowess failed: %v", err)
@@ -793,8 +793,7 @@ func TestOnlineLowess(t *testing.T) {
 		opts.UpdateMode = "full"
 		opts.ReturnSE = true
 		ci := 0.95
-		opts.ConfidenceIntervals = &ci
-		opts.PredictionIntervals = &ci
+		opts.Intervals = &fastlowess.IntervalsOptions{Confidence: &ci, Prediction: &ci}
 		model, err := fastlowess.NewOnlineLowess(opts)
 		if err != nil {
 			t.Fatalf("NewOnlineLowess failed: %v", err)
@@ -957,8 +956,7 @@ func TestErrorHandling(t *testing.T) {
 		y := []float64{2.0, 4.0, 6.0, 8.0, 10.0}
 
 		opts := fastlowess.DefaultOptions()
-		opts.CVFractions = []float64{0.5}
-		opts.CVMethod = "invalid"
+		opts.CV = &fastlowess.CVOptions{Fractions: []float64{0.5}, Method: "invalid"}
 		model, err := fastlowess.NewLowess(opts)
 		if err != nil {
 			t.Fatalf("NewLowess unexpectedly failed: %v", err)
@@ -1135,14 +1133,14 @@ func TestCrossValidation(t *testing.T) {
 		}
 
 		opts := fastlowess.DefaultOptions()
-		opts.CVFractions = []float64{0.2, 0.3, 0.5, 0.7}
+		opts.CV = &fastlowess.CVOptions{Fractions: []float64{0.2, 0.3, 0.5, 0.7}}
 		res := fitOrFatal(t, opts, x, y)
 
-		if !inSet(res.FractionUsed, opts.CVFractions) {
-			t.Fatalf("expected FractionUsed to be one of %v, got %v", opts.CVFractions, res.FractionUsed)
+		if !inSet(res.FractionUsed, opts.CV.Fractions) {
+			t.Fatalf("expected FractionUsed to be one of %v, got %v", opts.CV.Fractions, res.FractionUsed)
 		}
-		if len(res.CVScores) != len(opts.CVFractions) {
-			t.Fatalf("expected %d CV scores, got %d", len(opts.CVFractions), len(res.CVScores))
+		if len(res.CVScores) != len(opts.CV.Fractions) {
+			t.Fatalf("expected %d CV scores, got %d", len(opts.CV.Fractions), len(res.CVScores))
 		}
 		if len(res.Y) != len(x) {
 			t.Fatalf("expected %d values, got %d", len(x), len(res.Y))
@@ -1156,13 +1154,11 @@ func TestCrossValidation(t *testing.T) {
 		}
 
 		opts := fastlowess.DefaultOptions()
-		opts.CVFractions = []float64{0.3, 0.5}
-		opts.CVMethod = "kfold"
-		opts.CVK = 5
+		opts.CV = &fastlowess.CVOptions{Fractions: []float64{0.3, 0.5}, Method: "kfold", K: 5}
 		res := fitOrFatal(t, opts, x, y)
 
-		if !inSet(res.FractionUsed, opts.CVFractions) {
-			t.Fatalf("expected FractionUsed to be one of %v, got %v", opts.CVFractions, res.FractionUsed)
+		if !inSet(res.FractionUsed, opts.CV.Fractions) {
+			t.Fatalf("expected FractionUsed to be one of %v, got %v", opts.CV.Fractions, res.FractionUsed)
 		}
 		if res.CVScores == nil {
 			t.Fatal("expected CVScores to be populated")
@@ -1173,12 +1169,11 @@ func TestCrossValidation(t *testing.T) {
 		x, y := sineData(20)
 
 		opts := fastlowess.DefaultOptions()
-		opts.CVFractions = []float64{0.4, 0.6}
-		opts.CVMethod = "loocv"
+		opts.CV = &fastlowess.CVOptions{Fractions: []float64{0.4, 0.6}, Method: "loocv"}
 		res := fitOrFatal(t, opts, x, y)
 
-		if !inSet(res.FractionUsed, opts.CVFractions) {
-			t.Fatalf("expected FractionUsed to be one of %v, got %v", opts.CVFractions, res.FractionUsed)
+		if !inSet(res.FractionUsed, opts.CV.Fractions) {
+			t.Fatalf("expected FractionUsed to be one of %v, got %v", opts.CV.Fractions, res.FractionUsed)
 		}
 		if res.CVScores == nil {
 			t.Fatal("expected CVScores to be populated")
@@ -1192,14 +1187,14 @@ func TestCrossValidation(t *testing.T) {
 		}
 
 		opts := fastlowess.DefaultOptions()
-		opts.CVFractions = []float64{0.3, 0.5, 0.7}
+		opts.CV = &fastlowess.CVOptions{Fractions: []float64{0.3, 0.5, 0.7}}
 		opts.Iterations = 2
 		opts.ReturnDiagnostics = true
 		opts.ReturnResiduals = true
 		res := fitOrFatal(t, opts, x, y)
 
-		if !inSet(res.FractionUsed, opts.CVFractions) {
-			t.Fatalf("expected FractionUsed to be one of %v, got %v", opts.CVFractions, res.FractionUsed)
+		if !inSet(res.FractionUsed, opts.CV.Fractions) {
+			t.Fatalf("expected FractionUsed to be one of %v, got %v", opts.CV.Fractions, res.FractionUsed)
 		}
 		if res.Diagnostics == nil {
 			t.Fatal("expected Diagnostics to be populated")
@@ -1214,7 +1209,7 @@ func TestCrossValidation(t *testing.T) {
 		copy(y, x)
 
 		opts := fastlowess.DefaultOptions()
-		opts.CVFractions = []float64{0.5}
+		opts.CV = &fastlowess.CVOptions{Fractions: []float64{0.5}}
 		res := fitOrFatal(t, opts, x, y)
 
 		if !approxEqual(res.FractionUsed, 0.5, 1e-9) {
@@ -1222,6 +1217,97 @@ func TestCrossValidation(t *testing.T) {
 		}
 		if len(res.CVScores) != 1 {
 			t.Fatalf("expected 1 CV score, got %d", len(res.CVScores))
+		}
+	})
+}
+
+func TestGroupedBootstrapIntervals(t *testing.T) {
+	x, y := sineData(40)
+	level := 0.9
+	seed := uint64(0)
+
+	t.Run("BatchCVAndPredict", func(t *testing.T) {
+		opts := fastlowess.DefaultOptions()
+		opts.CV = &fastlowess.CVOptions{Method: "kfold", K: 3, Fractions: []float64{0.3, 0.5}}
+		opts.Intervals = &fastlowess.IntervalsOptions{Confidence: &level, Prediction: &level, Bootstrap: 16}
+		opts.Seed = &seed
+		opts.RetainModel = true
+		result := fitOrFatal(t, opts, x, y)
+		if len(result.CVScores) != 2 || len(result.StandardErrors) != len(x) || len(result.ConfidenceLower) != len(x) || len(result.PredictionUpper) != len(x) {
+			t.Fatal("grouped CV and batch bootstrap should populate scores and intervals")
+		}
+		againFit := fitOrFatal(t, opts, x, y)
+		if againFit.PredictModel != nil {
+			defer againFit.PredictModel.Close()
+		}
+		if !slices.Equal(result.CVScores, againFit.CVScores) || !slices.Equal(result.StandardErrors, againFit.StandardErrors) || !slices.Equal(result.ConfidenceLower, againFit.ConfidenceLower) {
+			t.Fatal("zero-valued shared seed should reproduce CV and fit-time bootstrap")
+		}
+		if result.PredictModel == nil {
+			t.Fatal("expected a retained PredictModel")
+		}
+		defer result.PredictModel.Close()
+
+		predictOpts := fastlowess.PredictOptions{
+			Outputs:   []string{"se", "derivative"},
+			Intervals: &fastlowess.IntervalsOptions{Confidence: &level, Prediction: &level, Bootstrap: 16},
+			Seed:      &seed,
+		}
+		first, err := result.PredictModel.Predict([]float64{1.5, 4.5}, predictOpts)
+		if err != nil {
+			t.Fatalf("bootstrap Predict failed: %v", err)
+		}
+		again, err := result.PredictModel.Predict([]float64{1.5, 4.5}, predictOpts)
+		if err != nil {
+			t.Fatalf("second bootstrap Predict failed: %v", err)
+		}
+		if !slices.Equal(first.StandardErrors, again.StandardErrors) || len(first.ConfidenceLower) != 2 || len(first.PredictionUpper) != 2 || len(first.Derivative) != 2 {
+			t.Fatal("Predict should return reproducible bootstrap intervals and derivatives")
+		}
+	})
+
+	t.Run("Streaming", func(t *testing.T) {
+		opts := fastlowess.DefaultStreamingOptions()
+		opts.ChunkSize = len(x)
+		opts.Intervals = &fastlowess.IntervalsOptions{Confidence: &level, Prediction: &level, Bootstrap: 16}
+		opts.Seed = &seed
+		model, err := fastlowess.NewStreamingLowess(opts)
+		if err != nil {
+			t.Fatalf("NewStreamingLowess failed: %v", err)
+		}
+		defer model.Close()
+		result, err := model.ProcessChunk(x, y)
+		if err != nil {
+			t.Fatalf("ProcessChunk failed: %v", err)
+		}
+		if len(result.StandardErrors) == 0 || len(result.ConfidenceLower) == 0 || len(result.PredictionUpper) == 0 {
+			t.Fatal("streaming bootstrap should populate intervals")
+		}
+	})
+
+	t.Run("Online", func(t *testing.T) {
+		opts := fastlowess.DefaultOnlineOptions()
+		opts.UpdateMode = "full"
+		opts.MinPoints = 5
+		opts.Intervals = &fastlowess.IntervalsOptions{Confidence: &level, Prediction: &level, Bootstrap: 16}
+		opts.Seed = &seed
+		model, err := fastlowess.NewOnlineLowess(opts)
+		if err != nil {
+			t.Fatalf("NewOnlineLowess failed: %v", err)
+		}
+		defer model.Close()
+		ready := false
+		for i := range x[:12] {
+			value, ok, err := model.AddPoint(x[i], y[i])
+			if err != nil {
+				t.Fatalf("AddPoint failed: %v", err)
+			}
+			if ok {
+				ready = allFinite([]float64{value.StandardError, value.ConfidenceLower, value.PredictionUpper})
+			}
+		}
+		if !ready {
+			t.Fatal("online bootstrap should populate finite intervals")
 		}
 	})
 }

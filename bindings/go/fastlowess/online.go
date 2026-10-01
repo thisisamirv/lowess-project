@@ -1,6 +1,7 @@
 package fastlowess
 
 /*
+#cgo CFLAGS: -I${SRCDIR}/../include
 #include "fastlowess_go.h"
 */
 import "C"
@@ -49,6 +50,11 @@ type OnlineOptions struct {
 	AutoConverge *float64
 	// Outputs selects optional result components: "weights", "derivative", and "se".
 	Outputs []string
+	// Intervals groups uncertainty levels and per-window residual-bootstrap refits.
+	// All interval settings require UpdateMode = "full".
+	Intervals *IntervalsOptions
+	// Seed makes bootstrap draws reproducible for each full-update window.
+	Seed *uint64
 
 	// ReturnRobustnessWeights requests per-point robustness weights in the result.
 	ReturnRobustnessWeights bool
@@ -57,12 +63,6 @@ type OnlineOptions struct {
 	// ReturnSE requests the standard error for the latest point. Requires
 	// UpdateMode = "full".
 	ReturnSE bool
-	// ConfidenceIntervals is the confidence level for confidence intervals,
-	// e.g. 0.95. Nil disables confidence intervals. Requires UpdateMode = "full".
-	ConfidenceIntervals *float64
-	// PredictionIntervals is the confidence level for prediction intervals,
-	// e.g. 0.95. Nil disables prediction intervals. Requires UpdateMode = "full".
-	PredictionIntervals *float64
 
 	// WindowCapacity is the maximum number of recent points retained.
 	// Default: 1000.
@@ -124,8 +124,17 @@ func NewOnlineLowess(opts OnlineOptions) (*OnlineLowess, error) {
 
 	delta, deltaSet := optPtr(opts.Delta)
 	autoConverge, autoConvergeSet := optPtr(opts.AutoConverge)
-	ci, ciSet := optPtr(opts.ConfidenceIntervals)
-	pi, piSet := optPtr(opts.PredictionIntervals)
+	var ci, pi *float64
+	var bootstrap uint
+	if opts.Intervals != nil {
+		ci, pi, bootstrap = opts.Intervals.Confidence, opts.Intervals.Prediction, opts.Intervals.Bootstrap
+	}
+	ciValue, ciSet := optPtr(ci)
+	piValue, piSet := optPtr(pi)
+	var seed uint64
+	if opts.Seed != nil {
+		seed = *opts.Seed
+	}
 
 	var ptr *C.fastlowess_GoOnlineLowess
 	var errMsg string
@@ -144,8 +153,9 @@ func NewOnlineLowess(opts OnlineOptions) (*OnlineLowess, error) {
 			missing,
 			boolToCInt(opts.ReturnDerivative || hasOutput(opts.Outputs, "derivative")),
 			boolToCInt(opts.ReturnSE || hasOutput(opts.Outputs, "se")),
-			optFloat(ci, ciSet),
-			optFloat(pi, piSet),
+			optFloat(ciValue, ciSet),
+			optFloat(piValue, piSet),
+			C.ulong(bootstrap), C.ulonglong(seed), boolToCInt(opts.Seed != nil),
 		)
 		if ptr == nil {
 			errMsg = lastError()

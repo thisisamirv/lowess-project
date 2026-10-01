@@ -11,7 +11,7 @@ Evaluate a fitted Batch model at query points that were not in the training set.
 
 `(*PredictModel) Predict(newX, opts)` evaluates the fit at arbitrary query points, like R's `predict(model, newdata)`.
 
-It reuses `Fit`'s own (possibly `Delta`-interpolated) smoothed curve for its `Y` output — so predicting at a training `x` always exactly reproduces that point's `Fit` output, regardless of `Delta`. A fresh local fit is only run when `ReturnDerivative`, `ReturnSE` (or an interval level), or `MaxNeighborDistance` needs the actual regression slope or standard error.
+It reuses `Fit`'s own (possibly `Delta`-interpolated) smoothed curve for its `Y` output — so predicting at a training `x` always exactly reproduces that point's `Fit` output, regardless of `Delta`. A fresh local fit is only run when `"derivative"`, `"se"` (or an interval level), or `MaxNeighborDistance` needs the actual regression slope or standard error.
 
 `Result.PredictModel` is non-nil only when `Options.RetainModel` was set to `true`. Call `Close()` on it when done (or let its finalizer run).
 
@@ -22,28 +22,21 @@ It reuses `Fit`'s own (possibly `Delta`-interpolated) smoothed curve for its `Y`
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `Outputs` | `[]string` | `nil` | Select `se` and/or `derivative` |
-| `ConfidenceLevel` | `*float64` | `nil` | Confidence interval coverage level (e.g. `0.95`) |
-| `PredictionLevel` | `*float64` | `nil` | Prediction interval coverage level (e.g. `0.95`) |
-| `ReturnDerivative` | `bool` | `false` | Include the local fit's derivative (slope) at each query point |
+| `Intervals` | `*IntervalsOptions` | `nil` | Confidence/prediction levels and optional bootstrap refits |
+| `Seed` | `*uint64` | `nil` | Reproducible prediction-time bootstrap draws; zero is valid |
 | `Extrapolation` | `string` | `"clamp"` | Behavior for query points outside the training `x`-range |
 | `MaxExtrapolationDistance` | `*float64` | `nil` | Under `"linear"` extrapolation, the max allowed distance beyond the training boundary before erroring |
 | `MaxNeighborDistance` | `*float64` | `nil` | Max allowed distance to the farthest training point in a query's local window before erroring |
 
-### ReturnSE
+### Outputs
 
-Computes standard errors for each query point, using the retained model's residual scale and per-point leverage. Required for `ConfidenceLevel`/`PredictionLevel` to be populated. `false` by default.
+Request `"se"` for standard errors and `"derivative"` for the local slope at each query point. Analytic intervals compute their required standard errors even without an explicit `"se"` output.
 
-### ConfidenceLevel
+### Intervals
 
-Confidence level for the confidence interval around the mean response at each query point (e.g. `0.95`). Uses the same z-score convention as `Fit`'s own confidence intervals. `nil` (default) disables it.
+Set `Intervals.Confidence` for bounds around the mean response and `Intervals.Prediction` for bounds of a new observation (e.g. `0.95`). With no bootstrap, these use normal-theory standard errors and the retained residual scale.
 
-### PredictionLevel
-
-Confidence level for the prediction interval for a new observation at each query point (e.g. `0.95`). Widens using the same MAD-based residual scale `Fit` uses for its own intervals. `nil` (default) disables it.
-
-### ReturnDerivative
-
-Includes the local fit's derivative (slope) at each query point in the output. `false` by default.
+Set `Intervals.Bootstrap` to at least 2 to resample the retained Batch residuals, refit the model, and calculate query-point percentile intervals and standard errors. `Seed` on `PredictOptions` controls these draws independently of the fit/CV seed. Prediction bootstrap requires `Options.RetainModel = true`.
 
 ### Extrapolation
 
@@ -92,7 +85,6 @@ fmt.Println(prediction.Y)
 
 ```go
 prediction, _ := result.PredictModel.Predict([]float64{2.5}, fastlowess.PredictOptions{
- Outputs:          []string{"se", "derivative"},
  Outputs: []string{"se", "derivative"},
 })
 fmt.Println(prediction.Y, prediction.StandardErrors, prediction.Derivative)
@@ -100,6 +92,43 @@ fmt.Println(prediction.Y, prediction.StandardErrors, prediction.Derivative)
 
 ```output
 [5.1] [0] [2.2]
+```
+
+### Bootstrap Intervals
+
+```go
+package main
+
+import (
+ "math"
+
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v4"
+)
+
+func main() {
+ x, y := make([]float64, 30), make([]float64, 30)
+ for i := range x {
+  x[i] = float64(i) * 0.1
+  y[i] = math.Sin(x[i]) + 0.1*math.Cos(7*x[i])
+ }
+ opts := fastlowess.DefaultOptions()
+ opts.RetainModel = true
+ model, err := fastlowess.NewLowess(opts)
+ if err != nil { panic(err) }
+ defer model.Close()
+ result, err := model.Fit(x, y)
+ if err != nil { panic(err) }
+ defer result.PredictModel.Close()
+
+ level, seed := 0.95, uint64(42)
+ predictOpts := fastlowess.PredictOptions{
+  Outputs: []string{"se", "derivative"},
+  Intervals: &fastlowess.IntervalsOptions{Confidence: &level, Prediction: &level, Bootstrap: 40},
+  Seed: &seed,
+ }
+ predicted, err := result.PredictModel.Predict([]float64{0.75, 1.25}, predictOpts)
+ if err != nil || len(predicted.ConfidenceLower) != 2 { panic("bootstrap Predict failed") }
+}
 ```
 
 ### Linear Extrapolation

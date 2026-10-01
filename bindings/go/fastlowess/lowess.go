@@ -1,6 +1,7 @@
 package fastlowess
 
 /*
+#cgo CFLAGS: -I${SRCDIR}/../include
 #include "fastlowess_go.h"
 */
 import "C"
@@ -18,8 +19,14 @@ type CVOptions struct {
 	Method string
 	// K is the number of k-fold splits. Ignored for loocv.
 	K int
-	// Seed makes k-fold split assignment reproducible. Nil uses a random seed.
-	Seed *uint64
+}
+
+// IntervalsOptions groups confidence/prediction levels and residual bootstrap refits.
+// Nil levels disable their respective bounds; zero Bootstrap uses analytic intervals.
+type IntervalsOptions struct {
+	Confidence *float64
+	Prediction *float64
+	Bootstrap  uint
 }
 
 // Options configures a Lowess, StreamingLowess, or OnlineLowess model.
@@ -54,12 +61,6 @@ type Options struct {
 	// "return_original" (alias "original"), or "return_none" (alias "none").
 	ZeroWeightFallback string
 
-	// ConfidenceIntervals is the confidence level for confidence intervals,
-	// in (0, 1) (e.g. 0.95). Nil disables confidence intervals.
-	ConfidenceIntervals *float64
-	// PredictionIntervals is the confidence level for prediction intervals,
-	// in (0, 1) (e.g. 0.95). Nil disables prediction intervals.
-	PredictionIntervals *float64
 	// AutoConverge is the convergence tolerance for early stopping of
 	// robustness iterations. Nil disables early stopping.
 	AutoConverge *float64
@@ -67,8 +68,12 @@ type Options struct {
 	// Outputs selects optional result components: "diagnostics", "residuals",
 	// "weights", "derivative", "se", and "sorted".
 	Outputs []string
+	// Intervals groups uncertainty levels and optional residual-bootstrap refits.
+	Intervals *IntervalsOptions
 	// CV groups cross-validation configuration. Nil disables CV.
 	CV *CVOptions
+	// Seed is shared by CV and fit-time bootstrap; nil uses their defaults.
+	Seed *uint64
 
 	// ReturnDiagnostics requests fit-quality metrics (RMSE, MAE, R-squared, AIC, etc.).
 	ReturnDiagnostics bool
@@ -86,17 +91,6 @@ type Options struct {
 	// re-fitting, sort the default (unsorted) result client-side rather than
 	// calling Fit twice.
 	ReturnSorted bool
-
-	// CVFractions is a set of candidate fractions for cross-validation.
-	// Empty disables CV. Batch model only.
-	CVFractions []float64
-	// CVMethod is the cross-validation method: "kfold" (default) or "loocv".
-	CVMethod string
-	// CVK is the number of folds for k-fold CV. Default: 5.
-	CVK int
-	// CVSeed is the RNG seed for reproducible k-fold splits. Nil uses a
-	// random seed.
-	CVSeed *uint64
 
 	// Parallel enables parallel processing. Default: true.
 	Parallel bool
@@ -135,8 +129,6 @@ func DefaultOptions() Options {
 		ScalingMethod:      "mad",
 		BoundaryPolicy:     "extend",
 		ZeroWeightFallback: "use_local_mean",
-		CVMethod:           "kfold",
-		CVK:                5,
 		Parallel:           true,
 		Backend:            "cpu",
 		Missing:            "error",
@@ -172,9 +164,14 @@ func NewLowess(opts Options) (*Lowess, error) {
 	defer freeCString(bp)
 	zwf := cStringOrNil(opts.ZeroWeightFallback)
 	defer freeCString(zwf)
-	cvMethodName, cvK, cvFractions, cvSeed := opts.CVMethod, opts.CVK, opts.CVFractions, opts.CVSeed
+	var cvMethodName string
+	var cvK int
+	var cvFractions []float64
 	if opts.CV != nil {
-		cvMethodName, cvK, cvFractions, cvSeed = opts.CV.Method, opts.CV.K, opts.CV.Fractions, opts.CV.Seed
+		cvMethodName, cvK, cvFractions = opts.CV.Method, opts.CV.K, opts.CV.Fractions
+	}
+	if cvK == 0 {
+		cvK = 5
 	}
 	cvMethod := cStringOrNil(cvMethodName)
 	defer freeCString(cvMethod)
@@ -183,8 +180,12 @@ func NewLowess(opts Options) (*Lowess, error) {
 	missing := cStringOrNil(opts.Missing)
 	defer freeCString(missing)
 
-	ci, ciSet := optPtr(opts.ConfidenceIntervals)
-	pi, piSet := optPtr(opts.PredictionIntervals)
+	var ci, pi *float64
+	if opts.Intervals != nil {
+		ci, pi = opts.Intervals.Confidence, opts.Intervals.Prediction
+	}
+	ciValue, ciSet := optPtr(ci)
+	piValue, piSet := optPtr(pi)
 	delta, deltaSet := optPtr(opts.Delta)
 	autoConverge, autoConvergeSet := optPtr(opts.AutoConverge)
 	cvFracPtr, cvFracLen := cDoubles(cvFractions)
@@ -197,8 +198,8 @@ func NewLowess(opts Options) (*Lowess, error) {
 			C.int(opts.Iterations),
 			optFloat(delta, deltaSet),
 			wf, rm, sm, bp,
-			optFloat(ci, ciSet),
-			optFloat(pi, piSet),
+			optFloat(ciValue, ciSet),
+			optFloat(piValue, piSet),
 			boolToCInt(opts.ReturnDiagnostics || hasOutput(opts.Outputs, "diagnostics")),
 			boolToCInt(opts.ReturnResiduals || hasOutput(opts.Outputs, "residuals")),
 			boolToCInt(opts.ReturnRobustnessWeights || hasOutput(opts.Outputs, "weights")),
@@ -223,8 +224,11 @@ func NewLowess(opts Options) (*Lowess, error) {
 		return nil, errors.New(errMsg)
 	}
 
-	if cvSeed != nil {
-		C.go_lowess_set_cv_seed(ptr, C.ulong(*cvSeed))
+	if opts.Seed != nil {
+		C.go_lowess_set_seed(ptr, C.ulonglong(*opts.Seed))
+	}
+	if opts.Intervals != nil && opts.Intervals.Bootstrap > 0 {
+		C.go_lowess_set_bootstrap(ptr, C.ulong(opts.Intervals.Bootstrap))
 	}
 
 	l := &Lowess{ptr: ptr}

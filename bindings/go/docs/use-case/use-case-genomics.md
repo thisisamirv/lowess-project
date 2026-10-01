@@ -19,7 +19,7 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 ### Solution
 
-A small `Fraction = 0.1` lets LOWESS follow fine-scale spatial structure without smearing the transitions between methylated and unmethylated regions. `ConfidenceIntervals = 0.95` produces uncertainty bands that naturally widen at positions with sparser CpG coverage, making low-confidence segments immediately apparent in the plot.
+A small `Fraction = 0.1` lets LOWESS follow fine-scale spatial structure without smearing the transitions between methylated and unmethylated regions. `Intervals.Confidence = 0.95` produces uncertainty bands that naturally widen at positions with sparser CpG coverage, making low-confidence segments immediately apparent in the plot.
 
 ```go
 package main
@@ -45,7 +45,7 @@ func main() {
  opts.Fraction = 0.1
  opts.Iterations = 3
  ci := 0.95
- opts.ConfidenceIntervals = &ci
+ opts.Intervals = &fastlowess.IntervalsOptions{Confidence: &ci}
 
  model, err := fastlowess.NewLowess(opts)
  if err != nil {

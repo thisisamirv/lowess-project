@@ -64,25 +64,26 @@ result, err := model.Finalize()
 | --- | --- | --- | --- |
 | `Fraction` | `float64` | `0.67` | Smoothing fraction (bandwidth) |
 | `Iterations` | `int` | `3` | Number of robustifying iterations |
-| `Delta` | `*float64` | `nil` | Interpolation distance (`nil` auto-sets it to 0.0 in Streaming, i.e. interpolation disabled) |
 | `WeightFunction` | `string` | `"tricube"` | Weight function name |
 | `RobustnessMethod` | `string` | `"bisquare"` | Robustness method name |
-| `ScalingMethod` | `string` | `"mad"` | Residual scaling method |
-| `BoundaryPolicy` | `string` | `"extend"` | Boundary handling policy |
+| `Delta` | `*float64` | `nil` | Interpolation distance (`nil` auto-sets it to 0.0 in Streaming, i.e. interpolation disabled) |
 | `ZeroWeightFallback` | `string` | `"use_local_mean"` | Zero-weight handling |
-| `Missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
+| `BoundaryPolicy` | `string` | `"extend"` | Boundary handling policy |
+| `ScalingMethod` | `string` | `"mad"` | Residual scaling method |
 | `AutoConverge` | `*float64` | `nil` | Auto-convergence tolerance |
-| `ReturnDiagnostics` | `bool` | `false` | Include diagnostics in result |
-| `ReturnResiduals` | `bool` | `false` | Include residuals in result |
-| `ReturnRobustnessWeights` | `bool` | `false` | Include weights in result |
-| `Parallel` | `bool` | `true` | Enable parallel execution |
+| `Missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
 | `ChunkSize` | `int` | `5000` | Data chunk size |
 | `Overlap` | `int` | `chunk_size / 10` | Overlap between chunks |
 | `MergeStrategy` | `string` | `"weighted_average"` | Strategy for blending overlap regions |
-| `ReturnDerivative` | `bool` | `false` | Include the per-point local fit derivative (slope) in the result |
+| `Parallel` | `bool` | `true` | Enable parallel execution |
+| `Outputs` | `[]string` | `nil` | Optional components: `se`, `diagnostics`, `residuals`, `weights`, `derivative`. |
+| `Intervals` | `*IntervalsOptions` | `nil` | Confidence/prediction levels and per-chunk bootstrap refits |
+| `Seed` | `*uint64` | `nil` | Reproducible bootstrap draws for each combined chunk |
 | `ReturnSE` | `bool` | `false` | Populate `StandardErrors` in the result |
-| `ConfidenceIntervals` | `*float64` | `nil` | Confidence level (e.g., 0.95); populates `ConfidenceLower`/`ConfidenceUpper` |
-| `PredictionIntervals` | `*float64` | `nil` | Prediction level (e.g., 0.95); populates `PredictionLower`/`PredictionUpper` |
+| `ReturnDiagnostics` | `bool` | `false` | Include diagnostics in result |
+| `ReturnResiduals` | `bool` | `false` | Include residuals in result |
+| `ReturnRobustnessWeights` | `bool` | `false` | Include weights in result |
+| `ReturnDerivative` | `bool` | `false` | Include the per-point local fit derivative (slope) in the result |
 
 Cross-validation, GPU `Backend`, `CustomWeights`, and `ReturnSorted` are Batch-only and not available here; see [API](api.md) for those. Standard errors and confidence/prediction intervals are computed per chunk the same way Batch computes them, then blended across overlap regions via `MergeStrategy` like `Y`/`Derivative` are.
 
@@ -110,10 +111,6 @@ Cross-validation, GPU `Backend`, `CustomWeights`, and `ReturnSorted` are Batch-o
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-### Delta
-
-Points within `Delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `nil` (default) auto-sets it to `0` in Streaming mode, i.e. interpolation is disabled and every point is fit exactly.
-
 ### WeightFunction
 
 *See: [Weight Functions](../weighting/kernels.md)*
@@ -134,22 +131,9 @@ Points within `Delta` of each other on the x-axis share the same local fit inste
 - `"huber"`
 - `"talwar"`
 
-### ScalingMethod
+### Delta
 
-*See: [Scaling Methods](../weighting/scaling.md)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### BoundaryPolicy
-
-*See: [Boundary Handling](../advanced/boundary.md)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
+Points within `Delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `nil` (default) auto-sets it to `0` in Streaming mode, i.e. interpolation is disabled and every point is fit exactly.
 
 ### ZeroWeightFallback
 
@@ -161,6 +145,29 @@ Behavior when all neighborhood weights are zero:
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
 
+### BoundaryPolicy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
+### ScalingMethod
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### AutoConverge
+
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. `nil` (default) disables early stopping.
+
 ### Missing
 
 Policy for handling non-finite (NaN/Inf) values within each chunk:
@@ -171,42 +178,6 @@ Policy for handling non-finite (NaN/Inf) values within each chunk:
 | `"drop"` | Silently remove rows where `X` or `Y` is non-finite before merging the chunk with the overlap buffer |
 
 **Note:** A length mismatch between `X` and `Y` always errors, even under `"drop"`.
-
-### AutoConverge
-
-*See: [Robustness](../weighting/robustness.md#auto-convergence)*
-
-Convergence tolerance for early stopping of robustness iterations. `nil` (default) disables early stopping.
-
-### ReturnDiagnostics
-
-*See: [`Diagnostics`](#diagnostics)*
-
-Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `EffectiveDF`/`AIC`/`AICc` require per-chunk hat-matrix leverage to be threaded into the cumulative diagnostics computation across chunk boundaries, which isn't currently done (even with `ReturnSE`/`ConfidenceIntervals`/`PredictionIntervals` set), so they're always `nil` here.
-
-- `false` (default) — leaves `Result.Diagnostics` as `nil`
-- `true` — populates `Result.Diagnostics`
-
-### ReturnResiduals
-
-Include per-point residuals (`Y - fitted`) in the result.
-
-- `false` (default) — leaves `Result.Residuals` as `nil`
-- `true` — populates `Result.Residuals`
-
-### ReturnRobustnessWeights
-
-Include the final per-point robustness weights (from the last robustness iteration) in the result.
-
-- `false` (default) — leaves `Result.RobustnessWeights` as `nil`
-- `true` — populates `Result.RobustnessWeights`
-
-### Parallel
-
-Enable multi-threaded execution via Rayon.
-
-- `true` (default) — parallelizes the local regression fits across CPU cores
-- `false` — forces single-threaded execution
 
 ### ChunkSize
 
@@ -230,12 +201,18 @@ Number of points retained from the previous chunk as context, so the neighbourho
 | `"take_first"` | `"first"` | Keep left chunk values |
 | `"take_last"` | `"last"` | Keep right chunk values |
 
-### ReturnDerivative
+### Parallel
 
-Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `Result.Derivative` at effectively no extra computation cost. Derivative values in the overlap region are merged across chunk boundaries the same way `Y` is, via `MergeStrategy`.
+Enable multi-threaded execution via Rayon.
 
-- `false` (default) — leaves `Result.Derivative` as `nil`
-- `true` — populates it
+- `true` (default) — parallelizes the local regression fits across CPU cores
+- `false` — forces single-threaded execution
+
+### Intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Set `Intervals.Confidence` and/or `Intervals.Prediction` to a level such as `0.95`, or leave either nil to disable it. `Intervals.Bootstrap` (at least 2) refits each combined chunk for percentile bounds and standard errors; overlap values are merged via `MergeStrategy`. Set the outer `Seed` for reproducible draws.
 
 ### ReturnSE
 
@@ -246,17 +223,35 @@ Computes standard errors per chunk the same way Batch does, then merges the over
 - `false` (default) — leaves `Result.StandardErrors` as `nil`
 - `true` — populates it
 
-### ConfidenceIntervals
+### ReturnDiagnostics
 
-*See: [Intervals](../guide/intervals.md)*
+*See: [`Diagnostics`](#diagnostics)*
 
-Confidence level for the confidence interval around the mean response (e.g. `0.95`), populating `Result.ConfidenceLower`/`Result.ConfidenceUpper`. Computed per chunk (same as Batch) and merged across overlap boundaries via `MergeStrategy`. `nil` (default) disables confidence intervals.
+Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `EffectiveDF`/`AIC`/`AICc` require per-chunk hat-matrix leverage to be threaded into the cumulative diagnostics computation across chunk boundaries, which isn't currently done (even with `ReturnSE` or `Intervals` set), so they're always `nil` here.
 
-### PredictionIntervals
+- `false` (default) — leaves `Result.Diagnostics` as `nil`
+- `true` — populates `Result.Diagnostics`
 
-*See: [Intervals](../guide/intervals.md)*
+### ReturnResiduals
 
-Confidence level for the prediction interval for new observations (e.g. `0.95`), populating `Result.PredictionLower`/`Result.PredictionUpper`. Same per-chunk computation and overlap-merging as `ConfidenceIntervals`. `nil` (default) disables prediction intervals.
+Include per-point residuals (`Y - fitted`) in the result.
+
+- `false` (default) — leaves `Result.Residuals` as `nil`
+- `true` — populates `Result.Residuals`
+
+### ReturnRobustnessWeights
+
+Include the final per-point robustness weights (from the last robustness iteration) in the result.
+
+- `false` (default) — leaves `Result.RobustnessWeights` as `nil`
+- `true` — populates `Result.RobustnessWeights`
+
+### ReturnDerivative
+
+Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `Result.Derivative` at effectively no extra computation cost. Derivative values in the overlap region are merged across chunk boundaries the same way `Y` is, via `MergeStrategy`.
+
+- `false` (default) — leaves `Result.Derivative` as `nil`
+- `true` — populates it
 
 ## Result Structure
 
@@ -267,9 +262,9 @@ Returned by `ProcessChunk` and `Finalize`.
 | Field | Type | Populated when |
 | --- | --- | --- |
 | `X`, `Y` | `[]float64` | Always. |
-| `StandardErrors` | `[]float64` | `ReturnSE`, `ConfidenceIntervals`, or `PredictionIntervals` |
-| `ConfidenceLower`, `ConfidenceUpper` | `[]float64` | `ConfidenceIntervals` |
-| `PredictionLower`, `PredictionUpper` | `[]float64` | `PredictionIntervals` |
+| `StandardErrors` | `[]float64` | `ReturnSE` or `Intervals` |
+| `ConfidenceLower`, `ConfidenceUpper` | `[]float64` | `Intervals.Confidence` |
+| `PredictionLower`, `PredictionUpper` | `[]float64` | `Intervals.Prediction` |
 | `Residuals` | `[]float64` | `ReturnResiduals` |
 | `RobustnessWeights` | `[]float64` | `ReturnRobustnessWeights` |
 | `CVScores` | `[]float64` | Always empty (Batch only) |
