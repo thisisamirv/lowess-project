@@ -16,7 +16,7 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 ### Solution
 
-A small `fraction = 0.1` lets LOWESS follow fine-scale spatial structure without smearing the transitions between methylated and unmethylated regions. `confidence_intervals = 0.95` produces uncertainty bands that naturally widen at positions with sparser CpG coverage, making low-confidence segments immediately apparent in the plot.
+A small `fraction = 0.1` lets LOWESS follow fine-scale spatial structure without smearing the transitions between methylated and unmethylated regions. `intervals={"confidence": 0.95}` produces uncertainty bands that naturally widen at positions with sparser CpG coverage, making low-confidence segments immediately apparent in the plot.
 
 :::{jupyter-execute}
 import fastlowess as fl
@@ -34,7 +34,7 @@ observed = observed / 100.0  # Methylation is 0-1
 model = fl.Lowess(
     fraction=0.1,           # Small fraction for local detail
     iterations=3,           # Robustness for outliers
-    confidence_intervals=0.95
+    intervals={"confidence": 0.95},
 )
 result = model.fit(positions, observed)
 

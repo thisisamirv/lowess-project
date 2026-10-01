@@ -91,7 +91,7 @@ Once GPU support is available, request it by setting the backend option on the b
 try:
     import fastlowess as fl
 
-    model = fl.Lowess(fraction=0.5, backend="gpu", confidence_intervals=0.95)
+    model = fl.Lowess(fraction=0.5, backend="gpu", intervals={"confidence": 0.95})
     result = model.fit(x, y)
     print(f"95% CI at midpoint: [{result.confidence_lower[50]:.4f}, {result.confidence_upper[50]:.4f}]")
 except Exception as e:

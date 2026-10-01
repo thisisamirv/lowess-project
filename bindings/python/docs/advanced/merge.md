@@ -40,7 +40,7 @@ rng = np.random.default_rng(42)
 x_chunk = np.linspace(0, np.pi, 50)
 y_chunk = np.sin(x_chunk) + rng.normal(0, 0.1, 50)
 
-model = StreamingLowess(merge_strategy="average", chunk_size=5000, overlap=500)
+model = StreamingLowess(chunk_size=5000, overlap=500, merge_strategy="average")
 result = model.process_chunk(x_chunk, y_chunk)
 :::
 
@@ -85,9 +85,9 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 :::{jupyter-execute}
 from fastlowess import StreamingLowess
 model = StreamingLowess(
-    merge_strategy="weighted_average",
     chunk_size=5000,
-    overlap=500
+    overlap=500,
+    merge_strategy="weighted_average",
 )
 :::
 

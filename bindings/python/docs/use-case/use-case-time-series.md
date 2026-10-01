@@ -101,8 +101,7 @@ y = np.sin(t) + 0.1
 model = fl.Lowess(
     fraction=0.2,
     iterations=3,
-    confidence_intervals=0.95,
-    prediction_intervals=0.95
+    intervals={"confidence": 0.95, "prediction": 0.95},
 )
 result = model.fit(t, y)
 
@@ -193,8 +192,8 @@ expression = 100 *(1 + 0.5* np.sin(hours *np.pi / 12)) + (np.mod(i* 7 + 3, 1.7) 
 model = fl.Lowess(
     fraction=0.3,
     iterations=3,
-    confidence_intervals=0.95,
-    outputs=["diagnostics"]
+    outputs=["diagnostics"],
+    intervals={"confidence": 0.95},
 )
 result = model.fit(hours, expression)
 

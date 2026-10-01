@@ -15,7 +15,7 @@ use fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
 use fastLowess::internals::api::{Online, Streaming};
 use fastLowess::internals::binding_support;
 
-use fastLowess::prelude::LowessResult;
+use fastLowess::prelude::{IntervalsBuilder, LowessResult};
 
 // ============================================================================
 // Helper Functions
@@ -36,51 +36,112 @@ fn to_py_invalid_arg_error(e: impl Display) -> PyErr {
     to_py_error(binding_support::BindingError::invalid_arg(e.to_string()))
 }
 
-type ParsedCvOptions = (Option<Vec<f64>>, String, usize, Option<u64>);
+fn check_keys(group: &Bound<'_, PyDict>, allowed: &[&str], name: &str) -> PyResult<()> {
+    for key in group.keys() {
+        let key: String = key.extract().map_err(to_py_invalid_arg_error)?;
+        if !allowed.contains(&key.as_str()) {
+            return Err(PyValueError::new_err(format!(
+                "unknown {name} option '{key}'; expected one of: {}",
+                allowed.join(", ")
+            )));
+        }
+    }
+    Ok(())
+}
 
-fn parse_cv_options(
-    cv: Option<&Bound<'_, PyDict>>,
-    legacy_fractions: Option<Vec<f64>>,
-    legacy_method: &str,
-    legacy_k: usize,
-    legacy_seed: Option<u64>,
-) -> PyResult<ParsedCvOptions> {
+fn has_output(outputs: Option<&Vec<String>>, name: &str) -> bool {
+    outputs.is_some_and(|v| v.iter().any(|x| x == name))
+}
+
+struct ParsedCvOptions {
+    fractions: Option<Vec<f64>>,
+    method: String,
+    k: usize,
+}
+
+fn parse_cv_options(cv: Option<&Bound<'_, PyDict>>) -> PyResult<ParsedCvOptions> {
     let Some(cv) = cv else {
-        return Ok((
-            legacy_fractions,
-            legacy_method.to_owned(),
-            legacy_k,
-            legacy_seed,
-        ));
+        return Ok(ParsedCvOptions {
+            fractions: None,
+            method: "kfold".to_owned(),
+            k: 5,
+        });
     };
+    check_keys(cv, &["method", "k", "fractions"], "cv")?;
 
     let fractions = match cv.get_item("fractions")? {
-        Some(value) => Some(
-            value
-                .extract::<Vec<f64>>()
-                .map_err(to_py_invalid_arg_error)?,
-        ),
-        None => legacy_fractions,
+        Some(value) => value
+            .extract::<Vec<f64>>()
+            .map_err(to_py_invalid_arg_error)?,
+        None => return Err(PyValueError::new_err("cv requires a 'fractions' sequence")),
     };
-    if fractions.is_none() {
-        return Err(PyValueError::new_err("cv requires a 'fractions' sequence"));
-    }
     let method = match cv.get_item("method")? {
         Some(value) => value.extract::<String>().map_err(to_py_invalid_arg_error)?,
-        None => legacy_method.to_owned(),
+        None => "kfold".to_owned(),
     };
     let k = match cv.get_item("k")? {
         Some(value) => value.extract::<usize>().map_err(to_py_invalid_arg_error)?,
-        None => legacy_k,
-    };
-    let seed = match cv.get_item("seed")? {
-        Some(value) if !value.is_none() => {
-            Some(value.extract::<u64>().map_err(to_py_invalid_arg_error)?)
-        }
-        _ => legacy_seed,
+        None => 5,
     };
 
-    Ok((fractions, method, k, seed))
+    Ok(ParsedCvOptions {
+        fractions: Some(fractions),
+        method,
+        k,
+    })
+}
+
+#[derive(Default)]
+struct ParsedIntervals {
+    confidence: Option<f64>,
+    prediction: Option<f64>,
+    bootstrap: Option<usize>,
+}
+
+fn parse_intervals(intervals: Option<&Bound<'_, PyDict>>) -> PyResult<ParsedIntervals> {
+    let Some(group) = intervals else {
+        return Ok(ParsedIntervals::default());
+    };
+    check_keys(
+        group,
+        &["confidence", "prediction", "bootstrap"],
+        "intervals",
+    )?;
+
+    let level = |key: &str| -> PyResult<Option<f64>> {
+        match group.get_item(key)? {
+            Some(value) if !value.is_none() => Ok(Some(
+                value.extract::<f64>().map_err(to_py_invalid_arg_error)?,
+            )),
+            _ => Ok(None),
+        }
+    };
+    let bootstrap = match group.get_item("bootstrap")? {
+        Some(value) if !value.is_none() => {
+            Some(value.extract::<usize>().map_err(to_py_invalid_arg_error)?)
+        }
+        _ => None,
+    };
+
+    Ok(ParsedIntervals {
+        confidence: level("confidence")?,
+        prediction: level("prediction")?,
+        bootstrap: bootstrap.filter(|&n| n > 0),
+    })
+}
+
+fn apply_bootstrap_and_seed(
+    mut builder: LowessBuilder<f64>,
+    bootstrap: Option<usize>,
+    seed: Option<u64>,
+) -> LowessBuilder<f64> {
+    if let Some(n_boot) = bootstrap {
+        builder = builder.intervals(IntervalsBuilder::new().bootstrap(n_boot));
+    }
+    if let Some(seed) = seed {
+        builder = builder.seed(seed);
+    }
+    builder
 }
 
 // ============================================================================
@@ -340,9 +401,11 @@ impl PyLowessResult {
     ///     Query x-values.
     /// outputs : sequence[str], optional
     ///     Select "se" and/or "derivative".
-    /// confidence_level : float, optional
-    /// prediction_level : float, optional
-    /// return_derivative : bool, optional
+    /// intervals : dict, optional
+    ///     Grouped ``confidence``, ``prediction``, and ``bootstrap`` options. With
+    ///     ``bootstrap >= 2`` the retained training residuals are resampled.
+    /// seed : int, optional
+    ///     Prediction-time bootstrap seed, independent of the fit seed.
     /// extrapolation : str, optional
     ///     One of "clamp" (default), "linear", "error".
     /// max_extrapolation_distance : float, optional
@@ -355,8 +418,8 @@ impl PyLowessResult {
         new_x,
         *,
         outputs=None,
-        confidence_level=None,
-        prediction_level=None,
+        intervals=None,
+        seed=None,
         extrapolation="clamp",
         max_extrapolation_distance=None,
         max_neighbor_distance=None,
@@ -367,33 +430,30 @@ impl PyLowessResult {
         py: Python<'py>,
         new_x: PyReadonlyArray1<'py, f64>,
         outputs: Option<Vec<String>>,
-        confidence_level: Option<f64>,
-        prediction_level: Option<f64>,
+        intervals: Option<Bound<'py, PyDict>>,
+        seed: Option<u64>,
         extrapolation: &str,
         max_extrapolation_distance: Option<f64>,
         max_neighbor_distance: Option<f64>,
     ) -> PyResult<PyPredictOutput> {
         let new_x_vec = new_x.as_slice().map_err(to_py_invalid_arg_error)?.to_vec();
+        let iv = parse_intervals(intervals.as_ref())?;
+        let query = binding_support::build_predict_options_with_bootstrap(
+            binding_support::PredictOptionSet {
+                return_se: has_output(outputs.as_ref(), "se"),
+                confidence_level: iv.confidence,
+                prediction_level: iv.prediction,
+                return_derivative: has_output(outputs.as_ref(), "derivative"),
+                extrapolation: Some(extrapolation),
+                max_extrapolation_distance,
+                max_neighbor_distance,
+            },
+            iv.bootstrap,
+            seed,
+        )
+        .map_err(to_py_error)?;
         let output = py
-            .detach(move || {
-                binding_support::run_predict(
-                    &self.inner,
-                    &new_x_vec,
-                    binding_support::PredictOptionSet {
-                        return_se: outputs
-                            .as_ref()
-                            .is_some_and(|v| v.iter().any(|x| x == "se")),
-                        confidence_level,
-                        prediction_level,
-                        return_derivative: outputs
-                            .as_ref()
-                            .is_some_and(|v| v.iter().any(|x| x == "derivative")),
-                        extrapolation: Some(extrapolation),
-                        max_extrapolation_distance,
-                        max_neighbor_distance,
-                    },
-                )
-            })
+            .detach(move || binding_support::map_lowess_result(query.call(&self.inner, &new_x_vec)))
             .map_err(to_py_error)?;
         Ok(PyPredictOutput { inner: output })
     }
@@ -438,8 +498,8 @@ impl PyStreamingLowess {
         return_robustness_weights=false,
         return_derivative=false,
         return_se=false,
-        confidence_intervals=None,
-        prediction_intervals=None,
+        intervals=None,
+        seed=None,
         zero_weight_fallback="use_local_mean",
         parallel=true,
         merge_strategy="weighted_average",
@@ -463,14 +523,15 @@ impl PyStreamingLowess {
         return_robustness_weights: bool,
         return_derivative: bool,
         return_se: bool,
-        confidence_intervals: Option<f64>,
-        prediction_intervals: Option<f64>,
+        intervals: Option<Bound<'_, PyDict>>,
+        seed: Option<u64>,
         zero_weight_fallback: &str,
         parallel: bool,
         merge_strategy: &str,
         missing: &str,
     ) -> PyResult<Self> {
         let overlap_size = overlap.unwrap_or_else(|| binding_support::default_overlap(chunk_size));
+        let iv = parse_intervals(intervals.as_ref())?;
 
         let mut builder = map_invalid_arg(binding_support::apply_builder_options(
             LowessBuilder::<f64>::new(),
@@ -502,8 +563,8 @@ impl PyStreamingLowess {
                         .is_some_and(|v| v.iter().any(|x| x == "se")),
                 return_sorted: false,
                 missing: Some(missing),
-                confidence_intervals,
-                prediction_intervals,
+                confidence_intervals: iv.confidence,
+                prediction_intervals: iv.prediction,
                 parallel: Some(parallel),
                 chunk_size: Some(chunk_size),
                 overlap: Some(overlap_size),
@@ -526,6 +587,7 @@ impl PyStreamingLowess {
         {
             builder = builder.return_derivative();
         }
+        builder = apply_bootstrap_and_seed(builder, iv.bootstrap, seed);
 
         let processor = binding_support::map_lowess_result(builder.adapter(Streaming).build())
             .map_err(to_py_error)?;
@@ -646,8 +708,8 @@ impl PyOnlineLowess {
         return_robustness_weights=false,
         return_derivative=false,
         return_se=false,
-        confidence_intervals=None,
-        prediction_intervals=None,
+        intervals=None,
+        seed=None,
         zero_weight_fallback="use_local_mean",
         missing="error"
     ))]
@@ -668,11 +730,12 @@ impl PyOnlineLowess {
         return_robustness_weights: bool,
         return_derivative: bool,
         return_se: bool,
-        confidence_intervals: Option<f64>,
-        prediction_intervals: Option<f64>,
+        intervals: Option<Bound<'_, PyDict>>,
+        seed: Option<u64>,
         zero_weight_fallback: &str,
         missing: &str,
     ) -> PyResult<Self> {
+        let iv = parse_intervals(intervals.as_ref())?;
         let mut builder = map_invalid_arg(binding_support::apply_builder_options(
             LowessBuilder::<f64>::new(),
             binding_support::BuilderOptionSet {
@@ -691,11 +754,11 @@ impl PyOnlineLowess {
                         .as_ref()
                         .is_some_and(|v| v.iter().any(|x| x == "weights")),
                 return_diagnostics: false,
-                return_se,
+                return_se: return_se || has_output(outputs.as_ref(), "se"),
                 return_sorted: false,
                 missing: Some(missing),
-                confidence_intervals,
-                prediction_intervals,
+                confidence_intervals: iv.confidence,
+                prediction_intervals: iv.prediction,
                 parallel: None,
                 chunk_size: None,
                 overlap: None,
@@ -718,6 +781,7 @@ impl PyOnlineLowess {
         {
             builder = builder.return_derivative();
         }
+        builder = apply_bootstrap_and_seed(builder, iv.bootstrap, seed);
 
         let processor = binding_support::map_lowess_result(builder.adapter(Online).build())
             .map_err(to_py_error)?;
@@ -778,20 +842,16 @@ impl PyLowess {
         robustness_method="bisquare",
         scaling_method="mad",
         boundary_policy="extend",
-        confidence_intervals=None,
-        prediction_intervals=None,
         outputs=None,
-            cv=None,
+        intervals=None,
+        cv=None,
+        seed=None,
         return_diagnostics=false,
         return_residuals=false,
         return_robustness_weights=false,
         zero_weight_fallback="use_local_mean",
         auto_converge=None,
-        cv_fractions=None,
-        cv_method="kfold",
-        cv_k=5,
         parallel=true,
-        cv_seed=None,
         return_se=false,
         return_sorted=false,
         backend="cpu",
@@ -808,20 +868,16 @@ impl PyLowess {
         robustness_method: &str,
         scaling_method: &str,
         boundary_policy: &str,
-        confidence_intervals: Option<f64>,
-        prediction_intervals: Option<f64>,
         outputs: Option<Vec<String>>,
+        intervals: Option<Bound<'_, PyDict>>,
         cv: Option<Bound<'_, PyDict>>,
+        seed: Option<u64>,
         return_diagnostics: bool,
         return_residuals: bool,
         return_robustness_weights: bool,
         zero_weight_fallback: &str,
         auto_converge: Option<f64>,
-        cv_fractions: Option<Vec<f64>>,
-        cv_method: &str,
-        cv_k: usize,
         parallel: bool,
-        cv_seed: Option<u64>,
         return_se: bool,
         return_sorted: bool,
         backend: &str,
@@ -829,13 +885,9 @@ impl PyLowess {
         retain_model: bool,
         return_derivative: bool,
     ) -> PyResult<Self> {
-        let (cv_fractions, cv_method, cv_k, cv_seed) =
-            parse_cv_options(cv.as_ref(), cv_fractions, cv_method, cv_k, cv_seed)?;
-        let output = |name: &str| {
-            outputs
-                .as_ref()
-                .is_some_and(|v| v.iter().any(|x| x == name))
-        };
+        let cv = parse_cv_options(cv.as_ref())?;
+        let iv = parse_intervals(intervals.as_ref())?;
+        let output = |name: &str| has_output(outputs.as_ref(), name);
         let mut builder = map_invalid_arg(binding_support::apply_builder_options(
             LowessBuilder::<f64>::new(),
             binding_support::BuilderOptionSet {
@@ -854,8 +906,8 @@ impl PyLowess {
                 return_se: return_se || output("se"),
                 return_sorted: return_sorted || output("sorted"),
                 missing: Some(missing),
-                confidence_intervals,
-                prediction_intervals,
+                confidence_intervals: iv.confidence,
+                prediction_intervals: iv.prediction,
                 parallel: Some(parallel),
                 backend: Some(backend),
                 chunk_size: None,
@@ -864,16 +916,17 @@ impl PyLowess {
                 window_capacity: None,
                 min_points: None,
                 update_mode: None,
-                cv_fractions: cv_fractions.as_deref(),
-                cv_method: Some(&cv_method),
-                cv_k: Some(cv_k),
-                cv_seed,
+                cv_fractions: cv.fractions.as_deref(),
+                cv_method: Some(&cv.method),
+                cv_k: Some(cv.k),
+                cv_seed: None,
                 retain_model: Some(retain_model),
             },
         ))?;
-        if return_derivative {
+        if return_derivative || output("derivative") {
             builder = builder.return_derivative();
         }
+        builder = apply_bootstrap_and_seed(builder, iv.bootstrap, seed);
 
         Ok(PyLowess {
             builder,

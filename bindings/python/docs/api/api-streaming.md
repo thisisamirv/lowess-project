@@ -64,23 +64,22 @@ print(final_result)
 | --- | --- | --- | --- |
 | `fraction` | `float` | `0.67` | Smoothing fraction (bandwidth) |
 | `iterations` | `int` | `3` | Number of robustifying iterations |
-| `delta` | `float` | `None` | Interpolation distance (`None` auto-sets it to 0.0 in Streaming, i.e. interpolation disabled) |
 | `weight_function` | `str` | `"tricube"` | Weight function name |
 | `robustness_method` | `str` | `"bisquare"` | Robustness method name |
-| `scaling_method` | `str` | `"mad"` | Residual scaling method |
-| `boundary_policy` | `str` | `"extend"` | Boundary handling policy |
+| `delta` | `float` | `None` | Interpolation distance (`None` auto-sets it to 0.0 in Streaming, i.e. interpolation disabled) |
 | `zero_weight_fallback` | `str` | `"use_local_mean"` | Zero-weight handling strategy |
-| `missing` | `str` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
+| `boundary_policy` | `str` | `"extend"` | Boundary handling policy |
+| `scaling_method` | `str` | `"mad"` | Residual scaling method |
 | `auto_converge` | `float` | `None` | Auto-convergence tolerance |
-| `outputs` | `Sequence[str]` | `[]` | Select `diagnostics`, `residuals`, `weights`, `derivative`, and/or `se` |
-| `parallel` | `bool` | `True` | Enable parallel execution |
+| `missing` | `str` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
 | `chunk_size` | `int` | `5000` | Data chunk size |
 | `overlap` | `int` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy` | `str` | `"weighted_average"` | Strategy for blending overlap regions |
-| `return_derivative` | `bool` | `False` | Include the per-point local fit derivative (slope) in result |
+| `parallel` | `bool` | `True` | Enable parallel execution |
 | `outputs` | `Sequence[str]` | `[]` | Select optional output components |
-| `confidence_intervals` | `float` | `None` | Confidence level (e.g., 0.95); populates `confidence_lower`/`confidence_upper` |
-| `prediction_intervals` | `float` | `None` | Prediction level (e.g., 0.95); populates `prediction_lower`/`prediction_upper` |
+| `intervals` | `dict` | `None` | Grouped `confidence`, `prediction`, and per-chunk `bootstrap` options |
+| `seed` | `int` | `None` | Reproducible bootstrap draws for each combined chunk |
+| `return_derivative` | `bool` | `False` | Include the per-point local fit derivative (slope) in result |
 
 Cross-validation, GPU `backend`, `custom_weights`, and `"sorted"` are Batch-only and not available here; see [fastLowess](api.md) for those. Standard errors and confidence/prediction intervals are computed per chunk the same way Batch computes them, then blended across overlap regions via `merge_strategy` like `y`/`derivative` are.
 
@@ -108,10 +107,6 @@ Cross-validation, GPU `backend`, `custom_weights`, and `"sorted"` are Batch-only
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-### delta
-
-Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `None` (default) auto-sets it to `0.0` in Streaming mode, i.e. interpolation is disabled and every point is fit exactly.
-
 ### weight_function
 
 *See: [Weight Functions](../weighting/kernels.md)*
@@ -132,22 +127,9 @@ Points within `delta` of each other on the x-axis share the same local fit inste
 - `"huber"`
 - `"talwar"`
 
-### scaling_method
+### delta
 
-*See: [Scaling Methods](../weighting/scaling.md)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### boundary_policy
-
-*See: [Boundary Handling](../advanced/boundary.md)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
+Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `None` (default) auto-sets it to `0.0` in Streaming mode, i.e. interpolation is disabled and every point is fit exactly.
 
 ### zero_weight_fallback
 
@@ -159,6 +141,29 @@ Behavior when all neighborhood weights are zero:
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
 
+### boundary_policy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
+### scaling_method
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### auto_converge
+
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. `None` (default) disables early stopping.
+
 ### missing
 
 Policy for handling non-finite (NaN/Inf) values within each chunk:
@@ -169,42 +174,6 @@ Policy for handling non-finite (NaN/Inf) values within each chunk:
 | `"drop"` | Silently remove rows where `x` or `y` is non-finite before merging the chunk with the overlap buffer |
 
 **Note:** A length mismatch between `x` and `y` always errors, even under `"drop"`.
-
-### auto_converge
-
-*See: [Robustness](../weighting/robustness.md#auto-convergence)*
-
-Convergence tolerance for early stopping of robustness iterations. `None` (default) disables early stopping.
-
-### outputs
-
-*See: [`Diagnostics`](#diagnostics)*
-
-Use `outputs=["diagnostics", "residuals", "weights", "derivative", "se"]` to select optional components. `effective_df`/`aic`/`aicc` remain unavailable per chunk.
-
-- `False` (default) — leaves `result.diagnostics` as `None`
-- `True` — populates `result.diagnostics`
-
-### outputs: residuals
-
-Include per-point residuals (`y - fitted`) in the result.
-
-- `False` (default) — leaves `result.residuals` as `None`
-- `True` — populates `result.residuals`
-
-### outputs: weights
-
-Include the final per-point robustness weights (from the last robustness iteration) in the result.
-
-- `False` (default) — leaves `result.robustness_weights` as `None`
-- `True` — populates `result.robustness_weights`
-
-### parallel
-
-Enable multi-threaded execution via Rayon.
-
-- `True` (default) — parallelizes the local regression fits across CPU cores
-- `False` — forces single-threaded execution (useful for benchmarking or deterministic profiling)
 
 ### chunk_size
 
@@ -228,12 +197,21 @@ Number of points retained from the previous chunk as context, so the neighbourho
 | `"take_first"` | `"first"` | Keep left chunk values |
 | `"take_last"` | `"last"` | Keep right chunk values |
 
-### return_derivative
+### parallel
 
-Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `LowessResult.derivative` at effectively no extra computation cost. Derivative values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
+Enable multi-threaded execution via Rayon.
 
-- `False` (default) — leaves `result.derivative` as `None`
-- `True` — populates it
+- `True` (default) — parallelizes the local regression fits across CPU cores
+- `False` — forces single-threaded execution (useful for benchmarking or deterministic profiling)
+
+### outputs
+
+*See: [`Diagnostics`](#diagnostics)*
+
+Use `outputs=["diagnostics", "residuals", "weights", "derivative", "se"]` to select optional components. `effective_df`/`aic`/`aicc` remain unavailable per chunk.
+
+- `False` (default) — leaves `result.diagnostics` as `None`
+- `True` — populates `result.diagnostics`
 
 ### outputs: se
 
@@ -244,17 +222,36 @@ Computes standard errors per chunk the same way Batch does, then merges the over
 - `False` (default) — leaves `result.standard_errors` as `None`
 - `True` — populates it
 
-### confidence_intervals
+### outputs: residuals
+
+Include per-point residuals (`y - fitted`) in the result.
+
+- `False` (default) — leaves `result.residuals` as `None`
+- `True` — populates `result.residuals`
+
+### outputs: weights
+
+Include the final per-point robustness weights (from the last robustness iteration) in the result.
+
+- `False` (default) — leaves `result.robustness_weights` as `None`
+- `True` — populates `result.robustness_weights`
+
+### intervals
 
 *See: [Intervals](../guide/intervals.md)*
 
-Confidence level for the confidence interval around the mean response (e.g. `0.95`), populating `result.confidence_lower`/`result.confidence_upper`. Computed per chunk (same as Batch) and merged across overlap boundaries via `merge_strategy`. `None` (default) disables confidence intervals.
+A dict such as `{"confidence": 0.95, "prediction": 0.95, "bootstrap": 200}`, populating `result.confidence_lower`/`result.confidence_upper` and `result.prediction_lower`/`result.prediction_upper`. Computed per combined chunk (including the previous overlap) and merged across overlap boundaries via `merge_strategy`; these are local chunk intervals, not whole-stream intervals. `bootstrap` (at least `2`) refits each combined chunk from resampled residuals; with `parallel=True`, refits run concurrently.
 
-### prediction_intervals
+### seed
 
-*See: [Intervals](../guide/intervals.md)*
+Seeds bootstrap draws. Each combined chunk restarts from the same seed. It does not enable bootstrap by itself; `0` is a valid seed.
 
-Confidence level for the prediction interval for new observations (e.g. `0.95`), populating `result.prediction_lower`/`result.prediction_upper`. Same per-chunk computation and overlap-merging as `confidence_intervals`. `None` (default) disables prediction intervals.
+### return_derivative
+
+Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `LowessResult.derivative` at effectively no extra computation cost. Derivative values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
+
+- `False` (default) — leaves `result.derivative` as `None`
+- `True` — populates it
 
 ## Result Structure
 
@@ -269,10 +266,10 @@ Returned by `process_chunk()` and `finalize()`.
 | `fraction_used` | `float` | Fraction used |
 | `iterations_used` | `int \| None` | Robustness iterations actually performed |
 | `standard_errors` | `ndarray \| None` | Per-point standard errors (if `"se"`, confidence, or prediction intervals were requested) |
-| `confidence_lower` | `ndarray \| None` | Lower confidence bounds (if `confidence_intervals` was set) |
-| `confidence_upper` | `ndarray \| None` | Upper confidence bounds (if `confidence_intervals` was set) |
-| `prediction_lower` | `ndarray \| None` | Lower prediction bounds (if `prediction_intervals` was set) |
-| `prediction_upper` | `ndarray \| None` | Upper prediction bounds (if `prediction_intervals` was set) |
+| `confidence_lower` | `ndarray \| None` | Lower confidence bounds (if `intervals["confidence"]` was set) |
+| `confidence_upper` | `ndarray \| None` | Upper confidence bounds (if `intervals["confidence"]` was set) |
+| `prediction_lower` | `ndarray \| None` | Lower prediction bounds (if `intervals["prediction"]` was set) |
+| `prediction_upper` | `ndarray \| None` | Upper prediction bounds (if `intervals["prediction"]` was set) |
 | `residuals` | `ndarray \| None` | Residuals (if `"residuals"` was requested) |
 | `robustness_weights` | `ndarray \| None` | Robustness weights (if `"weights"` was requested) |
 | `cv_scores` | `ndarray \| None` | Always `None` (Batch only) |

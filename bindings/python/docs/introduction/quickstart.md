@@ -37,9 +37,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 model = fl.Lowess(
     fraction=0.5,
     iterations=3,
-    confidence_intervals=0.95,
-    prediction_intervals=0.95,
-    outputs=["diagnostics"]
+    outputs=["diagnostics"],
+    intervals={"confidence": 0.95, "prediction": 0.95},
 )
 result = model.fit(x, y)
 

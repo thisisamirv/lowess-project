@@ -37,9 +37,9 @@ reference = sm.nonparametric.lowess(y, x, frac=2 / 3, it=3, delta=0.0)
 model = fl.Lowess(
     fraction=2 / 3,
     iterations=3,
+    delta=0.0,
     boundary_policy="noboundary",
     scaling_method="mar",
-    delta=0.0,
 )
 result = model.fit(x, y)
 
@@ -63,9 +63,9 @@ reference = sm.nonparametric.lowess(y_unsorted, x_unsorted, frac=2 / 3, it=3, de
 model = fl.Lowess(
     fraction=2 / 3,
     iterations=3,
+    delta=0.0,
     boundary_policy="noboundary",
     scaling_method="mar",
-    delta=0.0,
     outputs=["sorted"],
 )
 result = model.fit(x_unsorted, y_unsorted)

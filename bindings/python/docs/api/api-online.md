@@ -52,22 +52,21 @@ print(result)
 | --- | --- | --- | --- |
 | `fraction` | `float` | `0.67` | Smoothing fraction (bandwidth) |
 | `iterations` | `int` | `0` | Number of robustifying iterations (requires `update_mode = "full"`) |
-| `delta` | `float` | `None` | Interpolation distance (`None` auto-sets it to 0.0 in Online, i.e. interpolation disabled) |
 | `weight_function` | `str` | `"tricube"` | Weight function name |
 | `robustness_method` | `str` | `"bisquare"` | Robustness method name |
-| `scaling_method` | `str` | `"mad"` | Residual scaling method |
-| `boundary_policy` | `str` | `"extend"` | Boundary handling policy |
+| `delta` | `float` | `None` | Interpolation distance (`None` auto-sets it to 0.0 in Online, i.e. interpolation disabled) |
 | `zero_weight_fallback` | `str` | `"use_local_mean"` | Zero-weight handling strategy |
-| `missing` | `str` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
+| `boundary_policy` | `str` | `"extend"` | Boundary handling policy |
+| `scaling_method` | `str` | `"mad"` | Residual scaling method |
 | `auto_converge` | `float` | `None` | Auto-convergence tolerance |
-| `outputs` | `Sequence[str]` | `[]` | Select `weights`, `derivative`, and/or `se` |
+| `missing` | `str` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `window_capacity` | `int` | `1000` | Max points in sliding window |
 | `min_points` | `int` | `2` | Min points before smoothing starts |
 | `update_mode` | `str` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
-| `return_derivative` | `bool` | `False` | Include the latest point's local fit derivative (slope) in result |
 | `outputs` | `Sequence[str]` | `[]` | `"se"` requires `update_mode="full"` |
-| `confidence_intervals` | `float` | `None` | Confidence level (e.g., 0.95); populates `confidence_lower`/`confidence_upper` (requires `update_mode="full"`) |
-| `prediction_intervals` | `float` | `None` | Prediction level (e.g., 0.95); populates `prediction_lower`/`prediction_upper` (requires `update_mode="full"`) |
+| `intervals` | `dict` | `None` | Grouped `confidence`, `prediction`, and per-window `bootstrap` options (requires `update_mode="full"`) |
+| `seed` | `int` | `None` | Reproducible bootstrap draws for each full-update window |
+| `return_derivative` | `bool` | `False` | Include the latest point's local fit derivative (slope) in result |
 
 Cross-validation, GPU `backend`, `custom_weights`, `"sorted"`, `"diagnostics"`, `"residuals"`, and `parallel` are Batch-only and not available here; see [fastLowess](api.md) for those.
 
@@ -95,10 +94,6 @@ Cross-validation, GPU `backend`, `custom_weights`, `"sorted"`, `"diagnostics"`, 
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-### delta
-
-Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `None` (default) auto-sets it to `0.0` in Online mode, i.e. interpolation is disabled and every point is fit exactly.
-
 ### weight_function
 
 *See: [Weight Functions](../weighting/kernels.md)*
@@ -119,22 +114,9 @@ Points within `delta` of each other on the x-axis share the same local fit inste
 - `"huber"`
 - `"talwar"`
 
-### scaling_method
+### delta
 
-*See: [Scaling Methods](../weighting/scaling.md)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### boundary_policy
-
-*See: [Boundary Handling](../advanced/boundary.md)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
+Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `None` (default) auto-sets it to `0.0` in Online mode, i.e. interpolation is disabled and every point is fit exactly.
 
 ### zero_weight_fallback
 
@@ -146,6 +128,29 @@ Behavior when all neighborhood weights are zero:
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
 
+### boundary_policy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
+### scaling_method
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### auto_converge
+
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. `None` (default) disables early stopping.
+
 ### missing
 
 Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `add_point`:
@@ -154,19 +159,6 @@ Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `add_point
 | --- | --- |
 | `"error"` (default) | Raise an error |
 | `"drop"` | Silently ignore the point — `add_point` returns `None` instead of adding it to the window |
-
-### auto_converge
-
-*See: [Robustness](../weighting/robustness.md#auto-convergence)*
-
-Convergence tolerance for early stopping of robustness iterations. `None` (default) disables early stopping.
-
-### outputs
-
-Include the robustness weight for the latest point (from the last robustness iteration) in the result.
-
-- `False` (default) — leaves `robustness_weight` as `None` in `OnlineOutput`
-- `True` — populates `robustness_weight`
 
 ### window_capacity
 
@@ -185,6 +177,23 @@ Minimum number of points required before smoothing starts. `add_point()` returns
 | `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
 | `"full"` | `"resmooth"` | Recompute entire window | More accurate |
 
+### outputs
+
+Include the robustness weight for the latest point (from the last robustness iteration) in the result.
+
+- `False` (default) — leaves `robustness_weight` as `None` in `OnlineOutput`
+- `True` — populates `robustness_weight`
+
+### intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+A dict such as `{"confidence": 0.95, "prediction": 0.95, "bootstrap": 200}`, populating `confidence_lower`/`confidence_upper` and `prediction_lower`/`prediction_upper` for the latest point. Same `update_mode="full"` requirement as `"se"`. `bootstrap` (at least `2`) refits each sliding window from resampled residuals.
+
+### seed
+
+Seeds bootstrap draws. Each full-update window restarts from the same seed. It does not enable bootstrap by itself; `0` is a valid seed.
+
 ### return_derivative
 
 Each point's local WLS fit already computes a slope internally; this exposes the latest point's slope (rate of change of the smoothed curve) in `OnlineOutput.derivative` at effectively no extra computation cost.
@@ -196,22 +205,10 @@ Each point's local WLS fit already computes a slope internally; this exposes the
 
 *See: [Intervals](../guide/intervals.md)*
 
-Populates `standard_error` — but only when combined with `update_mode="full"`. The fast `"incremental"` path (the default) never computes standard errors, so combining `"se"` (or `confidence_intervals`/`prediction_intervals`) with anything other than `"full"` raises at construction time, rather than silently leaving `standard_error` as `None`.
+Populates `standard_error` — but only when combined with `update_mode="full"`. The fast `"incremental"` path (the default) never computes standard errors, so combining `"se"` (or `intervals`) with anything other than `"full"` raises at construction time, rather than silently leaving `standard_error` as `None`.
 
 - `False` (default) — leaves `standard_error` as `None`
 - `True` — populates `standard_error`, and requires `update_mode="full"`
-
-### confidence_intervals
-
-*See: [Intervals](../guide/intervals.md)*
-
-Confidence level for the confidence interval around the mean response at the latest point (e.g. `0.95`), populating `confidence_lower`/`confidence_upper`. Same `update_mode="full"` requirement as `"se"`. `None` (default) disables confidence intervals.
-
-### prediction_intervals
-
-*See: [Intervals](../guide/intervals.md)*
-
-Confidence level for the prediction interval for a new observation at the latest point (e.g. `0.95`), populating `prediction_lower`/`prediction_upper`. Same `update_mode="full"` requirement as `"se"`. `None` (default) disables prediction intervals.
 
 ## Result Structure
 
@@ -223,8 +220,8 @@ Returned by `add_point()` once the window has enough points (`None` until then).
 | --- | --- | --- |
 | `y` | `float` | Smoothed value for the latest point |
 | `standard_error` | `float \| None` | Populated when `"se"` is set (requires `update_mode="full"`); otherwise always `None` |
-| `confidence_lower` / `confidence_upper` | `float \| None` | Confidence interval bounds around the mean response, if `confidence_intervals` was set (requires `update_mode="full"`) |
-| `prediction_lower` / `prediction_upper` | `float \| None` | Prediction interval bounds for a new observation, if `prediction_intervals` was set (requires `update_mode="full"`) |
+| `confidence_lower` / `confidence_upper` | `float \| None` | Confidence interval bounds around the mean response, if `intervals["confidence"]` was set (requires `update_mode="full"`) |
+| `prediction_lower` / `prediction_upper` | `float \| None` | Prediction interval bounds for a new observation, if `intervals["prediction"]` was set (requires `update_mode="full"`) |
 | `residual` | `float \| None` | Residual y − smoothed; always present (there is no `"residuals"` output for Online) |
 | `robustness_weight` | `float \| None` | Robustness weight, if `"weights"` was set |
 | `iterations_used` | `int \| None` | Robustness iterations performed |

@@ -61,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Python:**
 
 - Added grouped `outputs` and nested `cv` constructor options, plus grouped prediction outputs, while preserving legacy keyword arguments.
+- Added a grouped `intervals` dict (`confidence`, `prediction`, `bootstrap`) with residual-bootstrap intervals across `Lowess`, `StreamingLowess`, full-update `OnlineLowess`, and `LowessResult.predict()`.
 - Added an "Alternative Software" guide comparing `fastlowess` with `statsmodels.lowess()`.
 - Added comparison-only `statsmodels` documentation dependency for executable examples.
 
@@ -139,7 +140,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Python:**
 
-- Refactored the internal `parse_cv_options` helper to return a named `ParsedCvOptions` alias, reducing signature type complexity so strict clippy (`-D warnings`) passes in `python-dev`.
+- Breaking change: replaced `confidence_intervals`/`prediction_intervals` (and `predict()`'s `confidence_level`/`prediction_level`/`return_se`/`return_derivative`) with `intervals` and `outputs`; removed `cv_fractions`/`cv_method`/`cv_k`/`cv_seed` and the `cv` dict's `seed` in favor of `cv={"method", "k", "fractions"}` plus one outer `seed` shared by CV and fit-time bootstrap. `predict()` has its own `seed`. Unknown `cv`/`intervals` keys raise `ValueError`.
+- Refactored the internal `parse_cv_options` helper to return a named `ParsedCvOptions` struct, reducing signature type complexity so strict clippy (`-D warnings`) passes in `python-dev`.
 
 **R:**
 

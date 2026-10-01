@@ -123,7 +123,7 @@ class TestLowess:
         x = np.linspace(0, 10, 20)
         y = 2 * x + np.random.normal(0, 1, 20)
 
-        lowess = fastlowess.Lowess(fraction=0.5, confidence_intervals=0.95)
+        lowess = fastlowess.Lowess(fraction=0.5, intervals={"confidence": 0.95})
         result = lowess.fit(x, y)
 
         assert result.confidence_lower is not None
@@ -140,7 +140,7 @@ class TestLowess:
         x = np.linspace(0, 10, 20)
         y = 2 * x + np.random.normal(0, 1, 20)
 
-        lowess = fastlowess.Lowess(fraction=0.5, prediction_intervals=0.95)
+        lowess = fastlowess.Lowess(fraction=0.5, intervals={"prediction": 0.95})
         result = lowess.fit(x, y)
 
         assert result.prediction_lower is not None
@@ -364,7 +364,7 @@ class TestStreamingLowess:
         assert total_points == len(x) - 1
 
     def test_streaming_return_se_and_intervals(self):
-        """Test streaming with return_se/confidence_intervals/prediction_intervals."""
+        """Test streaming with return_se and grouped intervals."""
         x = np.linspace(0, 100, 200)
         y = np.sin(x / 10)
 
@@ -372,8 +372,7 @@ class TestStreamingLowess:
             fraction=0.2,
             chunk_size=50,
             return_se=True,
-            confidence_intervals=0.95,
-            prediction_intervals=0.95,
+            intervals={"confidence": 0.95, "prediction": 0.95},
         )
         chunk_result = streaming.process_chunk(x, y)
         final_result = streaming.finalize()
@@ -459,7 +458,7 @@ class TestOnlineLowess:
             )
 
     def test_online_return_se_and_intervals(self):
-        """Test online with return_se/confidence_intervals/prediction_intervals."""
+        """Test online with return_se and grouped intervals."""
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0])
         y = np.array([2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0])
 
@@ -469,8 +468,7 @@ class TestOnlineLowess:
             min_points=3,
             update_mode="full",
             return_se=True,
-            confidence_intervals=0.95,
-            prediction_intervals=0.95,
+            intervals={"confidence": 0.95, "prediction": 0.95},
         )
 
         results = []
@@ -601,7 +599,7 @@ class TestErrorHandling:
         y = np.array([2.0, 4.0, 6.0, 8.0, 10.0])
 
         with pytest.raises(ValueError):
-            lowess = fastlowess.Lowess(cv_fractions=[0.5], cv_method="invalid")
+            lowess = fastlowess.Lowess(cv={"method": "invalid", "fractions": [0.5]})
             lowess.fit(x, y)
 
     def test_grouped_outputs(self):
@@ -623,7 +621,7 @@ class TestErrorHandling:
         y = x**2
 
         result = fastlowess.Lowess(
-            cv={"method": "kfold", "k": 5, "fractions": [0.3, 0.5], "seed": 42}
+            cv={"method": "kfold", "k": 5, "fractions": [0.3, 0.5]}, seed=42
         ).fit(x, y)
 
         assert result.fraction_used in [0.3, 0.5]
@@ -633,6 +631,107 @@ class TestErrorHandling:
         """Test malformed nested CV values raise ValueError."""
         with pytest.raises(ValueError):
             fastlowess.Lowess(cv={"fractions": "invalid"})
+
+    def test_grouped_option_validation(self):
+        """Test unknown or incomplete grouped options are rejected."""
+        with pytest.raises(ValueError):
+            fastlowess.Lowess(cv={"fractions": [0.3], "seed": 1})
+        with pytest.raises(ValueError):
+            fastlowess.Lowess(cv={"method": "kfold"})
+        with pytest.raises(ValueError):
+            fastlowess.Lowess(intervals={"level": 0.95})
+        with pytest.raises(OverflowError):
+            fastlowess.Lowess(seed=-1)
+
+    def test_shared_seed_reproduces_cv_and_bootstrap(self):
+        """Test one outer seed controls CV folds and bootstrap draws."""
+        x = np.arange(40, dtype=float)
+        y = np.sin(x * 0.1) + 0.1 * np.cos(0.7 * x)
+        runs = [
+            fastlowess.Lowess(
+                intervals={"confidence": 0.95, "prediction": 0.95, "bootstrap": 20},
+                cv={"method": "kfold", "k": 4, "fractions": [0.3, 0.5, 0.7]},
+                seed=0,
+            ).fit(x, y)
+            for _ in range(2)
+        ]
+        np.testing.assert_array_equal(runs[0].cv_scores, runs[1].cv_scores)
+        np.testing.assert_array_equal(
+            runs[0].confidence_lower, runs[1].confidence_lower
+        )
+        assert len(runs[0].standard_errors) == len(x)
+        assert len(runs[0].prediction_upper) == len(x)
+
+    def test_bootstrap_rejects_single_replicate(self):
+        """Test fewer than two bootstrap replicates raise an error."""
+        x = np.arange(20, dtype=float)
+        with pytest.raises(ValueError):
+            fastlowess.Lowess(intervals={"confidence": 0.95, "bootstrap": 1}).fit(x, x)
+
+    def test_streaming_seeded_bootstrap(self):
+        """Test per-chunk bootstrap intervals are reproducible with a seed."""
+        x = np.arange(30) * 0.1
+        y = np.sin(x) + 0.1 * np.cos(7 * x)
+        lower = [
+            fastlowess.StreamingLowess(
+                chunk_size=len(x),
+                intervals={"confidence": 0.95, "prediction": 0.95, "bootstrap": 20},
+                seed=42,
+            )
+            .process_chunk(x, y)
+            .confidence_lower
+            for _ in range(2)
+        ]
+        assert lower[0] is not None
+        np.testing.assert_array_equal(lower[0], lower[1])
+
+    def test_online_seeded_bootstrap(self):
+        """Test full-update online bootstrap intervals are reproducible."""
+        x = np.arange(12) * 0.1
+        y = np.sin(x) + 0.1 * np.cos(7 * x)
+        intervals = {"confidence": 0.95, "prediction": 0.95, "bootstrap": 20}
+
+        def last_bounds():
+            online = fastlowess.OnlineLowess(
+                fraction=0.5,
+                window_capacity=20,
+                min_points=5,
+                update_mode="full",
+                intervals=intervals,
+                seed=0,
+            )
+            points = [online.add_point(float(a), float(b)) for a, b in zip(x, y)]
+            last = [p for p in points if p is not None][-1]
+            return last.confidence_lower, last.prediction_upper
+
+        first = last_bounds()
+        assert None not in first
+        assert first == last_bounds()
+        with pytest.raises(ValueError):
+            fastlowess.OnlineLowess(intervals=intervals)
+
+    def test_predict_grouped_intervals_and_seeded_bootstrap(self):
+        """Test predict with grouped outputs, intervals, and seeded bootstrap."""
+        x = np.arange(30, dtype=float)
+        y = np.sin(x * 0.1) + 0.1 * np.cos(0.7 * x)
+        new_x = np.array([2.5, 10.5, 20.5])
+        result = fastlowess.Lowess(retain_model=True).fit(x, y)
+
+        analytic = result.predict(
+            new_x,
+            outputs=["se", "derivative"],
+            intervals={"confidence": 0.95, "prediction": 0.95},
+        )
+        assert len(analytic.standard_errors) == len(new_x)
+        assert len(analytic.derivative) == len(new_x)
+        assert len(analytic.prediction_lower) == len(new_x)
+
+        def boot():
+            return result.predict(
+                new_x, intervals={"confidence": 0.95, "bootstrap": 20}, seed=7
+            ).confidence_lower
+
+        np.testing.assert_array_equal(boot(), boot())
 
     def test_invalid_missing_policy(self):
         """Test error on invalid missing policy."""
@@ -742,7 +841,7 @@ class TestCrossValidation:
         x = np.linspace(0, 10, 50)
         y = 2 * x + np.sin(x)
 
-        lowess = fastlowess.Lowess(cv_fractions=[0.2, 0.3, 0.5, 0.7])
+        lowess = fastlowess.Lowess(cv={"fractions": [0.2, 0.3, 0.5, 0.7]})
         result = lowess.fit(x, y)
 
         assert result.fraction_used in [0.2, 0.3, 0.5, 0.7]
@@ -755,7 +854,9 @@ class TestCrossValidation:
         x = np.linspace(0, 10, 30)
         y = x**2
 
-        lowess = fastlowess.Lowess(cv_fractions=[0.3, 0.5], cv_method="kfold", cv_k=5)
+        lowess = fastlowess.Lowess(
+            cv={"method": "kfold", "k": 5, "fractions": [0.3, 0.5]}
+        )
         result = lowess.fit(x, y)
 
         assert result.fraction_used in [0.3, 0.5]
@@ -766,7 +867,7 @@ class TestCrossValidation:
         x = np.linspace(0, 10, 20)
         y = np.sin(x)
 
-        lowess = fastlowess.Lowess(cv_fractions=[0.4, 0.6], cv_method="loocv")
+        lowess = fastlowess.Lowess(cv={"method": "loocv", "fractions": [0.4, 0.6]})
         result = lowess.fit(x, y)
 
         assert result.fraction_used in [0.4, 0.6]
@@ -778,8 +879,8 @@ class TestCrossValidation:
         y = 2 * x + 0.5 * np.sin(x)
 
         lowess = fastlowess.Lowess(
-            cv_fractions=[0.3, 0.5, 0.7],
             iterations=2,
+            cv={"fractions": [0.3, 0.5, 0.7]},
             return_diagnostics=True,
             return_residuals=True,
         )
@@ -794,7 +895,7 @@ class TestCrossValidation:
         x = np.linspace(0, 10, 25)
         y = x + np.random.normal(0, 0.1, 25)
 
-        lowess = fastlowess.Lowess(cv_fractions=[0.5])
+        lowess = fastlowess.Lowess(cv={"fractions": [0.5]})
         result = lowess.fit(x, y)
 
         assert result.fraction_used == 0.5

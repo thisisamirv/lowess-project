@@ -8,7 +8,12 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Added
 
 * Added grouped `outputs` and nested `cv` constructor options, plus grouped prediction outputs, while preserving legacy keyword arguments.
+* Added a grouped `intervals` dict with residual-bootstrap intervals for `Lowess`, `StreamingLowess`, full-update `OnlineLowess`, and `LowessResult.predict()`.
 * Added an "Alternative Software" guide comparing `fastlowess` with `statsmodels.lowess()`.
+
+### Changed
+
+* Breaking change: replaced flat interval keywords and `predict()`'s interval levels with `intervals={"confidence": ..., "prediction": ..., "bootstrap": ...}`, and replaced flat CV keywords and the `cv` dict's `seed` with `cv={"method": ..., "k": ..., "fractions": ...}` plus one outer `seed` shared by CV and bootstrap. `predict()` takes `outputs` instead of `return_se`/`return_derivative`, and has its own `seed`.
 
 ### Fixed
 
