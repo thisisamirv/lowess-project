@@ -428,29 +428,19 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
     fn eval_at(&mut self, x_pivot: T, orig_y: Option<T>) -> Option<(T, T)> {
         let n = self.x.len();
         let window_radius = self.window.max_distance(self.x, x_pivot);
-        let unbounded_kernel = self.weight_function.support().is_none();
-        let weight_left = if unbounded_kernel {
-            0
-        } else {
-            self.window.left
-        };
 
         if window_radius <= T::zero() {
             // R's `lowest` scans from the window's left edge to the end of the data and
             // stops at the first x past the pivot, so a zero-radius window takes in every
             // point tied with the pivot rather than only the nearest `q`.
-            let mut tied_start = weight_left;
-            while tied_start > 0 && self.x[tied_start - 1] == x_pivot {
-                tied_start -= 1;
-            }
             let mut tied_end = self.window.right;
             while tied_end + 1 < n && self.x[tied_end + 1] == x_pivot {
                 tied_end += 1;
             }
-            let tied_count = T::from(tied_end - tied_start + 1).unwrap_or(T::one());
+            let tied_count = T::from(tied_end - self.window.left + 1).unwrap_or(T::one());
 
             let mut sum_w = T::zero();
-            let mut j = tied_start;
+            let mut j = self.window.left;
             while j <= tied_end {
                 let w_base = if self.use_robustness {
                     self.robustness_weights[j]
@@ -473,7 +463,7 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
                 // in exact arithmetic but rounds differently, and the robustness iteration
                 // amplifies that difference geometrically.
                 let mut fitted = T::zero();
-                let mut j = tied_start;
+                let mut j = self.window.left;
                 while j <= tied_end {
                     fitted = fitted + (self.weights[j] / sum_w) * self.y[j];
                     j += 1;
@@ -482,7 +472,7 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
             } else {
                 return match self.zero_weight_fallback {
                     ZeroWeightFallback::UseLocalMean => {
-                        let mean = self.y[tied_start..=tied_end]
+                        let mean = self.y[self.window.left..=tied_end]
                             .iter()
                             .copied()
                             .fold(T::zero(), |acc, v| acc + v)
@@ -493,7 +483,7 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
                     ZeroWeightFallback::ReturnOriginal => match orig_y {
                         Some(v) => Some((v, T::zero())),
                         None => {
-                            let mean = self.y[tied_start..=tied_end]
+                            let mean = self.y[self.window.left..=tied_end]
                                 .iter()
                                 .copied()
                                 .fold(T::zero(), |acc, v| acc + v)
@@ -510,7 +500,7 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
 
         let (mut weight_sum, rightmost_idx) = self.weight_function.compute_window_weights(
             self.x,
-            weight_left,
+            self.window.left,
             n - 1,
             weight_params.x_current,
             weight_params.window_radius,
@@ -521,7 +511,7 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
 
         if self.use_robustness || self.custom_weights.is_some() {
             weight_sum = T::zero();
-            let mut j = weight_left;
+            let mut j = self.window.left;
             while j <= rightmost_idx {
                 let w_k = self.weights[j];
                 if w_k > T::zero() {
@@ -575,9 +565,9 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
             }
         }
 
-        let window_x = &self.x[weight_left..=rightmost_idx];
-        let window_y = &self.y[weight_left..=rightmost_idx];
-        let window_weights = &mut self.weights[weight_left..=rightmost_idx];
+        let window_x = &self.x[self.window.left..=rightmost_idx];
+        let window_y = &self.y[self.window.left..=rightmost_idx];
+        let window_weights = &mut self.weights[self.window.left..=rightmost_idx];
 
         let global_x_range = self.x[self.x.len() - 1] - self.x[0];
         let model = LinearFit::fit_wls(window_x, window_y, window_weights, x_pivot, global_x_range);

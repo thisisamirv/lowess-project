@@ -102,9 +102,9 @@ y[0]: 0.406923
 
 ## Gaussian
 
-Infinitely smooth, with unbounded support. The nearest-neighbor span sets the bandwidth, but observations outside that neighborhood still contribute.
+Infinitely smooth. No boundary effects.
 
-\f[w(u) = \exp(-(2.5u)^2/2)\f]
+\f[w(u) = \exp(-u^2/2)\f]
 
 **Use when**: Maximum smoothness needed, computational cost acceptable.
 

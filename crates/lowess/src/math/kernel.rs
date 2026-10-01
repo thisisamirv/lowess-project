@@ -12,7 +12,7 @@
 // External dependencies
 #[cfg(not(feature = "std"))]
 use alloc::string::ToString;
-use core::f64::consts::PI;
+use core::f64::consts::{PI, SQRT_2};
 use core::str::FromStr;
 use num_traits::Float;
 
@@ -29,8 +29,12 @@ const SQRT_PI: f64 = 1.772453850905516027298167483341145182797_f64;
 // pi/2, used in cosine kernel calculations.
 const PI_OVER_2: f64 = PI / 2.0;
 
-// Locfit's Gaussian uses exp(-0.5 * (2.5 * u)^2).
-const GAUSSIAN_SCALE: f64 = 2.5;
+// Cutoff for Gaussian kernel evaluation.
+//
+// Beyond this normalized distance, the Gaussian kernel value is effectively
+// zero (exp(-6^2/2) approx 6.9e-9). This prevents numerical underflow and improves
+// performance.
+const GAUSSIAN_CUTOFF: f64 = 6.0;
 
 // Mathematical Properties
 struct KernelProperties {
@@ -60,9 +64,9 @@ const EPANECHNIKOV_PROPERTIES: KernelProperties = KernelProperties {
 
 // Precomputed properties for the Gaussian kernel.
 const GAUSSIAN_PROPERTIES: KernelProperties = KernelProperties {
-    integrator: SQRT_2PI / GAUSSIAN_SCALE,
-    variance: SQRT_2PI / (GAUSSIAN_SCALE * GAUSSIAN_SCALE * GAUSSIAN_SCALE),
-    roughness: SQRT_PI / GAUSSIAN_SCALE,
+    integrator: SQRT_2PI,
+    variance: SQRT_2 * SQRT_PI,
+    roughness: SQRT_PI,
 };
 
 // Precomputed properties for the Biweight kernel.
@@ -103,7 +107,7 @@ pub enum WeightFunction {
     // Epanechnikov kernel: K(u) = (1 - u^2) for |u| < 1.
     Epanechnikov,
 
-    // Locfit-scaled Gaussian kernel: K(u) = exp(-0.5 * (2.5 * u)^2).
+    // Gaussian kernel: K(u) = exp(-u^2 / 2).
     Gaussian,
 
     // Biweight (quartic) kernel: K(u) = (1 - u^2)^2 for |u| < 1.
@@ -249,9 +253,16 @@ impl WeightFunction {
             WeightFunction::Epanechnikov => T::one() - abs_u * abs_u,
 
             WeightFunction::Gaussian => {
+                // Convert to f64 for exponential calculation
                 let u_f64 = abs_u.to_f64().unwrap_or(f64::INFINITY);
-                let scaled_u = GAUSSIAN_SCALE * u_f64;
-                T::from((-0.5 * scaled_u * scaled_u).exp()).unwrap_or_else(T::zero)
+
+                // Use cutoff to avoid underflow to zero
+                if u_f64 > GAUSSIAN_CUTOFF {
+                    T::from(f64::MIN_POSITIVE).unwrap_or_else(T::zero)
+                } else {
+                    let val = (-0.5 * u_f64 * u_f64).exp().max(f64::MIN_POSITIVE);
+                    T::from(val).unwrap_or_else(T::zero)
+                }
             }
 
             WeightFunction::Biweight => {
@@ -302,14 +313,12 @@ impl WeightFunction {
 
         let mut sum = T::zero();
         let mut rightmost = left;
-        let bounded = self.is_bounded();
 
+        // Skip points to the left of (x_current - h9) for efficiency
+        let lower_bound = x_current - h9;
         let mut start = left;
-        if bounded {
-            let lower_bound = x_current - h9;
-            while start < n && x[start] < lower_bound {
-                start += 1;
-            }
+        while start < n && x[start] < lower_bound {
+            start += 1;
         }
 
         // Zero the skipped region [left..start)
@@ -327,7 +336,7 @@ impl WeightFunction {
             let xj = x[j];
             let distance = (xj - x_current).abs();
 
-            if bounded && distance > h9 {
+            if distance > h9 {
                 if xj > x_current {
                     // Beyond h9 on right side (x is sorted): zero remaining in window and break
                     let mut k = j;
@@ -344,7 +353,7 @@ impl WeightFunction {
             }
 
             // Compute weight: use 1.0 for very close points, otherwise evaluate kernel
-            let w_k = if bounded && distance <= h1 {
+            let w_k = if distance <= h1 {
                 T::one()
             } else {
                 self.compute_weight(distance / bandwidth)

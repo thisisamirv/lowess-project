@@ -195,14 +195,6 @@ var<workgroup> s_scan: array<u32, 256>;
 // -----------------------------------------------------------------------------
 
 // Helper: Calculate kernel weight
-fn is_unbounded_kernel() -> bool {
-    var fn_id = config.weight_function;
-    if (WEIGHT_FN != 99u) {
-        fn_id = WEIGHT_FN;
-    }
-    return fn_id == KERNEL_GAUSSIAN;
-}
-
 fn get_kernel_weight(u: f32, u2: f32) -> f32 {
     var kw = 1.0;
     var fn_id = config.weight_function;
@@ -212,7 +204,7 @@ fn get_kernel_weight(u: f32, u2: f32) -> f32 {
     switch (fn_id) {
         case KERNEL_COSINE: { kw = cos(u * 1.57079632679); }
         case KERNEL_EPANECHNIKOV: { kw = (1.0 - u2); }
-        case KERNEL_GAUSSIAN: { let scaled_u = 2.5 * u; kw = exp(-0.5 * scaled_u * scaled_u); }
+        case KERNEL_GAUSSIAN: { kw = exp(-0.5 * u2); }
         case KERNEL_BIWEIGHT: { let v = 1.0 - u2; kw = v * v; }
         case KERNEL_TRIANGLE: { kw = (1.0 - u); }
         case KERNEL_TRICUBE: { let v = 1.0 - u * u2; kw = v * v * v; }
@@ -511,11 +503,10 @@ fn fit_anchors(
     let win = get_adaptive_window(i, x_i);
     let left = win.x;
     let right = win.y;
-    let unbounded_kernel = is_unbounded_kernel();
 
     // Check degenerate window
     let d_max = max(abs(x_i - x[left]), abs(x_i - x[right]));
-    if (d_max <= 1e-12 && !unbounded_kernel) {
+    if (d_max <= 1e-12) {
         if (tid == 0u) {
             anchor_output[anchor_id] = y[i];
         }
@@ -536,12 +527,10 @@ fn fit_anchors(
     let h9 = 0.999 * d_max_val;
     
     let iter = w_config.iteration;
-    let fit_left = select(left, 0u, unbounded_kernel);
-    let fit_right = select(right, config.n - 1u, unbounded_kernel);
 
     // Parallel accumulation loop
     // Stride is 256 (workgroup size)
-    for (var k = fit_left + tid; k <= fit_right; k += 256u) {
+    for (var k = left + tid; k <= right; k += 256u) {
         let xj = x[k];
         let yj = y[k];
         let rel_x = xj - x_i;
@@ -549,9 +538,9 @@ fn fit_anchors(
         
         my_y_window += yj;
         
-        if (unbounded_kernel || dist <= h9) {
+        if (dist <= h9) {
             var kernel_w = 1.0;
-            if (unbounded_kernel || dist > h1) {
+            if (dist > h1) {
                 let u = dist * inv_d_max;
                 let u2 = u * u;
                 kernel_w = get_kernel_weight(u, u2);
@@ -856,10 +845,9 @@ fn compute_se(
     let win = get_adaptive_window(i, x_i);
     let left = win.x;
     let right = win.y;
-    let unbounded_kernel = is_unbounded_kernel();
 
     let d_max = max(abs(x_i - x[left]), abs(x_i - x[right]));
-    if (d_max <= 1e-12 && !unbounded_kernel) {
+    if (d_max <= 1e-12) {
         if (tid == 0u) {
             std_errors[i] = 0.0;
         }
@@ -875,10 +863,8 @@ fn compute_se(
     var my_t2 = 0.0;
     let d_max_val = max(d_max, 1e-9);
     let inv_d_max = 1.0 / d_max_val;
-    let fit_left = select(left, 0u, unbounded_kernel);
-    let fit_right = select(right, n - 1u, unbounded_kernel);
     
-    for (var k = fit_left + tid; k <= fit_right; k += 256u) {
+    for (var k = left + tid; k <= right; k += 256u) {
         let xj = x[k];
         let smoothed_j = y_smooth[k];
         let yj = y[k];
@@ -888,7 +874,7 @@ fn compute_se(
         let dist = abs(xj - x_i);
         let u = dist * inv_d_max;
         
-        if (unbounded_kernel || u < 1.0) {
+        if (u < 1.0) {
             let u2 = u * u;
             let kernel_w = get_kernel_weight(u, u2);
             
