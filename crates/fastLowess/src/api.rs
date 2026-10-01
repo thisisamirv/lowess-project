@@ -19,12 +19,9 @@ use lowess::internals::api::Online as BaseOnline;
 use lowess::internals::api::Streaming as BaseStreaming;
 
 // Publicly re-exported types
-pub use lowess::IntervalsBuilder;
-pub use lowess::internals::api::CVBuilder;
-pub use lowess::internals::api::LowessBuilder;
-pub use lowess::internals::engine::output::LowessResult;
-pub use lowess::internals::engine::predict::Predict;
-pub use lowess::internals::primitives::errors::LowessError;
+use lowess::internals::api::LowessBuilder;
+use lowess::internals::evaluation::intervals::IntervalsBuilder;
+use lowess::internals::primitives::errors::LowessError;
 
 // Marker for parallel in-memory batch processing.
 #[derive(Debug, Clone, Copy)]

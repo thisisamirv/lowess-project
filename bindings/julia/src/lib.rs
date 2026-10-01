@@ -14,7 +14,7 @@ use std::ptr;
 use std::slice::from_raw_parts;
 use std::sync::Arc;
 
-use fastLowess::internals::api::LowessBuilder;
+use fastLowess::internals::LowessBuilder;
 use fastLowess::internals::binding_support as shared_parse;
 use fastLowess::prelude::LowessResult;
 

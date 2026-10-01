@@ -12,9 +12,9 @@
 // methods still work identically; this binding uses them for brevity.
 #![allow(deprecated)]
 
+use fastLowess::internals::LowessBuilder;
 use fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
-use fastLowess::internals::api::LowessBuilder;
 use fastLowess::internals::binding_support as shared_parse;
 use fastLowess::prelude::LowessResult;
 

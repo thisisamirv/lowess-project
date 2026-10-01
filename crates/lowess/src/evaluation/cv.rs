@@ -11,16 +11,83 @@
 
 // External dependencies
 #[cfg(not(feature = "std"))]
+use alloc::string::{String, ToString};
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 use core::cmp::Ordering::Equal;
 use core::fmt::Debug;
 use num_traits::Float;
+#[cfg(feature = "std")]
+use std::string::{String, ToString};
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
 // Internal dependencies
 use crate::primitives::buffer::CVBuffer;
 use crate::primitives::errors::LowessError;
+
+// Intermediate cross-validation builder produced by `CVBuilder::new()`:
+// carries the method and fold count while awaiting the (required)
+// candidate fractions. Finalized with `.fraction(...)` into a `CVOptions`.
+#[derive(Debug, Clone)]
+pub struct CVBuilder {
+    method: String,
+    k: usize,
+}
+
+impl CVBuilder {
+    /// Start cross-validation with k-fold (k = 5); candidate fractions are still required.
+    pub fn new() -> Self {
+        Self {
+            method: "kfold".to_string(),
+            k: 5,
+        }
+    }
+
+    /// Select k-fold or leave-one-out CV; invalid names are rejected by `build()`.
+    pub fn method(mut self, name: &str) -> Self {
+        self.method = name.to_string();
+        self
+    }
+
+    // Set the number of folds for k-fold CV.
+    pub fn k(mut self, k: usize) -> Self {
+        self.k = k;
+        self
+    }
+
+    // Provide the candidate fractions and produce the final `CVOptions`.
+    pub fn fraction<T: Float>(self, fractions: Vec<T>) -> CVOptions<T> {
+        CVOptions {
+            method: self.method,
+            k: self.k,
+            fractions,
+        }
+    }
+}
+
+impl Default for CVBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+// Fully-specified cross-validation options, passed to `LowessBuilder::cv`.
+// Produced by `CVBuilder::fraction(...)`; callers never name this type.
+#[derive(Debug, Clone)]
+pub struct CVOptions<T> {
+    pub(crate) method: String,
+    pub(crate) k: usize,
+    pub(crate) fractions: Vec<T>,
+}
+
+impl<T: Float> CVOptions<T> {
+    // Set the number of folds for k-fold CV.
+    pub fn k(mut self, k: usize) -> Self {
+        self.k = k;
+        self
+    }
+}
 
 // Minimal PRNG for no-std shuffling.
 // Uses an LCG (Linear Congruential Generator) with constants from PCG/MQL.

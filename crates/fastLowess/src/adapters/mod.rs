@@ -15,3 +15,6 @@ pub mod streaming;
 
 // Online LOWESS for real-time data streams.
 pub mod online;
+
+// Out-of-sample prediction for fitted Batch models.
+pub mod predict;

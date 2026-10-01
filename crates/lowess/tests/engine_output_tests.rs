@@ -18,7 +18,7 @@
 use approx::assert_relative_eq;
 use num_traits::Float;
 
-use lowess::internals::engine::output::LowessResult;
+use lowess::internals::engine::executor::LowessResult;
 use lowess::internals::evaluation::diagnostics::Diagnostics;
 
 // ============================================================================

@@ -13,3 +13,6 @@ pub mod diagnostics;
 
 // Confidence and prediction interval computation (analytic and bootstrap).
 pub mod intervals;
+
+// Default settings and constants for evaluation procedures.
+pub mod defaults;

@@ -23,6 +23,49 @@ use crate::math::scaling::ScalingMethod;
 use crate::primitives::errors::LowessError;
 use crate::primitives::window::Window;
 
+/// Grouped confidence, prediction, and bootstrap settings for fitting and prediction.
+#[derive(Debug, Clone, Copy)]
+pub struct IntervalsBuilder<T> {
+    pub(crate) confidence: Option<T>,
+    pub(crate) prediction: Option<T>,
+    pub(crate) bootstrap: Option<usize>,
+}
+
+impl<T: Float> IntervalsBuilder<T> {
+    /// Start an interval configuration without bounds (e.g., for bootstrap standard errors only).
+    pub fn new() -> Self {
+        Self {
+            confidence: None,
+            prediction: None,
+            bootstrap: None,
+        }
+    }
+
+    /// Request confidence intervals at the given coverage level.
+    pub fn confidence(mut self, level: T) -> Self {
+        self.confidence = Some(level);
+        self
+    }
+
+    /// Request prediction intervals at the given coverage level.
+    pub fn prediction(mut self, level: T) -> Self {
+        self.prediction = Some(level);
+        self
+    }
+
+    /// Replace analytic intervals with residual-bootstrap refits.
+    pub fn bootstrap(mut self, n_boot: usize) -> Self {
+        self.bootstrap = Some(n_boot);
+        self
+    }
+}
+
+impl<T: Float> Default for IntervalsBuilder<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 // Configuration for computing confidence/prediction intervals and standard errors.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct IntervalMethod<T> {

@@ -599,14 +599,17 @@ mod api;
 
 // Export option types used by public builder signatures. `CVOptions` stays out
 // of the prelude; `IntervalsBuilder` is also exported there for fluent use.
-pub use crate::api::{CVOptions, IntervalsBuilder};
+pub use crate::evaluation::cv::CVOptions;
+pub use crate::evaluation::intervals::IntervalsBuilder;
 
 // Standard LOWESS prelude.
 pub mod prelude {
-    pub use crate::api::{
-        CVBuilder, IntervalsBuilder, Lowess, LowessError, LowessResult, OnlineLowess, Predict,
-        StreamingLowess,
-    };
+    pub use crate::adapters::predict::Predict;
+    pub use crate::api::{Lowess, OnlineLowess, StreamingLowess};
+    pub use crate::engine::executor::LowessResult;
+    pub use crate::evaluation::cv::CVBuilder;
+    pub use crate::evaluation::intervals::IntervalsBuilder;
+    pub use crate::primitives::errors::LowessError;
 }
 
 // Internal modules for development and testing.
@@ -642,6 +645,7 @@ pub mod internals {
     pub mod defaults {
         pub use crate::adapters::defaults::*;
         pub use crate::algorithms::defaults::*;
+        pub use crate::evaluation::defaults::*;
         pub use crate::math::defaults::*;
     }
 }

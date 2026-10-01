@@ -23,7 +23,7 @@ use std::result::Result;
 // Export dependencies from lowess crate
 use lowess::internals::adapters::streaming::{StreamingLowess, StreamingLowessBuilder};
 use lowess::internals::algorithms::regression::WLSSolver;
-use lowess::internals::engine::output::LowessResult;
+use lowess::internals::engine::executor::LowessResult;
 use lowess::internals::primitives::errors::LowessError;
 
 // Builder for streaming LOWESS processor with parallel support.

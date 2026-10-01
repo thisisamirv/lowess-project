@@ -28,7 +28,6 @@ use wgpu::{
 
 // Export dependencies from lowess crate
 use lowess::internals::algorithms::robustness::RobustnessMethod;
-use lowess::internals::api::LowessError;
 use lowess::internals::engine::executor::{IterationResult, LowessConfig};
 use lowess::internals::evaluation::cv::CVKind;
 use lowess::internals::evaluation::intervals::{
@@ -37,6 +36,7 @@ use lowess::internals::evaluation::intervals::{
 use lowess::internals::math::boundary::BoundaryPolicy;
 use lowess::internals::math::kernel::WeightFunction;
 use lowess::internals::math::scaling::ScalingMethod;
+use lowess::internals::primitives::errors::LowessError;
 
 // Shader Source (WGSL)
 const SHADER_SOURCE: &str = r#"

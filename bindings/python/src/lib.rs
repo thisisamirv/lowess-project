@@ -9,9 +9,10 @@ use pyo3::types::PyDict;
 use std::fmt::Display;
 use std::sync::Mutex;
 
+use fastLowess::internals::LowessBuilder;
 use fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
-use fastLowess::internals::api::{LowessBuilder, Online, Streaming};
+use fastLowess::internals::api::{Online, Streaming};
 use fastLowess::internals::binding_support;
 
 use fastLowess::prelude::LowessResult;

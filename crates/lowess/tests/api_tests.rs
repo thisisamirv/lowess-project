@@ -25,10 +25,12 @@ use approx::assert_relative_eq;
 use std::fmt::Write;
 
 use lowess::internals::algorithms::robustness::RobustnessMethod;
-use lowess::internals::api::{Batch, CVBuilder, IntervalsBuilder, Lowess, Online, Streaming};
-use lowess::internals::engine::output::LowessResult;
+use lowess::internals::api::{Batch, Lowess, Online, Streaming};
+use lowess::internals::engine::executor::LowessResult;
 use lowess::internals::engine::validator::Validator;
+use lowess::internals::evaluation::cv::CVBuilder;
 use lowess::internals::evaluation::diagnostics::Diagnostics;
+use lowess::internals::evaluation::intervals::IntervalsBuilder;
 use lowess::internals::primitives::errors::LowessError;
 
 // ============================================================================

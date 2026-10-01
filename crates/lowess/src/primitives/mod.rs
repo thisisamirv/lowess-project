@@ -18,3 +18,6 @@ pub mod backend;
 
 // Buffer management.
 pub mod buffer;
+
+// Shared input and update policies.
+pub mod policies;

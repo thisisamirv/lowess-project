@@ -24,28 +24,14 @@ use std::vec::Vec;
 
 // Internal dependencies
 use crate::algorithms::regression::{RegressionContext, WLSSolver, ZeroWeightFallback};
-use crate::api::{IntervalsBuilder, IntoEnum};
-use crate::engine::executor::{LowessConfig, LowessExecutor};
-use crate::engine::output::LowessResult;
-use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod, MIN_BOOTSTRAP_SAMPLES};
-use crate::math::kernel::WeightFunction;
+use crate::engine::executor::LowessExecutor;
+use crate::engine::executor::LowessResult;
+use crate::engine::executor::{ExtrapolationPolicy, PredictQuery, PredictState, RawPredictValues};
+use crate::evaluation::intervals::{
+    BootstrapConfig, IntervalMethod, IntervalsBuilder, MIN_BOOTSTRAP_SAMPLES,
+};
 use crate::primitives::errors::LowessError;
 use crate::primitives::window::Window;
-
-// Policy for evaluating query points outside the retained training x-range.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum ExtrapolationPolicy {
-    // Clamp to the nearest boundary window (default; matches `predict()`'s original behavior).
-    #[default]
-    Clamp,
-
-    // Linearly extrapolate from the nearest boundary point's local fit and slope.
-    Linear,
-
-    // Fail the whole `predict()` call with `LowessError::PredictOutOfRange` if any query
-    // point falls outside `[min(x_train), max(x_train)]`.
-    Error,
-}
 
 // Options controlling a `Predict::call()` invocation.
 #[derive(Debug, Clone)]
@@ -168,17 +154,6 @@ impl<T: Float> PredictBuilder<T> {
         self
     }
 
-    // Behavior for query points outside the training x-range: `"clamp"` (default),
-    // `"linear"`, `"error"`, or an `ExtrapolationPolicy` variant directly.
-    #[allow(private_bounds)]
-    pub fn extrapolation(mut self, policy: impl IntoEnum<ExtrapolationPolicy>) -> Self {
-        match policy.into_enum() {
-            Ok(p) => self.extrapolation = p,
-            Err(e) => self.pending_error = Some(e),
-        }
-        self
-    }
-
     // Under `"linear"` extrapolation, the maximum allowed distance beyond the training
     // boundary before `call()` errors instead of returning an unbounded value.
     pub fn max_extrapolation_distance(mut self, distance: T) -> Self {
@@ -225,30 +200,6 @@ impl<T: Float> PredictBuilder<T> {
 // `Lowess` being an alias for `LowessBuilder<T, BatchMode>`.
 pub type Predict<T = f64> = PredictBuilder<T>;
 
-// Validated, ready-to-call configuration for a `Predict::call()` invocation, produced by
-// `PredictBuilder::build()`. Fields are private; the only way to construct one is via the
-// builder, so a `.build()` call can never be skipped.
-#[derive(Debug, Clone)]
-pub struct PredictQuery<T> {
-    return_se: bool,
-    confidence_intervals: Option<T>,
-    prediction_intervals: Option<T>,
-    bootstrap: Option<BootstrapConfig>,
-    return_derivative: bool,
-    extrapolation: ExtrapolationPolicy,
-    max_extrapolation_distance: Option<T>,
-    max_neighbor_distance: Option<T>,
-}
-
-impl<T> PredictQuery<T> {
-    // Whether the local WLS fit's derivative is included in the output (used by
-    // fastLowess's parallel predict pass, which needs this outside `lowess` itself).
-    // No trait bounds needed: this just reads a plain `bool` field.
-    pub fn return_derivative(&self) -> bool {
-        self.return_derivative
-    }
-}
-
 impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> PredictQuery<T> {
     // Evaluate `result` (a fitted Batch model) at out-of-sample x-values not in the
     // training set, per these options, similar to R's `predict(model, newdata)`.
@@ -292,97 +243,6 @@ pub struct PredictOutput<T> {
 
     // Local WLS fit's derivative (slope) at each query point, if `return_derivative` was set.
     pub derivative: Option<Vec<T>>,
-}
-
-// Per-point predict results before shared confidence/prediction interval math is applied:
-// `(y, optional derivative, optional standard error)`, one entry per query point.
-pub type RawPredictValues<T> = Result<(Vec<T>, Option<Vec<T>>, Option<Vec<T>>), LowessError>;
-
-// Signature for a custom (e.g. parallel) predict pass function. Computes only the
-// per-point values (y, optional derivative, optional standard error); the shared
-// confidence/prediction interval math is applied afterward by `predict_batch`.
-pub type PredictPassFn<T> = fn(
-    &PredictState<T>,
-    &[T], // new_x
-    &PredictQuery<T>,
-    bool, // need_se
-) -> RawPredictValues<T>;
-
-// Fitted-model state retained by a Batch `fit()` call when `.retain_model(true)` was set,
-// enabling `Predict::call()` to evaluate the fit at out-of-sample query points.
-//
-// `x`/`y`/`y_smooth`/`robustness_weights`/`custom_weights` are the boundary-*padded* arrays
-// actually used for local fitting (not the shorter, unpadded arrays returned in
-// `LowessResult`), so that predictions near the edges of the training range are consistent
-// with `fit()`.
-#[derive(Debug, Clone)]
-pub struct PredictState<T> {
-    // Boundary-padded, sorted training x-values used during fitting.
-    pub x: Vec<T>,
-
-    // Boundary-padded training y-values, aligned with `x`.
-    pub y: Vec<T>,
-
-    // Boundary-padded smoothed (fitted) training y-values, aligned with `x`. Used to
-    // compute local residuals for standard errors at out-of-sample query points.
-    pub y_smooth: Vec<T>,
-
-    // Final (post-robustness-iteration) weights, aligned with `x`/`y`.
-    pub robustness_weights: Vec<T>,
-
-    // Neighbor window size (span), already resolved from `fraction`.
-    pub window_size: usize,
-
-    // Kernel weight function used during fitting.
-    pub weight_function: WeightFunction,
-
-    // Zero-weight fallback policy flag (see `ZeroWeightFallback::from_u8`).
-    pub zero_weight_fallback: u8,
-
-    // Per-observation case weights, aligned with `x`/`y`, if provided.
-    pub custom_weights: Option<Vec<T>>,
-
-    // Global residual standard deviation (MAD-based), matching `Diagnostics.residual_sd`.
-    // Used to widen prediction intervals beyond the local standard error.
-    pub residual_sd: T,
-
-    // Minimum/maximum of the REAL (unpadded) training x-range, used to decide whether a
-    // query point is out-of-range for `ExtrapolationPolicy`. `x`/`y` above are boundary-
-    // *padded* and can extend well beyond this range, so they must not be used for that
-    // check directly.
-    pub train_min_x: T,
-    pub train_max_x: T,
-
-    // Custom (e.g. parallel) predict pass, injected by extension crates like fastLowess.
-    pub custom_predict_pass: Option<PredictPassFn<T>>,
-
-    pub bootstrap_state: Option<BootstrapPredictState<T>>,
-}
-
-#[derive(Debug, Clone)]
-pub struct BootstrapPredictState<T> {
-    pub x: Vec<T>,
-    pub smoothed: Vec<T>,
-    pub residuals: Vec<T>,
-    pub refit_config: LowessConfig<T>,
-}
-
-// Manual `PartialEq` that ignores `custom_predict_pass` - function pointer comparisons
-// are not meaningful (addresses aren't guaranteed unique across codegen units).
-impl<T: PartialEq> PartialEq for PredictState<T> {
-    fn eq(&self, other: &Self) -> bool {
-        self.x == other.x
-            && self.y == other.y
-            && self.y_smooth == other.y_smooth
-            && self.robustness_weights == other.robustness_weights
-            && self.window_size == other.window_size
-            && self.weight_function == other.weight_function
-            && self.zero_weight_fallback == other.zero_weight_fallback
-            && self.custom_weights == other.custom_weights
-            && self.residual_sd == other.residual_sd
-            && self.train_min_x == other.train_min_x
-            && self.train_max_x == other.train_max_x
-    }
 }
 
 // Evaluate the fitted model at a single out-of-sample query point, returning

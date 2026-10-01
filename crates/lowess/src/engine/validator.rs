@@ -19,19 +19,8 @@ use num_traits::Float;
 use std::vec::Vec;
 
 // Internal dependencies
-use crate::adapters::online::UpdateMode;
 use crate::primitives::errors::LowessError;
-
-// Policy for handling non-finite (NaN/Inf) values in input data.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum MissingPolicy {
-    // Return an error if any input value is non-finite (default).
-    #[default]
-    Error,
-
-    // Silently remove observations where x or y is non-finite before fitting.
-    Drop,
-}
+use crate::primitives::policies::UpdateMode;
 
 // Validation utility for LOWESS configuration and input data.
 pub struct Validator;
@@ -258,9 +247,9 @@ impl Validator {
     // `standard_error` as `None`.
     pub fn validate_online_se_update_mode<T>(
         interval_type: Option<T>,
-        update_mode: crate::adapters::online::UpdateMode,
+        update_mode: UpdateMode,
     ) -> Result<(), LowessError> {
-        if interval_type.is_some() && update_mode != crate::adapters::online::UpdateMode::Full {
+        if interval_type.is_some() && update_mode != UpdateMode::Full {
             return Err(LowessError::StandardErrorRequiresFullUpdateMode);
         }
         Ok(())

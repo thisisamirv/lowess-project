@@ -578,10 +578,12 @@ mod binding_support;
 
 // Standard fastLowess prelude.
 pub mod prelude {
-    pub use crate::api::{
-        CVBuilder, IntervalsBuilder, Lowess, LowessError, LowessResult, OnlineLowess, Predict,
-        StreamingLowess,
-    };
+    pub use crate::api::{Lowess, OnlineLowess, StreamingLowess};
+    pub use lowess::internals::adapters::predict::Predict;
+    pub use lowess::internals::engine::executor::LowessResult;
+    pub use lowess::internals::evaluation::cv::CVBuilder;
+    pub use lowess::internals::evaluation::intervals::IntervalsBuilder;
+    pub use lowess::internals::primitives::errors::LowessError;
 }
 
 // Internal modules for development and testing.
@@ -590,6 +592,9 @@ pub mod prelude {
 // It is only available with the `dev` feature enabled.
 #[cfg(feature = "dev")]
 pub mod internals {
+    pub type LowessBuilder<T, Mode = lowess::internals::api::BatchMode> =
+        lowess::internals::api::LowessBuilder<T, Mode>;
+
     pub mod engine {
         pub use crate::engine::*;
     }

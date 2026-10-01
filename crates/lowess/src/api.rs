@@ -25,25 +25,18 @@ use crate::adapters::batch::{BatchLowess, BatchLowessBuilder};
 use crate::adapters::defaults::default_overlap;
 use crate::adapters::online::OnlineLowessBuilder;
 use crate::adapters::streaming::StreamingLowessBuilder;
-use crate::engine::executor::{CVPassFn, IntervalPassFn, SmoothPassFn};
-use crate::engine::predict::{ExtrapolationPolicy, PredictPassFn};
-use crate::evaluation::cv::CVKind;
-use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod};
-use crate::primitives::backend::Backend;
-
-// Publicly re-exported types
-use crate::adapters::online::UpdateMode;
-use crate::adapters::streaming::MergeStrategy;
 use crate::algorithms::regression::ZeroWeightFallback;
 use crate::algorithms::robustness::RobustnessMethod;
-pub use crate::engine::output::LowessResult;
-pub use crate::engine::predict::Predict;
-use crate::engine::validator::MissingPolicy;
-
+use crate::engine::executor::{CVPassFn, IntervalPassFn, SmoothPassFn};
+use crate::engine::executor::{ExtrapolationPolicy, PredictPassFn};
+use crate::evaluation::cv::{CVKind, CVOptions};
+use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod, IntervalsBuilder};
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::kernel::WeightFunction;
 use crate::math::scaling::ScalingMethod;
-pub use crate::primitives::errors::LowessError;
+use crate::primitives::backend::Backend;
+use crate::primitives::errors::LowessError;
+use crate::primitives::policies::{MergeStrategy, MissingPolicy, UpdateMode};
 
 // Converts a value into a typed enum, either infallibly (enum variant) or
 // via case-insensitive string parsing (string literal / `String`).
@@ -91,6 +84,17 @@ impl_into_enum_for!(ZeroWeightFallback);
 impl_into_enum_for!(Backend);
 impl_into_enum_for!(ExtrapolationPolicy);
 
+impl<T: Float> crate::adapters::predict::PredictBuilder<T> {
+    #[allow(private_bounds)]
+    pub fn extrapolation(mut self, policy: impl IntoEnum<ExtrapolationPolicy>) -> Self {
+        match policy.into_enum() {
+            Ok(p) => self.extrapolation = p,
+            Err(e) => self.pending_error = Some(e),
+        }
+        self
+    }
+}
+
 // Mode markers for the type-alias-based builder API.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct BatchMode;
@@ -105,112 +109,6 @@ pub struct OnlineMode;
 pub type Lowess<T = f64> = LowessBuilder<T, BatchMode>;
 pub type StreamingLowess<T = f64> = LowessBuilder<T, StreamingMode>;
 pub type OnlineLowess<T = f64> = LowessBuilder<T, OnlineMode>;
-
-// Intermediate cross-validation builder produced by `CVBuilder::new()`:
-// carries the method and fold count while awaiting the (required)
-// candidate fractions. Finalized with `.fraction(...)` into a `CVOptions`.
-#[derive(Debug, Clone)]
-pub struct CVBuilder {
-    method: String,
-    k: usize,
-}
-
-impl CVBuilder {
-    /// Start cross-validation with k-fold (k = 5); candidate fractions are still required.
-    pub fn new() -> Self {
-        Self {
-            method: "kfold".to_string(),
-            k: 5,
-        }
-    }
-
-    /// Select k-fold or leave-one-out CV; invalid names are rejected by `build()`.
-    pub fn method(mut self, name: &str) -> Self {
-        self.method = name.to_string();
-        self
-    }
-
-    // Set the number of folds for k-fold cross-validation.
-    pub fn k(mut self, k: usize) -> Self {
-        self.k = k;
-        self
-    }
-
-    // Provide the candidate fractions and produce the final `CVOptions`.
-    pub fn fraction<T: Float>(self, fractions: Vec<T>) -> CVOptions<T> {
-        CVOptions {
-            method: self.method,
-            k: self.k,
-            fractions,
-        }
-    }
-}
-
-impl Default for CVBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-// Fully-specified cross-validation options, passed to `LowessBuilder::cv`.
-// Produced by `CVBuilder::fraction(...)`; callers never name this type.
-#[derive(Debug, Clone)]
-pub struct CVOptions<T> {
-    method: String,
-    k: usize,
-    fractions: Vec<T>,
-}
-
-impl<T: Float> CVOptions<T> {
-    // Set the number of folds for k-fold cross-validation.
-    pub fn k(mut self, k: usize) -> Self {
-        self.k = k;
-        self
-    }
-}
-
-/// Grouped confidence, prediction, and bootstrap settings for [`LowessBuilder::intervals`].
-#[derive(Debug, Clone, Copy)]
-pub struct IntervalsBuilder<T> {
-    pub(crate) confidence: Option<T>,
-    pub(crate) prediction: Option<T>,
-    pub(crate) bootstrap: Option<usize>,
-}
-
-impl<T: Float> IntervalsBuilder<T> {
-    /// Start an interval configuration without bounds (e.g., for bootstrap standard errors only).
-    pub fn new() -> Self {
-        Self {
-            confidence: None,
-            prediction: None,
-            bootstrap: None,
-        }
-    }
-
-    /// Request confidence intervals at the given coverage level.
-    pub fn confidence(mut self, level: T) -> Self {
-        self.confidence = Some(level);
-        self
-    }
-
-    /// Request prediction intervals at the given coverage level.
-    pub fn prediction(mut self, level: T) -> Self {
-        self.prediction = Some(level);
-        self
-    }
-
-    /// Replace analytic intervals with residual-bootstrap refits.
-    pub fn bootstrap(mut self, n_boot: usize) -> Self {
-        self.bootstrap = Some(n_boot);
-        self
-    }
-}
-
-impl<T: Float> Default for IntervalsBuilder<T> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 // Fluent builder for configuring LOWESS parameters and execution modes.
 #[derive(Debug, Clone)]

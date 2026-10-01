@@ -10,9 +10,9 @@
 
 // Internal dependencies
 #[cfg(feature = "cpu")]
-use crate::engine::executor::{
-    derivative_pass_parallel, predict_pass_parallel, smooth_pass_parallel,
-};
+use crate::adapters::predict::predict_pass_parallel;
+#[cfg(feature = "cpu")]
+use crate::engine::executor::{derivative_pass_parallel, smooth_pass_parallel};
 #[cfg(feature = "gpu")]
 use crate::engine::gpu::{cross_validate_gpu, fit_pass_gpu};
 #[cfg(feature = "cpu")]
@@ -29,7 +29,7 @@ use std::result::Result;
 // Export dependencies from lowess crate
 use lowess::internals::adapters::batch::BatchLowessBuilder;
 use lowess::internals::algorithms::regression::WLSSolver;
-use lowess::internals::engine::output::LowessResult;
+use lowess::internals::engine::executor::LowessResult;
 use lowess::internals::evaluation::cv::CVKind;
 use lowess::internals::primitives::backend::Backend;
 use lowess::internals::primitives::errors::LowessError;

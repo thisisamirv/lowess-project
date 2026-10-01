@@ -18,7 +18,8 @@ use alloc::sync::Arc;
 use alloc::vec;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
-use core::fmt::Debug;
+use core::cmp::Ordering;
+use core::fmt::{Debug, Display, Formatter};
 use core::iter::repeat_n;
 use core::mem::swap;
 use num_traits::Float;
@@ -30,14 +31,14 @@ use std::vec;
 use std::vec::Vec;
 
 // Internal dependencies
-use crate::adapters::defaults::*;
 use crate::algorithms::defaults::*;
 use crate::algorithms::interpolation::{interpolate_gap, interpolate_gap_derivative};
 use crate::algorithms::regression::{LinearFit, RegressionContext, WLSSolver, ZeroWeightFallback};
 use crate::algorithms::robustness::RobustnessMethod;
-use crate::engine::predict::{PredictPassFn, PredictState};
 use crate::evaluation::cv::CVKind;
-use crate::evaluation::intervals::IntervalMethod;
+use crate::evaluation::defaults::*;
+use crate::evaluation::diagnostics::Diagnostics;
+use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod};
 use crate::math::boundary::{BoundaryPolicy, apply_boundary_policy};
 use crate::math::defaults::*;
 use crate::math::kernel::WeightFunction;
@@ -46,6 +47,233 @@ use crate::primitives::backend::Backend;
 use crate::primitives::buffer::LowessBuffer;
 use crate::primitives::errors::LowessError;
 use crate::primitives::window::Window;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ExtrapolationPolicy {
+    #[default]
+    Clamp,
+    Linear,
+    Error,
+}
+
+#[derive(Debug, Clone)]
+pub struct PredictQuery<T> {
+    pub(crate) return_se: bool,
+    pub(crate) confidence_intervals: Option<T>,
+    pub(crate) prediction_intervals: Option<T>,
+    pub(crate) bootstrap: Option<BootstrapConfig>,
+    pub(crate) return_derivative: bool,
+    pub(crate) extrapolation: ExtrapolationPolicy,
+    pub(crate) max_extrapolation_distance: Option<T>,
+    pub(crate) max_neighbor_distance: Option<T>,
+}
+
+impl<T> PredictQuery<T> {
+    pub fn return_derivative(&self) -> bool {
+        self.return_derivative
+    }
+}
+
+pub type RawPredictValues<T> = Result<(Vec<T>, Option<Vec<T>>, Option<Vec<T>>), LowessError>;
+pub type PredictPassFn<T> =
+    fn(&PredictState<T>, &[T], &PredictQuery<T>, bool) -> RawPredictValues<T>;
+
+#[derive(Debug, Clone)]
+pub struct PredictState<T> {
+    pub x: Vec<T>,
+    pub y: Vec<T>,
+    pub y_smooth: Vec<T>,
+    pub robustness_weights: Vec<T>,
+    pub window_size: usize,
+    pub weight_function: WeightFunction,
+    pub zero_weight_fallback: u8,
+    pub custom_weights: Option<Vec<T>>,
+    pub residual_sd: T,
+    pub train_min_x: T,
+    pub train_max_x: T,
+    pub custom_predict_pass: Option<PredictPassFn<T>>,
+    pub bootstrap_state: Option<BootstrapPredictState<T>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct BootstrapPredictState<T> {
+    pub x: Vec<T>,
+    pub smoothed: Vec<T>,
+    pub residuals: Vec<T>,
+    pub refit_config: LowessConfig<T>,
+}
+
+impl<T: PartialEq> PartialEq for PredictState<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.x == other.x
+            && self.y == other.y
+            && self.y_smooth == other.y_smooth
+            && self.robustness_weights == other.robustness_weights
+            && self.window_size == other.window_size
+            && self.weight_function == other.weight_function
+            && self.zero_weight_fallback == other.zero_weight_fallback
+            && self.custom_weights == other.custom_weights
+            && self.residual_sd == other.residual_sd
+            && self.train_min_x == other.train_min_x
+            && self.train_max_x == other.train_max_x
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct LowessResult<T> {
+    pub x: Vec<T>,
+    pub y: Vec<T>,
+    pub standard_errors: Option<Vec<T>>,
+    pub confidence_lower: Option<Vec<T>>,
+    pub confidence_upper: Option<Vec<T>>,
+    pub prediction_lower: Option<Vec<T>>,
+    pub prediction_upper: Option<Vec<T>>,
+    pub residuals: Option<Vec<T>>,
+    pub robustness_weights: Option<Vec<T>>,
+    pub derivative: Option<Vec<T>>,
+    pub diagnostics: Option<Diagnostics<T>>,
+    pub iterations_used: Option<usize>,
+    pub fraction_used: T,
+    pub cv_scores: Option<Vec<T>>,
+    #[doc(hidden)]
+    pub fit_state: Option<Arc<PredictState<T>>>,
+}
+
+impl<T: Float> LowessResult<T> {
+    pub fn has_confidence_intervals(&self) -> bool {
+        self.confidence_lower.is_some() && self.confidence_upper.is_some()
+    }
+
+    pub fn has_prediction_intervals(&self) -> bool {
+        self.prediction_lower.is_some() && self.prediction_upper.is_some()
+    }
+
+    pub fn has_cv_scores(&self) -> bool {
+        self.cv_scores.is_some()
+    }
+
+    pub fn best_cv_score(&self) -> Option<T> {
+        self.cv_scores.as_ref().and_then(|scores| {
+            scores
+                .iter()
+                .copied()
+                .min_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
+        })
+    }
+}
+
+impl<T: Float + Display + Debug> Display for LowessResult<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        writeln!(f, "Summary:")?;
+        writeln!(f, "  Data points: {}", self.x.len())?;
+        writeln!(f, "  Fraction:    {}", self.fraction_used)?;
+
+        if let Some(iters) = self.iterations_used {
+            writeln!(f, "  Iterations: {}", iters)?;
+        }
+
+        if self.robustness_weights.is_some() {
+            writeln!(f, "  Robustness: Applied")?;
+        }
+
+        if self.has_cv_scores()
+            && let Some(best_score) = self.best_cv_score()
+        {
+            writeln!(f, "  Best CV score: {}", best_score)?;
+        }
+        writeln!(f)?;
+
+        if let Some(diag) = &self.diagnostics {
+            writeln!(f, "{}", diag)?;
+        }
+
+        writeln!(f, "Smoothed Data:")?;
+
+        let has_std_err = self.standard_errors.is_some();
+        let has_conf = self.has_confidence_intervals();
+        let has_pred = self.has_prediction_intervals();
+        let has_resid = self.residuals.is_some();
+        let has_weights = self.robustness_weights.is_some();
+
+        write!(f, "{:>8} {:>12}", "X", "Y_smooth")?;
+        if has_std_err {
+            write!(f, " {:>12}", "Std_Err")?;
+        }
+        if has_conf {
+            write!(f, " {:>12} {:>12}", "Conf_Lower", "Conf_Upper")?;
+        }
+        if has_pred {
+            write!(f, " {:>12} {:>12}", "Pred_Lower", "Pred_Upper")?;
+        }
+        if has_resid {
+            write!(f, " {:>12}", "Residual")?;
+        }
+        if has_weights {
+            write!(f, " {:>10}", "Rob_Weight")?;
+        }
+        writeln!(f)?;
+
+        let line_width = 21
+            + if has_std_err { 13 } else { 0 }
+            + if has_conf { 26 } else { 0 }
+            + if has_pred { 26 } else { 0 }
+            + if has_resid { 13 } else { 0 }
+            + if has_weights { 11 } else { 0 };
+        writeln!(f, "{:-<width$}", "", width = line_width)?;
+
+        let n = self.x.len();
+        let show_all = n <= 20;
+        let rows_to_show: Vec<usize> = if show_all {
+            (0..n).collect()
+        } else {
+            (0..10).chain(n - 10..n).collect()
+        };
+
+        let mut prev_idx = 0;
+        for (i, &idx) in rows_to_show.iter().enumerate() {
+            if i > 0 && idx != prev_idx + 1 {
+                writeln!(f, "{:>8}", "...")?;
+            }
+            prev_idx = idx;
+
+            write!(f, "{:>8.2} {:>12.6}", self.x[idx], self.y[idx])?;
+
+            if has_std_err && let Some(se) = &self.standard_errors {
+                write!(f, " {:>12.6}", se[idx])?;
+            }
+
+            if has_conf
+                && let (Some(lower), Some(upper)) = (&self.confidence_lower, &self.confidence_upper)
+            {
+                write!(f, " {:>12.6} {:>12.6}", lower[idx], upper[idx])?;
+            }
+
+            if has_pred
+                && let (Some(lower), Some(upper)) = (&self.prediction_lower, &self.prediction_upper)
+            {
+                write!(f, " {:>12.6} {:>12.6}", lower[idx], upper[idx])?;
+            }
+
+            if has_resid && let Some(resid) = &self.residuals {
+                let r = resid[idx];
+                let r_clean = if r.abs() < T::from(1e-10).unwrap() {
+                    T::zero()
+                } else {
+                    r
+                };
+                write!(f, " {:>12.6}", r_clean)?;
+            }
+
+            if has_weights && let Some(weights) = &self.robustness_weights {
+                write!(f, " {:>10.4}", weights[idx])?;
+            }
+
+            writeln!(f)?;
+        }
+
+        Ok(())
+    }
+}
 
 // Signature for custom smooth pass function
 pub type SmoothPassFn<T> = fn(

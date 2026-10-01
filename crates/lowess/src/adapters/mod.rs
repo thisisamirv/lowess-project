@@ -10,11 +10,14 @@
 // Unified batch adapter for LOWESS smoothing.
 pub mod batch;
 
-// Default values for adapter configuration.
-pub mod defaults;
-
 // Streaming LOWESS for large datasets.
 pub mod streaming;
 
 // Online LOWESS for real-time data streams.
 pub mod online;
+
+// Out-of-sample prediction for fitted Batch models.
+pub mod predict;
+
+// Default configurations and parameters for the adapters.
+pub mod defaults;

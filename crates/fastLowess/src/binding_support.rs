@@ -7,7 +7,10 @@
 use crate::adapters::batch::{ParallelBatchLowess, ParallelBatchLowessBuilder};
 use crate::adapters::online::{ParallelOnlineLowess, ParallelOnlineLowessBuilder};
 use crate::adapters::streaming::{ParallelStreamingLowess, ParallelStreamingLowessBuilder};
-use crate::api::{Batch, LowessBuilder, LowessError, LowessResult, Online, Streaming};
+use crate::api::{Batch, Online, Streaming};
+use lowess::internals::api::LowessBuilder;
+use lowess::internals::engine::executor::LowessResult;
+use lowess::internals::primitives::errors::LowessError;
 // Converts a value into a typed enum, either infallibly (enum variant) or
 // via case-insensitive string parsing (string literal / `String`).
 pub(crate) trait IntoEnum<E> {
@@ -48,29 +51,29 @@ impl_into_enum_for!(UpdateMode);
 impl_into_enum_for!(WeightFunction);
 impl_into_enum_for!(ZeroWeightFallback);
 use lowess::internals::adapters::online::OnlineOutput;
-use lowess::internals::api::CVBuilder;
-pub use lowess::internals::engine::predict::{
-    ExtrapolationPolicy, PredictBuilder, PredictOutput, PredictQuery, PredictState, predict_batch,
-};
+use lowess::internals::adapters::predict::{PredictBuilder, predict_batch};
+use lowess::internals::engine::executor::{ExtrapolationPolicy, PredictQuery};
+use lowess::internals::evaluation::cv::CVBuilder;
 use lowess::internals::evaluation::intervals::IntervalMethod;
 use lowess::internals::primitives::backend::Backend;
 use num_traits::Float;
 
-use lowess::internals::adapters::online::UpdateMode;
-use lowess::internals::adapters::streaming::MergeStrategy;
 use lowess::internals::algorithms::regression::ZeroWeightFallback;
 use lowess::internals::algorithms::robustness::RobustnessMethod;
 use lowess::internals::alias;
-use lowess::internals::engine::validator::MissingPolicy;
 use lowess::internals::math::boundary::BoundaryPolicy;
 use lowess::internals::math::kernel::WeightFunction;
 use lowess::internals::math::scaling::ScalingMethod;
+use lowess::internals::primitives::policies::{MergeStrategy, MissingPolicy, UpdateMode};
 use std::ffi::{CStr, CString};
 use std::fmt::{Display, Formatter};
 use std::os::raw::c_char;
 use std::ptr::{null_mut, slice_from_raw_parts_mut};
 use std::slice::from_raw_parts;
 use std::sync::Arc;
+
+pub type PredictState<T> = lowess::internals::engine::executor::PredictState<T>;
+pub type PredictOutput<T> = lowess::internals::adapters::predict::PredictOutput<T>;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BindingErrorCategory {
@@ -211,14 +214,21 @@ pub const CUSTOM_WEIGHTS_MUST_BE_NON_NEGATIVE: &str = "custom_weights must be no
 
 // Default string values for all parser-facing options. Re-exported from
 // `lowess::defaults` so that all bindings share a single source of truth.
-pub use lowess::internals::adapters::defaults::DEFAULT_ONLINE_UPDATE_MODE;
-pub use lowess::internals::adapters::defaults::DEFAULT_STREAMING_MERGE_STRATEGY;
-pub use lowess::internals::algorithms::defaults::DEFAULT_MISSING_POLICY;
-pub use lowess::internals::algorithms::defaults::DEFAULT_ROBUSTNESS_METHOD;
-pub use lowess::internals::algorithms::defaults::DEFAULT_ZERO_WEIGHT_FALLBACK;
-pub use lowess::internals::math::defaults::DEFAULT_BOUNDARY_POLICY;
-pub use lowess::internals::math::defaults::DEFAULT_SCALING_METHOD;
-pub use lowess::internals::math::defaults::DEFAULT_WEIGHT_FUNCTION;
+pub const DEFAULT_ONLINE_UPDATE_MODE: &str =
+    lowess::internals::adapters::defaults::DEFAULT_ONLINE_UPDATE_MODE;
+pub const DEFAULT_STREAMING_MERGE_STRATEGY: &str =
+    lowess::internals::adapters::defaults::DEFAULT_STREAMING_MERGE_STRATEGY;
+pub const DEFAULT_MISSING_POLICY: &str =
+    lowess::internals::algorithms::defaults::DEFAULT_MISSING_POLICY;
+pub const DEFAULT_ROBUSTNESS_METHOD: &str =
+    lowess::internals::algorithms::defaults::DEFAULT_ROBUSTNESS_METHOD;
+pub const DEFAULT_ZERO_WEIGHT_FALLBACK: &str =
+    lowess::internals::algorithms::defaults::DEFAULT_ZERO_WEIGHT_FALLBACK;
+pub const DEFAULT_BOUNDARY_POLICY: &str =
+    lowess::internals::math::defaults::DEFAULT_BOUNDARY_POLICY;
+pub const DEFAULT_SCALING_METHOD: &str = lowess::internals::math::defaults::DEFAULT_SCALING_METHOD;
+pub const DEFAULT_WEIGHT_FUNCTION: &str =
+    lowess::internals::math::defaults::DEFAULT_WEIGHT_FUNCTION;
 
 pub fn sanitize_error_message(msg: &str) -> String {
     msg.replace('\0', " ")

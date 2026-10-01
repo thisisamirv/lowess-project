@@ -23,12 +23,13 @@ use crate::adapters::defaults::*;
 use crate::algorithms::defaults::*;
 use crate::algorithms::regression::{WLSSolver, ZeroWeightFallback};
 use crate::algorithms::robustness::RobustnessMethod;
+use crate::engine::executor::LowessResult;
 use crate::engine::executor::{
     BootstrapPassFn, CVPassFn, DerivativePassFn, FitPassFn, IntervalPassFn, SmoothPassFn,
 };
 use crate::engine::executor::{LowessConfig, LowessExecutor};
-use crate::engine::output::LowessResult;
-use crate::engine::validator::{MissingPolicy, Validator};
+use crate::engine::validator::Validator;
+use crate::evaluation::defaults::{DEFAULT_DELTA, DEFAULT_FRACTION};
 use crate::evaluation::diagnostics::DiagnosticsState;
 use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod, MIN_BOOTSTRAP_SAMPLES};
 use crate::math::boundary::BoundaryPolicy;
@@ -39,23 +40,7 @@ use crate::primitives::buffer::{StreamingBuffer, VecExt};
 use crate::primitives::errors::LowessError;
 use crate::primitives::sorting::sort_by_x;
 
-// Strategy for merging overlapping regions between streaming chunks.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum MergeStrategy {
-    // Arithmetic mean of overlapping smoothed values: `(v1 + v2) / 2`.
-    Average,
-
-    // Distance-based weights that favor values from the center of each chunk:
-    // v1 * (1 - alpha) + v2 * alpha where `alpha` is the relative position within the overlap.
-    #[default]
-    WeightedAverage,
-
-    // Use the value from the first chunk in processing order.
-    TakeFirst,
-
-    // Use the value from the last chunk in processing order.
-    TakeLast,
-}
+use crate::primitives::policies::{MergeStrategy, MissingPolicy};
 
 // Builder for streaming LOWESS processor.
 #[derive(Debug, Clone)]

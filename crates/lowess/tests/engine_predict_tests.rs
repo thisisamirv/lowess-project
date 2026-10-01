@@ -1,7 +1,8 @@
 #![cfg(feature = "dev")]
 //! Tests for Batch out-of-sample prediction (`.retain_model()` + `Predict::call()`).
 
-use lowess::internals::engine::predict::{ExtrapolationPolicy, Predict};
+use lowess::internals::adapters::predict::Predict;
+use lowess::internals::engine::executor::ExtrapolationPolicy;
 use lowess::prelude::*;
 
 /// predict() must error when `.retain_model(true)` was not set before `fit()`.

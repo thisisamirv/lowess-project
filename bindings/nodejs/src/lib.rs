@@ -3,9 +3,9 @@
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
+use ::fastLowess::internals::LowessBuilder;
 use ::fastLowess::internals::adapters::online::ParallelOnlineLowess;
 use ::fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
-use ::fastLowess::internals::api::LowessBuilder;
 use ::fastLowess::internals::binding_support;
 use ::fastLowess::prelude::LowessResult as InnerLowessResult;
 

@@ -27,7 +27,8 @@ use crate::engine::executor::{
     CVPassFn, DerivativePassFn, FitPassFn, IntervalPassFn, SmoothPassFn,
 };
 use crate::engine::executor::{LowessConfig, LowessExecutor};
-use crate::engine::validator::{MissingPolicy, Validator};
+use crate::engine::validator::Validator;
+use crate::evaluation::defaults::{DEFAULT_DELTA, DEFAULT_FRACTION};
 use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod, MIN_BOOTSTRAP_SAMPLES};
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
@@ -35,17 +36,7 @@ use crate::math::kernel::WeightFunction;
 use crate::math::scaling::ScalingMethod;
 use crate::primitives::buffer::{OnlineBuffer, VecExt};
 use crate::primitives::errors::LowessError;
-
-// Update mode for online LOWESS processing.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum UpdateMode {
-    // Recompute all points in the window from scratch.
-    Full,
-
-    // Optimized incremental update.
-    #[default]
-    Incremental,
-}
+use crate::primitives::policies::{MissingPolicy, UpdateMode};
 
 // Builder for online LOWESS processor.
 #[derive(Debug, Clone)]

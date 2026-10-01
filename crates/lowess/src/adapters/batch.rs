@@ -26,14 +26,15 @@ use crate::algorithms::defaults::*;
 use crate::algorithms::interpolation::calculate_delta;
 use crate::algorithms::regression::{WLSSolver, ZeroWeightFallback};
 use crate::algorithms::robustness::RobustnessMethod;
+use crate::engine::executor::LowessResult;
 use crate::engine::executor::{
     BootstrapPassFn, CVPassFn, DerivativePassFn, FitPassFn, IntervalPassFn, SmoothPassFn,
 };
+use crate::engine::executor::{BootstrapPredictState, PredictPassFn};
 use crate::engine::executor::{LowessConfig, LowessExecutor};
-use crate::engine::output::LowessResult;
-use crate::engine::predict::{BootstrapPredictState, PredictPassFn};
-use crate::engine::validator::{MissingPolicy, Validator};
+use crate::engine::validator::Validator;
 use crate::evaluation::cv::CVKind;
+use crate::evaluation::defaults::{DEFAULT_CV_SEED, DEFAULT_FRACTION};
 use crate::evaluation::diagnostics::Diagnostics;
 use crate::evaluation::intervals::{
     BootstrapConfig, BootstrapOutput, IntervalMethod, MIN_BOOTSTRAP_SAMPLES,
@@ -44,6 +45,7 @@ use crate::math::kernel::WeightFunction;
 use crate::math::scaling::ScalingMethod;
 use crate::primitives::backend::Backend;
 use crate::primitives::errors::LowessError;
+use crate::primitives::policies::MissingPolicy;
 use crate::primitives::sorting::{SortedData, sort_by_x, unsort};
 
 pub type BootstrapComputeFn<T> = fn(
