@@ -140,3 +140,28 @@ fn test_streaming_bootstrap_parallel_matches_sequential() {
         assert_eq!(par.prediction_upper, seq.prediction_upper);
     }
 }
+
+#[test]
+fn test_online_bootstrap_full_update() {
+    let mut online = fastLowess::prelude::OnlineLowess::new()
+        .update_mode("full")
+        .window_capacity(10)
+        .min_points(5)
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.9)
+        .bootstrap_intervals(40)
+        .bootstrap_seed(7)
+        .build()
+        .unwrap();
+    for idx in 0..12 {
+        let x = idx as f64 * 0.2;
+        let y = x.sin() + 0.1 * (x * 7.0).sin();
+        let output = online.add_point(x, y).unwrap();
+        if idx >= 4 {
+            let output = output.unwrap();
+            assert!(output.standard_error.unwrap().is_finite());
+            assert!(output.confidence_lower.unwrap() <= output.confidence_upper.unwrap());
+            assert!(output.prediction_lower.unwrap() <= output.prediction_upper.unwrap());
+        }
+    }
+}

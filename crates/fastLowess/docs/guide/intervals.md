@@ -8,7 +8,7 @@ Confidence and prediction intervals for uncertainty quantification.
 ![Confidence and Prediction Intervals](https://raw.githubusercontent.com/thisisamirv/lowess-project/main/crates/fastLowess/assets/diagrams/intervals_comparison.svg)
 
 !!! note "Adapter support"
-    Analytic confidence and prediction intervals are available in **Batch** mode, **Streaming** mode (computed per chunk and merged across overlap boundaries via `merge_strategy`, like `y`/`derivative`), and **Online** mode when `update_mode("full")` is set (`.build()` errors if combined with the default `"incremental"` mode). Residual-bootstrap intervals (`.bootstrap_intervals()`) are available in **Batch and Streaming**.
+    Analytic and residual-bootstrap intervals are available in **Batch**, **Streaming** (per chunk with overlap merging), and **Online** with `update_mode("full")`. Online's default `"incremental"` mode rejects intervals at `.build()`.
 
 | Type | Represents | Width | Use |
 | --- | --- | --- | --- |
@@ -199,15 +199,15 @@ Point 2: SE = 0.0258
 
 ## Bootstrap Intervals
 
-The intervals above are analytic: a local-linear standard error times a normal z-score. That assumes roughly normal residuals. `.bootstrap_intervals(n_boot)` replaces it with a residual bootstrap (Batch or Streaming), which does not:
+The intervals above are analytic: a local-linear standard error times a normal z-score. That assumes roughly normal residuals. `.bootstrap_intervals(n_boot)` replaces it with a residual bootstrap (Batch, Streaming, or full-update Online), which does not:
 
 1. Fit once, and center the residuals.
 2. Refit `n_boot` times on `y_hat + residuals drawn with replacement` (same `x` and smoothing settings; cross-validation is not repeated).
 3. Per point, the standard error is the sample standard deviation of those refits. A confidence interval is their percentile interval. A prediction interval is the percentile interval of each refit plus a freshly drawn residual, so skewed noise produces an asymmetric tail.
 
-`.bootstrap_seed(seed)` fixes the draws. If omitted, a fixed default seed is used, so results are reproducible either way. Fewer than 2 replicates is rejected at `.build()` as `InvalidBootstrapSamples`. Online rejects bootstrap with `UnsupportedFeature`. In Streaming, each combined chunk (including its incoming overlap) is bootstrapped independently with the same seed; bounds and SEs are then merged according to `merge_strategy`. These are local chunk intervals, not whole-stream bootstrap intervals.
+`.bootstrap_seed(seed)` fixes the draws. If omitted, a fixed default seed is used, so results are reproducible either way. Fewer than 2 replicates is rejected at `.build()` as `InvalidBootstrapSamples`. In Streaming, each combined chunk (including its incoming overlap) is bootstrapped independently with the same seed; bounds and SEs are then merged according to `merge_strategy`. These are local chunk intervals, not whole-stream bootstrap intervals. In Online, each full update bootstraps the current sliding window with the same seed and returns only the newest point's SE and bounds (starting at 3 points). The default incremental mode rejects bootstrap with `StandardErrorRequiresFullUpdateMode`.
 
-With `parallel(true)` (the default) those refits run concurrently and match a one-at-a-time run. GPU and `parallel(false)` refit one replicate at a time; a GPU refit still uses the GPU fit pass. Each replicate is a full refit, so this is much slower than the analytic intervals. It also replaces `result.standard_errors` when `"se"` or an interval was requested.
+With `parallel(true)` (the default) Batch and Streaming refits run concurrently and match a one-at-a-time run. GPU Batch, Online, and `parallel(false)` refit one replicate at a time; a GPU refit still uses the GPU fit pass. Each replicate is a full refit, so this is much slower than the analytic intervals. It replaces `result.standard_errors` in Batch/Streaming or `output.standard_error` in Online when `"se"` or an interval was requested.
 
 ```rust
 use fastLowess::prelude::*;
@@ -277,14 +277,45 @@ fn main() -> Result<(), LowessError> {
 
 ---
 
+## Online Bootstrap
+
+Full-update Online bootstraps the current sliding window at each new point, returning only the newest point's intervals. It refits sequentially and restarts the seed for each window. Set `min_points` to at least 3 to get intervals from the first emitted update.
+
+```rust
+use fastLowess::prelude::*;
+
+fn main() -> Result<(), LowessError> {
+    let mut model = OnlineLowess::new()
+        .update_mode("full")
+        .window_capacity(10)
+        .min_points(3)
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.95)
+        .bootstrap_intervals(40)
+        .bootstrap_seed(7)
+        .build()?;
+    for i in 0..12 {
+        let x = i as f64 * 0.2;
+        if let Some(output) = model.add_point(x, x.sin())? {
+            assert!(output.standard_error.is_some());
+            assert!(output.confidence_lower.is_some());
+            assert!(output.prediction_upper.is_some());
+        }
+    }
+    Ok(())
+}
+```
+
+---
+
 ## Availability
 
-!!! note "Analytic intervals in all three adapters"
-    Analytic confidence and prediction intervals are available in **Batch**, **Streaming** (see [Streaming Adapter](crate::doc::api::streaming)), and **Online** mode (`update_mode("full")` only — see [Online Adapter](crate::doc::api::online)). Residual-bootstrap intervals are available in Batch and per-chunk Streaming. With `parallel(true)` the bootstrap refits run concurrently.
+!!! note "Intervals in all three adapters"
+    Analytic and residual-bootstrap intervals are available in **Batch**, **Streaming** (see [Streaming Adapter](crate::doc::api::streaming)), and **Online** mode (`update_mode("full")` only — see [Online Adapter](crate::doc::api::online)). Bootstrap resamples independently per chunk or sliding window. Batch and Streaming refits run concurrently with `parallel(true)`; Online refits sequentially.
 
 | Feature | Batch | Streaming | Online |
 | --- | --- | --- | --- |
 | Confidence intervals | ✓ | ✓ | ✓ (`update_mode("full")` only) |
 | Prediction intervals | ✓ | ✓ | ✓ (`update_mode("full")` only) |
 | Standard errors | ✓ | ✓ | ✓ (`update_mode("full")` only) |
-| Residual bootstrap | ✓ | ✓ (per chunk) | — |
+| Residual bootstrap | ✓ | ✓ (per chunk) | ✓ (`update_mode("full")`, per window) |

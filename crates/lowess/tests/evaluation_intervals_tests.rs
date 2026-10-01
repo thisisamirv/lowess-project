@@ -20,7 +20,7 @@
 use approx::assert_relative_eq;
 use lowess::prelude::*;
 
-use lowess::internals::api::{Batch, Online};
+use lowess::internals::api::Batch;
 use lowess::internals::engine::validator::Validator;
 use lowess::internals::evaluation::intervals::IntervalMethod;
 use lowess::internals::primitives::errors::LowessError;
@@ -652,21 +652,110 @@ fn test_bootstrap_invalid_sample_count() {
     assert_eq!(err, Some(LowessError::InvalidBootstrapSamples(1)));
 }
 
-/// Online does not support the bootstrap.
+/// Incremental Online updates cannot bootstrap the current window.
 #[test]
-fn test_bootstrap_rejected_on_online() {
-    let o = Lowess::<f64>::new()
+fn test_bootstrap_online_requires_full_update() {
+    let err = OnlineLowess::<f64>::new()
         .bootstrap_intervals(10)
-        .adapter(Online)
         .build()
         .err();
-    assert!(matches!(
-        o,
-        Some(LowessError::UnsupportedFeature {
-            adapter: "Online",
-            ..
-        })
-    ));
+    assert_eq!(err, Some(LowessError::StandardErrorRequiresFullUpdateMode));
+}
+
+#[test]
+fn test_bootstrap_online_full_matches_batch_window() {
+    let x: Vec<f64> = (0..15).map(|i| i as f64 * 0.2).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .map(|&xi| xi.sin() + 0.2 * (xi * 7.0).sin())
+        .collect();
+    let mut online = OnlineLowess::new()
+        .fraction(0.6)
+        .iterations(0)
+        .delta(0.0)
+        .window_capacity(10)
+        .min_points(5)
+        .update_mode("full")
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.9)
+        .bootstrap_intervals(40)
+        .bootstrap_seed(7)
+        .build()
+        .unwrap();
+
+    for idx in 0..x.len() {
+        let output = online.add_point(x[idx], y[idx]).unwrap();
+        if idx + 1 < 5 {
+            assert!(output.is_none());
+            continue;
+        }
+        let output = output.unwrap();
+        let start = (idx + 1).saturating_sub(10);
+        let batch = Lowess::<f64>::new()
+            .fraction(0.6)
+            .iterations(0)
+            .delta(0.0)
+            .confidence_intervals(0.95)
+            .prediction_intervals(0.9)
+            .bootstrap_intervals(40)
+            .bootstrap_seed(7)
+            .build()
+            .unwrap()
+            .fit(&x[start..=idx], &y[start..=idx])
+            .unwrap();
+        assert_eq!(output.y, *batch.y.last().unwrap());
+        assert_eq!(
+            output.standard_error,
+            batch.standard_errors.unwrap().last().copied()
+        );
+        assert_eq!(
+            output.confidence_lower,
+            batch.confidence_lower.unwrap().last().copied()
+        );
+        assert_eq!(
+            output.confidence_upper,
+            batch.confidence_upper.unwrap().last().copied()
+        );
+        assert_eq!(
+            output.prediction_lower,
+            batch.prediction_lower.unwrap().last().copied()
+        );
+        assert_eq!(
+            output.prediction_upper,
+            batch.prediction_upper.unwrap().last().copied()
+        );
+    }
+}
+
+#[test]
+fn test_bootstrap_online_invalid_samples() {
+    let err = OnlineLowess::<f64>::new()
+        .update_mode("full")
+        .bootstrap_intervals(1)
+        .build()
+        .err();
+    assert_eq!(err, Some(LowessError::InvalidBootstrapSamples(1)));
+}
+
+#[test]
+fn test_bootstrap_online_se_without_interval_levels() {
+    let mut online = OnlineLowess::new()
+        .update_mode("full")
+        .min_points(3)
+        .bootstrap_intervals(20)
+        .bootstrap_seed(7)
+        .build()
+        .unwrap();
+    for idx in 0..5 {
+        let x = idx as f64;
+        let output = online.add_point(x, x.sin()).unwrap();
+        if idx >= 2 {
+            let output = output.unwrap();
+            assert!(output.standard_error.unwrap().is_finite());
+            assert!(output.confidence_lower.is_none());
+            assert!(output.prediction_lower.is_none());
+        }
+    }
 }
 
 #[test]

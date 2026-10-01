@@ -28,7 +28,7 @@ use crate::engine::executor::{
 };
 use crate::engine::executor::{LowessConfig, LowessExecutor};
 use crate::engine::validator::{MissingPolicy, Validator};
-use crate::evaluation::intervals::IntervalMethod;
+use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod, MIN_BOOTSTRAP_SAMPLES};
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
 use crate::math::kernel::WeightFunction;
@@ -92,9 +92,11 @@ pub struct OnlineLowessBuilder<T: Float> {
     // Include the per-point local fit derivative (slope) in the output.
     pub return_derivative: bool,
 
-    // Interval estimation method (standard error only - `Full` update mode only;
-    // `OnlineOutput` has no confidence/prediction bounds, just `standard_error`).
+    // Interval estimation method (`Full` update mode only).
     pub interval_type: Option<IntervalMethod<T>>,
+
+    // Bootstrap refits on the current full-update window.
+    pub bootstrap: Option<BootstrapConfig>,
 
     // Policy for handling non-finite (NaN/Inf) values in input data
     pub missing: MissingPolicy,
@@ -148,6 +150,7 @@ impl<T: Float> OnlineLowessBuilder<T> {
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
             return_derivative: DEFAULT_RETURN_DERIVATIVE,
             interval_type: None,
+            bootstrap: None,
             auto_converge: default_auto_converge(),
             missing: DEFAULT_MISSING_POLICY_ENUM,
             deferred_error: None,
@@ -181,7 +184,17 @@ impl<T: Float> OnlineLowessBuilder<T> {
 
         // Validate that return_se()/confidence_intervals()/prediction_intervals() is
         // only combined with update_mode("full")
-        Validator::validate_online_se_update_mode(self.interval_type, self.update_mode)?;
+        Validator::validate_online_se_update_mode(
+            self.interval_type
+                .or_else(|| self.bootstrap.map(|_| IntervalMethod::se())),
+            self.update_mode,
+        )?;
+
+        if let Some(bc) = self.bootstrap
+            && bc.n_boot < MIN_BOOTSTRAP_SAMPLES
+        {
+            return Err(LowessError::InvalidBootstrapSamples(bc.n_boot));
+        }
 
         // Validate that robustness iterations are only combined with update_mode("full")
         Validator::validate_online_iterations_update_mode(self.iterations, self.update_mode)?;
@@ -228,7 +241,6 @@ pub struct OnlineOutput<T> {
     pub derivative: Option<T>,
 }
 
-// Online LOWESS processor for streaming data.
 pub struct OnlineLowess<T: Float> {
     config: OnlineLowessBuilder<T>,
     window_x: VecDeque<T>,
@@ -311,8 +323,9 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
         let zero_flag = self.config.zero_weight_fallback.to_u8();
 
         // Choose update strategy based on configuration
+        let update_mode = self.config.update_mode;
         let (smoothed, std_err, ci_bounds, rob_weight, iterations_used, derivative) =
-            match self.config.update_mode {
+            match update_mode {
                 UpdateMode::Incremental => {
                     // Incremental mode: fit only the latest point
                     let n = x_vec.len();
@@ -364,7 +377,11 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                         auto_converge: self.config.auto_converge,
                         cv_fractions: None,
                         cv_kind: None,
-                        return_variance: self.config.interval_type,
+                        return_variance: if self.config.bootstrap.is_some() {
+                            None
+                        } else {
+                            self.config.interval_type
+                        },
                         cv_seed: None,
                         return_derivative: self.config.return_derivative,
                         // ++++++++++++++++++++++++++++++++++++++
@@ -391,7 +408,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                     let smoothed_val = smoothed_vec.last().copied().ok_or_else(|| {
                         LowessError::InvalidNumericValue("No smoothed output produced".into())
                     })?;
-                    let std_err = se_vec.as_ref().and_then(|v| v.last().copied());
+                    let mut std_err = se_vec.as_ref().and_then(|v| v.last().copied());
                     let rob_weight = if self.config.return_robustness_weights {
                         result.robustness_weights.last().copied()
                     } else {
@@ -403,16 +420,41 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                     // from the whole window's smoothed values/SE/residuals the same way
                     // Batch does (`IntervalMethod::compute_intervals`), then taking the
                     // last element - the executor itself only produces plain std_errors.
-                    let ci_bounds = if let (Some(method), Some(se)) =
-                        (&self.config.interval_type, se_vec.as_ref())
-                    {
+                    let ci_bounds = if let Some(method) = &self.config.interval_type {
                         let residuals: Vec<T> = y_vec
                             .iter()
                             .zip(smoothed_vec.iter())
                             .map(|(&yi, &si)| yi - si)
                             .collect();
-                        let (cl, cu, pl, pu) =
-                            method.compute_intervals(&smoothed_vec, se, &residuals)?;
+                        let (cl, cu, pl, pu) = if let Some(bc) = self.config.bootstrap {
+                            let mut refit = config.clone();
+                            refit.return_derivative = false;
+                            let out =
+                                bc.compute(method, &smoothed_vec, &residuals, |replicates| {
+                                    replicates
+                                        .iter()
+                                        .map(|y_star| {
+                                            LowessExecutor::run_with_config(
+                                                x_vec,
+                                                y_star,
+                                                refit.clone(),
+                                            )
+                                            .map(|r| r.smoothed)
+                                        })
+                                        .collect()
+                                })?;
+                            std_err = out.std_errors.last().copied();
+                            (
+                                out.confidence_lower,
+                                out.confidence_upper,
+                                out.prediction_lower,
+                                out.prediction_upper,
+                            )
+                        } else if let Some(se) = se_vec.as_ref() {
+                            method.compute_intervals(&smoothed_vec, se, &residuals)?
+                        } else {
+                            (None, None, None, None)
+                        };
                         (
                             cl.as_ref().and_then(|v| v.last().copied()),
                             cu.as_ref().and_then(|v| v.last().copied()),

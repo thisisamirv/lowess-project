@@ -99,11 +99,13 @@ fn main() -> Result<(), LowessError> {
 | `outputs([&str])` | `&[&str]` | `[]` | Select `"weights"`, `"derivative"`, and/or `"se"`; `"se"` requires `update_mode("full")` |
 | `confidence_intervals(T)` | `T: Float` | `NaN` | Confidence level (e.g., 0.95); populates `confidence_lower`/`confidence_upper` (requires `update_mode("full")`) |
 | `prediction_intervals(T)` | `T: Float` | `NaN` | Prediction level (e.g., 0.95); populates `prediction_lower`/`prediction_upper` (requires `update_mode("full")`) |
+| `bootstrap_intervals(usize)` | `usize` | disabled | Bootstrap refits of the current window for SEs/intervals (requires `update_mode("full")`) |
+| `bootstrap_seed(u64)` | `u64` | fixed default | Seed for window resampling; alone enables 1000 replicates (requires `update_mode("full")`) |
 | `window_capacity(usize)` | `usize` | `1000` | Max points in sliding window |
 | `min_points(usize)` | `usize` | `2` | Min points before smoothing starts |
 | `update_mode(...)` | `update_mode` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
 
-Cross-validation, GPU `backend`, `custom_weights`, `"sorted"`, `"diagnostics"`, `"residuals"`, and `parallel()` are Batch-only (or Batch/Streaming-only) and not available here. `bootstrap_intervals`/`bootstrap_seed` are available in Batch and Streaming but rejected here at `.build()` with `UnsupportedFeature`; see [fastLowess](crate::doc::api).
+Cross-validation, GPU `backend`, `custom_weights`, `"sorted"`, `"diagnostics"`, `"residuals"`, and `parallel()` are Batch-only (or Batch/Streaming-only) and not available here. Bootstrap is available with `update_mode("full")` only: after at least 3 points are in the window, each update resamples the current window with the same seed and returns its newest point's bootstrap SE and requested bounds. Online refits are sequential. The default incremental mode rejects it at `.build()` with `StandardErrorRequiresFullUpdateMode`; fewer than 2 replicates returns `InvalidBootstrapSamples`.
 
 ## Options
 
