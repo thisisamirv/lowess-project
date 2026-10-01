@@ -63,3 +63,71 @@ fn test_predict_pass_consistency() {
         );
     }
 }
+
+#[test]
+fn test_parallel_bootstrap_predict_matches_sequential() {
+    let x: Vec<f64> = (0..50).map(|i| i as f64 * 0.1).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .map(|&xi| xi.sin() + 0.12 * (xi * 8.0).cos())
+        .collect();
+    let fit = |parallel| {
+        Lowess::new()
+            .fraction(0.35)
+            .parallel(parallel)
+            .retain_model(true)
+            .build()
+            .unwrap()
+            .fit(&x, &y)
+            .unwrap()
+    };
+    let options = Predict::new()
+        .intervals(
+            IntervalsBuilder::new()
+                .confidence(0.9)
+                .prediction(0.9)
+                .bootstrap(20),
+        )
+        .seed(41)
+        .build()
+        .unwrap();
+    let queries = [0.25, 1.75, 3.75];
+    let sequential = options.call(&fit(false), &queries).unwrap();
+    let parallel = options.call(&fit(true), &queries).unwrap();
+    assert_eq!(sequential.standard_errors, parallel.standard_errors);
+    assert_eq!(sequential.confidence_lower, parallel.confidence_lower);
+    assert_eq!(sequential.prediction_upper, parallel.prediction_upper);
+}
+
+#[cfg(feature = "gpu")]
+#[test]
+fn test_gpu_backed_bootstrap_predict() {
+    let x: Vec<f64> = (0..30).map(|i| i as f64 * 0.1).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .map(|&xi| xi.sin() + 0.1 * (xi * 8.0).cos())
+        .collect();
+    let fitted = Lowess::new()
+        .fraction(0.35)
+        .backend("gpu")
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    let predicted = Predict::new()
+        .intervals(
+            IntervalsBuilder::new()
+                .confidence(0.9)
+                .prediction(0.9)
+                .bootstrap(12),
+        )
+        .seed(51)
+        .build()
+        .unwrap()
+        .call(&fitted, &[0.25, 1.25])
+        .unwrap();
+    assert_eq!(predicted.standard_errors.unwrap().len(), 2);
+    assert_eq!(predicted.confidence_lower.unwrap().len(), 2);
+    assert_eq!(predicted.prediction_upper.unwrap().len(), 2);
+}

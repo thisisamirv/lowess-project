@@ -408,3 +408,89 @@ fn test_predict_se_and_intervals() {
         );
     }
 }
+
+#[test]
+fn test_predict_bootstrap_intervals_are_seeded_at_query_points() {
+    let x: Vec<f64> = (0..60).map(|i| i as f64 * 0.1).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .map(|&xi| xi.sin() + 0.15 * (xi * 9.0).cos())
+        .collect();
+    let fitted = Lowess::new()
+        .fraction(0.35)
+        .iterations(1)
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    let predict = |seed| {
+        Predict::new()
+            .intervals(
+                IntervalsBuilder::new()
+                    .confidence(0.9)
+                    .prediction(0.9)
+                    .bootstrap(40),
+            )
+            .seed(seed)
+            .outputs(["derivative"])
+            .extrapolation("linear")
+            .build()
+            .unwrap()
+            .call(&fitted, &[0.55, 2.25, 6.1])
+            .unwrap()
+    };
+    let first = predict(41);
+    let again = predict(41);
+    let other = predict(42);
+    assert_eq!(first.standard_errors, again.standard_errors);
+    assert_eq!(first.confidence_lower, again.confidence_lower);
+    assert_eq!(first.prediction_upper, again.prediction_upper);
+    assert_ne!(first.standard_errors, other.standard_errors);
+    assert!(first.derivative.is_some());
+    for values in [
+        first.standard_errors.unwrap(),
+        first.confidence_lower.unwrap(),
+        first.confidence_upper.unwrap(),
+        first.prediction_lower.unwrap(),
+        first.prediction_upper.unwrap(),
+    ] {
+        assert_eq!(values.len(), 3);
+        assert!(values.iter().all(|value| value.is_finite()));
+    }
+}
+
+#[test]
+fn test_predict_bootstrap_se_only_and_validation() {
+    assert!(matches!(
+        Predict::<f64>::new()
+            .intervals(IntervalsBuilder::new().bootstrap(1))
+            .build(),
+        Err(LowessError::InvalidBootstrapSamples(1))
+    ));
+    let x: Vec<f64> = (0..30).map(|i| i as f64 * 0.1).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .map(|&xi| xi.sin() + 0.1 * (xi * 7.0).cos())
+        .collect();
+    let retained = Lowess::new()
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    let plain = Lowess::new().build().unwrap().fit(&x, &y).unwrap();
+    let options = Predict::new()
+        .seed(5)
+        .intervals(IntervalsBuilder::new().bootstrap(12))
+        .build()
+        .unwrap();
+    let predicted = options.call(&retained, &[0.25, 1.25]).unwrap();
+    assert_eq!(predicted.standard_errors.unwrap().len(), 2);
+    assert!(predicted.confidence_lower.is_none());
+    assert!(predicted.prediction_lower.is_none());
+    assert!(matches!(
+        options.call(&plain, &[0.25]),
+        Err(LowessError::PredictionUnavailable)
+    ));
+}

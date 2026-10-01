@@ -172,9 +172,9 @@ impl<T: Float> CVOptions<T> {
 /// Grouped confidence, prediction, and bootstrap settings for [`LowessBuilder::intervals`].
 #[derive(Debug, Clone, Copy)]
 pub struct IntervalsBuilder<T> {
-    confidence: Option<T>,
-    prediction: Option<T>,
-    bootstrap: Option<usize>,
+    pub(crate) confidence: Option<T>,
+    pub(crate) prediction: Option<T>,
+    pub(crate) bootstrap: Option<usize>,
 }
 
 impl<T: Float> IntervalsBuilder<T> {

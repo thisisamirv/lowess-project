@@ -24,9 +24,10 @@ use std::vec::Vec;
 
 // Internal dependencies
 use crate::algorithms::regression::{RegressionContext, WLSSolver, ZeroWeightFallback};
-use crate::api::IntoEnum;
+use crate::api::{IntervalsBuilder, IntoEnum};
+use crate::engine::executor::{LowessConfig, LowessExecutor};
 use crate::engine::output::LowessResult;
-use crate::evaluation::intervals::IntervalMethod;
+use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod, MIN_BOOTSTRAP_SAMPLES};
 use crate::math::kernel::WeightFunction;
 use crate::primitives::errors::LowessError;
 use crate::primitives::window::Window;
@@ -57,6 +58,8 @@ pub struct PredictBuilder<T> {
 
     // Prediction interval coverage level (e.g. `Some(0.95)`), or `None` to skip.
     pub prediction_intervals: Option<T>,
+    pub bootstrap: Option<usize>,
+    pub seed: Option<u64>,
 
     // Include the local WLS fit's derivative (slope) at each query point.
     pub return_derivative: bool,
@@ -90,6 +93,8 @@ impl<T: Float> Default for PredictBuilder<T> {
             return_se: false,
             confidence_intervals: None,
             prediction_intervals: None,
+            bootstrap: None,
+            seed: None,
             return_derivative: false,
             extrapolation: ExtrapolationPolicy::default(),
             max_extrapolation_distance: None,
@@ -121,6 +126,16 @@ impl<T: Float> PredictBuilder<T> {
     // Request a prediction interval at the given coverage level (e.g. `0.95`).
     pub fn prediction_intervals(mut self, level: T) -> Self {
         self.prediction_intervals = Some(level);
+        self
+    }
+    pub fn intervals(mut self, options: IntervalsBuilder<T>) -> Self {
+        self.confidence_intervals = options.confidence;
+        self.prediction_intervals = options.prediction;
+        self.bootstrap = options.bootstrap;
+        self
+    }
+    pub fn seed(mut self, seed: u64) -> Self {
+        self.seed = Some(seed);
         self
     }
 
@@ -185,10 +200,19 @@ impl<T: Float> PredictBuilder<T> {
         if let Some(e) = self.pending_error {
             return Err(e);
         }
+        if let Some(n_boot) = self.bootstrap
+            && n_boot < MIN_BOOTSTRAP_SAMPLES
+        {
+            return Err(LowessError::InvalidBootstrapSamples(n_boot));
+        }
         Ok(PredictQuery {
             return_se: self.return_se,
             confidence_intervals: self.confidence_intervals,
             prediction_intervals: self.prediction_intervals,
+            bootstrap: self.bootstrap.map(|n_boot| BootstrapConfig {
+                n_boot,
+                seed: self.seed,
+            }),
             return_derivative: self.return_derivative,
             extrapolation: self.extrapolation,
             max_extrapolation_distance: self.max_extrapolation_distance,
@@ -209,6 +233,7 @@ pub struct PredictQuery<T> {
     return_se: bool,
     confidence_intervals: Option<T>,
     prediction_intervals: Option<T>,
+    bootstrap: Option<BootstrapConfig>,
     return_derivative: bool,
     extrapolation: ExtrapolationPolicy,
     max_extrapolation_distance: Option<T>,
@@ -330,6 +355,16 @@ pub struct PredictState<T> {
 
     // Custom (e.g. parallel) predict pass, injected by extension crates like fastLowess.
     pub custom_predict_pass: Option<PredictPassFn<T>>,
+
+    pub bootstrap_state: Option<BootstrapPredictState<T>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct BootstrapPredictState<T> {
+    pub x: Vec<T>,
+    pub smoothed: Vec<T>,
+    pub residuals: Vec<T>,
+    pub refit_config: LowessConfig<T>,
 }
 
 // Manual `PartialEq` that ignores `custom_predict_pass` - function pointer comparisons
@@ -534,7 +569,7 @@ fn predict_batch_serial<T: Float + WLSSolver>(
 // Rayon-parallel implementation), otherwise evaluates serially; either way, the shared
 // confidence/prediction interval math is applied here. `new_x` need not be sorted - each
 // query point is independently located via binary search.
-pub fn predict_batch<T: Float + WLSSolver>(
+pub fn predict_batch<T: Float + WLSSolver + Debug + Send + Sync + 'static>(
     state: &PredictState<T>,
     new_x: &[T],
     options: &PredictQuery<T>,
@@ -549,15 +584,72 @@ pub fn predict_batch<T: Float + WLSSolver>(
         }
     }
 
-    let need_se = options.return_se
-        || options.confidence_intervals.is_some()
-        || options.prediction_intervals.is_some();
+    let need_se = options.bootstrap.is_none()
+        && (options.return_se
+            || options.confidence_intervals.is_some()
+            || options.prediction_intervals.is_some());
 
     let (y, derivative, se) = if let Some(pass) = state.custom_predict_pass {
         pass(state, new_x, options, need_se)?
     } else {
         predict_batch_serial(state, new_x, options, need_se)?
     };
+
+    if let Some(bootstrap) = options.bootstrap {
+        let retained = state
+            .bootstrap_state
+            .as_ref()
+            .ok_or(LowessError::PredictionUnavailable)?;
+        for level in [options.confidence_intervals, options.prediction_intervals]
+            .into_iter()
+            .flatten()
+        {
+            IntervalMethod::<T>::approximate_z_score(level)
+                .map_err(|_| LowessError::InvalidIntervals(level.to_f64().unwrap_or(0.0)))?;
+        }
+        let method = IntervalMethod {
+            level: options
+                .prediction_intervals
+                .or(options.confidence_intervals)
+                .unwrap_or_else(|| T::from(0.95).unwrap()),
+            confidence: options.confidence_intervals.is_some(),
+            prediction: options.prediction_intervals.is_some(),
+            se: true,
+        };
+        let intervals = bootstrap.compute_at(
+            &method,
+            &retained.smoothed,
+            &retained.residuals,
+            new_x.len(),
+            |replicates| {
+                replicates
+                    .iter()
+                    .map(|sample| {
+                        let refit = LowessExecutor::run_with_config(
+                            &retained.x,
+                            sample,
+                            retained.refit_config.clone(),
+                        )?;
+                        let refit_state = refit
+                            .predict_state
+                            .ok_or(LowessError::PredictionUnavailable)?;
+                        let (predictions, _, _) =
+                            predict_batch_serial(&refit_state, new_x, options, false)?;
+                        Ok(predictions)
+                    })
+                    .collect::<Result<Vec<_>, _>>()
+            },
+        )?;
+        return Ok(PredictOutput {
+            y,
+            standard_errors: Some(intervals.std_errors),
+            confidence_lower: intervals.confidence_lower,
+            confidence_upper: intervals.confidence_upper,
+            prediction_lower: intervals.prediction_lower,
+            prediction_upper: intervals.prediction_upper,
+            derivative,
+        });
+    }
 
     let (confidence_lower, confidence_upper) = if let Some(level) = options.confidence_intervals {
         let se_vals = se.as_deref().unwrap_or(&[]);

@@ -578,6 +578,21 @@ impl BootstrapConfig {
         method: &IntervalMethod<T>,
         y_smooth: &[T],
         residuals: &[T],
+        refit: F,
+    ) -> Result<BootstrapOutput<T>, LowessError>
+    where
+        T: Float,
+        F: FnMut(&[Vec<T>]) -> Result<Vec<Vec<T>>, LowessError>,
+    {
+        self.compute_at(method, y_smooth, residuals, y_smooth.len(), refit)
+    }
+
+    pub fn compute_at<T, F>(
+        &self,
+        method: &IntervalMethod<T>,
+        y_smooth: &[T],
+        residuals: &[T],
+        n_output: usize,
         mut refit: F,
     ) -> Result<BootstrapOutput<T>, LowessError>
     where
@@ -598,7 +613,7 @@ impl BootstrapConfig {
 
         // Point-major layout (`fits[i * b + k]`) so each point's replicates are contiguous.
         let mut fits: Vec<T> = Vec::new();
-        fits.resize(n * b, T::zero());
+        fits.resize(n_output * b, T::zero());
 
         // Draws happen here, in replicate order, so results don't depend on how `refit` schedules work.
         let mut done = 0;
@@ -614,7 +629,7 @@ impl BootstrapConfig {
                 .collect();
             let batch_fits = refit(&batch)?;
             for (j, fit) in batch_fits.iter().enumerate().take(len) {
-                for (i, &f) in fit.iter().enumerate().take(n) {
+                for (i, &f) in fit.iter().enumerate().take(n_output) {
                     fits[i * b + done + j] = f;
                 }
             }
@@ -626,7 +641,7 @@ impl BootstrapConfig {
         let q_hi = T::one() - half_alpha;
         let b_t = T::from(b).unwrap();
 
-        let mut std_errors = Vec::with_capacity(n);
+        let mut std_errors = Vec::with_capacity(n_output);
         let (mut cl, mut cu) = (Vec::new(), Vec::new());
         let (mut pl, mut pu) = (Vec::new(), Vec::new());
         let mut pred: Vec<T> = Vec::new();
@@ -634,7 +649,7 @@ impl BootstrapConfig {
             pred.resize(b, T::zero());
         }
 
-        for i in 0..n {
+        for i in 0..n_output {
             let col = &mut fits[i * b..(i + 1) * b];
 
             let mean = col.iter().fold(T::zero(), |acc, &v| acc + v) / b_t;

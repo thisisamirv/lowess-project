@@ -235,6 +235,45 @@
 //! - **Consistency**: If your project already uses `ndarray`, `fastLowess` fits right in.
 //! - **Performance**: Optimized internal operations using `ndarray` primitives.
 //!
+//! ### Predict
+//!
+//! Retain the fitted Batch model to predict at new points. The prediction builder
+//! controls optional outputs, intervals, and extrapolation limits:
+//!
+//! ```rust
+//! use fastLowess::prelude::*;
+//! use ndarray::Array1;
+//!
+//! let x = Array1::from_vec(vec![1.0_f64, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
+//! let y = Array1::from_vec(vec![2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]);
+//! let model = Lowess::new()
+//!     .fraction(0.5)
+//!     .retain_model(true)                         // Required for out-of-sample prediction
+//!     .build()?;
+//! let fitted = model.fit(&x, &y)?;
+//!
+//! let predict = Predict::new()
+//!     .outputs(["se", "derivative"])              // Standard errors and local slopes
+//!     .intervals(IntervalsBuilder::new()
+//!         .confidence(0.95)                       // Bounds for the mean response
+//!         .prediction(0.95)                       // Bounds for a new observation
+//!         .bootstrap(1000)                        // Residual-bootstrap refits
+//!     )
+//!     .seed(42)                                   // Reproducible bootstrap draws
+//!     .extrapolation("linear")                    // Extend beyond the training range
+//!     .max_extrapolation_distance(2.0)            // Limit distance outside that range
+//!     .max_neighbor_distance(10.0)                // Reject sparse neighborhoods
+//!     .build()?;
+//! let prediction = predict.call(&fitted, &[2.5, 8.5])?;
+//! println!("{prediction:#?}");
+//! # assert_eq!(prediction.y.len(), 2);
+//! # assert!(prediction.standard_errors.is_some());
+//! # assert!(prediction.confidence_lower.is_some());
+//! # assert!(prediction.prediction_upper.is_some());
+//! # assert!(prediction.derivative.is_some());
+//! # Result::<(), LowessError>::Ok(())
+//! ```
+//!
 //! ## Quick Start (Streaming)
 //!
 //! ### Typical Use

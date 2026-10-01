@@ -21,8 +21,8 @@ Requires `.retain_model(true)` on the builder before `fit()`, otherwise `.call(.
 | Method | Argument Type | Default | Description |
 | --- | --- | --- | --- |
 | `outputs([&str])` | `&[&str]` | `[]` | Select `"se"` and/or `"derivative"` |
-| `confidence_intervals(T)` | `T: Float` | disabled | Confidence interval coverage level (e.g. `0.95`) |
-| `prediction_intervals(T)` | `T: Float` | disabled | Prediction interval coverage level (e.g. `0.95`) |
+| `intervals(IntervalsBuilder)` | grouped options | disabled | Confidence and prediction coverage levels; optional residual bootstrap refits |
+| `seed(u64)` | `u64` | fixed default for bootstrap | Reproducible bootstrap draws (does not enable bootstrap by itself) |
 | `return_derivative()` | `bool` | `false` | Include the local fit's derivative (slope) at each query point |
 | `extrapolation(...)` | `&str` | `"clamp"` | Behavior for query points outside the training `x`-range |
 | `max_extrapolation_distance(T)` | `T: Float` | disabled | Under `"linear"` extrapolation, the max allowed distance beyond the training boundary before erroring |
@@ -32,7 +32,9 @@ Requires `.retain_model(true)` on the builder before `fit()`, otherwise `.call(.
 
 ### outputs
 
-Select optional prediction output components with `.outputs(["se", "derivative"])`. `"se"` computes standard errors for each query point, using the retained model's residual scale and per-point leverage. It is required for `confidence_intervals`/`prediction_intervals` to be populated.
+Select optional prediction output components with `.outputs(["se", "derivative"])`. Without bootstrap, `"se"` computes analytic standard errors for each query point using the retained model's residual scale and per-point leverage. Request bounds with `.intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))`. The previous `confidence_intervals(level)` and `prediction_intervals(level)` setters remain available.
+
+Add `.bootstrap(n)` to the interval builder to resample the retained training residuals, refit the model, and calculate query-point SEs and percentile confidence/prediction intervals (including a fresh residual draw for prediction bounds). At least two replicates are required. `.seed(seed)` on `Predict::new()` makes draws reproducible; the fit builder's seed controls fit-time CV/intervals, not prediction-time draws. Bootstrap requires `.retain_model(true)` on the Batch fit and is not available for Streaming or Online.
 
 ### confidence_intervals
 

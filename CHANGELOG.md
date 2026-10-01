@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **lowess:**
 
+- Added grouped Predict interval configuration with `.intervals(IntervalsBuilder::new().confidence(level).prediction(level).bootstrap(n))` and `.seed(seed)` for reproducible out-of-sample residual-bootstrap SEs and percentile intervals.
+- Added a full-featured Batch Predict example to the crate-level quick start.
 - Added crate-level Streaming and Online quick starts covering typical use, full features, result/error handling, and ndarray-to-slice integration examples (ndarray is dev-only).
 - Added `.intervals(IntervalsBuilder::new().confidence(level).prediction(level).bootstrap(n))` to configure analytic or residual-bootstrap intervals as one group in Batch, Streaming, and full-update Online. `IntervalsBuilder` is available from the crate root and prelude.
 - Added `LowessBuilder::outputs(names)` as a grouped replacement for the individual output toggles. Unknown names are collected and reported together by `.build()`.
@@ -25,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **fastLowess:**
 
+- Added grouped and residual-bootstrap Predict intervals through the shared Rust API, including parallel CPU refits.
+- Added a full-featured Batch Predict example to the crate-level quick start.
 - Added GPU-resident Batch residual-bootstrap sampling, refits, and pointwise SE/percentile reduction. Replicates are processed sequentially on the device without per-replicate readback; GPU draws are reproducible for a given seed but differ from CPU bootstrap draws.
 - Added crate-level Streaming and Online quick starts covering typical use, annotated full-feature options, result/error handling, and ndarray input.
 - Added `.intervals(IntervalsBuilder::new()...)` on Batch, Streaming, and Online Rust entry points, matching the lowess crate's grouped interval configuration.

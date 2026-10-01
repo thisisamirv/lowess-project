@@ -10,9 +10,13 @@
 
 // External dependencies
 #[cfg(not(feature = "std"))]
+use alloc::sync::Arc;
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 use core::fmt::Debug;
 use num_traits::Float;
+#[cfg(feature = "std")]
+use std::sync::Arc;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
@@ -27,7 +31,7 @@ use crate::engine::executor::{
 };
 use crate::engine::executor::{LowessConfig, LowessExecutor};
 use crate::engine::output::LowessResult;
-use crate::engine::predict::PredictPassFn;
+use crate::engine::predict::{BootstrapPredictState, PredictPassFn};
 use crate::engine::validator::{MissingPolicy, Validator};
 use crate::evaluation::cv::CVKind;
 use crate::evaluation::diagnostics::Diagnostics;
@@ -355,10 +359,20 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
             c
         });
 
+        let retained_refit = self.config.retain_model.then(|| {
+            let mut refit = config.clone();
+            refit.cv_fractions = None;
+            refit.cv_kind = None;
+            refit.return_variance = None;
+            refit.return_derivative = false;
+            refit
+        });
+
         // Execute unified LOWESS
         let result = LowessExecutor::run_with_config(&sorted.x, &sorted.y, config)?;
 
         let y_smooth = result.smoothed;
+        let mut predict_state = result.predict_state;
         let mut std_errors = result.std_errors;
         let iterations_used = result.iterations;
         let fraction_used = result.used_fraction;
@@ -376,6 +390,19 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
                 .map(|(&orig, &smoothed_val)| orig - smoothed_val)
                 .collect()
         };
+
+        if let (Some(state), Some(mut refit_config)) = (
+            predict_state.as_mut().and_then(Arc::get_mut),
+            retained_refit,
+        ) {
+            refit_config.fraction = Some(fraction_used);
+            state.bootstrap_state = Some(BootstrapPredictState {
+                x: sorted.x.clone(),
+                smoothed: y_smooth.clone(),
+                residuals: residuals.clone(),
+                refit_config,
+            });
+        }
 
         let boot_out = match (bootstrap, boot_base, &self.config.interval_type) {
             (Some(bc), Some(mut base), Some(method)) => {
@@ -520,7 +547,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
             iterations_used,
             cv_scores,
             diagnostics,
-            fit_state: result.predict_state,
+            fit_state: predict_state,
         })
     }
 }

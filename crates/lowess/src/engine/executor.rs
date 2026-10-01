@@ -848,6 +848,7 @@ impl<T: Float> LowessExecutor<T> {
             train_min_x: x[0],
             train_max_x: x[n - 1],
             custom_predict_pass: self.custom_predict_pass,
+            bootstrap_state: None,
         });
 
         // Per-point local fit derivative (slope), if requested. `iteration_loop_with_callback`
