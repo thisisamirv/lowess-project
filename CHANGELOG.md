@@ -68,6 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **R:**
 
 - Added `cv_opts()` to build grouped cross-validation options for `Lowess(cv = ...)`.
+- Added `intervals_opts()` (`confidence`, `prediction`, `bootstrap`) with residual-bootstrap intervals across `Lowess()`, `StreamingLowess()`, full-update `OnlineLowess()`, and `predict()`.
 - Added unit coverage for `cv_opts()` and output-flag parsing, bringing R package line coverage to 100%.
 - Added `quickcheck` properties covering input-order output, `outputs = "sorted"`, and sparse one-spike initial fits against `stats::lowess`.
 - Bounded broad randomized robustness checks to 12 passes, where branch differences already emerge, while fixed regressions pin long-run roundoff cycles at their original iteration counts.
@@ -147,6 +148,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the local result alias with `extendr_api::error::Result`, which remains exported outside the prelude in `extendr-api 0.9.0`.
 - Breaking change: replaced individual `return_*` arguments with grouped `outputs`, and replaced `Lowess()`'s four `cv_*` arguments with `cv = cv_opts(...)`.
+- Breaking change: replaced `confidence_intervals`/`prediction_intervals` (and `predict()`'s `confidence_level`/`prediction_level`) with `intervals = intervals_opts(...)`; removed `cv_opts(seed = ...)` in favor of one outer `seed` shared by CV and fit-time bootstrap. `predict()` has its own `seed`. Seeds must be non-negative whole numbers up to 2^53, and `seed = 0` is a real seed.
+- Fixed the R crate's imports for the current `fastLowess` module layout and re-vendored `fastLowess`.
 - Represent unavailable diagnostic metrics as R `NA` rather than generic `NaN` values.
 - Added regression comparisons with `stats::lowess` for input-order and sorted output.
 - Added committed `statsmodels.lowess` reference fixtures for cross-language validation.

@@ -157,10 +157,12 @@ fit.Lowess <- function(model, x, y, custom_weights = NULL, ...) {
 #' @param outputs Character vector selecting optional prediction components:
 #'   \code{"se"} and/or \code{"derivative"}. \code{NULL} (default)
 #'   returns only predicted values.
-#' @param confidence_level Confidence interval coverage level (e.g. 0.95).
-#'   \code{NULL} (default) disables it.
-#' @param prediction_level Prediction interval coverage level (e.g. 0.95).
-#'   \code{NULL} (default) disables it.
+#' @param intervals Interval options, created with
+#'   \code{\link{intervals_opts}} (or a named list with any of
+#'   \code{confidence}, \code{prediction}, \code{bootstrap}). \code{NULL}
+#'   (default) disables intervals.
+#' @param seed Non-negative whole-number seed for bootstrap resampling.
+#'   \code{NULL} (default) uses a random seed.
 #' @param extrapolation Behavior for query points outside the training range:
 #'   \code{"clamp"} (default), \code{"linear"}, or \code{"error"}.
 #' @param max_extrapolation_distance Under \code{"linear"} extrapolation, the
@@ -185,8 +187,8 @@ predict.Lowess <- function(
     object,
     new_x,
     outputs = NULL,
-    confidence_level = NULL,
-    prediction_level = NULL,
+    intervals = NULL,
+    seed = NULL,
     extrapolation = "clamp",
     max_extrapolation_distance = NULL,
     max_neighbor_distance = NULL,
@@ -196,15 +198,18 @@ predict.Lowess <- function(
         stop("unused arguments (...)")
     }
     flags <- parse_outputs_flags(outputs, c("se", "derivative"))
+    iv <- expand_intervals(intervals)
     object$handle$predict(
         as.double(new_x),
         flags[["se"]],
-        coerce_nullable(confidence_level)[[1]],
-        coerce_nullable(prediction_level)[[1]],
+        coerce_nullable(iv$confidence)[[1]],
+        coerce_nullable(iv$prediction)[[1]],
         flags[["derivative"]],
         as.character(extrapolation),
         coerce_nullable(max_extrapolation_distance)[[1]],
-        coerce_nullable(max_neighbor_distance)[[1]]
+        coerce_nullable(max_neighbor_distance)[[1]],
+        iv$bootstrap,
+        if (is.null(seed)) Nullable(NULL) else as.double(seed)
     )
 }
 

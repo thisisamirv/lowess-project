@@ -15,6 +15,7 @@ test_that("RLowess generated accessors dispatch fit methods", {
         boundary_policy = "extend",
         confidence_intervals = null_value,
         prediction_intervals = null_value,
+        bootstrap = 0L,
         return_diagnostics = FALSE,
         return_residuals = FALSE,
         return_robustness_weights = FALSE,
@@ -25,7 +26,7 @@ test_that("RLowess generated accessors dispatch fit methods", {
         cv_method = "kfold",
         cv_k = 5L,
         parallel = FALSE,
-        cv_seed = null_value,
+        seed = null_value,
         return_se = FALSE,
         return_sorted = FALSE,
         backend = "cpu",
@@ -63,6 +64,8 @@ test_that("RStreamingLowess generated accessors dispatch chunked methods", {
         return_se = FALSE,
         confidence_intervals = null_value,
         prediction_intervals = null_value,
+        bootstrap = 0L,
+        seed = null_value,
         merge_strategy = "weighted_average",
         parallel = FALSE,
         delta = null_value,
@@ -98,6 +101,8 @@ test_that("ROnlineLowess generated accessors dispatch add_point", {
         return_se = FALSE,
         confidence_intervals = null_value,
         prediction_intervals = null_value,
+        bootstrap = 0L,
+        seed = null_value,
         delta = null_value,
         missing = "error"
     )
@@ -118,6 +123,8 @@ test_that("ROnlineLowess generated accessors dispatch add_point", {
         return_se = FALSE,
         confidence_intervals = null_value,
         prediction_intervals = null_value,
+        bootstrap = 0L,
+        seed = null_value,
         delta = null_value,
         missing = "error"
     )

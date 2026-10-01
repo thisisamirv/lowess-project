@@ -48,9 +48,8 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 model <- Lowess(
     fraction = 0.5,
     iterations = 3,
-    confidence_intervals = 0.95,
-    prediction_intervals = 0.95,
-    outputs = "diagnostics"
+    outputs = "diagnostics",
+    intervals = intervals_opts(confidence = 0.95, prediction = 0.95)
 )
 result <- fit(model, x, y)
 

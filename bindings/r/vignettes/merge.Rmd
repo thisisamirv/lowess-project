@@ -56,9 +56,9 @@ x_chunk <- x[seq_len(50)]
 y_chunk <- y[seq_len(50)]
 
 model <- StreamingLowess(
-    merge_strategy = "weighted_average",
     chunk_size = 5000,
-    overlap = 500
+    overlap = 500,
+    merge_strategy = "weighted_average"
 )
 result <- process_chunk(model, x_chunk, y_chunk)
 cat("First 6 smoothed values (weighted_average strategy):\n")
@@ -76,9 +76,9 @@ overlap region.
 
 ```{r merge_2}
 model <- StreamingLowess(
-    merge_strategy = "average",
     chunk_size = 5000,
-    overlap = 500
+    overlap = 500,
+    merge_strategy = "average"
 )
 result <- process_chunk(model, x_chunk, y_chunk)
 cat("First 6 smoothed values (average strategy):\n")
@@ -96,9 +96,9 @@ more accurate at the overlap boundary.
 
 ```{r merge_3}
 model <- StreamingLowess(
-    merge_strategy = "take_first",
     chunk_size = 5000,
-    overlap = 500
+    overlap = 500,
+    merge_strategy = "take_first"
 )
 result <- process_chunk(model, x_chunk, y_chunk)
 cat("First 6 smoothed values (take_first strategy):\n")
@@ -116,9 +116,9 @@ data follows).
 
 ```{r merge_4}
 model <- StreamingLowess(
-    merge_strategy = "take_last",
     chunk_size = 5000,
-    overlap = 500
+    overlap = 500,
+    merge_strategy = "take_last"
 )
 result <- process_chunk(model, x_chunk, y_chunk)
 cat("First 6 smoothed values (take_last strategy):\n")

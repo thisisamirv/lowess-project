@@ -25,6 +25,7 @@ export(finalize)
 export(fit)
 export(gpu_available)
 export(install_gpu)
+export(intervals_opts)
 export(process_chunk)
 importFrom(graphics,lines)
 importFrom(stats,

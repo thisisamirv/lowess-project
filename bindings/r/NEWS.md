@@ -6,11 +6,14 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Added
 
 * Added `cv_opts()` to configure grouped cross-validation options for `Lowess(cv = ...)`.
+* Added `intervals_opts()` and an `intervals` argument to `Lowess()`, `StreamingLowess()`, `OnlineLowess()`, and `predict()`, including bootstrap intervals via `bootstrap`.
+* Added a `seed` argument to `Lowess()`, `StreamingLowess()`, `OnlineLowess()`, and `predict()` for reproducible cross-validation and bootstrap resampling.
 * Added an "Alternative Software" vignette comparing `rfastlowess` with `stats::lowess()`.
 
 ### Changed
 
 * Breaking change: replaced individual `return_*` arguments with grouped `outputs`, and replaced `Lowess()`'s four `cv_*` arguments with `cv = cv_opts(...)`.
+* Breaking change: replaced `confidence_intervals`/`prediction_intervals` (and `predict()`'s `confidence_level`/`prediction_level`) with `intervals = intervals_opts(confidence, prediction, bootstrap)`, and moved the cross-validation seed from `cv_opts(seed = ...)` to a shared `seed` argument.
 * Represent unavailable diagnostic metrics as R `NA` rather than generic `NaN` values.
 
 ### Fixed

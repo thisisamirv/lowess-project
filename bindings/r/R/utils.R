@@ -168,6 +168,54 @@ parse_outputs_flags <- function(outputs, valid) {
     result
 }
 
+#' Expand an `intervals` list into the flat values the Rust FFI expects
+#'
+#' Accepts `NULL` (no intervals), an \code{\link{intervals_opts}} object, or a
+#' plain named list with any of `confidence`, `prediction`, and `bootstrap`.
+#'
+#' @param intervals `NULL` or a named list.
+#' @return A list with `confidence`, `prediction` (each `NULL` or numeric)
+#'   and `bootstrap` (integer, `0L` meaning off).
+#' @noRd
+expand_intervals <- function(intervals) {
+    if (is.null(intervals)) {
+        return(list(confidence = NULL, prediction = NULL, bootstrap = 0L))
+    }
+    if (!is.list(intervals)) {
+        stop(
+            "`intervals` must be NULL, intervals_opts(), or a named list",
+            call. = FALSE
+        )
+    }
+    valid <- c("confidence", "prediction", "bootstrap")
+    keys <- names(intervals)
+    if (length(intervals) > 0L && (is.null(keys) || any(keys == ""))) {
+        stop("`intervals` must be a named list", call. = FALSE)
+    }
+    unknown <- setdiff(keys, valid)
+    if (length(unknown) > 0L) {
+        stop(
+            sprintf(
+                "Invalid `intervals` key(s): %s. Allowed: %s",
+                toString(sprintf("'%s'", unknown)),
+                toString(sprintf("'%s'", valid))
+            ),
+            call. = FALSE
+        )
+    }
+    bootstrap <- intervals$bootstrap
+    if (is.null(bootstrap)) {
+        bootstrap <- 0L
+    } else {
+        validate_optional_count(bootstrap, "intervals$bootstrap")
+    }
+    list(
+        confidence = intervals$confidence,
+        prediction = intervals$prediction,
+        bootstrap = as.integer(bootstrap)
+    )
+}
+
 #' Coerce optional values to Nullable
 #' @noRd
 #' @srrstats {RE1.2} Numeric vector inputs documented and validated.
@@ -185,6 +233,7 @@ param_types <- list(
     min_points = "integer",
     chunk_size = "integer",
     cv_k = "integer",
+    bootstrap = "integer",
     weight_function = "character",
     robustness_method = "character",
     scaling_method = "character",
@@ -209,7 +258,7 @@ param_types <- list(
     prediction_intervals = "nullable",
     auto_converge = "nullable",
     cv_fractions = "nullable",
-    cv_seed = "nullable"
+    seed = "nullable_double"
 )
 
 #' Build args from parent environment
@@ -226,13 +275,13 @@ env_args <- function(param_names) {
         if (is.null(type)) {
             return(val)
         }
-        switch(
-            type,
+        switch(type,
             double = as.double(val),
             integer = as.integer(val),
             character = as.character(val),
             logical = as.logical(val),
             nullable = coerce_nullable(val)[[1]],
+            nullable_double = if (is.null(val)) Nullable(NULL) else as.double(val),
             val
         )
     })
@@ -244,72 +293,77 @@ env_args <- function(param_names) {
 lowess_params <- c(
     "fraction",
     "iterations",
-    "delta",
     "weight_function",
     "robustness_method",
-    "scaling_method",
+    "delta",
+    "zero_weight_fallback",
     "boundary_policy",
-    "confidence_intervals",
-    "prediction_intervals",
+    "scaling_method",
+    "auto_converge",
+    "missing",
+    "parallel",
+    "backend",
+    "return_se",
     "return_diagnostics",
     "return_residuals",
     "return_robustness_weights",
     "return_derivative",
-    "zero_weight_fallback",
-    "auto_converge",
-    "cv_fractions",
+    "return_sorted",
+    "confidence_intervals",
+    "prediction_intervals",
+    "bootstrap",
     "cv_method",
     "cv_k",
-    "parallel",
-    "cv_seed",
-    "return_se",
-    "return_sorted",
-    "backend",
-    "missing",
+    "cv_fractions",
+    "seed",
     "retain_model"
 )
 
 online_params <- c(
     "fraction",
-    "window_capacity",
-    "min_points",
     "iterations",
     "weight_function",
     "robustness_method",
-    "scaling_method",
-    "boundary_policy",
+    "delta",
     "zero_weight_fallback",
-    "update_mode",
+    "boundary_policy",
+    "scaling_method",
     "auto_converge",
+    "missing",
+    "window_capacity",
+    "min_points",
+    "update_mode",
+    "return_se",
     "return_robustness_weights",
     "return_derivative",
-    "return_se",
     "confidence_intervals",
     "prediction_intervals",
-    "delta",
-    "missing"
+    "bootstrap",
+    "seed"
 )
 
 streaming_params <- c(
     "fraction",
-    "chunk_size",
-    "overlap",
     "iterations",
     "weight_function",
     "robustness_method",
-    "scaling_method",
-    "boundary_policy",
+    "delta",
     "zero_weight_fallback",
+    "boundary_policy",
+    "scaling_method",
     "auto_converge",
+    "missing",
+    "chunk_size",
+    "overlap",
+    "merge_strategy",
+    "parallel",
+    "return_se",
     "return_diagnostics",
     "return_residuals",
     "return_robustness_weights",
     "return_derivative",
-    "return_se",
     "confidence_intervals",
     "prediction_intervals",
-    "merge_strategy",
-    "parallel",
-    "delta",
-    "missing"
+    "bootstrap",
+    "seed"
 )

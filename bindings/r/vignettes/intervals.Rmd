@@ -40,7 +40,7 @@ set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
-model <- Lowess(fraction = 0.5, confidence_intervals = 0.95)
+model <- Lowess(fraction = 0.5, intervals = intervals_opts(confidence = 0.95))
 result <- fit(model, x, y)
 
 # Plot with bands
@@ -66,7 +66,7 @@ set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
-model <- Lowess(fraction = 0.5, prediction_intervals = 0.95)
+model <- Lowess(fraction = 0.5, intervals = intervals_opts(prediction = 0.95))
 result <- fit(model, x, y)
 
 plot(x, y, pch = 16, col = "gray",
@@ -93,8 +93,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(
     fraction = 0.5,
-    confidence_intervals = 0.95,
-    prediction_intervals = 0.95
+    intervals = intervals_opts(confidence = 0.95, prediction = 0.95)
 )
 result <- fit(model, x, y)
 
@@ -133,11 +132,36 @@ Common levels and their z-values:
 
 ```{r intervals_4}
 # 99% confidence interval
-model <- Lowess(fraction = 0.5, confidence_intervals = 0.99)
+model <- Lowess(fraction = 0.5, intervals = intervals_opts(confidence = 0.99))
 result <- fit(model, x, y)
 cat("99% CI at midpoint: [", result$confidence_lower[50], ", ",
     result$confidence_upper[50], "]\n")
 ```
+
+---
+
+## Bootstrap Intervals
+
+Set `bootstrap` to compute intervals from resampled fits instead of the
+analytic formula. Pass `seed` for reproducible resampling:
+
+```{r intervals_bootstrap}
+model <- Lowess(
+    fraction = 0.5,
+    intervals = intervals_opts(
+        confidence = 0.95,
+        prediction = 0.95,
+        bootstrap = 200
+    ),
+    seed = 42
+)
+result <- fit(model, x, y)
+cat("Bootstrap 95% CI at midpoint: [", result$confidence_lower[50], ", ",
+    result$confidence_upper[50], "]\n")
+```
+
+The same `intervals` and `seed` arguments are accepted by
+`StreamingLowess()`, `OnlineLowess()`, and `predict()`.
 
 ---
 
@@ -161,9 +185,9 @@ cat("Standard errors (first 5):", head(result$standard_errors, 5), "\n")
 
 | Feature | Batch | Streaming | Online |
 | --- | --- | --- | --- |
+| Standard errors | ✓ | ✓ | ✓ (`update_mode = "full"` only) |
 | Confidence intervals | ✓ | ✓ | ✓ (`update_mode = "full"` only) |
 | Prediction intervals | ✓ | ✓ | ✓ (`update_mode = "full"` only) |
-| Standard errors | ✓ | ✓ | ✓ (`update_mode = "full"` only) |
 
 ```{r session-info}
 sessionInfo()

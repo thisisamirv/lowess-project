@@ -49,7 +49,7 @@ test_that("print.LowessResult shows cv_scores when present", {
     y <- sin(x) + rnorm(100, 0, 0.2)
     result <- fit(
         Lowess(
-            cv = cv_opts(fractions = c(0.2, 0.3, 0.5), method = "kfold", k = 5L)
+            cv = cv_opts(method = "kfold", k = 5L, fractions = c(0.2, 0.3, 0.5))
         ),
         x,
         y
@@ -89,7 +89,11 @@ test_that("plot.LowessResult draws confidence interval lines when present", {
     set.seed(42)
     x <- seq(0, 10, length.out = 50)
     y <- sin(x) + rnorm(50, 0, 0.2)
-    result <- fit(Lowess(fraction = 0.5, confidence_intervals = 0.95), x, y)
+    result <- fit(
+        Lowess(fraction = 0.5, intervals = intervals_opts(confidence = 0.95)),
+        x,
+        y
+    )
     expect_no_error(plot(result, main = "With CI"))
 })
 
@@ -165,14 +169,18 @@ test_that("predict.Lowess return_se returns standard errors", {
     expect_true(all(pred$standard_errors >= 0))
 })
 
-test_that("predict.Lowess confidence_level returns confidence intervals", {
+test_that("predict.Lowess intervals confidence returns confidence intervals", {
     set.seed(42)
     x <- seq(0, 10, length.out = 50)
     y <- sin(x) + rnorm(50, 0, 0.1)
     model <- Lowess(fraction = 0.3, retain_model = TRUE)
     invisible(fit(model, x, y))
 
-    pred <- predict(model, c(2.5, 7.5), confidence_level = 0.95)
+    pred <- predict(
+        model,
+        c(2.5, 7.5),
+        intervals = intervals_opts(confidence = 0.95)
+    )
 
     expect_true("confidence_lower" %in% names(pred))
     expect_true("confidence_upper" %in% names(pred))
@@ -183,19 +191,40 @@ test_that("predict.Lowess confidence_level returns confidence intervals", {
     expect_gte(min(pred$confidence_upper - pred$y), 0)
 })
 
-test_that("predict.Lowess prediction_level returns prediction intervals", {
+test_that("predict.Lowess intervals prediction returns prediction intervals", {
     set.seed(42)
     x <- seq(0, 10, length.out = 50)
     y <- sin(x) + rnorm(50, 0, 0.1)
     model <- Lowess(fraction = 0.3, retain_model = TRUE)
     invisible(fit(model, x, y))
 
-    pred <- predict(model, c(2.5, 7.5), prediction_level = 0.95)
+    pred <- predict(model, c(2.5, 7.5), intervals = list(prediction = 0.95))
 
     expect_true("prediction_lower" %in% names(pred))
     expect_true("prediction_upper" %in% names(pred))
     expect_length(pred$prediction_lower, 2)
     expect_length(pred$prediction_upper, 2)
+})
+
+test_that("predict.Lowess bootstrap intervals are reproducible with a seed", {
+    set.seed(42)
+    x <- seq(0, 10, length.out = 50)
+    y <- sin(x) + rnorm(50, 0, 0.1)
+    model <- Lowess(fraction = 0.3, retain_model = TRUE)
+    invisible(fit(model, x, y))
+
+    iv <- intervals_opts(confidence = 0.95, prediction = 0.95, bootstrap = 50)
+    p1 <- predict(model, c(2.5, 7.5), intervals = iv, seed = 0)
+    p2 <- predict(model, c(2.5, 7.5), intervals = iv, seed = 0)
+
+    expect_length(p1$confidence_lower, 2)
+    expect_length(p1$prediction_upper, 2)
+    expect_identical(p1$confidence_lower, p2$confidence_lower)
+    expect_identical(p1$prediction_upper, p2$prediction_upper)
+    expect_error(
+        predict(model, c(2.5), intervals = iv, seed = -3),
+        "seed must be"
+    )
 })
 
 test_that("predict.Lowess return_derivative returns local slopes", {

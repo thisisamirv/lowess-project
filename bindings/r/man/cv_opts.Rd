@@ -4,22 +4,20 @@
 \alias{cv_opts}
 \title{Cross-validation options for \code{\link{Lowess}}}
 \usage{
-cv_opts(fractions, method = "kfold", k = 5L, seed = NULL)
+cv_opts(method = "kfold", k = 5L, fractions)
 }
 \arguments{
-\item{fractions}{Numeric vector of candidate smoothing fractions, each
-greater than 0 and up to 1 (e.g. \code{c(0.2, 0.3, 0.5)}).}
-
 \item{method}{Cross-validation method: \code{"kfold"} (default) or
 \code{"loocv"}.}
 
 \item{k}{Number of folds for k-fold cross-validation. Default: 5.}
 
-\item{seed}{Integer seed for reproducible fold assignment. \code{NULL}
-(default) uses a random seed.}
+\item{fractions}{Numeric vector of candidate smoothing fractions, each
+greater than 0 and up to 1 (e.g. \code{c(0.2, 0.3, 0.5)}).}
 }
 \value{
 A \code{cv_opts} list for \code{Lowess(cv = ...)}.
+Use \code{Lowess(seed = ...)} for reproducible fold assignment.
 }
 \description{
 Build a cross-validation options list to pass to
@@ -28,5 +26,8 @@ Build a cross-validation options list to pass to
 model pick the best smoothing fraction from the candidates.
 }
 \examples{
-model <- Lowess(cv = cv_opts(fractions = c(0.2, 0.3, 0.5)))
+model <- Lowess(
+    cv = cv_opts(method = "kfold", k = 5, fractions = c(0.2, 0.3, 0.5)),
+    seed = 42
+)
 }

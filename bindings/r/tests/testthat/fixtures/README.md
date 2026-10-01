@@ -51,10 +51,10 @@ y <- sin(x) * x + rnorm(60, 0, 0.25)
 | Case | Config |
 | --- | --- |
 | `batch_default` | `Lowess(fraction = 0.67, iterations = 3L, boundary_policy = "extend", parallel = FALSE)` |
-| `batch_intervals` | `Lowess(fraction = 0.3, iterations = 2L, boundary_policy = "extend", outputs = c("se", "derivative"), confidence_intervals = 0.9, prediction_intervals = 0.9, parallel = FALSE)` |
-| `batch_robust` | `Lowess(fraction = 0.4, iterations = 5L, boundary_policy = "extend", outputs = "weights", parallel = FALSE)`; `y[9]` and `y[33]` get a `+4` outlier |
-| `streaming_chunked` | `StreamingLowess(fraction = 0.3, chunk_size = 20L, overlap = 0L, iterations = 1L, parallel = FALSE)` |
-| `online_full` | `OnlineLowess(fraction = 0.3, window_capacity = 16L, min_points = 4L, update_mode = "full", iterations = 2L)` |
+| `batch_intervals` | `Lowess(fraction = 0.3, iterations = 2L, boundary_policy = "extend", parallel = FALSE, outputs = c("se", "derivative"), intervals = intervals_opts(confidence = 0.9, prediction = 0.9))` |
+| `batch_robust` | `Lowess(fraction = 0.4, iterations = 5L, boundary_policy = "extend", parallel = FALSE, outputs = "weights")`; `y[9]` and `y[33]` get a `+4` outlier |
+| `streaming_chunked` | `StreamingLowess(fraction = 0.3, iterations = 1L, chunk_size = 20L, overlap = 0L, parallel = FALSE)` |
+| `online_full` | `OnlineLowess(fraction = 0.3, iterations = 2L, window_capacity = 16L, min_points = 4L, update_mode = "full")` |
 
 ## Determinism notes
 

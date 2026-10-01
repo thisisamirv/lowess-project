@@ -24,7 +24,37 @@
 #' @srrstats {G2.0} Input validation for fraction, chunk_size.
 #' @srrstats {G1.6} Memory-efficient streaming for large datasets.
 #'
-#' @inheritParams Lowess
+#' @param fraction Smoothing fraction, greater than 0 and up to 1. Default:
+#'   0.67.
+#' @param ... Not used; forces all subsequent arguments to be named.
+#' @param iterations Number of robustness iterations, between 0 and 1000
+#'   (inclusive). Default: 3.
+#' @param weight_function Kernel weight function. One of \code{"tricube"}
+#'   (default), \code{"gaussian"}, \code{"uniform"} (alias: \code{"boxcar"}),
+#'   \code{"cosine"}, \code{"epanechnikov"}, \code{"biweight"} (alias:
+#'   \code{"bisquare"}), or \code{"triangle"} (alias: \code{"triangular"}).
+#' @param robustness_method Outlier downweighting method: \code{"bisquare"}
+#'   (default; alias: \code{"biweight"}), \code{"huber"}, or \code{"talwar"}.
+#' @param delta Interpolation distance threshold, as a non-negative fraction
+#'   of the x range; points within \code{delta} of each other on x share the
+#'   same local fit. \code{NULL} (default) sets it automatically to 1/100th
+#'   of the x range.
+#' @param zero_weight_fallback Fallback policy when all robustness weights drop
+#'   to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
+#'   \code{"mean"}), \code{"return_original"} (alias: \code{"original"}), or
+#'   \code{"return_none"} (alias: \code{"none"}).
+#' @param boundary_policy Boundary handling strategy: \code{"extend"}
+#'   (default; alias: \code{"pad"}), \code{"reflect"} (alias:
+#'   \code{"mirror"}), \code{"zero"}, or \code{"noboundary"} (alias: \code{"none"}).
+#' @param scaling_method Residual scale estimation for robustness weights:
+#'   \code{"mad"} (default; alias: \code{"median_absolute_deviation"}),
+#'   \code{"mar"} (alias: \code{"median_absolute_residual"}), or
+#'   \code{"mean"} (alias: \code{"mean_absolute_residual"}).
+#' @param auto_converge Convergence tolerance for early stopping of robustness
+#'   iterations. \code{NULL} (default) disables early stopping.
+#' @param missing Policy for non-finite (NaN/Infinity) values in input data:
+#'   \code{"error"} (default) raises an error, \code{"drop"} silently removes
+#'   affected observations before fitting.
 #' @param chunk_size Number of data points per processing chunk, at least 10.
 #'   Default: 5000.
 #' @param overlap Number of overlapping points between consecutive chunks,
@@ -36,14 +66,17 @@
 #'   \code{"average"} (alias: \code{"mean"}),
 #'   \code{"take_first"} (alias: \code{"first"}), or
 #'   \code{"take_last"} (alias: \code{"last"}).
+#' @param parallel Logical; enable parallel processing. Default: \code{TRUE}.
 #' @param outputs Character vector selecting optional output components:
-#'   \code{"diagnostics"}, \code{"residuals"}, \code{"weights"} (robustness
-#'   weights), \code{"derivative"}, and/or \code{"se"} (standard errors).
-#'   \code{NULL} (default) returns only the core result.
-#' @param confidence_intervals Confidence level for confidence intervals
-#'   (e.g. 0.95), or \code{NULL} (default) to disable.
-#' @param prediction_intervals Confidence level for prediction intervals
-#'   (e.g. 0.95), or \code{NULL} (default) to disable.
+#'   \code{"se"} (standard errors), \code{"diagnostics"},
+#'   \code{"residuals"}, \code{"weights"} (robustness weights), and/or
+#'   \code{"derivative"}. \code{NULL} (default) returns only the core result.
+#' @param intervals Interval options, created with
+#'   \code{\link{intervals_opts}} (or a named list with any of
+#'   \code{confidence}, \code{prediction}, \code{bootstrap}). \code{NULL}
+#'   (default) disables intervals.
+#' @param seed Non-negative whole-number seed for bootstrap resampling.
+#'   \code{NULL} (default) uses a random seed.
 #'
 #' @return A StreamingLowess object.
 #' @examples
@@ -56,36 +89,41 @@
 #' @export
 StreamingLowess <- function(
     fraction = 0.67,
-    chunk_size = 5000L,
     ...,
-    overlap = NULL,
     iterations = 3L,
-    delta = NULL,
     weight_function = "tricube",
     robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
+    delta = NULL,
     zero_weight_fallback = "use_local_mean",
+    boundary_policy = "extend",
+    scaling_method = "mad",
     auto_converge = NULL,
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
+    missing = "error",
+    chunk_size = 5000L,
+    overlap = NULL,
     merge_strategy = "weighted_average",
     parallel = TRUE,
-    missing = "error",
-    outputs = NULL
+    outputs = NULL,
+    intervals = NULL,
+    seed = NULL
 ) {
-    reject_extra_positional_args(sys.call(), "chunk_size")
+    reject_extra_positional_args(sys.call(), "fraction")
     validate_params(fraction = fraction, chunk_size = chunk_size)
 
     flags <- parse_outputs_flags(
         outputs,
-        c("diagnostics", "residuals", "weights", "derivative", "se")
+        c("se", "diagnostics", "residuals", "weights", "derivative")
     )
     return_diagnostics <- flags[["diagnostics"]]
     return_residuals <- flags[["residuals"]]
     return_robustness_weights <- flags[["weights"]]
     return_derivative <- flags[["derivative"]]
     return_se <- flags[["se"]]
+
+    iv <- expand_intervals(intervals)
+    confidence_intervals <- iv$confidence
+    prediction_intervals <- iv$prediction
+    bootstrap <- iv$bootstrap
 
     handle <- do.call(RStreamingLowess$new, env_args(streaming_params))
 

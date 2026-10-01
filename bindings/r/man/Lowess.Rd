@@ -5,24 +5,24 @@
 \title{LOWESS Batch Smoothing}
 \usage{
 Lowess(
-    fraction = 0.67,
-    ...,
-    iterations = 3L,
-    delta = NULL,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
-    zero_weight_fallback = "use_local_mean",
-    auto_converge = NULL,
-    parallel = TRUE,
-    backend = "cpu",
-    missing = "error",
-    retain_model = FALSE,
-    outputs = NULL,
-    cv = NULL
+  fraction = 0.67,
+  ...,
+  iterations = 3L,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  delta = NULL,
+  zero_weight_fallback = "use_local_mean",
+  boundary_policy = "extend",
+  scaling_method = "mad",
+  auto_converge = NULL,
+  missing = "error",
+  parallel = TRUE,
+  backend = "cpu",
+  outputs = NULL,
+  intervals = NULL,
+  cv = NULL,
+  seed = NULL,
+  retain_model = FALSE
 )
 }
 \arguments{
@@ -34,11 +34,6 @@ Lowess(
 \item{iterations}{Number of robustness iterations, between 0 and 1000
 (inclusive). Default: 3.}
 
-\item{delta}{Interpolation distance threshold, as a non-negative fraction
-of the x range; points within \code{delta} of each other on x share the
-same local fit. \code{NULL} (default) sets it automatically to 1/100th
-of the x range.}
-
 \item{weight_function}{Kernel weight function. One of \code{"tricube"}
 (default), \code{"gaussian"}, \code{"uniform"} (alias: \code{"boxcar"}),
 \code{"cosine"}, \code{"epanechnikov"},
@@ -48,31 +43,32 @@ of the x range.}
 \item{robustness_method}{Outlier downweighting method: \code{"bisquare"}
 (default; alias: \code{"biweight"}), \code{"huber"}, or \code{"talwar"}.}
 
-\item{scaling_method}{Residual scale estimation for robustness weights:
-\code{"mad"} (default; alias: \code{"median_absolute_deviation"}),
-\code{"mar"} (alias: \code{"median_absolute_residual"}), or
-\code{"mean"} (alias: \code{"mean_absolute_residual"}).}
-
-\item{boundary_policy}{Boundary handling strategy: \code{"extend"}
-(default; alias: \code{"pad"}), \code{"reflect"} (alias:
-\code{"mirror"}), \code{"zero"}, or
-\code{"noboundary"} (alias: \code{"none"}).}
-
-\item{confidence_intervals}{Confidence level for confidence intervals,
-greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
-disables confidence intervals.}
-
-\item{prediction_intervals}{Confidence level for prediction intervals,
-greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
-disables prediction intervals.}
+\item{delta}{Interpolation distance threshold, as a non-negative fraction
+of the x range; points within \code{delta} of each other on x share the
+same local fit. \code{NULL} (default) sets it automatically to 1/100th
+of the x range.}
 
 \item{zero_weight_fallback}{Fallback policy when all robustness weights drop
 to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
 \code{"mean"}), \code{"return_original"} (alias: \code{"original"}), or
 \code{"return_none"} (alias: \code{"none"}).}
 
+\item{boundary_policy}{Boundary handling strategy: \code{"extend"}
+(default; alias: \code{"pad"}), \code{"reflect"} (alias:
+\code{"mirror"}), \code{"zero"}, or
+\code{"noboundary"} (alias: \code{"none"}).}
+
+\item{scaling_method}{Residual scale estimation for robustness weights:
+\code{"mad"} (default; alias: \code{"median_absolute_deviation"}),
+\code{"mar"} (alias: \code{"median_absolute_residual"}), or
+\code{"mean"} (alias: \code{"mean_absolute_residual"}).}
+
 \item{auto_converge}{Convergence tolerance for early stopping of robustness
 iterations. \code{NULL} (default) disables early stopping.}
+
+\item{missing}{Policy for non-finite (NaN/Infinity) values in input data:
+\code{"error"} (default) raises an error, \code{"drop"} silently removes
+affected observations before fitting.}
 
 \item{parallel}{Logical; enable parallel processing. Default: \code{TRUE}.}
 
@@ -82,23 +78,29 @@ GPU support requires the package to be built locally with
 Vulkan/Metal/DX12-capable GPU driver; not available in released
 CRAN/Bioconductor binaries.}
 
-\item{missing}{Policy for non-finite (NaN/Infinity) values in input data:
-\code{"error"} (default) raises an error, \code{"drop"} silently removes
-affected observations before fitting.}
+\item{outputs}{Character vector selecting optional output components:
+\code{"se"} (standard errors), \code{"diagnostics"},
+\code{"residuals"}, \code{"weights"} (robustness weights),
+\code{"derivative"}, and/or \code{"sorted"}. \code{NULL} (default)
+returns only the core result (\code{x}, \code{y}, and fit metadata).}
+
+\item{intervals}{Interval options, created with
+\code{\link{intervals_opts}} (or a named list with any of
+\code{confidence}, \code{prediction}, \code{bootstrap}): e.g.
+\code{intervals = intervals_opts(confidence = 0.95, bootstrap = 200)}.
+\code{NULL} (default) disables intervals.}
+
+\item{cv}{Cross-validation options, created with \code{\link{cv_opts}}:
+e.g. \code{cv = cv_opts(method = "kfold", k = 5, fractions = c(0.2, 0.3, 0.5))}.
+\code{NULL} (default) disables cross-validation.}
+
+\item{seed}{Non-negative whole-number seed shared by cross-validation fold
+assignment and bootstrap resampling, for reproducible results.
+\code{NULL} (default) uses a random seed.}
 
 \item{retain_model}{Logical; if \code{TRUE}, retain the fitted model's
 training data, enabling \code{\link{predict.Lowess}} for out-of-sample
 prediction. Default: \code{FALSE}.}
-
-\item{outputs}{Character vector selecting optional output components:
-\code{"diagnostics"}, \code{"residuals"}, \code{"weights"} (robustness
-weights), \code{"derivative"}, \code{"se"} (standard errors), and/or
-\code{"sorted"}. \code{NULL} (default) returns only the core result
-(\code{x}, \code{y}, and fit metadata).}
-
-\item{cv}{Cross-validation options, created with \code{\link{cv_opts}}:
-e.g. \code{cv = cv_opts(fractions = c(0.2, 0.3, 0.5))}. \code{NULL}
-(default) disables cross-validation.}
 }
 \value{
 A Lowess object.
@@ -116,11 +118,11 @@ real-time data, see \code{\link{OnlineLowess}}.
 
 \code{fraction} is the most important parameter: it controls the size of the
 local neighbourhood used at each point.\tabular{lll}{
-    Range \tab Effect \tab Use case \cr
-    0.1-0.3 \tab Fine detail \tab Rapidly changing signals \cr
-    0.3-0.5 \tab Balanced \tab General purpose \cr
-    0.5-0.7 \tab Heavy smoothing \tab Noisy data \cr
-    0.7-1.0 \tab Very smooth \tab Trend extraction \cr
+   Range \tab Effect \tab Use case \cr
+   0.1-0.3 \tab Fine detail \tab Rapidly changing signals \cr
+   0.3-0.5 \tab Balanced \tab General purpose \cr
+   0.5-0.7 \tab Heavy smoothing \tab Noisy data \cr
+   0.7-1.0 \tab Very smooth \tab Trend extraction \cr
 }
 }
 \examples{

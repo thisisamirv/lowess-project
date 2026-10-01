@@ -11,8 +11,9 @@ use extendr_api::{error::Result, prelude::*};
 use std::cell::RefCell;
 use std::sync::Arc;
 
-use fastLowess::internals::api::{LowessBuilder, LowessResult};
 use fastLowess::internals::binding_support as shared_parse;
+use fastLowess::internals::LowessBuilder;
+use fastLowess::prelude::{IntervalsBuilder, LowessResult};
 
 // ============================================================================
 // Helper Functions
@@ -44,6 +45,45 @@ fn require_non_negative_usize(name: &str, value: i32) -> Result<usize> {
         .map_err(|e| to_r_error(shared_parse::BindingError::invalid_arg(e)))
 }
 
+fn opt_f64(value: Nullable<f64>) -> Option<f64> {
+    match value {
+        NotNull(v) => Some(v),
+        Null => None,
+    }
+}
+
+fn opt_bootstrap(bootstrap: i32) -> Result<Option<usize>> {
+    let n = require_non_negative_usize("bootstrap", bootstrap)?;
+    Ok((n > 0).then_some(n))
+}
+
+// R has no unsigned 64-bit integer, so seeds arrive as doubles; only exact whole numbers are accepted.
+fn opt_seed(seed: Nullable<f64>) -> Result<Option<u64>> {
+    match seed {
+        Null => Ok(None),
+        NotNull(s) if s.is_finite() && s >= 0.0 && s.fract() == 0.0 && s <= 2f64.powi(53) => {
+            Ok(Some(s as u64))
+        }
+        NotNull(s) => Err(to_r_error(shared_parse::BindingError::invalid_arg(
+            format!("seed must be a non-negative whole number no larger than 2^53, got {s}"),
+        ))),
+    }
+}
+
+fn apply_bootstrap_and_seed(
+    mut builder: LowessBuilder<f64>,
+    bootstrap: Option<usize>,
+    seed: Option<u64>,
+) -> LowessBuilder<f64> {
+    if let Some(n_boot) = bootstrap {
+        builder = builder.intervals(IntervalsBuilder::new().bootstrap(n_boot));
+    }
+    if let Some(seed) = seed {
+        builder = builder.seed(seed);
+    }
+    builder
+}
+
 // ============================================================================
 // Stateful API: Lowess
 // ============================================================================
@@ -69,6 +109,7 @@ impl RLowess {
         boundary_policy: &str,
         confidence_intervals: Nullable<f64>,
         prediction_intervals: Nullable<f64>,
+        bootstrap: i32,
         return_diagnostics: bool,
         return_residuals: bool,
         return_robustness_weights: bool,
@@ -79,7 +120,7 @@ impl RLowess {
         cv_method: &str,
         cv_k: i32,
         parallel: bool,
-        cv_seed: Nullable<i32>,
+        seed: Nullable<f64>,
         return_se: bool,
         return_sorted: bool,
         backend: &str,
@@ -90,10 +131,8 @@ impl RLowess {
             NotNull(v) => Some(v),
             Null => None,
         };
-        let seed = match cv_seed {
-            NotNull(s) => Some(require_non_negative_usize("cv_seed", s)? as u64),
-            Null => None,
-        };
+        let bootstrap = opt_bootstrap(bootstrap)?;
+        let seed = opt_seed(seed)?;
         let iterations = require_non_negative_usize("iterations", iterations)?;
         let cv_k = require_positive_usize("cv_k", cv_k)?;
 
@@ -132,7 +171,6 @@ impl RLowess {
                 cv_fractions: fractions.as_deref(),
                 cv_method: Some(cv_method),
                 cv_k: Some(cv_k),
-                cv_seed: seed,
                 backend: Some(backend),
                 missing: Some(missing),
                 retain_model: Some(retain_model),
@@ -144,6 +182,7 @@ impl RLowess {
         } else {
             builder
         };
+        let builder = apply_bootstrap_and_seed(builder, bootstrap, seed);
 
         Ok(Self {
             builder,
@@ -180,37 +219,31 @@ impl RLowess {
         extrapolation: &str,
         max_extrapolation_distance: Nullable<f64>,
         max_neighbor_distance: Nullable<f64>,
+        bootstrap: i32,
+        seed: Nullable<f64>,
     ) -> Result<List> {
+        let bootstrap = opt_bootstrap(bootstrap)?;
+        let seed = opt_seed(seed)?;
         let state_ref = self.predict_state.borrow();
         let Some(state) = state_ref.as_ref() else {
             return Err(to_r_error(shared_parse::BindingError::invalid_arg(
                 "predict() requires retain_model = TRUE and a prior call to fit()".to_string(),
             )));
         };
-        let output = map_invalid_arg(shared_parse::run_predict_state(
+        let output = map_invalid_arg(shared_parse::run_predict_state_with_bootstrap(
             state,
             new_x,
             shared_parse::PredictOptionSet {
                 return_se,
-                confidence_level: match confidence_level {
-                    NotNull(v) => Some(v),
-                    Null => None,
-                },
-                prediction_level: match prediction_level {
-                    NotNull(v) => Some(v),
-                    Null => None,
-                },
+                confidence_level: opt_f64(confidence_level),
+                prediction_level: opt_f64(prediction_level),
                 return_derivative,
                 extrapolation: Some(extrapolation),
-                max_extrapolation_distance: match max_extrapolation_distance {
-                    NotNull(v) => Some(v),
-                    Null => None,
-                },
-                max_neighbor_distance: match max_neighbor_distance {
-                    NotNull(v) => Some(v),
-                    Null => None,
-                },
+                max_extrapolation_distance: opt_f64(max_extrapolation_distance),
+                max_neighbor_distance: opt_f64(max_neighbor_distance),
             },
+            bootstrap,
+            seed,
         ))?;
 
         let mut list_items: Vec<(&str, Robj)> = vec![("y", output.y.into_robj())];
@@ -266,12 +299,16 @@ impl RStreamingLowess {
         return_se: bool,
         confidence_intervals: Nullable<f64>,
         prediction_intervals: Nullable<f64>,
+        bootstrap: i32,
+        seed: Nullable<f64>,
         merge_strategy: &str,
         parallel: bool,
         delta: Nullable<f64>,
         missing: &str,
     ) -> Result<Self> {
         let chunk_size = require_positive_usize("chunk_size", chunk_size)?;
+        let bootstrap = opt_bootstrap(bootstrap)?;
+        let seed = opt_seed(seed)?;
         let overlap_size = match overlap {
             NotNull(o) => Some(require_non_negative_usize("overlap", o)?),
             Null => None,
@@ -318,6 +355,7 @@ impl RStreamingLowess {
         } else {
             builder
         };
+        let builder = apply_bootstrap_and_seed(builder, bootstrap, seed);
 
         let model = map_runtime(shared_parse::build_streaming(
             builder,
@@ -368,10 +406,14 @@ impl ROnlineLowess {
         return_se: bool,
         confidence_intervals: Nullable<f64>,
         prediction_intervals: Nullable<f64>,
+        bootstrap: i32,
+        seed: Nullable<f64>,
         delta: Nullable<f64>,
         missing: &str,
     ) -> Result<Self> {
         let window_capacity = require_positive_usize("window_capacity", window_capacity)?;
+        let bootstrap = opt_bootstrap(bootstrap)?;
+        let seed = opt_seed(seed)?;
         let min_points = require_positive_usize("min_points", min_points)?;
         let iterations = require_non_negative_usize("iterations", iterations)?;
 
@@ -415,6 +457,7 @@ impl ROnlineLowess {
         } else {
             builder
         };
+        let builder = apply_bootstrap_and_seed(builder, bootstrap, seed);
 
         let model = map_runtime(shared_parse::build_online(
             builder,

@@ -63,7 +63,7 @@ test_that("Lowess confidence intervals work", {
     x <- seq(0, 10, length.out = 50)
     y <- sin(x) + rnorm(50, sd = 0.2)
 
-    model <- Lowess(fraction = 0.5, confidence_intervals = 0.95)
+    model <- Lowess(fraction = 0.5, intervals = intervals_opts(confidence = 0.95))
     result <- fit(model, as.double(x), as.double(y))
 
     expect_true("confidence_lower" %in% names(result))
@@ -81,7 +81,7 @@ test_that("Lowess prediction intervals work", {
     x <- seq(0, 10, length.out = 50)
     y <- sin(x) + rnorm(50, sd = 0.2)
 
-    model <- Lowess(fraction = 0.5, prediction_intervals = 0.95)
+    model <- Lowess(fraction = 0.5, intervals = list(prediction = 0.95))
     result <- fit(model, as.double(x), as.double(y))
 
     expect_true("prediction_lower" %in% names(result))
@@ -90,12 +90,49 @@ test_that("Lowess prediction intervals work", {
     expect_length(result$prediction_upper, length(y))
 
     # PI should be wider than CI
-    model_ci <- Lowess(fraction = 0.5, confidence_intervals = 0.95)
+    model_ci <- Lowess(fraction = 0.5, intervals = list(confidence = 0.95))
     result_ci <- fit(model_ci, as.double(x), as.double(y))
     expect_gt(
         mean(result$prediction_upper - result$prediction_lower),
         mean(result_ci$confidence_upper - result_ci$confidence_lower)
     )
+})
+
+test_that("Lowess bootstrap intervals are reproducible with a seed", {
+    set.seed(42)
+    x <- seq(0, 10, length.out = 50)
+    y <- sin(x) + rnorm(50, sd = 0.2)
+
+    make <- function(seed) {
+        Lowess(
+            fraction = 0.5,
+            intervals = intervals_opts(
+                confidence = 0.95,
+                prediction = 0.95,
+                bootstrap = 50
+            ),
+            seed = seed,
+            parallel = FALSE
+        )
+    }
+    r1 <- fit(make(7), as.double(x), as.double(y))
+    r2 <- fit(make(7), as.double(x), as.double(y))
+    r0a <- fit(make(0), as.double(x), as.double(y))
+    r0b <- fit(make(0), as.double(x), as.double(y))
+
+    expect_length(r1$confidence_lower, length(y))
+    expect_length(r1$prediction_upper, length(y))
+    expect_identical(r1$confidence_lower, r2$confidence_lower)
+    expect_identical(r1$prediction_upper, r2$prediction_upper)
+    expect_identical(r0a$confidence_lower, r0b$confidence_lower)
+})
+
+test_that("Lowess rejects invalid intervals and seed values", {
+    expect_error(Lowess(intervals = list(level = 0.95)), "Invalid `intervals`")
+    expect_error(Lowess(intervals = 0.95), "`intervals` must be")
+    expect_error(intervals_opts(bootstrap = -1), "non-negative")
+    expect_error(Lowess(seed = -1), "seed must be")
+    expect_error(Lowess(seed = 1.5), "seed must be")
 })
 
 test_that("Lowess diagnostics work", {
@@ -240,9 +277,9 @@ test_that("Lowess cross-validation works", {
     result <- fit(
         Lowess(
             cv = cv_opts(
-                fractions = c(0.2, 0.3, 0.5, 0.7),
                 method = "kfold",
-                k = 5
+                k = 5,
+                fractions = c(0.2, 0.3, 0.5, 0.7)
             )
         ),
         as.double(x),
@@ -254,7 +291,7 @@ test_that("Lowess cross-validation works", {
     expect_true(result$fraction_used %in% c(0.2, 0.3, 0.5, 0.7))
 })
 
-test_that("Lowess cross-validation respects cv_seed for reproducibility", {
+test_that("Lowess cross-validation respects seed for reproducibility", {
     set.seed(123)
     x <- seq(0, 10, length.out = 60)
     y <- sin(x) + rnorm(60, sd = 0.15)
@@ -263,11 +300,11 @@ test_that("Lowess cross-validation respects cv_seed for reproducibility", {
     result1 <- fit(
         Lowess(
             cv = cv_opts(
-                fractions = c(0.3, 0.5, 0.7),
                 method = "kfold",
                 k = 5,
-                seed = 42L
-            )
+                fractions = c(0.3, 0.5, 0.7)
+            ),
+            seed = 42L
         ),
         as.double(x),
         as.double(y)
@@ -276,11 +313,11 @@ test_that("Lowess cross-validation respects cv_seed for reproducibility", {
     result2 <- fit(
         Lowess(
             cv = cv_opts(
-                fractions = c(0.3, 0.5, 0.7),
                 method = "kfold",
                 k = 5,
-                seed = 42L
-            )
+                fractions = c(0.3, 0.5, 0.7)
+            ),
+            seed = 42L
         ),
         as.double(x),
         as.double(y)
@@ -294,11 +331,11 @@ test_that("Lowess cross-validation respects cv_seed for reproducibility", {
     result3 <- fit(
         Lowess(
             cv = cv_opts(
-                fractions = c(0.3, 0.5, 0.7),
                 method = "kfold",
                 k = 5,
-                seed = 43L
-            )
+                fractions = c(0.3, 0.5, 0.7)
+            ),
+            seed = 43L
         ),
         as.double(x),
         as.double(y)
@@ -315,11 +352,11 @@ test_that("Lowess cross-validation respects cv_seed for reproducibility", {
     result_null <- fit(
         Lowess(
             cv = cv_opts(
-                fractions = c(0.3, 0.5, 0.7),
                 method = "kfold",
                 k = 5,
-                seed = NULL
-            )
+                fractions = c(0.3, 0.5, 0.7)
+            ),
+            seed = NULL
         ),
         as.double(x),
         as.double(y)
@@ -339,11 +376,11 @@ test_that("G5.9b CV-selected fraction is stable across different seeds", {
             fit(
                 Lowess(
                     cv = cv_opts(
-                        fractions = c(0.2, 0.3, 0.4, 0.5),
                         method = "kfold",
                         k = 5,
-                        seed = s
-                    )
+                        fractions = c(0.2, 0.3, 0.4, 0.5)
+                    ),
+                    seed = s
                 ),
                 as.double(x),
                 as.double(y)

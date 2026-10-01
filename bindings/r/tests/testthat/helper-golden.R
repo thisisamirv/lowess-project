@@ -55,8 +55,7 @@ golden_batch_intervals <- function(d) {
         iterations = 2L,
         boundary_policy = "extend",
         outputs = c("se", "derivative"),
-        confidence_intervals = 0.9,
-        prediction_intervals = 0.9,
+        intervals = intervals_opts(confidence = 0.9, prediction = 0.9),
         parallel = FALSE
     )
     res <- fit(model, d$x, d$y)

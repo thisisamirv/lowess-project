@@ -233,8 +233,7 @@ test_that("OnlineLowess return_se/ci/pi work", {
         min_points = 3,
         update_mode = "full",
         outputs = "se",
-        confidence_intervals = 0.95,
-        prediction_intervals = 0.95
+        intervals = intervals_opts(confidence = 0.95, prediction = 0.95)
     )
     results <- lapply(seq_along(x), function(i) add_point(ol, x[[i]], y[[i]]))
     non_null <- Filter(Negate(is.null), results)
@@ -246,4 +245,29 @@ test_that("OnlineLowess return_se/ci/pi work", {
     expect_false(is.null(last$confidence_upper))
     expect_false(is.null(last$prediction_lower))
     expect_false(is.null(last$prediction_upper))
+})
+
+test_that("OnlineLowess bootstrap intervals are reproducible with a seed", {
+    set.seed(42)
+    x <- as.double(1:30)
+    y <- sin(x / 10) + rnorm(30, sd = 0.1)
+
+    run <- function() {
+        ol <- OnlineLowess(
+            fraction = 0.5,
+            window_capacity = 10,
+            min_points = 3,
+            update_mode = "full",
+            intervals = intervals_opts(confidence = 0.95, bootstrap = 30),
+            seed = 5
+        )
+        res <- lapply(seq_along(x), function(i) add_point(ol, x[[i]], y[[i]]))
+        Filter(Negate(is.null), res)
+    }
+    r1 <- run()
+    r2 <- run()
+    last1 <- r1[[length(r1)]]
+    last2 <- r2[[length(r2)]]
+    expect_false(is.null(last1$confidence_lower))
+    expect_identical(last1$confidence_lower, last2$confidence_lower)
 })

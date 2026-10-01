@@ -5,15 +5,15 @@
 \title{Predict from a fitted LOWESS model at out-of-sample points}
 \usage{
 \method{predict}{Lowess}(
-    object,
-    new_x,
-    outputs = NULL,
-    confidence_level = NULL,
-    prediction_level = NULL,
-    extrapolation = "clamp",
-    max_extrapolation_distance = NULL,
-    max_neighbor_distance = NULL,
-    ...
+  object,
+  new_x,
+  outputs = NULL,
+  intervals = NULL,
+  seed = NULL,
+  extrapolation = "clamp",
+  max_extrapolation_distance = NULL,
+  max_neighbor_distance = NULL,
+  ...
 )
 }
 \arguments{
@@ -26,11 +26,13 @@
 \code{"se"} and/or \code{"derivative"}. \code{NULL} (default)
 returns only predicted values.}
 
-\item{confidence_level}{Confidence interval coverage level (e.g. 0.95).
-\code{NULL} (default) disables it.}
+\item{intervals}{Interval options, created with
+\code{\link{intervals_opts}} (or a named list with any of
+\code{confidence}, \code{prediction}, \code{bootstrap}). \code{NULL}
+(default) disables intervals.}
 
-\item{prediction_level}{Prediction interval coverage level (e.g. 0.95).
-\code{NULL} (default) disables it.}
+\item{seed}{Non-negative whole-number seed for bootstrap resampling.
+\code{NULL} (default) uses a random seed.}
 
 \item{extrapolation}{Behavior for query points outside the training range:
 \code{"clamp"} (default), \code{"linear"}, or \code{"error"}.}

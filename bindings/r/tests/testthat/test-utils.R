@@ -22,25 +22,24 @@ test_that("cv_opts validates required and non-empty fractions", {
         "`fractions` must be a numeric vector of candidate fractions"
     )
     expect_error(
-        cv_opts(NULL),
+        cv_opts(fractions = NULL),
         "`fractions` must be a numeric vector of candidate fractions"
     )
     expect_error(
-        cv_opts("0.5"),
+        cv_opts(fractions = "0.5"),
         "`fractions` must be a non-empty numeric vector"
     )
     expect_error(
-        cv_opts(numeric()),
+        cv_opts(fractions = numeric()),
         "`fractions` must be a non-empty numeric vector"
     )
 })
 
 test_that("cv_opts returns coerced cross-validation options", {
     result <- cv_opts(
-        c(0.2, 0.5),
         method = factor("kfold"),
         k = 3.8,
-        seed = 42L
+        fractions = c(0.2, 0.5)
     )
 
     expect_s3_class(result, "cv_opts")
@@ -48,7 +47,24 @@ test_that("cv_opts returns coerced cross-validation options", {
     expect_identical(result$fractions, c(0.2, 0.5))
     expect_identical(result$method, "kfold")
     expect_identical(result$k, 3L)
-    expect_identical(result$seed, 42L)
+    expect_null(result$seed)
+})
+
+test_that("intervals_opts and expand_intervals build grouped interval options", {
+    result <- intervals_opts(confidence = 0.9, bootstrap = 20)
+    expect_s3_class(result, "intervals_opts")
+    expect_identical(result$bootstrap, 20L)
+
+    expect_identical(
+        expand_intervals(NULL),
+        list(confidence = NULL, prediction = NULL, bootstrap = 0L)
+    )
+    expect_identical(
+        expand_intervals(list(prediction = 0.8)),
+        list(confidence = NULL, prediction = 0.8, bootstrap = 0L)
+    )
+    expect_error(expand_intervals(list(0.95)), "must be a named list")
+    expect_error(expand_intervals(list(foo = 1)), "Invalid `intervals` key")
 })
 
 test_that("parse_outputs_flags handles NULL and valid output names", {
@@ -195,7 +211,8 @@ test_that("Lowess constructor coerces all param types via env_args", {
         weight_function = "tricube",
         parallel = FALSE,
         delta = NULL,
-        confidence_intervals = 0.95
+        intervals = intervals_opts(confidence = 0.95),
+        seed = 1
     )
     expect_s3_class(model, "Lowess")
     expect_identical(model$params$fraction, 0.4)

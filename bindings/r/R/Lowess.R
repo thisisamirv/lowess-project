@@ -32,15 +32,11 @@
 #' @srrstats {RE4.11} Goodness-of-fit metrics via return_diagnostics.
 #' @srrstats {RE5.0} O(n) scaling documented in README.
 #'
-#' @param ... Not used; forces all subsequent arguments to be named.
 #' @param fraction Smoothing fraction, greater than 0 and up to 1. Default:
 #'   0.67. See Details for guidance on choosing a value.
+#' @param ... Not used; forces all subsequent arguments to be named.
 #' @param iterations Number of robustness iterations, between 0 and 1000
 #'   (inclusive). Default: 3.
-#' @param delta Interpolation distance threshold, as a non-negative fraction
-#'   of the x range; points within \code{delta} of each other on x share the
-#'   same local fit. \code{NULL} (default) sets it automatically to 1/100th
-#'   of the x range.
 #' @param weight_function Kernel weight function. One of \code{"tricube"}
 #'   (default), \code{"gaussian"}, \code{"uniform"} (alias: \code{"boxcar"}),
 #'   \code{"cosine"}, \code{"epanechnikov"},
@@ -48,43 +44,49 @@
 #'   \code{"triangle"} (alias: \code{"triangular"}).
 #' @param robustness_method Outlier downweighting method: \code{"bisquare"}
 #'   (default; alias: \code{"biweight"}), \code{"huber"}, or \code{"talwar"}.
-#' @param scaling_method Residual scale estimation for robustness weights:
-#'   \code{"mad"} (default; alias: \code{"median_absolute_deviation"}),
-#'   \code{"mar"} (alias: \code{"median_absolute_residual"}), or
-#'   \code{"mean"} (alias: \code{"mean_absolute_residual"}).
-#' @param boundary_policy Boundary handling strategy: \code{"extend"}
-#'   (default; alias: \code{"pad"}), \code{"reflect"} (alias:
-#'   \code{"mirror"}), \code{"zero"}, or
-#'   \code{"noboundary"} (alias: \code{"none"}).
-#' @param confidence_intervals Confidence level for confidence intervals,
-#'   greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
-#'   disables confidence intervals.
-#' @param prediction_intervals Confidence level for prediction intervals,
-#'   greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
-#'   disables prediction intervals.
-#' @param outputs Character vector selecting optional output components:
-#'   \code{"diagnostics"}, \code{"residuals"}, \code{"weights"} (robustness
-#'   weights), \code{"derivative"}, \code{"se"} (standard errors), and/or
-#'   \code{"sorted"}. \code{NULL} (default) returns only the core result
-#'   (\code{x}, \code{y}, and fit metadata).
+#' @param delta Interpolation distance threshold, as a non-negative fraction
+#'   of the x range; points within \code{delta} of each other on x share the
+#'   same local fit. \code{NULL} (default) sets it automatically to 1/100th
+#'   of the x range.
 #' @param zero_weight_fallback Fallback policy when all robustness weights drop
 #'   to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
 #'   \code{"mean"}), \code{"return_original"} (alias: \code{"original"}), or
 #'   \code{"return_none"} (alias: \code{"none"}).
+#' @param boundary_policy Boundary handling strategy: \code{"extend"}
+#'   (default; alias: \code{"pad"}), \code{"reflect"} (alias:
+#'   \code{"mirror"}), \code{"zero"}, or
+#'   \code{"noboundary"} (alias: \code{"none"}).
+#' @param scaling_method Residual scale estimation for robustness weights:
+#'   \code{"mad"} (default; alias: \code{"median_absolute_deviation"}),
+#'   \code{"mar"} (alias: \code{"median_absolute_residual"}), or
+#'   \code{"mean"} (alias: \code{"mean_absolute_residual"}).
 #' @param auto_converge Convergence tolerance for early stopping of robustness
 #'   iterations. \code{NULL} (default) disables early stopping.
-#' @param cv Cross-validation options, created with \code{\link{cv_opts}}:
-#'   e.g. \code{cv = cv_opts(fractions = c(0.2, 0.3, 0.5))}. \code{NULL}
-#'   (default) disables cross-validation.
+#' @param missing Policy for non-finite (NaN/Infinity) values in input data:
+#'   \code{"error"} (default) raises an error, \code{"drop"} silently removes
+#'   affected observations before fitting.
 #' @param parallel Logical; enable parallel processing. Default: \code{TRUE}.
 #' @param backend Execution backend: \code{"cpu"} (default) or \code{"gpu"}.
 #'   GPU support requires the package to be built locally with
 #'   \code{WITH_GPU=1} (see \code{bindings/r/Makefile}) and a
 #'   Vulkan/Metal/DX12-capable GPU driver; not available in released
 #'   CRAN/Bioconductor binaries.
-#' @param missing Policy for non-finite (NaN/Infinity) values in input data:
-#'   \code{"error"} (default) raises an error, \code{"drop"} silently removes
-#'   affected observations before fitting.
+#' @param outputs Character vector selecting optional output components:
+#'   \code{"se"} (standard errors), \code{"diagnostics"},
+#'   \code{"residuals"}, \code{"weights"} (robustness weights),
+#'   \code{"derivative"}, and/or \code{"sorted"}. \code{NULL} (default)
+#'   returns only the core result (\code{x}, \code{y}, and fit metadata).
+#' @param intervals Interval options, created with
+#'   \code{\link{intervals_opts}} (or a named list with any of
+#'   \code{confidence}, \code{prediction}, \code{bootstrap}): e.g.
+#'   \code{intervals = intervals_opts(confidence = 0.95, bootstrap = 200)}.
+#'   \code{NULL} (default) disables intervals.
+#' @param cv Cross-validation options, created with \code{\link{cv_opts}}:
+#'   e.g. \code{cv = cv_opts(method = "kfold", k = 5, fractions = c(0.2, 0.3, 0.5))}.
+#'   \code{NULL} (default) disables cross-validation.
+#' @param seed Non-negative whole-number seed shared by cross-validation fold
+#'   assignment and bootstrap resampling, for reproducible results.
+#'   \code{NULL} (default) uses a random seed.
 #' @param retain_model Logical; if \code{TRUE}, retain the fitted model's
 #'   training data, enabling \code{\link{predict.Lowess}} for out-of-sample
 #'   prediction. Default: \code{FALSE}.
@@ -102,21 +104,21 @@ Lowess <- function(
     fraction = 0.67,
     ...,
     iterations = 3L,
-    delta = NULL,
     weight_function = "tricube",
     robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
+    delta = NULL,
     zero_weight_fallback = "use_local_mean",
+    boundary_policy = "extend",
+    scaling_method = "mad",
     auto_converge = NULL,
+    missing = "error",
     parallel = TRUE,
     backend = "cpu",
-    missing = "error",
-    retain_model = FALSE,
     outputs = NULL,
-    cv = NULL
+    intervals = NULL,
+    cv = NULL,
+    seed = NULL,
+    retain_model = FALSE
 ) {
     reject_extra_positional_args(sys.call(), "fraction")
     check_gpu_backend(backend)
@@ -125,7 +127,7 @@ Lowess <- function(
     # Expand `return` into the flat boolean flags the Rust FFI expects.
     flags <- parse_outputs_flags(
         outputs,
-        c("diagnostics", "residuals", "weights", "derivative", "se", "sorted")
+        c("se", "diagnostics", "residuals", "weights", "derivative", "sorted")
     )
     return_diagnostics <- flags[["diagnostics"]]
     return_residuals <- flags[["residuals"]]
@@ -134,17 +136,20 @@ Lowess <- function(
     return_se <- flags[["se"]]
     return_sorted <- flags[["sorted"]]
 
+    iv <- expand_intervals(intervals)
+    confidence_intervals <- iv$confidence
+    prediction_intervals <- iv$prediction
+    bootstrap <- iv$bootstrap
+
     # Expand `cv` into the flat FFI args.
     if (is.null(cv)) {
         cv_fractions <- NULL
         cv_method <- "kfold"
         cv_k <- 5L
-        cv_seed <- NULL
     } else {
         cv_fractions <- cv$fractions
         cv_method <- if (is.null(cv$method)) "kfold" else cv$method
         cv_k <- if (is.null(cv$k)) 5L else cv$k
-        cv_seed <- if (is.null(cv$seed)) NULL else cv$seed
     }
 
     handle <- do.call(RLowess$new, env_args(lowess_params))
@@ -173,19 +178,21 @@ Lowess <- function(
 #' (\code{cv = NULL}); supplying \code{cv_opts()} enables it and lets the
 #' model pick the best smoothing fraction from the candidates.
 #'
-#' @param fractions Numeric vector of candidate smoothing fractions, each
-#'   greater than 0 and up to 1 (e.g. \code{c(0.2, 0.3, 0.5)}).
 #' @param method Cross-validation method: \code{"kfold"} (default) or
 #'   \code{"loocv"}.
 #' @param k Number of folds for k-fold cross-validation. Default: 5.
-#' @param seed Integer seed for reproducible fold assignment. \code{NULL}
-#'   (default) uses a random seed.
+#' @param fractions Numeric vector of candidate smoothing fractions, each
+#'   greater than 0 and up to 1 (e.g. \code{c(0.2, 0.3, 0.5)}).
 #'
 #' @return A \code{cv_opts} list for \code{Lowess(cv = ...)}.
+#'   Use \code{Lowess(seed = ...)} for reproducible fold assignment.
 #' @examples
-#' model <- Lowess(cv = cv_opts(fractions = c(0.2, 0.3, 0.5)))
+#' model <- Lowess(
+#'     cv = cv_opts(method = "kfold", k = 5, fractions = c(0.2, 0.3, 0.5)),
+#'     seed = 42
+#' )
 #' @export
-cv_opts <- function(fractions, method = "kfold", k = 5L, seed = NULL) {
+cv_opts <- function(method = "kfold", k = 5L, fractions) {
     if (missing(fractions) || is.null(fractions)) {
         stop(
             "`fractions` must be a numeric vector of candidate fractions",
@@ -197,11 +204,43 @@ cv_opts <- function(fractions, method = "kfold", k = 5L, seed = NULL) {
     }
     structure(
         list(
-            fractions = as.double(fractions),
             method = as.character(method),
             k = as.integer(k),
-            seed = seed
+            fractions = as.double(fractions)
         ),
         class = "cv_opts"
+    )
+}
+
+#' Interval options for LOWESS models
+#'
+#' @description
+#' Build an interval options list to pass to \code{intervals = ...} in
+#' \code{\link{Lowess}}, \code{\link{StreamingLowess}},
+#' \code{\link{OnlineLowess}}, or \code{\link{predict.Lowess}}.
+#'
+#' @param confidence Confidence level for confidence intervals, greater than
+#'   0 and less than 1 (e.g. 0.95). \code{NULL} (default) disables them.
+#' @param prediction Confidence level for prediction intervals, greater than
+#'   0 and less than 1 (e.g. 0.95). \code{NULL} (default) disables them.
+#' @param bootstrap Number of bootstrap resamples used to compute the
+#'   intervals. \code{0} (default) uses the analytic intervals.
+#'
+#' @return An \code{intervals_opts} list.
+#' @examples
+#' model <- Lowess(
+#'     intervals = intervals_opts(confidence = 0.95, bootstrap = 200),
+#'     seed = 42
+#' )
+#' @export
+intervals_opts <- function(confidence = NULL, prediction = NULL, bootstrap = 0L) {
+    validate_optional_count(bootstrap, "bootstrap")
+    structure(
+        list(
+            confidence = confidence,
+            prediction = prediction,
+            bootstrap = as.integer(bootstrap)
+        ),
+        class = "intervals_opts"
     )
 }

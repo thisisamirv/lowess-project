@@ -23,10 +23,10 @@ test_that("Lowess rejects invalid inputs", {
         "iterations must be a non-negative integer"
     )
 
-    # Invalid cv_seed (negative rejected by require_non_negative_usize)
+    # Invalid seed (negative rejected by the Rust seed validator)
     expect_error(
-        Lowess(cv = cv_opts(fractions = c(0.3, 0.5), seed = -1)),
-        "cv_seed must be non-negative"
+        Lowess(cv = cv_opts(fractions = c(0.3, 0.5)), seed = -1),
+        "seed must be a non-negative whole number"
     )
 
     # Mismatched lengths at fit time
@@ -40,7 +40,7 @@ test_that("OnlineLowess rejects invalid inputs", {
     # Unnamed positional arguments are forbidden
     expect_error(
         OnlineLowess(0.5, 100),
-        "All arguments after 'min_points' must be named"
+        "All arguments after 'fraction' must be named"
     )
 
     # Invalid parameters
@@ -67,7 +67,7 @@ test_that("StreamingLowess rejects invalid inputs", {
     # Unnamed positional arguments are forbidden
     expect_error(
         StreamingLowess(0.5, 100),
-        "All arguments after 'chunk_size' must be named"
+        "All arguments after 'fraction' must be named"
     )
 
     # Invalid parameters

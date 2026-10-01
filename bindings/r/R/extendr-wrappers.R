@@ -9,21 +9,22 @@ RLowess <- new.env(parent = emptyenv())
 RLowess$new <- function(
     fraction, iterations, delta, weight_function,
     robustness_method, scaling_method, boundary_policy,
-    confidence_intervals, prediction_intervals,
+    confidence_intervals, prediction_intervals, bootstrap,
     return_diagnostics, return_residuals,
     return_robustness_weights, return_derivative, zero_weight_fallback,
     auto_converge, cv_fractions, cv_method, cv_k, parallel,
-    cv_seed, return_se, return_sorted, backend, missing,
+    seed, return_se, return_sorted, backend, missing,
     retain_model
 ) {
     .Call(
         wrap__RLowess__new, fraction, iterations, delta, weight_function,
         robustness_method, scaling_method, boundary_policy,
-        confidence_intervals, prediction_intervals, return_diagnostics,
+        confidence_intervals, prediction_intervals, bootstrap,
+        return_diagnostics,
         return_residuals, return_robustness_weights, return_derivative,
         zero_weight_fallback,
         auto_converge, cv_fractions, cv_method, cv_k, parallel,
-        cv_seed, return_se, return_sorted, backend, missing,
+        seed, return_se, return_sorted, backend, missing,
         retain_model
     )
 }
@@ -32,8 +33,8 @@ RLowess$fit <- function(x, y, custom_weights = NULL) {
     .Call(wrap__RLowess__fit, self, x, y, custom_weights)
 }
 
-RLowess$predict <- function(new_x, return_se, confidence_level, prediction_level, return_derivative, extrapolation, max_extrapolation_distance, max_neighbor_distance) {
-    .Call(wrap__RLowess__predict, self, new_x, return_se, confidence_level, prediction_level, return_derivative, extrapolation, max_extrapolation_distance, max_neighbor_distance)
+RLowess$predict <- function(new_x, return_se, confidence_level, prediction_level, return_derivative, extrapolation, max_extrapolation_distance, max_neighbor_distance, bootstrap, seed) {
+    .Call(wrap__RLowess__predict, self, new_x, return_se, confidence_level, prediction_level, return_derivative, extrapolation, max_extrapolation_distance, max_neighbor_distance, bootstrap, seed)
 }
 
 #' @export
@@ -54,7 +55,7 @@ RStreamingLowess$new <- function(
     scaling_method, boundary_policy, zero_weight_fallback, auto_converge,
     return_diagnostics, return_residuals, return_robustness_weights,
     return_derivative, return_se, confidence_intervals, prediction_intervals,
-    merge_strategy, parallel,
+    bootstrap, seed, merge_strategy, parallel,
     delta, missing
 ) {
     .Call(
@@ -63,7 +64,7 @@ RStreamingLowess$new <- function(
         boundary_policy, zero_weight_fallback, auto_converge,
         return_diagnostics, return_residuals, return_robustness_weights,
         return_derivative, return_se, confidence_intervals, prediction_intervals,
-        merge_strategy, parallel,
+        bootstrap, seed, merge_strategy, parallel,
         delta, missing
     )
 }
@@ -94,14 +95,15 @@ ROnlineLowess$new <- function(
     scaling_method, boundary_policy, zero_weight_fallback, update_mode,
     auto_converge, return_robustness_weights, return_derivative,
     return_se, confidence_intervals, prediction_intervals,
-    delta, missing
+    bootstrap, seed, delta, missing
 ) {
     .Call(
         wrap__ROnlineLowess__new, fraction, window_capacity, min_points,
         iterations, weight_function, robustness_method, scaling_method,
         boundary_policy, zero_weight_fallback, update_mode, auto_converge,
         return_robustness_weights, return_derivative,
-        return_se, confidence_intervals, prediction_intervals, delta, missing
+        return_se, confidence_intervals, prediction_intervals,
+        bootstrap, seed, delta, missing
     )
 }
 

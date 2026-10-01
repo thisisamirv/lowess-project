@@ -144,8 +144,7 @@ test_that("StreamingLowess return_se/ci/pi work", {
         fraction = 0.2,
         chunk_size = 50,
         outputs = "se",
-        confidence_intervals = 0.95,
-        prediction_intervals = 0.95
+        intervals = intervals_opts(confidence = 0.95, prediction = 0.95)
     )
     chunk_result <- process_chunk(sl, as.double(x), as.double(y))
     final_result <- finalize(sl)
@@ -156,4 +155,25 @@ test_that("StreamingLowess return_se/ci/pi work", {
     expect_false(is.null(chunk_result$prediction_lower))
     expect_false(is.null(chunk_result$prediction_upper))
     expect_false(is.null(final_result$standard_errors))
+})
+
+test_that("StreamingLowess bootstrap intervals are reproducible with a seed", {
+    set.seed(42)
+    x <- seq(0, 10, length.out = 120)
+    y <- sin(x) + rnorm(120, sd = 0.1)
+
+    run <- function() {
+        sl <- StreamingLowess(
+            fraction = 0.3,
+            chunk_size = 60,
+            parallel = FALSE,
+            intervals = intervals_opts(confidence = 0.95, bootstrap = 30),
+            seed = 11
+        )
+        process_chunk(sl, as.double(x), as.double(y))
+    }
+    r1 <- run()
+    r2 <- run()
+    expect_false(is.null(r1$confidence_lower))
+    expect_identical(r1$confidence_lower, r2$confidence_lower)
 })
