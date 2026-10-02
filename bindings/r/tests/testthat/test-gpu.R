@@ -138,6 +138,123 @@ test_that("gpu_asset_info rejects unsupported R GPU targets", {
     )
 })
 
+test_that("GPU libc detection follows R's linked runtime", {
+    gpu_is_musl <- getFromNamespace("gpu_is_musl", "rfastlowess")
+    testthat::local_mocked_bindings(
+        Sys.which = function(...) "ldd",
+        Sys.glob = function(...) "/lib/ld-musl-x86_64.so.1",
+        system2 = function(...) "libc.so.6 => /lib/libc.so.6",
+        .package = "base"
+    )
+    expect_false(gpu_is_musl("x86_64-pc-linux-gnu", "Linux"))
+    info <- gpu_asset_info("1.0.0", "Linux", "x86_64", "x86_64-pc-linux-gnu")
+    expect_true(endsWith(info$asset, "linux-x86_64.so"))
+})
+
+test_that("GPU libc detection recognizes musl and rejects unknown runtimes", {
+    gpu_is_musl <- getFromNamespace("gpu_is_musl", "rfastlowess")
+    testthat::local_mocked_bindings(
+        Sys.which = function(...) "ldd",
+        system2 = function(...) "libc.musl-aarch64.so.1 => /lib/ld-musl-aarch64.so.1",
+        .package = "base"
+    )
+    expect_true(gpu_is_musl("aarch64-unknown-linux-gnu", "Linux"))
+    expect_true(gpu_is_musl("aarch64-alpine-linux-musl", "Linux"))
+    expect_false(gpu_is_musl("aarch64-w64-mingw32", "Windows"))
+})
+
+test_that("GPU libc detection does not guess when inspection fails", {
+    gpu_is_musl <- getFromNamespace("gpu_is_musl", "rfastlowess")
+    testthat::local_mocked_bindings(
+        Sys.which = function(...) "",
+        .package = "base"
+    )
+    expect_error(gpu_is_musl("x86_64-pc-linux-gnu", "Linux"), "Cannot determine")
+})
+
+test_that("GPU destinations use canonical names and unique Windows sidecars", {
+    destination <- getFromNamespace("gpu_install_destination", "rfastlowess")
+    lib_dir <- tempfile()
+    dir.create(lib_dir)
+    on.exit(unlink(lib_dir, recursive = TRUE), add = TRUE)
+    expect_identical(
+        destination(lib_dir, "unix", "1.2.3"),
+        file.path(lib_dir, "rfastlowess.so")
+    )
+    first <- destination(lib_dir, "windows", "1.2.3")
+    second <- destination(lib_dir, "windows", "1.2.3")
+    expect_identical(basename(first), "rfastlowess.dll")
+    expect_true(startsWith(basename(dirname(first)), "gpu-v1.2.3-"))
+    expect_false(identical(first, second))
+})
+
+test_that("Windows installation preserves a loaded primary DLL", {
+    skip_if_not(identical(.Platform$OS.type, "windows"))
+    lib_dir <- tempfile()
+    dir.create(lib_dir)
+    on.exit(unlink(lib_dir, recursive = TRUE), add = TRUE)
+    primary <- file.path(lib_dir, "rfastlowess.dll")
+    native <- getFromNamespace("wrap__gpu_enabled", "rfastlowess")
+    file.copy(native$dll[["path"]], primary)
+    dll <- dyn.load(primary)
+    on.exit(dyn.unload(dll[["path"]]), add = TRUE)
+    original <- readBin(primary, "raw", n = file.size(primary))
+    source <- tempfile(fileext = ".renamed")
+    writeLines("validated candidate", source)
+    on.exit(unlink(source), add = TRUE)
+    testthat::local_mocked_bindings(
+        gpu_library_enabled = function(...) TRUE,
+        .package = "rfastlowess"
+    )
+    expect_true(install_gpu_local(source, TRUE, lib_dir))
+    expect_identical(readBin(primary, "raw", n = file.size(primary)), original)
+    installed <- list.files(lib_dir, recursive = TRUE, full.names = TRUE)
+    expect_length(installed, 2L)
+    expect_true(all(basename(installed) == "rfastlowess.dll"))
+})
+
+test_that("sidecar activation rebinds native routines for the matching version", {
+    loader <- getFromNamespace("gpu_load_sidecar", "rfastlowess")
+    destination <- getFromNamespace("gpu_install_destination", "rfastlowess")
+    lib_dir <- tempfile()
+    dir.create(lib_dir)
+    on.exit(unlink(lib_dir, recursive = TRUE), add = TRUE)
+    native <- getFromNamespace("wrap__gpu_enabled", "rfastlowess")
+    path <- destination(lib_dir, "windows", "1.2.3")
+    file.copy(native$dll[["path"]], path)
+    namespace <- new.env(parent = emptyenv())
+    namespace$wrap__gpu_enabled <- native
+    testthat::local_mocked_bindings(
+        gpu_library_enabled = function(...) TRUE,
+        .package = "rfastlowess"
+    )
+    expect_null(loader(lib_dir, namespace, "9.9.9", "windows"))
+    expect_null(loader(lib_dir, namespace, "1.2.3", "unix"))
+    loaded <- loader(lib_dir, namespace, "1.2.3", "windows")
+    on.exit(dyn.unload(loaded), add = TRUE)
+    expect_identical(namespace$wrap__gpu_enabled$dll[["path"]], loaded)
+    expect_identical(.Call(namespace$wrap__gpu_enabled), .Call(native))
+})
+
+test_that("incompatible sidecars leave existing native routines unchanged", {
+    loader <- getFromNamespace("gpu_load_sidecar", "rfastlowess")
+    destination <- getFromNamespace("gpu_install_destination", "rfastlowess")
+    lib_dir <- tempfile()
+    dir.create(lib_dir)
+    on.exit(unlink(lib_dir, recursive = TRUE), add = TRUE)
+    native <- getFromNamespace("wrap__gpu_enabled", "rfastlowess")
+    path <- destination(lib_dir, "windows", "1.2.3")
+    file.copy(native$dll[["path"]], path)
+    namespace <- new.env(parent = emptyenv())
+    namespace$wrap__missing_api <- "original"
+    testthat::local_mocked_bindings(
+        gpu_library_enabled = function(...) TRUE,
+        .package = "rfastlowess"
+    )
+    expect_error(loader(lib_dir, namespace, "1.2.3", "windows"), "incompatible")
+    expect_identical(namespace$wrap__missing_api, "original")
+})
+
 # ── gpu_confirm_download ─────────────────────────────────────────────────────
 
 test_that("gpu_confirm_download returns TRUE when yes = TRUE", {
@@ -319,6 +436,7 @@ test_that("install_gpu downloads and installs when confirmed", {
     skip_if(gpu_available(), "GPU backend is active in this build")
     testthat::local_mocked_bindings(
         gpu_confirm_download = function(yes, asset, repo) TRUE,
+        gpu_install_destination = function(...) "mock-destination",
         gpu_download_to = function(url, ext, dest) invisible(TRUE)
     )
     expect_message(
@@ -374,13 +492,25 @@ test_that("install_gpu_local aborts when confirmation is declined", {
     on.exit(unlink(src), add = TRUE)
     testthat::local_mocked_bindings(
         gpu_confirm_local_install = function(yes, local_path) FALSE,
-        gpu_library_enabled = function(path) TRUE
+        gpu_library_enabled = function(path) stop("Must not probe before confirmation")
     )
     expect_message(
         result <- install_gpu_local(src, FALSE, tempdir()),
         "Aborted"
     )
     expect_false(isTRUE(result))
+})
+
+test_that("non-interactive local installs require consent before probing", {
+    src <- tempfile()
+    file.create(src)
+    on.exit(unlink(src), add = TRUE)
+    testthat::local_mocked_bindings(
+        is_interactive = function() FALSE,
+        gpu_library_enabled = function(...) stop("Candidate must not execute"),
+        .package = "rfastlowess"
+    )
+    expect_error(install_gpu_local(src, FALSE, tempdir()), "requires confirmation")
 })
 
 test_that("install_gpu_local rejects non-GPU files", {
@@ -415,7 +545,9 @@ test_that("install_gpu_local installs a validated GPU library", {
         "GPU backend installed at"
     )
     expect_true(isTRUE(result))
-    expect_true(file.exists(file.path(lib_dir, "rfastlowess.so")))
+    installed <- list.files(lib_dir, recursive = TRUE, full.names = TRUE)
+    expect_length(installed, 1L)
+    expect_identical(basename(installed), paste0("rfastlowess", .Platform$dynlib.ext))
 })
 
 test_that("install_gpu dispatches to install_gpu_local for local_path", {

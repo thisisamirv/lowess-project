@@ -155,6 +155,7 @@ Lowess <- function(
         cv_method <- if (is.null(cv$method)) "kfold" else cv$method
         cv_k <- if (is.null(cv$k)) 5L else cv$k
     }
+    validate_optional_count(cv_k, "cv.k", allow_zero = FALSE)
 
     handle <- do.call(RLowess$new, env_args(lowess_params))
 

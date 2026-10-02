@@ -21,6 +21,8 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Validate Streaming/Online iterations and plain-list CV fold counts before coercion, and accept integer custom weights.
+* Detect R's linked libc, confirm local GPU installs before probing candidates, use canonical library filenames, and activate versioned Windows GPU sidecars on restart without replacing loaded DLLs.
 * Fixed global OLS fits treating predictor values with a large offset as degenerate; translated inputs now retain their fitted slope.
 * Fixed fraction-1 global fits ignoring custom weights, including when Batch sorts observations by x.
 * Fixed Batch `missing = "drop"` accepting custom weights with a length different from the original input; weights are validated before rows are dropped.

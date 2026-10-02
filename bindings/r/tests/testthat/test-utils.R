@@ -79,6 +79,29 @@ test_that("common validation rejects fractional iteration counts", {
     )
 })
 
+test_that("all constructors validate iteration counts before coercion", {
+    for (count in c(1.5, -0.5, Inf, NA_real_, .Machine$integer.max + 1)) {
+        expect_error(Lowess(iterations = count), "iterations")
+        expect_error(StreamingLowess(iterations = count), "iterations")
+        expect_error(
+            OnlineLowess(iterations = count, update_mode = "full"),
+            "iterations"
+        )
+    }
+    expect_error(
+        Lowess(cv = list(k = 2.5, fractions = c(0.3, 0.5))),
+        "whole number"
+    )
+})
+
+test_that("integer custom weights match double custom weights", {
+    model <- Lowess(fraction = 0.5, iterations = 0L)
+    integer_result <- fit(model, 1:10, sin(1:10), custom_weights = rep(1L, 10))
+    double_result <- fit(model, 1:10, sin(1:10), custom_weights = rep(1, 10))
+    expect_equal(integer_result$y, double_result$y)
+    expect_error(fit(model, 1:10, sin(1:10), custom_weights = -1L))
+})
+
 test_that("parse_outputs_flags handles NULL and valid output names", {
     valid <- c("diagnostics", "residuals", "weights")
 

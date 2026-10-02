@@ -78,6 +78,7 @@ OnlineLowess <- function(
     reject_extra_positional_args(sys.call(), "fraction")
     validate_params(
         fraction = fraction,
+        iterations = iterations,
         window_capacity = window_capacity,
         min_points = min_points
     )

@@ -82,8 +82,13 @@ installed package's `libs/` directory.
 
 Prebuilt R GPU libraries are built for Linux x86_64/ARM64 with glibc or
 musl (Alpine), macOS x86_64/ARM64, and Windows x86_64/ARM64. The installer
-selects a matching R architecture and Linux libc, verifies GPU support in the
-candidate library, and requires atomic replacement of the installed library.
+selects a matching R architecture and the libc linked by R, and verifies GPU
+support in the candidate library after confirmation. On Windows, the library
+is installed in a versioned sidecar directory, leaving the loaded CPU DLL
+untouched; after restarting R, the package activates the matching sidecar's
+native routines. Other platforms require atomic replacement of the installed
+library. Local candidates use the platform's canonical library filename,
+regardless of their original filename extension.
 
 **Restart R after installation.**
 

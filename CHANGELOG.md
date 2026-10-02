@@ -237,6 +237,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **R:**
 
 - Reject fractional integer/count options, validate local and downloaded GPU libraries, restrict prebuilt GPU targets, and refuse in-place replacement when atomic rename fails.
+- Validate Streaming/Online iterations and plain-list CV fold counts before coercion, and accept integer custom weights.
+- Detect R's linked libc instead of installed musl loaders, confirm local GPU installs before executing candidates, normalize library filenames, and activate versioned Windows GPU sidecars on restart without replacing loaded DLLs.
 
 **WASM:**
 

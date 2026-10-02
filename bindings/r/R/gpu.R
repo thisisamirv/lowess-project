@@ -81,6 +81,43 @@ check_gpu_backend <- function(backend) {
     invisible(NULL)
 }
 
+gpu_is_musl <- function(
+    r_platform = R.version$platform,
+    sys_name = Sys.info()[["sysname"]]
+) {
+    if (!identical(sys_name, "Linux")) {
+        return(FALSE)
+    }
+    if (grepl("musl", r_platform, ignore.case = TRUE)) {
+        return(TRUE)
+    }
+    ldd <- Sys.which("ldd")
+    output <- if (nzchar(ldd)) {
+        tryCatch(
+            suppressWarnings(system2(
+                ldd,
+                shQuote(file.path(R.home("bin"), "exec", "R")),
+                stdout = TRUE,
+                stderr = TRUE
+            )),
+            error = function(e) character()
+        )
+    } else {
+        character()
+    }
+    if (any(grepl("ld-musl|libc[.]musl", output, ignore.case = TRUE))) {
+        return(TRUE)
+    }
+    if (any(grepl("libc[.]so[.]6|ld-linux", output))) {
+        return(FALSE)
+    }
+    stop(
+        "Cannot determine the libc used by R; ",
+        "install a locally built GPU library instead.",
+        call. = FALSE
+    )
+}
+
 #' Determine the GPU Release Asset Name and Download URL
 #' @noRd
 gpu_asset_info <- function(
@@ -88,8 +125,7 @@ gpu_asset_info <- function(
     sys_name = Sys.info()[["sysname"]],
     machine = R.version$arch,
     r_platform = R.version$platform,
-    musl = grepl("musl", r_platform, ignore.case = TRUE) ||
-        length(Sys.glob("/lib/ld-musl-*.so.1")) > 0L
+    musl = gpu_is_musl(r_platform, sys_name)
 ) {
     if (identical(sys_name, "Windows")) {
         if (!grepl("^(x86[-_]64|amd64|arm64|aarch64)$", machine, ignore.case = TRUE)) {
@@ -108,11 +144,11 @@ gpu_asset_info <- function(
         # R uses .so as the package shared-object extension on macOS too
         ext <- ".so"
     } else if (identical(sys_name, "Linux")) {
-        if (!musl && !grepl("linux.*gnu", r_platform, ignore.case = TRUE)) {
-            stop("Prebuilt R GPU libraries require glibc or musl Linux.", call. = FALSE)
-        }
         if (!grepl("^(x86[-_]64|amd64|arm64|aarch64)$", machine, ignore.case = TRUE)) {
             stop("No prebuilt R GPU library is available for this Linux architecture.", call. = FALSE)
+        }
+        if (!musl && !grepl("linux.*gnu", r_platform, ignore.case = TRUE)) {
+            stop("Prebuilt R GPU libraries require glibc or musl Linux.", call. = FALSE)
         }
         platform_tag <- if (musl) "linux-musl" else "linux"
         ext <- ".so"
@@ -227,13 +263,91 @@ gpu_download_to <- function(url, ext, dest) {
 #' @noRd
 gpu_lib_dir <- function(
     os_type = .Platform$OS.type,
-    r_arch = .Platform$r_arch
+    r_arch = .Platform$r_arch,
+    lib_dir = system.file("libs", package = "rfastlowess")
 ) {
-    lib_dir <- system.file("libs", package = "rfastlowess")
     if (identical(os_type, "windows") && nzchar(r_arch)) {
         lib_dir <- file.path(lib_dir, r_arch)
     }
     lib_dir
+}
+
+gpu_install_destination <- function(
+    lib_dir,
+    os_type = .Platform$OS.type,
+    version = as.character(getNamespaceVersion("rfastlowess"))
+) {
+    if (identical(os_type, "windows")) {
+        sidecar_dir <- tempfile(paste0("gpu-v", version, "-"), tmpdir = lib_dir)
+        if (!dir.create(sidecar_dir)) {
+            stop("Failed to create GPU library directory in ", lib_dir, call. = FALSE)
+        }
+        return(file.path(sidecar_dir, "rfastlowess.dll"))
+    }
+    file.path(lib_dir, "rfastlowess.so")
+}
+
+gpu_load_sidecar <- function(
+    lib_dir,
+    namespace,
+    version,
+    os_type = .Platform$OS.type
+) {
+    if (!identical(os_type, "windows")) {
+        return(NULL)
+    }
+    directories <- list.dirs(lib_dir, recursive = FALSE, full.names = TRUE)
+    directories <- directories[
+        startsWith(basename(directories), paste0("gpu-v", version, "-"))
+    ]
+    paths <- file.path(directories, "rfastlowess.dll")
+    paths <- paths[file.exists(paths)]
+    if (!length(paths)) {
+        return(NULL)
+    }
+    path <- paths[order(file.info(paths)$mtime, decreasing = TRUE)][1L]
+    if (!gpu_library_enabled(path)) {
+        stop("Installed GPU sidecar does not report GPU support.", call. = FALSE)
+    }
+    dll <- dyn.load(path)
+    activated <- FALSE
+    on.exit(if (!activated) dyn.unload(dll[["path"]]), add = TRUE)
+    routines <- getDLLRegisteredRoutines(dll)[[".Call"]]
+    required <- ls(namespace, pattern = "^wrap__", all.names = TRUE)
+    if (!length(required) || !all(required %in% names(routines))) {
+        stop(
+            "Installed GPU sidecar is incompatible with this package's native API.",
+            call. = FALSE
+        )
+    }
+    for (name in required) {
+        assign(name, routines[[name]], envir = namespace)
+    }
+    activated <- TRUE
+    dll[["path"]]
+}
+
+gpu_state <- new.env(parent = emptyenv())
+
+.onLoad <- function(libname, pkgname) {
+    namespace <- asNamespace(pkgname)
+    gpu_state$dll_path <- tryCatch(
+        gpu_load_sidecar(
+            gpu_lib_dir(lib_dir = file.path(libname, pkgname, "libs")), namespace,
+            as.character(getNamespaceVersion(namespace))
+        ),
+        error = function(e) {
+            warning("GPU sidecar was not activated: ", conditionMessage(e), call. = FALSE)
+            NULL
+        }
+    )
+}
+
+.onUnload <- function(libpath) {
+    if (!is.null(gpu_state$dll_path)) {
+        dyn.unload(gpu_state$dll_path)
+        gpu_state$dll_path <- NULL
+    }
 }
 
 #' Ask the User to Confirm a Local-Path Install, Unless Skipped
@@ -262,16 +376,15 @@ install_gpu_local <- function(local_path, yes, lib_dir) {
     if (!file.exists(local_path)) {
         stop("No such file: ", local_path, call. = FALSE)
     }
-    if (!gpu_library_enabled(local_path)) {
-        stop("The library at ", local_path, " does not report GPU support.", call. = FALSE)
-    }
     if (!gpu_confirm_local_install(yes, local_path)) {
         message("Aborted.")
         return(invisible(FALSE))
     }
+    if (!gpu_library_enabled(local_path)) {
+        stop("The library at ", local_path, " does not report GPU support.", call. = FALSE)
+    }
 
-    ext <- paste0(".", tools::file_ext(local_path))
-    dest <- file.path(lib_dir, paste0("rfastlowess", ext))
+    dest <- gpu_install_destination(lib_dir)
     message("Installing ", local_path, " ...")
     gpu_replace_file(local_path, dest)
     message("GPU backend installed at ", dest, ".")
@@ -290,7 +403,7 @@ install_gpu_download <- function(yes, lib_dir) {
         return(invisible(FALSE))
     }
 
-    dest <- file.path(lib_dir, paste0("rfastlowess", info$ext))
+    dest <- gpu_install_destination(lib_dir, version = version)
     gpu_download_to(info$url, info$ext, dest)
     message("GPU backend installed at ", dest, ".")
     message("Restart R for the change to take effect.")
@@ -301,9 +414,11 @@ install_gpu_download <- function(yes, lib_dir) {
 #'
 #' @description
 #' Downloads a prebuilt GPU-enabled \pkg{rfastlowess} shared library for the
-#' current platform from the matching GitHub Release and installs it in
-#' place of the current (CPU-only) library. GPU support is opt-in and not
-#' included in CRAN/Bioconductor releases.
+#' current platform from the matching GitHub Release. On Windows, installs
+#' a versioned sidecar alongside the CPU library and activates its native
+#' routines when the package is loaded after restarting R. Other platforms
+#' atomically replace the CPU library. GPU support is opt-in and not included
+#' in CRAN/Bioconductor releases.
 #'
 #' A running R session cannot swap an already-loaded shared library, so
 #' \strong{restart R} after installing for the change to take effect.

@@ -146,7 +146,8 @@ fit.Lowess <- function(model, x, y, custom_weights = NULL, ...) {
         model$params$fraction,
         model$params$iterations
     )
-    model$handle$fit(validated_args$x, validated_args$y, custom_weights)
+    weights <- if (is.null(custom_weights)) NULL else as.double(custom_weights)
+    model$handle$fit(validated_args$x, validated_args$y, weights)
 }
 
 #' Predict from a fitted LOWESS model at out-of-sample points

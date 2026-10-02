@@ -23,9 +23,11 @@ if the user aborted.
 }
 \description{
 Downloads a prebuilt GPU-enabled \pkg{rfastlowess} shared library for the
-current platform from the matching GitHub Release and installs it in
-place of the current (CPU-only) library. GPU support is opt-in and not
-included in CRAN/Bioconductor releases.
+current platform from the matching GitHub Release. On Windows, installs
+a versioned sidecar alongside the CPU library and activates its native
+routines when the package is loaded after restarting R. Other platforms
+atomically replace the CPU library. GPU support is opt-in and not included
+in CRAN/Bioconductor releases.
 
 A running R session cannot swap an already-loaded shared library, so
 \strong{restart R} after installing for the change to take effect.

@@ -73,7 +73,11 @@ StreamingLowess <- function(
     seed = NULL
 ) {
     reject_extra_positional_args(sys.call(), "fraction")
-    validate_params(fraction = fraction, chunk_size = chunk_size)
+    validate_params(
+        fraction = fraction,
+        iterations = iterations,
+        chunk_size = chunk_size
+    )
 
     flags <- parse_outputs_flags(
         outputs,
