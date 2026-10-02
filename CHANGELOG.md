@@ -218,6 +218,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `javadoc` "no main description" warnings in `OnlineOptions` and `StreamingOptions` builder methods by adding a leading description sentence to each Javadoc block.
 - Fixed `maven-javadoc-plugin` silently ignoring warnings because `pom.xml` used `failOnWarning` instead of `failOnWarnings`.
 
+**Julia:**
+
+- Preserved Julia model owners across native calls, passed GPU library paths as subprocess arguments, rejected unsupported GPU targets, and surfaced native constructor validation errors.
+
 **Node.js:**
 
 - Fixed `OnlineLowess` and `LowessResult.predict()` silently ignoring `outputs`; online `"weights"`/`"derivative"`/`"se"` and prediction `"se"`/`"derivative"` are now applied.
