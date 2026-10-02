@@ -2,6 +2,8 @@ package fastlowess_test
 
 import (
 	"math"
+	"os"
+	"path/filepath"
 	"slices"
 	"sort"
 	"strconv"
@@ -67,6 +69,23 @@ func TestVersionAndGPUEnabled(t *testing.T) {
 	}
 	// Just exercise the call; whether GPU is enabled depends on build flags.
 	_ = fastlowess.GPUEnabled()
+}
+
+func TestInstallGPURejectsUnmarkedLocalArchive(t *testing.T) {
+	if fastlowess.GPUEnabled() {
+		t.Skip("installer is unnecessary when the current library already has GPU support")
+	}
+
+	directory := t.TempDir()
+	t.Setenv("HOME", directory)
+	t.Setenv("USERPROFILE", directory)
+	localPath := filepath.Join(directory, "not-a-gpu-library.a")
+	if err := os.WriteFile(localPath, []byte("!<arch>\nnot a GPU archive"), 0o600); err != nil {
+		t.Fatalf("failed to create test archive: %v", err)
+	}
+	if err := fastlowess.InstallGPU(true, localPath); err == nil {
+		t.Fatal("expected installer to reject an archive without the GPU build marker")
+	}
 }
 
 // ---------------------------------------------------------------------------

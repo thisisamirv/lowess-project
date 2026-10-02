@@ -168,7 +168,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Go:**
 
 - Declared cgo seed arguments as `unsigned long long` so the Go type checker sees `C.ulonglong`. `uint64_t` was not exported as `C.uint64_t`.
-- Fixed finalizers potentially freeing native models during cgo calls, silently ignored output/extra weight arguments, k-fold count coercion, musl GPU downloads, and 32-bit C ABI length truncation on Windows.
+- Fixed finalizers potentially freeing native models during cgo calls, silently ignored output/extra weight arguments, k-fold count coercion, musl GPU downloads, unverified local GPU archives, and 32-bit C ABI length truncation on Windows.
+- Local GPU archive installs now verify the Go ABI major, GPU feature, platform, and architecture marker before replacement.
 
 **Node.js:**
 

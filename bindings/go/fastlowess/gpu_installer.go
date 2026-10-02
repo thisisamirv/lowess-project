@@ -8,6 +8,7 @@ package fastlowess
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -24,6 +25,18 @@ const gpuRepo = "thisisamirv/lowess-project"
 // instead of cluttering each version's own release page; the source version
 // is embedded in each asset's filename instead.
 const gpuReleaseTag = "gpu-builds"
+const gpuArchiveMarkerPrefix = "fastlowess-go-gpu|abi-v4|"
+
+func gpuBuildMarker() string {
+	tag := platformArchTag()
+	if tag == "" {
+		return ""
+	}
+	if runtime.GOOS == "linux" {
+		tag += "-glibc"
+	}
+	return gpuArchiveMarkerPrefix + tag
+}
 
 // platformArchTag returns the "<platform>-<arch>" suffix release-gpu.yml
 // uses for this binding's GPU static library, or "" if this platform/arch
@@ -86,6 +99,10 @@ func InstallGPU(yes bool, localPath string) error {
 		if _, err := os.Stat(localPath); err != nil {
 			return fmt.Errorf("no such file: %s", localPath)
 		}
+		marker := gpuBuildMarker()
+		if marker == "" {
+			return fmt.Errorf("no matching GPU build target for %s/%s", runtime.GOOS, runtime.GOARCH)
+		}
 		if !yes {
 			fmt.Printf("Install %s in place of the current build? [y/N] ", localPath)
 			reader := bufio.NewReader(os.Stdin)
@@ -101,7 +118,7 @@ func InstallGPU(yes bool, localPath string) error {
 			return fmt.Errorf("failed to create %s: %w", dir, err)
 		}
 		fmt.Printf("Installing %s ...\n", localPath)
-		if err := copyGPULibrary(localPath, dest); err != nil {
+		if err := copyGPULibrary(localPath, dest, marker); err != nil {
 			return fmt.Errorf("failed to copy %s: %w", localPath, err)
 		}
 		printRebuildInstructions(dest, dir)
@@ -157,7 +174,7 @@ func printRebuildInstructions(dest, dir string) {
 	fmt.Println("then `go build ./...`.")
 }
 
-func copyGPULibrary(src, dest string) error {
+func copyGPULibrary(src, dest, marker string) error {
 	in, err := os.Open(src)
 	if err != nil {
 		return err
@@ -175,6 +192,10 @@ func copyGPULibrary(src, dest string) error {
 		return err
 	}
 	if err := out.Close(); err != nil {
+		_ = os.Remove(tmp)
+		return err
+	}
+	if err := validateGPUArchive(tmp, marker); err != nil {
 		_ = os.Remove(tmp)
 		return err
 	}
@@ -207,4 +228,43 @@ func downloadGPULibrary(url, dest string) error {
 		return err
 	}
 	return os.Rename(tmp, dest)
+}
+
+func validateGPUArchive(path, marker string) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = file.Close() }()
+
+	var magic [8]byte
+	if _, err := io.ReadFull(file, magic[:]); err != nil {
+		return fmt.Errorf("invalid static library archive: %w", err)
+	}
+	if string(magic[:]) != "!<arch>\n" {
+		return fmt.Errorf("invalid static library archive: missing ar signature")
+	}
+
+	needle := []byte(marker)
+	chunk := make([]byte, 32*1024)
+	tail := make([]byte, 0, len(needle)-1)
+	for {
+		n, readErr := file.Read(chunk)
+		data := append(tail, chunk[:n]...)
+		if bytes.Contains(data, needle) {
+			return nil
+		}
+		keep := len(needle) - 1
+		if keep > len(data) {
+			keep = len(data)
+		}
+		tail = append(tail[:0], data[len(data)-keep:]...)
+		if readErr != nil {
+			if readErr == io.EOF {
+				break
+			}
+			return readErr
+		}
+	}
+	return fmt.Errorf("archive does not contain GPU build marker %q", marker)
 }

@@ -105,6 +105,40 @@ pub extern "C" fn go_gpu_enabled() -> c_int {
     cfg!(feature = "gpu") as c_int
 }
 
+#[cfg(all(
+    feature = "gpu",
+    target_os = "linux",
+    target_env = "gnu",
+    target_arch = "x86_64"
+))]
+#[unsafe(no_mangle)]
+pub static FASTLOWESS_GO_GPU_BUILD_MARKER: &[u8] = b"fastlowess-go-gpu|abi-v4|linux-x86_64-glibc";
+
+#[cfg(all(
+    feature = "gpu",
+    target_os = "linux",
+    target_env = "gnu",
+    target_arch = "aarch64"
+))]
+#[unsafe(no_mangle)]
+pub static FASTLOWESS_GO_GPU_BUILD_MARKER: &[u8] = b"fastlowess-go-gpu|abi-v4|linux-arm64-glibc";
+
+#[cfg(all(feature = "gpu", target_os = "macos", target_arch = "x86_64"))]
+#[unsafe(no_mangle)]
+pub static FASTLOWESS_GO_GPU_BUILD_MARKER: &[u8] = b"fastlowess-go-gpu|abi-v4|macos-x86_64";
+
+#[cfg(all(feature = "gpu", target_os = "macos", target_arch = "aarch64"))]
+#[unsafe(no_mangle)]
+pub static FASTLOWESS_GO_GPU_BUILD_MARKER: &[u8] = b"fastlowess-go-gpu|abi-v4|macos-aarch64";
+
+#[cfg(all(feature = "gpu", target_os = "windows", target_arch = "x86_64"))]
+#[unsafe(no_mangle)]
+pub static FASTLOWESS_GO_GPU_BUILD_MARKER: &[u8] = b"fastlowess-go-gpu|abi-v4|windows-x86_64";
+
+#[cfg(all(feature = "gpu", target_os = "windows", target_arch = "aarch64"))]
+#[unsafe(no_mangle)]
+pub static FASTLOWESS_GO_GPU_BUILD_MARKER: &[u8] = b"fastlowess-go-gpu|abi-v4|windows-arm64";
+
 // Per-point result from an online update, passed across the FFI boundary.
 // has_value = 1 means the window is ready and smoothed is valid; 0 means the
 // window is still filling (caller should treat it as no output yet).

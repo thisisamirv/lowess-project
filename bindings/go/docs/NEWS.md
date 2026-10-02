@@ -26,7 +26,7 @@ This changelog includes end-user changes only. For internal development notes, s
 * Fixed model finalizers potentially releasing native state during in-flight calls; model receivers are now kept alive until cgo calls return.
 * Fixed unknown `Outputs` names being silently ignored and `Fit` silently ignoring extra custom-weight slices; invalid inputs now return errors.
 * Fixed k-fold CV silently coercing fold counts below two; active k-fold now rejects them while LOOCV continues to ignore `K`.
-* Fixed the GPU installer selecting GNU/Linux artifacts on musl systems; unsupported libc environments now fail before download.
+* Fixed the GPU installer selecting GNU/Linux artifacts on musl systems and accepting incompatible local archives; local archives now require a matching GPU feature, Go ABI major, platform, and architecture marker.
 * Fixed Go `int` option and collection lengths narrowing at the C ABI boundary on 64-bit Windows.
 * Fixed global OLS fits treating predictor values with a large offset as degenerate; translated inputs now retain their fitted slope.
 * Fixed fraction-1 global fits ignoring custom weights, including when Batch sorts observations by x.
