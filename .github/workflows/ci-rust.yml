@@ -65,6 +65,12 @@ jobs:
           cargo build -p fastLowess --features cpu
           cargo build -p fastLowess --features gpu
 
+      - name: Check Android GPU target
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          rustup target add aarch64-linux-android
+          cargo check -p fastLowess --features gpu,dev --target aarch64-linux-android
+
       - name: Setup lavapipe
         if: matrix.os == 'ubuntu-latest'
         uses: ./.github/actions/setup-lavapipe

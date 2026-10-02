@@ -41,7 +41,7 @@ The `lowess-project` also offers bindings for Rust, Python, R, Julia, Node.js, W
 
 ### GPU Backend
 
-GPU acceleration (`wgpu`: Vulkan/Metal/DX12) is also supported for high-throughput batch smoothing. See the [GPU Backend guide](https://thisisamirv.github.io/lowess-project/nodejs/advanced/gpu-backend/) for details.
+GPU acceleration (`wgpu`: Vulkan, Metal, DirectX 12, and GLES on Android) is also supported for high-throughput batch smoothing. See the [GPU Backend guide](https://thisisamirv.github.io/lowess-project/nodejs/advanced/gpu-backend/) for details.
 
 ---
 

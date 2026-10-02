@@ -14,7 +14,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ## Overview
 
 The batch `Lowess` type can execute on a GPU-accelerated backend powered by
-`wgpu` (Vulkan / Metal / DX12). The GPU backend reimplements almost the entire
+`wgpu` (Vulkan / Metal / DX12 / GLES on Android). The GPU backend reimplements almost the entire
 LOWESS pipeline — local regression fitting, robustness iterations, interval
 bounds, and cross-validation — as compute shaders, so all anchor points are
 fitted in parallel.

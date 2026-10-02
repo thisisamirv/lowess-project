@@ -75,7 +75,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOWESS (Lo
 
 ## GPU Backend
 
-GPU acceleration (`wgpu`: Vulkan/Metal/DX12) is also supported for high-throughput batch smoothing. See the GPU Backend page in the documentation for your binding/crate for details.
+GPU acceleration (`wgpu`: Vulkan, Metal, DirectX 12, and GLES on Android) is also supported for high-throughput batch smoothing. See the GPU Backend page in the documentation for your binding/crate for details.
 
 ## LOESS vs. LOWESS
 

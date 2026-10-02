@@ -51,5 +51,5 @@ make java-dev     # full dev checks: fmt, clippy, export verification, mvn test
 
 == GPU backend
 
-GPU acceleration is available via the native library's `gpu` Cargo feature (`wgpu`: Vulkan/Metal/DX12), but is not enabled in the default build, nor bundled in the published jar. See the C++ binding's https://thisisamirv.github.io/lowess-project/cpp/gpu-backend.html[GPU Backend guide] for the underlying feature; building `fastlowess-java` with `--features gpu` produces a library where `FastLowess.gpuEnabled()` returns `true` — point the JVM at it via `fastlowess.native.path`/`fastlowess.native.dir` as shown above.
+GPU acceleration is available via the native library's `gpu` Cargo feature (`wgpu`: Vulkan, Metal, DirectX 12, and GLES on Android), but is not enabled in the default build, nor bundled in the published jar. See the C++ binding's https://thisisamirv.github.io/lowess-project/cpp/gpu-backend.html[GPU Backend guide] for the underlying feature; building `fastlowess-java` with `--features gpu` produces a library where `FastLowess.gpuEnabled()` returns `true` — point the JVM at it via `fastlowess.native.path`/`fastlowess.native.dir` as shown above.
 

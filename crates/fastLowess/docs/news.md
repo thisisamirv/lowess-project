@@ -8,6 +8,7 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Added
 
 * Enabled the optional wgpu DirectX 12 backend for GPU-enabled Windows builds. DXC is loaded dynamically with an FXC fallback, avoiding eager imports of `dxcompiler.dll` and `dxil.dll`.
+* Added GLES for Android GPU builds with a target-scoped `wgpu` feature; Windows continues to omit the GLES-only loader imports.
 * Added residual-bootstrap standard errors and percentile confidence/prediction intervals via `.intervals(IntervalsBuilder::new().bootstrap(n))` (Batch, per-chunk Streaming, and full-update Online per sliding window). With `parallel(true)` Batch and Streaming refits run concurrently and match a sequential run; Online refits sequentially. Online incremental mode rejects them at `.build()`.
 
 ### Changed

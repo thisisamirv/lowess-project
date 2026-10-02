@@ -2,7 +2,7 @@
 title: GPU Backend
 ---
 <!-- markdownlint-disable MD024 MD033 MD046 -->
-Run the batch LOWESS fit on the GPU via `wgpu` (Vulkan/Metal/DX12) instead of the CPU.
+Run the batch LOWESS fit on the GPU via `wgpu` (Vulkan/Metal/DX12, GLES on Android) instead of the CPU.
 
 ## Overview
 
@@ -107,6 +107,7 @@ The GPU backend leverages `wgpu` and supports:
 * **Vulkan** (Linux/Windows)
 * **Metal** (macOS/iOS)
 * **DirectX 12** (Windows)
+* **GLES** (Android)
 
 It requires a device supporting compute shaders. If no compatible GPU is found at runtime, model construction raises an error.
 

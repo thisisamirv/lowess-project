@@ -1,6 +1,6 @@
 # GPU Backend
 
-Run the batch LOWESS fit on the GPU via `wgpu` (Vulkan/Metal/DX12) instead of the CPU.
+Run the batch LOWESS fit on the GPU via `wgpu` (Vulkan/Metal/DX12, GLES on Android) instead of the CPU.
 
 ## Overview
 

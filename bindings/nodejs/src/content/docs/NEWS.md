@@ -11,6 +11,7 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Added
 
 * Enabled the optional wgpu DirectX 12 backend for GPU-enabled Windows builds. DXC is loaded dynamically with an FXC fallback, avoiding eager imports of `dxcompiler.dll` and `dxil.dll`.
+* Added GLES for Android GPU builds with a target-scoped `wgpu` feature; Windows continues to omit the GLES-only loader imports.
 * Added grouped `outputs` arrays and nested `cv` options for batch, streaming, online, and prediction configuration while preserving legacy fields.
 * Added a grouped `intervals` option with residual-bootstrap intervals for `Lowess`, `StreamingLowess`, full-update `OnlineLowess`, and `LowessResult.predict()`.
 

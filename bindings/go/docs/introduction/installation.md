@@ -46,4 +46,4 @@ cargo build -p fastlowess-go --profile release-c
 
 ## GPU backend
 
-GPU acceleration is available via the native library's `gpu` Cargo feature (`wgpu`: Vulkan/Metal/DX12), but is not enabled in the default build. See the C++ binding's [GPU Backend guide](https://thisisamirv.github.io/lowess-project/cpp/gpu-backend.html) for the underlying feature; building `fastlowess-go` with `--features gpu` produces a Go-compatible library with `GPUEnabled()` returning `true`.
+GPU acceleration is available via the native library's `gpu` Cargo feature (`wgpu`: Vulkan, Metal, DirectX 12, and GLES on Android), but is not enabled in the default build. See the C++ binding's [GPU Backend guide](https://thisisamirv.github.io/lowess-project/cpp/gpu-backend.html) for the underlying feature; building `fastlowess-go` with `--features gpu` produces a Go-compatible library with `GPUEnabled()` returning `true`.

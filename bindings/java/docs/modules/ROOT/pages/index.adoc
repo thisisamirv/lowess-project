@@ -32,7 +32,7 @@ See the https://thisisamirv.github.io/lowess-project/java/introduction/installat
 
 === GPU Backend
 
-GPU acceleration (`wgpu`: Vulkan/Metal/DX12) is also supported for high-throughput batch smoothing. See the https://thisisamirv.github.io/lowess-project/java/advanced/gpu-backend/[GPU Backend guide] for details.
+GPU acceleration (`wgpu`: Vulkan, Metal, DirectX 12, and GLES on Android) is also supported for high-throughput batch smoothing. See the https://thisisamirv.github.io/lowess-project/java/advanced/gpu-backend/[GPU Backend guide] for details.
 
 '''
 
