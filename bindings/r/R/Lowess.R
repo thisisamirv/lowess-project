@@ -206,6 +206,7 @@ cv_opts <- function(method = "kfold", k = 5L, fractions) {
     if (!is.numeric(fractions) || length(fractions) == 0L) {
         stop("`fractions` must be a non-empty numeric vector", call. = FALSE)
     }
+    validate_optional_count(k, "cv.k", allow_zero = FALSE)
     structure(
         list(
             method = as.character(method),

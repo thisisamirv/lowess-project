@@ -38,7 +38,7 @@ test_that("cv_opts validates required and non-empty fractions", {
 test_that("cv_opts returns coerced cross-validation options", {
     result <- cv_opts(
         method = factor("kfold"),
-        k = 3.8,
+        k = 3L,
         fractions = c(0.2, 0.5)
     )
 
@@ -50,10 +50,15 @@ test_that("cv_opts returns coerced cross-validation options", {
     expect_null(result$seed)
 })
 
+test_that("cv_opts rejects fractional fold counts", {
+    expect_error(cv_opts(k = 3.8, fractions = c(0.2, 0.5)), "whole number")
+})
+
 test_that("intervals_opts and expand_intervals build grouped options", {
     result <- intervals_opts(confidence = 0.9, bootstrap = 20)
     expect_s3_class(result, "intervals_opts")
     expect_identical(result$bootstrap, 20L)
+    expect_error(intervals_opts(bootstrap = 2.5), "whole number")
 
     expect_identical(
         expand_intervals(NULL),
@@ -65,6 +70,13 @@ test_that("intervals_opts and expand_intervals build grouped options", {
     )
     expect_error(expand_intervals(list(0.95)), "must be a named list")
     expect_error(expand_intervals(list(foo = 1)), "Invalid `intervals` key")
+})
+
+test_that("common validation rejects fractional iteration counts", {
+    expect_error(
+        validate_common_args(1:5, 1:5, fraction = 0.5, iterations = 1.5),
+        "iterations must be a non-negative integer"
+    )
 })
 
 test_that("parse_outputs_flags handles NULL and valid output names", {

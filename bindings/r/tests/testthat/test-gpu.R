@@ -107,9 +107,24 @@ test_that("gpu_asset_info handles Linux platform", {
         `Sys.info` = function() c(sysname = "Linux", machine = "x86_64"),
         .package = "base"
     )
-    info <- gpu_asset_info("1.0.0")
+    info <- gpu_asset_info("1.0.0", r_platform = "x86_64-pc-linux-gnu")
     expect_identical(info$ext, ".so")
     expect_true(grepl("linux-x86_64\\.so$", info$asset))
+})
+
+test_that("gpu_asset_info rejects unsupported R GPU targets", {
+    expect_error(
+        gpu_asset_info("1.0.0", "Linux", "x86_64", "x86_64-alpine-linux-musl"),
+        "not available for musl Linux"
+    )
+    expect_error(
+        gpu_asset_info("1.0.0", "Linux", "aarch64", "aarch64-unknown-linux-gnu"),
+        "only for Linux x86_64"
+    )
+    expect_error(
+        gpu_asset_info("1.0.0", "Windows", "ARM64", "aarch64-w64-mingw32"),
+        "Windows architecture"
+    )
 })
 
 # ── gpu_confirm_download ─────────────────────────────────────────────────────
@@ -155,9 +170,30 @@ test_that("gpu_download_to copies the downloaded file to its destination", {
         },
         .package = "utils"
     )
+    testthat::local_mocked_bindings(
+        gpu_library_enabled = function(path) TRUE,
+        .package = "rfastlowess"
+    )
     gpu_download_to("https://example.com/lib.so", ".so", dest)
     expect_true(file.exists(dest))
     expect_gt(file.size(dest), 0)
+})
+
+test_that("gpu_download_to rejects a library without the GPU feature", {
+    dest <- tempfile(fileext = ".so")
+    on.exit(unlink(dest), add = TRUE)
+    testthat::local_mocked_bindings(
+        download.file = function(url, destfile, mode, quiet) {
+            writeLines("not a shared library", destfile)
+            0L
+        },
+        .package = "utils"
+    )
+    expect_error(
+        gpu_download_to("https://example.com/lib.so", ".so", dest),
+        "does not report GPU support"
+    )
+    expect_false(file.exists(dest))
 })
 
 test_that("gpu_download_to errors when the download fails", {
@@ -205,20 +241,22 @@ test_that("gpu_replace_file errors when staging the copy fails", {
     expect_error(gpu_replace_file(src, dest), "Failed to stage install")
 })
 
-test_that("gpu_replace_file errors when rename and fallback copy both fail", {
+test_that("gpu_replace_file refuses an in-place overwrite when rename fails", {
     src <- tempfile()
-    writeLines("dummy", src)
+    writeLines("replacement", src)
     on.exit(unlink(src), add = TRUE)
     dest <- tempfile()
+    writeLines("original", dest)
+    on.exit(unlink(dest), add = TRUE)
     testthat::local_mocked_bindings(
         `file.rename` = function(from, to) FALSE,
-        # Staging (to != dest) succeeds; the fallback copy (to == dest) fails.
         `file.copy` = function(from, to, overwrite = FALSE) {
             !identical(to, dest)
         },
         .package = "base"
     )
-    expect_error(gpu_replace_file(src, dest), "Failed to install to")
+    expect_error(gpu_replace_file(src, dest), "refusing an in-place copy")
+    expect_identical(readLines(dest), "original")
 })
 
 # ── install_gpu ──────────────────────────────────────────────────────────────
@@ -324,7 +362,8 @@ test_that("install_gpu_local aborts when confirmation is declined", {
     writeLines("dummy", src)
     on.exit(unlink(src), add = TRUE)
     testthat::local_mocked_bindings(
-        gpu_confirm_local_install = function(yes, local_path) FALSE
+        gpu_confirm_local_install = function(yes, local_path) FALSE,
+        gpu_library_enabled = function(path) TRUE
     )
     expect_message(
         result <- install_gpu_local(src, FALSE, tempdir()),
@@ -333,13 +372,32 @@ test_that("install_gpu_local aborts when confirmation is declined", {
     expect_false(isTRUE(result))
 })
 
-test_that("install_gpu_local installs when confirmed", {
+test_that("install_gpu_local rejects non-GPU files", {
     src <- tempfile(fileext = ".so")
     writeLines("dummy", src)
     on.exit(unlink(src), add = TRUE)
     lib_dir <- tempfile()
     dir.create(lib_dir)
     on.exit(unlink(lib_dir, recursive = TRUE), add = TRUE)
+
+    expect_error(
+        install_gpu_local(src, TRUE, lib_dir),
+        "does not report GPU support"
+    )
+    expect_false(file.exists(file.path(lib_dir, "rfastlowess.so")))
+})
+
+test_that("install_gpu_local installs a validated GPU library", {
+    src <- tempfile(fileext = ".so")
+    writeLines("gpu library", src)
+    on.exit(unlink(src), add = TRUE)
+    lib_dir <- tempfile()
+    dir.create(lib_dir)
+    on.exit(unlink(lib_dir, recursive = TRUE), add = TRUE)
+    testthat::local_mocked_bindings(
+        gpu_library_enabled = function(path) TRUE,
+        .package = "rfastlowess"
+    )
 
     expect_message(
         result <- install_gpu_local(src, TRUE, lib_dir),

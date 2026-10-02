@@ -228,14 +228,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `OnlineLowess` and `LowessResult.predict()` silently ignoring `outputs`; online `"weights"`/`"derivative"`/`"se"` and prediction `"se"`/`"derivative"` are now applied.
 - Reject unknown output names, reliably detect musl when selecting GPU addons, validate installs to a Windows-safe versioned sidecar, reject unsupported musl ARM, and preserve the `fit_async()` return type across builds.
 
+**Python:**
+
+- Reject unknown output names, release the GIL during online updates, accept documented array-like inputs for batch, streaming, and prediction, reject musl GPU-wheel mismatches and non-GPU wheels, and install Windows GPU extensions as versioned sidecars.
+
+**R:**
+
+- Reject fractional integer/count options, validate local and downloaded GPU libraries, restrict prebuilt GPU targets, and refuse in-place replacement when atomic rename fails.
+
 **WASM:**
 
 - Fixed `OnlineLowess` silently ignoring `outputs`; `"weights"`, `"derivative"`, and `"se"` are now applied.
 - Reject unknown option keys and `outputs` names, and return owned typed-array copies so results remain valid after freeing their WASM owners.
-
-**Python:**
-
-- Reject unknown output names, release the GIL during online updates, accept documented array-like inputs for batch, streaming, and prediction, reject musl GPU-wheel mismatches and non-GPU wheels, and install Windows GPU extensions as versioned sidecars.
 
 ## 4.1.0
 

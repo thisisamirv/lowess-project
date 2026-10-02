@@ -13,6 +13,59 @@ gpu_available <- function() {
     isTRUE(gpu_enabled())
 }
 
+#' Probe a Candidate R Shared Library for the GPU Feature
+#' @noRd
+gpu_library_enabled <- function(path) {
+    if (!file.exists(path)) {
+        return(FALSE)
+    }
+    if (
+        identical(Sys.info()[["sysname"]], "Windows") &&
+            !identical(readBin(path, "raw", n = 2L), as.raw(c(0x4d, 0x5a)))
+    ) {
+        return(FALSE)
+    }
+
+    ext <- if (identical(Sys.info()[["sysname"]], "Windows")) ".dll" else ".so"
+    probe_dir <- tempfile("rfastlowess-gpu-probe-")
+    if (!dir.create(probe_dir)) {
+        return(FALSE)
+    }
+    on.exit(unlink(probe_dir, recursive = TRUE), add = TRUE)
+    probe_path <- file.path(probe_dir, paste0("rfastlowess", ext))
+    if (!file.copy(path, probe_path, overwrite = TRUE)) {
+        return(FALSE)
+    }
+
+    rscript <- file.path(
+        R.home("bin"),
+        if (identical(.Platform$OS.type, "windows")) "Rscript.exe" else "Rscript"
+    )
+    script <- paste(
+        "probe <- function(path) {",
+        "dll <- dyn.load(path)",
+        "on.exit(dyn.unload(dll[['path']]), add = TRUE)",
+        "routine <- getDLLRegisteredRoutines(dll)[['.Call']][['wrap__gpu_enabled']]",
+        "if (is.null(routine)) return(FALSE)",
+        "isTRUE(.Call(routine))",
+        "}",
+        "cat(probe(commandArgs(TRUE)[[1L]]))",
+        sep = "\n"
+    )
+    output <- tryCatch(
+        suppressWarnings(system2(
+            rscript,
+            args = c("--vanilla", "-e", shQuote(script), shQuote(probe_path)),
+            stdout = TRUE,
+            stderr = FALSE
+        )),
+        error = function(e) character()
+    )
+    status <- attr(output, "status")
+    (is.null(status) || status == 0L) &&
+        identical(trimws(paste(output, collapse = "")), "TRUE")
+}
+
 #' Stop with a Helpful Message if the Requested Backend is Unavailable
 #' @noRd
 check_gpu_backend <- function(backend) {
@@ -30,21 +83,44 @@ check_gpu_backend <- function(backend) {
 
 #' Determine the GPU Release Asset Name and Download URL
 #' @noRd
-gpu_asset_info <- function(version) {
-    sys_name <- Sys.info()[["sysname"]]
+gpu_asset_info <- function(
+    version,
+    sys_name = Sys.info()[["sysname"]],
+    machine = Sys.info()[["machine"]],
+    r_platform = R.version$platform
+) {
     if (identical(sys_name, "Windows")) {
+        if (!grepl("^(x86[-_]64|amd64)$", machine, ignore.case = TRUE)) {
+            stop(
+                "No prebuilt R GPU library is available for this Windows architecture.",
+                call. = FALSE
+            )
+        }
         platform_tag <- "windows"
         ext <- ".dll"
     } else if (identical(sys_name, "Darwin")) {
+        if (!grepl("^(x86[-_]64|amd64|arm64|aarch64)$", machine, ignore.case = TRUE)) {
+            stop("No prebuilt R GPU library is available for this macOS architecture.", call. = FALSE)
+        }
         platform_tag <- "macos"
         # R uses .so as the package shared-object extension on macOS too
         ext <- ".so"
-    } else {
+    } else if (identical(sys_name, "Linux")) {
+        if (grepl("musl", r_platform, ignore.case = TRUE)) {
+            stop("Prebuilt R GPU libraries are not available for musl Linux.", call. = FALSE)
+        }
+        if (!grepl("linux.*gnu", r_platform, ignore.case = TRUE)) {
+            stop("Prebuilt R GPU libraries are available only for glibc Linux.", call. = FALSE)
+        }
+        if (!grepl("^(x86[-_]64|amd64)$", machine, ignore.case = TRUE)) {
+            stop("Prebuilt R GPU libraries are available only for Linux x86_64.", call. = FALSE)
+        }
         platform_tag <- "linux"
         ext <- ".so"
+    } else {
+        stop("No prebuilt R GPU library is available for this operating system.", call. = FALSE)
     }
 
-    machine <- Sys.info()[["machine"]]
     is_arm <- grepl("arm|aarch64", machine, ignore.case = TRUE)
     arch <- if (is_arm) "aarch64" else "x86_64"
 
@@ -98,10 +174,8 @@ gpu_confirm_download <- function(yes, asset, repo) {
 #' Atomically Replace an Installed Shared Library
 #'
 #' A running R session may still have the current library memory-mapped;
-#' truncating/rewriting that file in place (file.copy(overwrite = TRUE))
-#' can segfault later when a not-yet-paged-in section is faulted in from
-#' the now-modified file on disk. Installing via a same-directory temp file
-#' plus file.rename() keeps the old (still-mapped) inode intact instead.
+#' truncating/rewriting that file in place can segfault later. Refuse to fall
+#' back to an in-place copy when atomic replacement is unavailable.
 #' @noRd
 gpu_replace_file <- function(src, dest) {
     tmp <- tempfile(
@@ -112,8 +186,12 @@ gpu_replace_file <- function(src, dest) {
     if (!file.copy(src, tmp, overwrite = TRUE)) {
         stop("Failed to stage install to ", dirname(dest), ".", call. = FALSE)
     }
-    if (!file.rename(tmp, dest) && !file.copy(tmp, dest, overwrite = TRUE)) {
-        stop("Failed to install to ", dest, ".", call. = FALSE)
+    if (!file.rename(tmp, dest)) {
+        stop(
+            "Failed to atomically replace ", dest,
+            "; refusing an in-place copy that could corrupt a loaded shared library.",
+            call. = FALSE
+        )
     }
     invisible(TRUE)
 }
@@ -139,6 +217,9 @@ gpu_download_to <- function(url, ext, dest) {
             "A matching GPU build may not exist for this platform/version yet.",
             call. = FALSE
         )
+    }
+    if (!gpu_library_enabled(tmp)) {
+        stop("Downloaded library does not report GPU support.", call. = FALSE)
     }
     gpu_replace_file(tmp, dest)
 }
@@ -181,6 +262,9 @@ gpu_confirm_local_install <- function(yes, local_path) {
 install_gpu_local <- function(local_path, yes, lib_dir) {
     if (!file.exists(local_path)) {
         stop("No such file: ", local_path, call. = FALSE)
+    }
+    if (!gpu_library_enabled(local_path)) {
+        stop("The library at ", local_path, " does not report GPU support.", call. = FALSE)
     }
     if (!gpu_confirm_local_install(yes, local_path)) {
         message("Aborted.")

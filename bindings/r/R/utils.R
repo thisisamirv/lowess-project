@@ -37,7 +37,14 @@ validate_common_args <- function(x, y, fraction, iterations, min_points = 2L) {
     if (fraction <= 0 || fraction > 1) {
         stop("fraction must be between 0 and 1")
     }
-    if (!is.numeric(iterations) || length(iterations) != 1 || iterations < 0) {
+    if (
+        !is.numeric(iterations) ||
+            length(iterations) != 1 ||
+            !is.finite(iterations) ||
+            iterations < 0 ||
+            iterations != floor(iterations) ||
+            iterations > .Machine$integer.max
+    ) {
         stop("iterations must be a non-negative integer")
     }
 
@@ -51,7 +58,7 @@ validate_common_args <- function(x, y, fraction, iterations, min_points = 2L) {
 
 
 validate_scalar_numeric <- function(value, name) {
-    if (!is.numeric(value) || length(value) != 1L || is.na(value)) {
+    if (!is.numeric(value) || length(value) != 1L || !is.finite(value)) {
         stop(sprintf("%s must be a single numeric value", name))
     }
 }
@@ -63,6 +70,12 @@ validate_optional_count <- function(value, name, allow_zero = TRUE) {
     }
 
     validate_scalar_numeric(value, name)
+    if (value != floor(value)) {
+        stop(sprintf("%s must be a whole number", name))
+    }
+    if (value > .Machine$integer.max) {
+        stop(sprintf("%s exceeds the maximum supported integer", name))
+    }
     if (allow_zero && value < 0) {
         stop(sprintf("%s must be a non-negative integer", name))
     }
