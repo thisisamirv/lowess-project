@@ -37,7 +37,12 @@ dispatch overhead is accounted for.
 | All weight / robustness / scaling methods | ✅ | ✅ |
 | Confidence / prediction intervals | ✅ | ✅ |
 | Cross-validation (k-fold, LOOCV) | ✅ | ✅ |
-| Custom per-observation weights | ✅ | ✅ |
+| Unsorted inputs and `return_sorted` | ✅ | ✅ |
+| Custom per-observation weights | ✅ | CPU fallback |
+
+GPU fits preserve Batch output ordering for unsorted input and `return_sorted`.
+When `custom_weights` is supplied, a GPU backend request runs on CPU so the
+weights are honored; this combination is not GPU-accelerated.
 
 ---
 
@@ -121,8 +126,9 @@ At n = 1M (`fraction = 0.5`, 3 iterations), the GPU backend is approximately
 ## Fallback Behaviour
 
 If `backend = "gpu"` is requested but GPU support is not installed, an
-informative error is raised pointing to `install_gpu()`. No silent fallback to
-CPU occurs.
+informative error is raised pointing to `install_gpu()`. A request with
+`custom_weights` is the exception: it deliberately uses the CPU implementation
+to preserve the custom-weight fit semantics.
 
 ```{r session-info}
 sessionInfo()

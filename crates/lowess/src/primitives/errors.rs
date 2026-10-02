@@ -56,6 +56,12 @@ pub enum LowessError {
     // Interval coverage level must be strictly between 0 and 1.
     InvalidIntervals(f64),
 
+    // Confidence and prediction levels share one coverage value and must match.
+    MismatchedIntervalLevels {
+        confidence: f64,
+        prediction: f64,
+    },
+
     // Number of bootstrap replicates must be at least 2.
     InvalidBootstrapSamples(usize),
 
@@ -204,6 +210,13 @@ impl Display for LowessError {
             Self::InvalidIntervals(level) => {
                 write!(f, "Invalid interval level: {level} (must be > 0 and < 1)")
             }
+            Self::MismatchedIntervalLevels {
+                confidence,
+                prediction,
+            } => write!(
+                f,
+                "Confidence interval level ({confidence}) and prediction interval level ({prediction}) must match"
+            ),
             Self::InvalidBootstrapSamples(n) => {
                 write!(f, "Invalid bootstrap sample count: {n} (must be >= 2)")
             }

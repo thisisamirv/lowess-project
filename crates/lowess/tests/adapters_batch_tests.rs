@@ -792,6 +792,18 @@ fn test_batch_confidence_and_prediction_intervals() {
     }
 }
 
+#[test]
+fn test_batch_rejects_mismatched_confidence_and_prediction_levels() {
+    let result = Lowess::new()
+        .intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.9))
+        .build();
+
+    assert!(
+        result.is_err(),
+        "the shared-level interval configuration should reject mismatched levels"
+    );
+}
+
 /// Test diagnostic metrics computation.
 ///
 /// Verifies that RMSE, MAE, R2, and other diagnostics are computed correctly.

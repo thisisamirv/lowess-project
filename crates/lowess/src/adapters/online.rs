@@ -170,9 +170,21 @@ impl<T: Float> OnlineLowessBuilder<T> {
         if !self.delta.is_nan() {
             Validator::validate_delta(self.delta)?;
         }
+        if self.update_mode != UpdateMode::Full && self.delta > T::zero() {
+            return Err(LowessError::UnsupportedFeature {
+                adapter: "Online",
+                feature: "positive delta requires update_mode(\"full\")",
+            });
+        }
 
         if let Some(tolerance) = self.auto_converge {
             Validator::validate_tolerance(tolerance)?;
+            if self.update_mode != UpdateMode::Full || self.iterations == 0 {
+                return Err(LowessError::UnsupportedFeature {
+                    adapter: "Online",
+                    feature: "auto_converge requires update_mode(\"full\") and iterations > 0",
+                });
+            }
         }
 
         // Validate configuration early

@@ -66,11 +66,11 @@ if ok {
 | `Iterations` | `int` | `0` | Number of robustifying iterations (requires `UpdateMode = "full"`) |
 | `WeightFunction` | `string` | `"tricube"` | Weight function name |
 | `RobustnessMethod` | `string` | `"bisquare"` | Robustness method name |
-| `Delta` | `*float64` | `nil` | Interpolation distance (`nil` auto-sets it to 0.0 in Online, i.e. interpolation disabled) |
+| `Delta` | `*float64` | `nil` | Interpolation distance (`nil` disables interpolation); positive values require `UpdateMode = "full"` |
 | `ZeroWeightFallback` | `string` | `"use_local_mean"` | Zero-weight handling |
 | `BoundaryPolicy` | `string` | `"extend"` | Boundary handling policy |
 | `ScalingMethod` | `string` | `"mad"` | Residual scaling method |
-| `AutoConverge` | `*float64` | `nil` | Auto-convergence tolerance |
+| `AutoConverge` | `*float64` | `nil` | Auto-convergence tolerance; requires `UpdateMode = "full"` and `Iterations > 0` |
 | `Missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `WindowCapacity` | `int` | `1000` | Maximum number of recent points retained |
 | `MinPoints` | `int` | `2` | Minimum points required before output starts |
@@ -78,6 +78,8 @@ if ok {
 | `Outputs` | `[]string` | `nil` | Optional components: `se`, `weights`, `derivative` (`se` requires `UpdateMode = "full"`). |
 | `Intervals` | `*IntervalsOptions` | `nil` | Confidence/prediction levels and per-window bootstrap refits (`UpdateMode = "full"` only) |
 | `Seed` | `*uint64` | `nil` | Reproducible bootstrap draws for each full-update window |
+
+Incremental mode fits only the newest point. Positive `Delta` is rejected there, and `AutoConverge` requires full mode with at least one robustness iteration.
 | `ReturnSE` | `bool` | `false` | Populate `StandardError` in the result (requires `UpdateMode = "full"`; errors if combined with `"incremental"`) |
 | `ReturnRobustnessWeights` | `bool` | `false` | Include `RobustnessWeight` in result |
 | `ReturnDerivative` | `bool` | `false` | Include the latest point's local fit derivative (slope) in the result |

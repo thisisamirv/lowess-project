@@ -35,7 +35,8 @@ GPU support is **opt-in** and not included in the default published npm binaries
 | All weight/robustness/scaling methods | ✅ | ✅ | |
 | Confidence/prediction intervals | ✅ | ✅ | |
 | Cross-validation (k-fold, LOOCV) | ✅ | ✅ | |
-| Custom per-observation weights | ✅ | ✅ | |
+| Unsorted inputs and sorted-output option | ✅ | ✅ | GPU results preserve Batch output ordering. |
+| Custom per-observation weights | ✅ | CPU fallback | Weighted GPU requests run on CPU to preserve weight semantics. |
 
 ---
 

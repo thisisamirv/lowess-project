@@ -156,11 +156,18 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelBatchLowess<T
             Backend::GPU => {
                 #[cfg(feature = "gpu")]
                 {
-                    builder.custom_fit_pass = Some(fit_pass_gpu);
-                    builder.custom_cv_pass = Some(cross_validate_gpu);
-                    builder.delegate_boundary_handling = true;
-                    builder.custom_bootstrap_compute =
-                        Some(crate::engine::gpu::bootstrap_compute_gpu);
+                    if builder.custom_weights.is_some() {
+                        // The current GPU kernels do not consume case weights. Preserve
+                        // fit semantics by using the core CPU path for this combination.
+                        builder.backend = Some(Backend::CPU);
+                        builder.parallel = Some(false);
+                    } else {
+                        builder.custom_fit_pass = Some(fit_pass_gpu);
+                        builder.custom_cv_pass = Some(cross_validate_gpu);
+                        builder.delegate_boundary_handling = true;
+                        builder.custom_bootstrap_compute =
+                            Some(crate::engine::gpu::bootstrap_compute_gpu);
+                    }
                 }
                 #[cfg(not(feature = "gpu"))]
                 {

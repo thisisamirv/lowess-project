@@ -43,10 +43,9 @@ non-robust single-point fit that ignores robustness iterations. Default: 0.}
 \item{robustness_method}{Outlier downweighting method: \code{"bisquare"}
 (default; alias: \code{"biweight"}), \code{"huber"}, or \code{"talwar"}.}
 
-\item{delta}{Interpolation distance threshold, as a non-negative fraction
-of the x range; points within \code{delta} of each other on x share the
-same local fit. \code{NULL} (default) sets it automatically to 1/100th
-of the x range.}
+\item{delta}{Interpolation distance as a non-negative fraction of the x
+range. In Online mode, \code{NULL} (default) disables interpolation;
+positive values require \code{update_mode = "full"}.}
 
 \item{zero_weight_fallback}{Fallback policy when all robustness weights drop
 to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
@@ -63,8 +62,9 @@ to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
 \code{"mar"} (alias: \code{"median_absolute_residual"}), or
 \code{"mean"} (alias: \code{"mean_absolute_residual"}).}
 
-\item{auto_converge}{Convergence tolerance for early stopping of robustness
-iterations. \code{NULL} (default) disables early stopping.}
+\item{auto_converge}{Convergence tolerance for early stopping. Requires
+\code{update_mode = "full"} and \code{iterations > 0}; \code{NULL}
+(default) disables early stopping.}
 
 \item{missing}{Policy for non-finite (NaN/Infinity) values in input data:
 \code{"error"} (default) raises an error, \code{"drop"} silently removes
@@ -79,7 +79,8 @@ begins, between 2 and \code{window_capacity}. Default: 2.}
 \item{update_mode}{Window update strategy: \code{"incremental"} (default;
 alias: \code{"single"}) updates only the newest point and does not run
 robustness iterations; \code{"full"} (alias: \code{"resmooth"}) re-smooths
-all window points after each addition and supports robustness iterations.}
+all window points after each addition and supports robustness iterations,
+positive \code{delta}, and \code{auto_converge}.}
 
 \item{outputs}{Character vector selecting optional Online output components:
 \code{"se"} (standard errors), \code{"weights"} (robustness weights),
@@ -112,6 +113,9 @@ that fit in memory, see \code{\link{Lowess}}; for large batches processed
 in chunks, see \code{\link{StreamingLowess}}.
 
 Confidence and prediction intervals require \code{update_mode = "full"}.
+Positive \code{delta} values also require \code{update_mode = "full"}.
+A non-\code{NULL} \code{auto_converge} requires full mode and at least one
+robustness iteration; unsupported combinations are rejected.
 }
 \examples{
 model <- OnlineLowess(fraction = 0.2, window_capacity = 20)

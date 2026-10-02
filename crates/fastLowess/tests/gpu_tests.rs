@@ -6,6 +6,7 @@ use ScalingMethod::Mean;
 use WeightFunction::{Biweight, Cosine, Epanechnikov, Gaussian, Triangle, Tricube, Uniform};
 use approx::assert_abs_diff_eq;
 use fastLowess::internals::engine::gpu::{GLOBAL_EXECUTOR, GpuConfig, GpuExecutor};
+use fastLowess::prelude::Lowess as FastLowess;
 use fastLowess::prelude::{CVBuilder, IntervalsBuilder};
 use lowess::internals::algorithms::robustness::RobustnessMethod;
 use lowess::internals::math::boundary::BoundaryPolicy;
@@ -41,6 +42,93 @@ fn test_gpu_batch_fit() {
     } else {
         println!("GPU fit skipped or failed (likely no hardware)");
     }
+}
+
+#[test]
+fn test_gpu_batch_unsorted_input_preserves_original_result_order() {
+    if pollster::block_on(GpuExecutor::new()).is_err() {
+        println!("GPU unavailable, skipping unsorted-order regression");
+        return;
+    }
+
+    let x: Vec<f64> = (0..20).rev().map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
+    let result = FastLowess::new()
+        .fraction(0.5)
+        .iterations(0)
+        .backend("gpu")
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    let sorted_x: Vec<f64> = (0..20).map(|i| i as f64).collect();
+    let sorted_y: Vec<f64> = sorted_x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
+    let sorted_result = FastLowess::new()
+        .fraction(0.5)
+        .iterations(0)
+        .backend("gpu")
+        .build()
+        .unwrap()
+        .fit(&sorted_x, &sorted_y)
+        .unwrap();
+
+    for (i, &xi) in x.iter().enumerate() {
+        assert_abs_diff_eq!(result.y[i], sorted_result.y[xi as usize], epsilon = 1e-4);
+    }
+}
+
+#[test]
+fn test_gpu_return_sorted_sorts_unsorted_input() {
+    if pollster::block_on(GpuExecutor::new()).is_err() {
+        println!("GPU unavailable, skipping sorted-output regression");
+        return;
+    }
+
+    let x: Vec<f64> = (0..20).rev().map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
+    let result = FastLowess::new()
+        .fraction(0.5)
+        .iterations(0)
+        .backend("gpu")
+        .outputs(["sorted"])
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    assert!(
+        result.x.windows(2).all(|pair| pair[0] <= pair[1]),
+        "GPU return_sorted should return ascending x values"
+    );
+}
+
+#[test]
+fn test_gpu_batch_custom_weights_change_the_fit() {
+    if pollster::block_on(GpuExecutor::new()).is_err() {
+        println!("GPU unavailable, skipping custom-weight regression");
+        return;
+    }
+
+    let x: Vec<f64> = (0..32).map(|i| i as f64).collect();
+    let mut y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
+    y[16] += 100.0;
+    let mut weights = vec![1.0; x.len()];
+    weights[16] = 0.0;
+
+    let fit = |custom_weights: Option<Vec<f64>>| {
+        let mut builder = FastLowess::new().fraction(0.5).iterations(0).backend("gpu");
+        if let Some(weights) = custom_weights {
+            builder = builder.custom_weights(weights);
+        }
+        builder.build().unwrap().fit(&x, &y).unwrap()
+    };
+    let unweighted = fit(None);
+    let weighted = fit(Some(weights));
+
+    assert!(
+        (unweighted.y[16] - weighted.y[16]).abs() > 1.0,
+        "zeroing the outlier's custom weight should change its fitted value"
+    );
 }
 
 #[test]

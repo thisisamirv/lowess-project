@@ -466,6 +466,17 @@ impl<T: Float, Mode> LowessBuilder<T, Mode> {
 
     /// Configure analytic or residual-bootstrap intervals as one group.
     pub fn intervals(mut self, options: IntervalsBuilder<T>) -> Self {
+        if let (Some(confidence), Some(prediction)) = (options.confidence, options.prediction)
+            && confidence != prediction
+        {
+            self.parse_errors
+                .push(LowessError::MismatchedIntervalLevels {
+                    confidence: confidence.to_f64().unwrap_or(f64::NAN),
+                    prediction: prediction.to_f64().unwrap_or(f64::NAN),
+                });
+            return self;
+        }
+
         if let Some(level) = options.confidence {
             self = self.confidence_intervals(level);
         }

@@ -462,6 +462,19 @@ fn test_predict_bootstrap_intervals_are_seeded_at_query_points() {
 }
 
 #[test]
+fn test_predict_rejects_mismatched_confidence_and_prediction_levels() {
+    let result = Predict::new()
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.9)
+        .build();
+
+    assert!(
+        matches!(result, Err(LowessError::MismatchedIntervalLevels { .. })),
+        "PredictBuilder should reject coverage levels that cannot both be represented"
+    );
+}
+
+#[test]
 fn test_predict_bootstrap_se_only_and_validation() {
     assert!(matches!(
         Predict::<f64>::new()

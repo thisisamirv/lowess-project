@@ -90,11 +90,11 @@ fn main() -> Result<(), LowessError> {
 | `iterations(usize)` | `usize` | `0` | Number of robustifying iterations (requires `update_mode("full")`) |
 | `weight_function(...)` | `weight_function` | `"tricube"` | Weight function name |
 | `robustness_method(...)` | `robustness_method` | `"bisquare"` | Robustness method name |
-| `delta(T)` | `T: Float` | `NaN` | Interpolation distance (`NaN` auto-sets it to 0.0 in Online, i.e. interpolation disabled) |
+| `delta(T)` | `T: Float` | `NaN` | Interpolation distance (`NaN` disables interpolation); positive values require `update_mode("full")` |
 | `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
 | `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
 | `scaling_method(...)` | `scaling_method` | `"mad"` | Residual scaling method |
-| `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
+| `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance; requires `update_mode("full")` and `iterations > 0` |
 | `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `window_capacity(usize)` | `usize` | `1000` | Max points in sliding window |
 | `min_points(usize)` | `usize` | `2` | Min points before smoothing starts |
@@ -102,6 +102,8 @@ fn main() -> Result<(), LowessError> {
 | `outputs([&str])` | `&[&str]` | `[]` | Select `"weights"`, `"derivative"`, and/or `"se"`; `"se"` requires `update_mode("full")` |
 | `intervals(IntervalsBuilder<f64>)` | `IntervalsBuilder<f64>` | disabled | Group CI, PI, and bootstrap refits (`update_mode("full")` required) |
 | `seed(u64)` | `u64` | unset | Bootstrap resampling seed when bootstrap is enabled |
+
+Incremental mode fits only the newest point. Positive `delta` is rejected there, and `auto_converge` requires full mode with at least one robustness iteration.
 
 Cross-validation, GPU `backend`, `custom_weights`, `"sorted"`, `"diagnostics"`, `"residuals"`, and `parallel()` are Batch-only (or Batch/Streaming-only) and not available here. Bootstrap is available with `update_mode("full")` only: after at least 3 points are in the window, each update resamples the current window with the same seed and returns its newest point's bootstrap SE and requested bounds. Online refits are sequential. The default incremental mode rejects it at `.build()` with `StandardErrorRequiresFullUpdateMode`; fewer than 2 replicates returns `InvalidBootstrapSamples`.
 

@@ -74,11 +74,11 @@ Smoothed y: 0.22659245357374927
 | `iterations` | `number` | `0` | Number of robustifying iterations (requires `update_mode = "full"`) |
 | `weight_function` | `string` | `"tricube"` | Weight function name |
 | `robustness_method` | `string` | `"bisquare"` | Robustness method name |
-| `delta` | `number` | `NaN` | Interpolation distance (`NaN` auto-sets it to 0.0 in Online, i.e. interpolation disabled) |
+| `delta` | `number` | `NaN` | Interpolation distance (`NaN` disables interpolation); positive values require `update_mode = "full"` |
 | `zero_weight_fallback` | `string` | `"use_local_mean"` | Zero-weight handling |
 | `boundary_policy` | `string` | `"extend"` | Boundary handling policy |
 | `scaling_method` | `string` | `"mad"` | Residual scaling method |
-| `auto_converge` | `number` | `null` | Auto-convergence tolerance |
+| `auto_converge` | `number` | `null` | Auto-convergence tolerance; requires `update_mode = "full"` and `iterations > 0` |
 | `missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `window_capacity` | `number` | `1000` | Max points in sliding window |
 | `min_points` | `number` | `2` | Min points before smoothing starts |
@@ -86,6 +86,8 @@ Smoothed y: 0.22659245357374927
 | `outputs` | `string[]` | `[]` | Select `se`, `weights`, and/or `derivative`; `se` requires `update_mode: "full"` |
 | `intervals` | `object` | `null` | Grouped `confidence`, `prediction`, and per-window `bootstrap` options (requires `update_mode: "full"`) |
 | `seed` | `number` | `null` | Reproducible bootstrap draws for each full-update window |
+
+Incremental mode fits only the newest point. Positive `delta` is rejected there, and `auto_converge` requires full mode with at least one robustness iteration.
 | `return_se` | `boolean` | `false` | Populate `standard_error` in the result (requires `update_mode: "full"`; throws if combined with `"incremental"`) |
 | `return_robustness_weights` | `boolean` | `false` | Include `robustness_weight` in result |
 | `return_derivative` | `boolean` | `false` | Include the latest point's local fit derivative (slope) in result |

@@ -1248,13 +1248,13 @@ fn test_adapter_batch_ignores_streaming_params() {
     assert_eq!(result.y.len(), 20);
 }
 
-/// Test that Online adapter ignores batch-specific parameters.
+/// Test that Online accepts delta when the full-update path uses it.
 #[test]
-fn test_adapter_online_ignores_batch_params() {
-    // Batch doesn't have unique params, but test delta which is less relevant for online
+fn test_adapter_online_delta_in_full_mode() {
     let mut processor = Lowess::new()
         .fraction(0.5)
-        .delta(0.1) // Less relevant for online
+        .delta(0.1)
+        .update_mode("full")
         .window_capacity(10)
         .min_points(3)
         .adapter(Online)

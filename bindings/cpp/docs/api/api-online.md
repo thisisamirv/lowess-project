@@ -107,17 +107,19 @@ int main() {
 | `window_capacity` | `int` | 1000 | Max points in sliding window |
 | `min_points` | `int` | 2 | Min points before smoothing starts |
 | `update_mode` | `std::string` | "incremental" | Update mode (`"full"` or `"incremental"`) |
-| `delta` | `double` | NaN | Interpolation distance (`NaN` auto-sets it to 0.0 in Online, i.e. interpolation disabled) |
+| `delta` | `double` | NaN | Interpolation distance (`NaN` disables interpolation); positive values require `update_mode = "full"` |
 | `weight_function` | `std::string` | "tricube" | Weight function name |
 | `robustness_method` | `std::string` | "bisquare" | Robustness method name |
 | `zero_weight_fallback` | `std::string` | "use_local_mean" | Zero-weight handling |
 | `boundary_policy` | `std::string` | "extend" | Boundary handling policy |
 | `scaling_method` | `std::string` | "mad" | Residual scaling method |
-| `auto_converge` | `double` | NaN | Auto-convergence tolerance |
+| `auto_converge` | `double` | NaN | Auto-convergence tolerance; requires `update_mode = "full"` and `iterations > 0` |
 | `missing` | `std::string` | "error" | Policy for non-finite (NaN/Inf) values in each point |
 | `outputs` | `std::vector<std::string>` | `{}` | Request `"se"`, `"weights"`, or `"derivative"` |
 | `intervals` | `IntervalsOptions` | disabled | Confidence/prediction levels and per-window bootstrap refits (`update_mode = "full"` only) |
 | `seed` | `std::optional<uint64_t>` | unset | Reproducible bootstrap draws for each full-update window |
+
+Incremental mode fits only the newest point. Positive `delta` is rejected there, and `auto_converge` requires full mode with at least one robustness iteration.
 
 Cross-validation, GPU `backend`, `custom_weights`, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [fastLowess](api.md) for those.
 

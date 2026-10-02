@@ -61,11 +61,11 @@ result.ifPresent(r -> System.out.println(r.y()));
 |`iterations` |`int` |`0` |Number of robustifying iterations (requires `updateMode("full")`)
 |`weightFunction` |`String` |`"tricube"` |Weight function name
 |`robustnessMethod` |`String` |`"bisquare"` |Robustness method name
-|`delta` |`double` |`NaN` |Interpolation distance (`NaN` auto-sets it to 0.0 in Online, i.e. interpolation disabled)
+|`delta` |`double` |`NaN` |Interpolation distance (`NaN` disables interpolation); positive values require `updateMode("full")`
 |`zeroWeightFallback` |`String` |`"use_local_mean"` |Zero-weight handling
 |`boundaryPolicy` |`String` |`"extend"` |Boundary handling policy
 |`scalingMethod` |`String` |`"mad"` |Residual scaling method
-|`autoConverge` |`double` |`NaN` |Auto-convergence tolerance
+|`autoConverge` |`double` |`NaN` |Auto-convergence tolerance; requires `updateMode("full")` and `iterations > 0`
 |`missing` |`String` |`"error"` |Policy for non-finite (NaN/Infinity) values in each point
 |`windowCapacity` |`int` |`1000` |Maximum number of recent points retained
 |`minPoints` |`int` |`2` |Minimum points required before output starts
@@ -76,6 +76,8 @@ result.ifPresent(r -> System.out.println(r.y()));
 |`returnRobustnessWeights` |`boolean` |`false` |Include `robustnessWeight()` in result
 |`returnDerivative` |`boolean` |`false` |Include the latest point's local fit derivative (slope) in the result
 |===
+
+Incremental mode fits only the newest point. Positive `delta` is rejected there, and `autoConverge` requires full mode with at least one robustness iteration.
 
 Cross-validation, GPU `backend`, `customWeights`, `returnSorted`, `returnDiagnostics`, `returnResiduals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see xref:./api.adoc[API] for those.
 

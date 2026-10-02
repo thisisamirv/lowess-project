@@ -175,6 +175,15 @@ impl<T: Float> PredictBuilder<T> {
         if let Some(e) = self.pending_error {
             return Err(e);
         }
+        if let (Some(confidence), Some(prediction)) =
+            (self.confidence_intervals, self.prediction_intervals)
+            && confidence != prediction
+        {
+            return Err(LowessError::MismatchedIntervalLevels {
+                confidence: confidence.to_f64().unwrap_or(f64::NAN),
+                prediction: prediction.to_f64().unwrap_or(f64::NAN),
+            });
+        }
         if let Some(n_boot) = self.bootstrap
             && n_boot < MIN_BOOTSTRAP_SAMPLES
         {

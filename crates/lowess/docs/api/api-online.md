@@ -90,11 +90,11 @@ fn main() -> Result<(), LowessError> {
 | `iterations(usize)` | `usize` | `0` | Number of robustifying iterations (requires `update_mode("full")`) |
 | `weight_function(...)` | `weight_function` | `"tricube"` | Weight function name |
 | `robustness_method(...)` | `robustness_method` | `"bisquare"` | Robustness method name |
-| `delta(T)` | `T: Float` | `NaN` | Interpolation distance (`NaN` auto-sets it to 0.0 in Online, i.e. interpolation disabled) |
+| `delta(T)` | `T: Float` | `NaN` | Interpolation distance (`NaN` auto-sets it to 0.0); positive values require `update_mode("full")` |
 | `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
 | `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
 | `scaling_method(...)` | `scaling_method` | `"mad"` | Residual scaling method |
-| `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance |
+| `auto_converge(T)` | `T: Float` | `NaN` | Auto-convergence tolerance; requires `update_mode("full")` and `iterations > 0` |
 | `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `window_capacity(usize)` | `usize` | `1000` | Max points in sliding window |
 | `min_points(usize)` | `usize` | `2` | Min points before smoothing starts |
@@ -131,7 +131,7 @@ Cross-validation, `custom_weights`, `"sorted"`, `"diagnostics"`, and `"residuals
 
 ### delta
 
-Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to `0` in Online mode, i.e. interpolation is disabled and every point is fit exactly.
+Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to `0` in Online mode, i.e. interpolation is disabled and every point is fit exactly. Positive `delta` is rejected in incremental mode because it fits only the latest point.
 
 ### weight_function
 
@@ -193,7 +193,7 @@ Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `add_point
 
 *See: [Robustness](crate::doc::weighting::robustness)*
 
-Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping. A finite tolerance requires `update_mode("full")` and `iterations > 0`; otherwise the setting would have no effect.
 
 ### outputs
 

@@ -54,11 +54,11 @@ print(result)
 | `iterations` | `int` | `0` | Number of robustifying iterations (requires `update_mode = "full"`) |
 | `weight_function` | `str` | `"tricube"` | Weight function name |
 | `robustness_method` | `str` | `"bisquare"` | Robustness method name |
-| `delta` | `float` | `None` | Interpolation distance (`None` auto-sets it to 0.0 in Online, i.e. interpolation disabled) |
+| `delta` | `float` | `None` | Interpolation distance (`None` disables interpolation); positive values require `update_mode="full"` |
 | `zero_weight_fallback` | `str` | `"use_local_mean"` | Zero-weight handling strategy |
 | `boundary_policy` | `str` | `"extend"` | Boundary handling policy |
 | `scaling_method` | `str` | `"mad"` | Residual scaling method |
-| `auto_converge` | `float` | `None` | Auto-convergence tolerance |
+| `auto_converge` | `float` | `None` | Auto-convergence tolerance; requires `update_mode="full"` and `iterations > 0` |
 | `missing` | `str` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `window_capacity` | `int` | `1000` | Max points in sliding window |
 | `min_points` | `int` | `2` | Min points before smoothing starts |
@@ -66,6 +66,8 @@ print(result)
 | `outputs` | `Sequence[str]` | `[]` | `"se"` requires `update_mode="full"` |
 | `intervals` | `dict` | `None` | Grouped `confidence`, `prediction`, and per-window `bootstrap` options (requires `update_mode="full"`) |
 | `seed` | `int` | `None` | Reproducible bootstrap draws for each full-update window |
+
+Incremental mode fits only the newest point. Positive `delta` is rejected there, and `auto_converge` requires full mode with at least one robustness iteration.
 | `return_derivative` | `bool` | `False` | Include the latest point's local fit derivative (slope) in result |
 
 Cross-validation, GPU `backend`, `custom_weights`, `"sorted"`, `"diagnostics"`, `"residuals"`, and `parallel` are Batch-only and not available here; see [fastLowess](api.md) for those.

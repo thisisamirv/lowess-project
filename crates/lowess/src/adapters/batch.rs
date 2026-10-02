@@ -46,7 +46,7 @@ use crate::math::scaling::ScalingMethod;
 use crate::primitives::backend::Backend;
 use crate::primitives::errors::LowessError;
 use crate::primitives::policies::MissingPolicy;
-use crate::primitives::sorting::{SortedData, sort_by_x, unsort};
+use crate::primitives::sorting::{sort_by_x, unsort};
 
 pub type BootstrapComputeFn<T> = fn(
     &[T],
@@ -295,16 +295,9 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
             Validator::validate_custom_weights(cw, y.len())?;
         }
 
-        // Sort data by x using sorting module, unless GPU is used
-        let sorted = if self.config.backend == Some(Backend::GPU) {
-            SortedData {
-                x: x.to_vec(),
-                y: y.to_vec(),
-                indices: (0..x.len()).collect(),
-            }
-        } else {
-            sort_by_x(x, y)
-        };
+        // Keep the host permutation so GPU-sorted fit outputs can be mapped back to
+        // original input order, or returned in ascending x order on request.
+        let sorted = sort_by_x(x, y);
         let custom_weights = custom_weights.map(|weights| {
             sorted
                 .indices

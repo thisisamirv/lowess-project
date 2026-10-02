@@ -25,6 +25,10 @@ This changelog includes end-user changes only. For internal development notes, s
 * Fixed fraction-1 global fits ignoring configured robustness iterations; they now reweight observations and report iterations used.
 * Fixed Batch cross-validation candidate fits ignoring `custom_weights`; K-fold CV now rejects more folds than observations instead of returning zero scores.
 * Fixed Streaming and Online accepting invalid `auto_converge` tolerances; Online also rejects invalid explicit `delta` values while retaining NaN as its default sentinel.
+* Fixed GPU Batch fits misaligning fitted values with unsorted inputs; results now preserve input and requested sorted order.
+* Fixed GPU Batch silently ignoring `custom_weights`; weighted GPU requests now fall back to CPU for correct results.
+* Fixed Online incremental mode accepting positive `delta` and `auto_converge` settings it cannot use; unsupported combinations now error.
+* Fixed grouped intervals silently collapsing different confidence and prediction levels; mismatches now error during build.
 
 * Improved agreement with R/Cleveland on sparse, asymmetric, and high-iteration fits by aligning effective-zero robustness stopping, local-linear degeneracy handling, span and endpoint traversal, delta interpolation, and adjusted-weight accumulation.
 * Fixed zero-radius neighborhoods dropping tied observations and accumulating adjusted weights in an order that diverged under robust iterations; the full tied run now contributes using reference-compatible normalization.

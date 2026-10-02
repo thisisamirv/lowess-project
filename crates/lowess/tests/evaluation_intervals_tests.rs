@@ -781,7 +781,7 @@ fn test_bootstrap_online_full_matches_batch_window() {
         .intervals(
             IntervalsBuilder::new()
                 .confidence(0.95)
-                .prediction(0.9)
+                .prediction(0.95)
                 .bootstrap(40),
         )
         .build()
@@ -803,7 +803,7 @@ fn test_bootstrap_online_full_matches_batch_window() {
             .intervals(
                 IntervalsBuilder::new()
                     .confidence(0.95)
-                    .prediction(0.9)
+                    .prediction(0.95)
                     .bootstrap(40),
             )
             .build()
@@ -883,7 +883,7 @@ fn test_bootstrap_streaming_matches_combined_batch_windows() {
         .intervals(
             IntervalsBuilder::new()
                 .confidence(0.95)
-                .prediction(0.9)
+                .prediction(0.95)
                 .bootstrap(40),
         )
         .build()
@@ -902,7 +902,7 @@ fn test_bootstrap_streaming_matches_combined_batch_windows() {
             .intervals(
                 IntervalsBuilder::new()
                     .confidence(0.95)
-                    .prediction(0.9)
+                    .prediction(0.95)
                     .bootstrap(40),
             )
             .build()

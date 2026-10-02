@@ -12,6 +12,9 @@
 #' in chunks, see \code{\link{StreamingLowess}}.
 #'
 #' Confidence and prediction intervals require \code{update_mode = "full"}.
+#' Positive \code{delta} values also require \code{update_mode = "full"}.
+#' A non-\code{NULL} \code{auto_converge} requires full mode and at least one
+#' robustness iteration; unsupported combinations are rejected.
 #'
 #' @srrstats {G2.0} Input validation for fraction, window_capacity, min_points.
 #' @srrstats {G1.6} Sliding window for incremental updates.
@@ -20,6 +23,12 @@
 #' @param iterations Number of robustness iterations. Requires
 #'   \code{update_mode = "full"}; the default \code{"incremental"} mode is a
 #'   non-robust single-point fit that ignores robustness iterations. Default: 0.
+#' @param delta Interpolation distance as a non-negative fraction of the x
+#'   range. In Online mode, \code{NULL} (default) disables interpolation;
+#'   positive values require \code{update_mode = "full"}.
+#' @param auto_converge Convergence tolerance for early stopping. Requires
+#'   \code{update_mode = "full"} and \code{iterations > 0}; \code{NULL}
+#'   (default) disables early stopping.
 #' @param window_capacity Maximum number of points kept in the sliding
 #'   window, at least 3. Default: 1000.
 #' @param min_points Minimum number of points required before smoothing
@@ -27,7 +36,8 @@
 #' @param update_mode Window update strategy: \code{"incremental"} (default;
 #'   alias: \code{"single"}) updates only the newest point and does not run
 #'   robustness iterations; \code{"full"} (alias: \code{"resmooth"}) re-smooths
-#'   all window points after each addition and supports robustness iterations.
+#'   all window points after each addition and supports robustness iterations,
+#'   positive \code{delta}, and \code{auto_converge}.
 #' @param outputs Character vector selecting optional Online output components:
 #'   \code{"se"} (standard errors), \code{"weights"} (robustness weights),
 #'   and/or \code{"derivative"}. \code{NULL} (default) returns only the core

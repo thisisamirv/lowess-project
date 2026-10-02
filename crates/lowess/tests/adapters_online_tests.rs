@@ -302,9 +302,13 @@ fn test_online_invalid_min_points() {
 #[test]
 fn test_online_rejects_invalid_auto_converge_tolerance() {
     for tolerance in [0.0, -1.0, f64::NAN, f64::INFINITY] {
-        let result = OnlineLowess::<f64>::new().auto_converge(tolerance).build();
+        let result = OnlineLowess::<f64>::new()
+            .update_mode("full")
+            .iterations(1)
+            .auto_converge(tolerance)
+            .build();
         assert!(
-            result.is_err(),
+            matches!(result, Err(LowessError::InvalidTolerance(_))),
             "invalid auto_converge tolerance {tolerance} should be rejected"
         );
     }
@@ -314,6 +318,24 @@ fn test_online_rejects_invalid_auto_converge_tolerance() {
 fn test_online_rejects_negative_delta() {
     let result = OnlineLowess::<f64>::new().delta(-0.1).build();
     assert!(result.is_err(), "negative delta should be rejected");
+}
+
+#[test]
+fn test_online_incremental_rejects_ignored_delta_and_auto_converge() {
+    let delta_result = OnlineLowess::<f64>::new().delta(100.0).build();
+    assert!(
+        matches!(delta_result, Err(LowessError::UnsupportedFeature { .. })),
+        "positive delta should require full update mode"
+    );
+
+    let convergence_result = OnlineLowess::<f64>::new().auto_converge(0.01).build();
+    assert!(
+        matches!(
+            convergence_result,
+            Err(LowessError::UnsupportedFeature { .. })
+        ),
+        "auto_converge should require full mode with robustness iterations"
+    );
 }
 
 /// Test valid builder configuration.
@@ -369,7 +391,7 @@ fn test_online_builder_setters() {
     let result = OnlineLowess::<f64>::new()
         .boundary_policy("extend")
         .delta(0.1)
-        .update_mode("incremental")
+        .update_mode("full")
         .window_capacity(100)
         .min_points(5)
         .build();
