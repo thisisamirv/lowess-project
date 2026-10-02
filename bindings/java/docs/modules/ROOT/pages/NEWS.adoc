@@ -32,11 +32,10 @@ This changelog includes end-user changes only. For internal development notes, s
 * Reduced GPU adapter buffer requirements from 30 storage/32 total buffer bindings to 7 storage/8 total per shader stage by using per-compute-pipeline resource layouts.
 * Fixed Online incremental mode accepting positive `delta` and `auto_converge` settings it cannot use; unsupported combinations now error.
 * Fixed grouped intervals discarding distinct confidence and prediction levels; each requested coverage is now applied independently.
-* Fixed JNI result conversion leaking retained models on allocation failures and hiding JNI array errors.
-* Fixed Streaming/Online negative iteration counts and k-fold values below two being converted instead of rejected; LOOCV continues to ignore `k`.
-* Fixed empty CV grids and explicitly empty custom-weight arrays being treated as if those options were absent.
-* Fixed GPU installation selecting unsupported libc/architectures or accepting local libraries for another platform; supported targets and a matching local GPU marker are now required.
-* Serialized operations on Streaming, Online, and retained prediction models to protect native state during concurrent calls.
+* Fixed retained-model handles leaking when JNI result conversion fails and array-read failures being hidden as empty inputs.
+* Fixed invalid k-fold counts and negative Streaming/Online iterations being silently coerced; CV grids and explicit custom-weight arrays must now be non-empty/valid.
+* Fixed GPU installation selecting unsupported libc/architecture targets or accepting incompatible local libraries; supported targets and a matching GPU ABI marker are now required.
+* Serialized operations on each Java model instance to protect mutable native state during concurrent calls.
 * Fixed the default `boundaryPolicy` (`"extend"`) letting synthetic boundary points bias the shared robustness scale estimate used to reweight every point, compounding across robustness iterations.
 * Improved agreement with R/Cleveland on sparse, asymmetric, and high-iteration fits by aligning robustness stopping, local-linear degeneracy handling, neighborhood traversal, delta interpolation, and weighted accumulation.
 * Fixed zero-radius neighborhoods dropping tied observations or accumulating normalized weights in a different order under robust fits.

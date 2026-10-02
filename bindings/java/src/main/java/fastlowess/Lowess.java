@@ -1,8 +1,8 @@
 package fastlowess;
 
 /**
- * A batch LOWESS model. Not thread-safe; each instance wraps a native handle
- * that must be freed.
+ * A batch LOWESS model. Operations on one instance are synchronized; each
+ * instance wraps a native handle that must be freed.
  */
 public final class Lowess implements AutoCloseable {
 

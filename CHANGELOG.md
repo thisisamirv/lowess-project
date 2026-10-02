@@ -162,25 +162,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Skip comparison snippets when the optional `statsmodels` dependency is unavailable instead of failing verification.
 - Fixed C++ release CI staging the tracked Spack recipe despite the repository's broad `spack/` ignore rule.
 
-**C++:**
-
-- Fixed shell injection in the GPU installer, result and retained-handle cleanup leaks and empty-result accessors, silent acceptance of unsupported options/output names, swallowed constructor errors, negative iteration and CV-fold coercion, Windows FFI length truncation, and unsafe reuse of a fixed C++ test temp directory.
-- Fixed the GPU installer guessing x86_64/Linux for unsupported targets, including musl; it now refuses unsupported platform/libc/architecture pairs.
-
-**Go:**
-
-- Declared cgo seed arguments as `unsigned long long` so the Go type checker sees `C.ulonglong`. `uint64_t` was not exported as `C.uint64_t`.
-- Fixed finalizers potentially freeing native models during cgo calls, silently ignored output/extra weight arguments, k-fold count coercion, musl GPU downloads, unverified local GPU archives, and 32-bit C ABI length truncation on Windows.
-- Local GPU archive installs now verify the Go ABI major, GPU feature, platform, and architecture marker before replacement.
-
-**Node.js:**
-
-- Fixed `OnlineLowess` and `LowessResult.predict()` silently ignoring `outputs`; online `"weights"`/`"derivative"`/`"se"` and prediction `"se"`/`"derivative"` are now applied.
-
-**WASM:**
-
-- Fixed `OnlineLowess` silently ignoring `outputs`; `"weights"`, `"derivative"`, and `"se"` are now applied.
-
 **lowess:**
 
 - Reduced GPU adapter buffer requirements from 30 storage/32 total buffer bindings to 7 storage/8 total per shader stage by deriving per-pipeline layouts from WGSL entry-point resource use.
@@ -220,10 +201,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Used the serial delta scan below the parallel-benefit threshold so small inputs preserve the exact arithmetic order required by `stats::lowess` robustness edge cases.
 - Fixed tied x-values being refit individually on the parallel path when `delta` is `0` (including the `delta = 0.01 * range` that `stats::lowess` derives for zero-range input). `stats::lowess` copies a fitted value across a run of tied x-values, so each refit point picked up its own narrower window: for all-tied input the final point returned its two-point window mean instead of the shared fit, and the resulting residuals then diverged through the robustness iterations.
 
+**C++:**
+
+- Fixed shell injection in the GPU installer, result and retained-handle cleanup leaks and empty-result accessors, silent acceptance of unsupported options/output names, swallowed constructor errors, negative iteration and CV-fold coercion, Windows FFI length truncation, and unsafe reuse of a fixed C++ test temp directory.
+- Fixed the GPU installer guessing x86_64/Linux for unsupported targets, including musl; it now refuses unsupported platform/libc/architecture pairs.
+
+**Go:**
+
+- Declared cgo seed arguments as `unsigned long long` so the Go type checker sees `C.ulonglong`. `uint64_t` was not exported as `C.uint64_t`.
+- Fixed finalizers potentially freeing native models during cgo calls, silently ignored output/extra weight arguments, k-fold count coercion, musl GPU downloads, unverified local GPU archives, and 32-bit C ABI length truncation on Windows.
+- Local GPU archive installs now verify the Go ABI major, GPU feature, platform, and architecture marker before replacement.
+
 **Java:**
 
+- Fixed JNI retained-handle leaks and swallowed array-read failures, invalid CV/iteration coercion and empty-array options, and GPU installer target/local-library validation. Serialized Java model operations to protect native mutable handles.
 - Fixed `javadoc` "no main description" warnings in `OnlineOptions` and `StreamingOptions` builder methods by adding a leading description sentence to each Javadoc block.
 - Fixed `maven-javadoc-plugin` silently ignoring warnings because `pom.xml` used `failOnWarning` instead of `failOnWarnings`.
+
+**Node.js:**
+
+- Fixed `OnlineLowess` and `LowessResult.predict()` silently ignoring `outputs`; online `"weights"`/`"derivative"`/`"se"` and prediction `"se"`/`"derivative"` are now applied.
+
+**WASM:**
+
+- Fixed `OnlineLowess` silently ignoring `outputs`; `"weights"`, `"derivative"`, and `"se"` are now applied.
 
 ## 4.1.0
 
