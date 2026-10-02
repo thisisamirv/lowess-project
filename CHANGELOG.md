@@ -235,7 +235,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Python:**
 
-- Reject unknown output names, release the GIL during online updates, accept documented array-like batch inputs, reject musl GPU-wheel mismatches and non-GPU wheels, and install Windows GPU extensions as versioned sidecars.
+- Reject unknown output names, release the GIL during online updates, accept documented array-like inputs for batch, streaming, and prediction, reject musl GPU-wheel mismatches and non-GPU wheels, and install Windows GPU extensions as versioned sidecars.
 
 ## 4.1.0
 

@@ -281,8 +281,8 @@ class TestStreamingLowess:
 
     def test_streaming_process_chunk_with_lists(self):
         """Test streaming processor accepts array-like chunk inputs."""
-        x = np.asarray(np.linspace(0, 1000, 2000))
-        y = np.asarray(np.sin(np.linspace(0, 1000, 2000) / 100))
+        x = np.linspace(0, 1000, 2000).tolist()
+        y = np.sin(np.linspace(0, 1000, 2000) / 100).tolist()
 
         streaming = fastlowess.StreamingLowess(fraction=0.1, chunk_size=1000)
         chunk_result = streaming.process_chunk(x, y)
@@ -728,7 +728,7 @@ class TestErrorHandling:
         """Test predict with grouped outputs, intervals, and seeded bootstrap."""
         x = np.arange(30, dtype=float)
         y = np.sin(x * 0.1) + 0.1 * np.cos(0.7 * x)
-        new_x = np.array([2.5, 10.5, 20.5])
+        new_x = [2.5, 10.5, 20.5]
         result = fastlowess.Lowess(retain_model=True).fit(x, y)
 
         analytic = result.predict(

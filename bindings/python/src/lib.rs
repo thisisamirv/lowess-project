@@ -67,6 +67,18 @@ fn validate_outputs(outputs: Option<&Vec<String>>, allowed: &[&str]) -> PyResult
     Ok(())
 }
 
+fn array_like_to_vec<'py>(py: Python<'py>, value: &Bound<'py, PyAny>) -> PyResult<Vec<f64>> {
+    let numpy = py.import("numpy")?;
+    let kwargs = PyDict::new(py);
+    kwargs.set_item("dtype", numpy.getattr("float64")?)?;
+    let array = numpy.call_method("ascontiguousarray", (value,), Some(&kwargs))?;
+    let array: PyReadonlyArray1<'py, f64> = array.extract()?;
+    array
+        .as_slice()
+        .map(|values| values.to_vec())
+        .map_err(to_py_invalid_arg_error)
+}
+
 struct ParsedCvOptions {
     fractions: Option<Vec<f64>>,
     method: String,
@@ -442,7 +454,7 @@ impl PyLowessResult {
     fn predict<'py>(
         &self,
         py: Python<'py>,
-        new_x: PyReadonlyArray1<'py, f64>,
+        new_x: &Bound<'py, PyAny>,
         outputs: Option<Vec<String>>,
         intervals: Option<Bound<'py, PyDict>>,
         seed: Option<u64>,
@@ -451,7 +463,7 @@ impl PyLowessResult {
         max_neighbor_distance: Option<f64>,
     ) -> PyResult<PyPredictOutput> {
         validate_outputs(outputs.as_ref(), &["se", "derivative"])?;
-        let new_x_vec = new_x.as_slice().map_err(to_py_invalid_arg_error)?.to_vec();
+        let new_x_vec = array_like_to_vec(py, new_x)?;
         let iv = parse_intervals(intervals.as_ref())?;
         let query = binding_support::build_predict_options_with_bootstrap(
             binding_support::PredictOptionSet {
@@ -619,11 +631,11 @@ impl PyStreamingLowess {
     fn process_chunk<'py>(
         &self,
         py: Python<'py>,
-        x: PyReadonlyArray1<'py, f64>,
-        y: PyReadonlyArray1<'py, f64>,
+        x: &Bound<'py, PyAny>,
+        y: &Bound<'py, PyAny>,
     ) -> PyResult<PyLowessResult> {
-        let x_vec = x.as_slice().map_err(to_py_invalid_arg_error)?.to_vec();
-        let y_vec = y.as_slice().map_err(to_py_invalid_arg_error)?.to_vec();
+        let x_vec = array_like_to_vec(py, x)?;
+        let y_vec = array_like_to_vec(py, y)?;
 
         let result = py.detach(move || {
             self.inner
