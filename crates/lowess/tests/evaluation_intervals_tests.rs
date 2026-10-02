@@ -56,6 +56,7 @@ fn test_compute_point_se_center() {
         &y_smooth,
         3,
         &robustness,
+        None,
         &mut std_errors,
         &uniform_weight_fn,
     );
@@ -89,6 +90,7 @@ fn test_compute_se_zero_bandwidth() {
         &y_smooth,
         2,
         &robustness,
+        None,
         &mut std_errors,
         &|_: f64| 1.0,
     );
@@ -115,6 +117,7 @@ fn test_compute_se_zero_weights() {
         &ys,
         2,
         &robustness_zero,
+        None,
         &mut std_errors,
         &|_: f64| 1.0,
     );
@@ -143,6 +146,7 @@ fn test_compute_se_downweighted_point_has_positive_se() {
         &y_smooth,
         5,
         &robustness,
+        None,
         &mut std_errors,
         &uniform_weight_fn,
     );
@@ -175,6 +179,7 @@ fn test_compute_se_insufficient_df() {
         &ys,
         2,
         &robustness_ones,
+        None,
         &mut std_errors,
         &|_: f64| 0.4,
     );
@@ -200,6 +205,7 @@ fn test_compute_window_se_vector() {
         &y_smooth,
         3,
         &robustness,
+        None,
         &mut std_err,
         &uniform_weight_fn,
     );
@@ -356,6 +362,7 @@ fn test_interval_method_workflow() {
         &y_smooth,
         3,
         &robustness,
+        None,
         &mut std_errors,
         &uniform_weight_fn,
     );

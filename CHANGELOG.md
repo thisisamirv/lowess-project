@@ -185,6 +185,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed fraction-1 global OLS ignoring `custom_weights`; weights are now kept aligned when Batch sorts input observations.
 - Fixed `missing("drop")` accepting `custom_weights` whose length did not match the original input, and validating weight values before filtering.
 - Fixed global weighted fits using the unweighted OLS standard-error formula; standard errors now account for observation weights.
+- Fixed local Batch and retained-model prediction standard errors ignoring `custom_weights`; serial and parallel paths now use the same case-weighted local moments as the fit.
 - Fixed all-zero custom weights in global fits bypassing the configured zero-weight fallback policy.
 - Fixed Gaussian fits dropping observations outside the nearest-neighbor window and replaced the artificial far-tail floor with the standard Gaussian formula.
 - Matched R's effective-zero robustness guard: stop when `6 * median(abs(residuals)) < 1e-7 * mean(abs(residuals))`; centered MAD retains its separate fallback.

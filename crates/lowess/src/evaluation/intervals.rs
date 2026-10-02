@@ -225,6 +225,7 @@ impl<T: Float> IntervalMethod<T> {
         y_smooth: &[T],
         window_size: usize,
         robustness_weights: &[T],
+        custom_weights: Option<&[T]>,
         std_errors: &mut [T],
         weight_fn: &F,
     ) where
@@ -260,7 +261,9 @@ impl<T: Float> IntervalMethod<T> {
             // Compute weight for current point (distance = 0)
             let u_idx = T::zero();
             let kernel_val = weight_fn(u_idx);
-            let w_idx = kernel_val * robustness_weights[idx];
+            let w_idx = kernel_val
+                * custom_weights.map_or(T::one(), |weights| weights[idx])
+                * robustness_weights[idx];
 
             // Accumulate weighted residual variance and local design moments.
             let mut sum_w_r2 = T::zero();
@@ -277,7 +280,9 @@ impl<T: Float> IntervalMethod<T> {
                 let w = if j == idx {
                     w_idx
                 } else {
-                    weight_fn(u) * robustness_weights[j]
+                    weight_fn(u)
+                        * custom_weights.map_or(T::one(), |weights| weights[j])
+                        * robustness_weights[j]
                 };
 
                 let r = y[j] - y_smooth[j];
@@ -308,6 +313,7 @@ impl<T: Float> IntervalMethod<T> {
         window: &Window,
         x_query: T,
         robustness_weights: &[T],
+        custom_weights: Option<&[T]>,
         weight_fn: &F,
     ) -> T
     where
@@ -329,7 +335,9 @@ impl<T: Float> IntervalMethod<T> {
         for j in window.left..=window.right {
             let dist = (x[j] - x_query).abs();
             let u = dist / bandwidth;
-            let w = weight_fn(u) * robustness_weights[j];
+            let w = weight_fn(u)
+                * custom_weights.map_or(T::one(), |weights| weights[j])
+                * robustness_weights[j];
             let r = y[j] - y_smooth[j];
             let dx = x[j] - x_query;
             sum_w_r2 = sum_w_r2 + w * r * r;

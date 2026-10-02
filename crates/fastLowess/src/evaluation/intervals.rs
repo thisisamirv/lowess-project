@@ -32,12 +32,14 @@ use lowess::internals::primitives::window::Window;
 
 // Perform interval estimation in parallel.
 #[cfg(feature = "cpu")]
+#[allow(clippy::too_many_arguments)]
 pub fn interval_pass_parallel<T>(
     x: &[T],
     y: &[T],
     y_smooth: &[T],
     window_size: usize,
     robustness_weights: &[T],
+    custom_weights: Option<&[T]>,
     weight_function: WeightFunction,
     method: &IntervalMethod<T>,
 ) -> Vec<T>
@@ -79,7 +81,9 @@ where
             // Compute weight for current point (distance = 0)
             let u_idx = T::zero();
             let kernel_val = weight_function.compute_weight(u_idx);
-            let w_idx = kernel_val * robustness_weights[idx];
+            let w_idx = kernel_val
+                * custom_weights.map_or(T::one(), |weights| weights[idx])
+                * robustness_weights[idx];
 
             // Accumulate weighted residual variance and local design moments.
             let mut sum_w_r2 = T::zero();
@@ -96,7 +100,9 @@ where
                 let w = if j == idx {
                     w_idx
                 } else {
-                    weight_function.compute_weight(u) * robustness_weights[j]
+                    weight_function.compute_weight(u)
+                        * custom_weights.map_or(T::one(), |weights| weights[j])
+                        * robustness_weights[j]
                 };
 
                 let r = y[j] - y_smooth[j];

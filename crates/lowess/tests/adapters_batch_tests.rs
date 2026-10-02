@@ -18,6 +18,10 @@
 //! 5. **Edge Cases** - Boundary conditions and error handling
 
 use approx::assert_relative_eq;
+use lowess::internals::evaluation::intervals::IntervalMethod;
+use lowess::internals::math::boundary::BoundaryPolicy;
+use lowess::internals::math::kernel::WeightFunction;
+use lowess::internals::primitives::window::Window;
 use lowess::prelude::*;
 use num_traits::float::Float;
 
@@ -1741,6 +1745,61 @@ fn test_batch_global_weighted_standard_errors_use_wls_formula() {
         assert_relative_eq!(standard_errors[i], expected, epsilon = 1e-12);
         assert_relative_eq!(scaled_standard_errors[i], expected, epsilon = 1e-12);
     }
+}
+
+#[test]
+fn test_batch_local_standard_errors_include_custom_weights() {
+    let x: Vec<f64> = (0..20).map(f64::from).collect();
+    let mut y: Vec<f64> = x
+        .iter()
+        .map(|&value| 0.3 * value + (0.7 * value).sin())
+        .collect();
+    y[12] += 10.0;
+    let mut custom_weights = vec![1.0; x.len()];
+    custom_weights[12] = 0.05;
+    let target_idx = 10;
+    let fraction = 0.5;
+
+    let result = Lowess::new()
+        .fraction(fraction)
+        .iterations(0)
+        .boundary_policy(BoundaryPolicy::NoBoundary)
+        .custom_weights(custom_weights.clone())
+        .intervals(IntervalsBuilder::new().confidence(0.95))
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let window_size = Window::calculate_span(x.len(), fraction);
+    let mut window = Window::initialize(target_idx, window_size, x.len());
+    window.recenter(&x, target_idx, x.len());
+    let bandwidth = window.max_distance(&x, x[target_idx]);
+    let mut sum_w_r2 = 0.0;
+    let mut sum_w = 0.0;
+    let mut s1 = 0.0;
+    let mut s2 = 0.0;
+    let mut t0 = 0.0;
+    let mut t1 = 0.0;
+    let mut t2 = 0.0;
+
+    for j in window.left..=window.right {
+        let dx = x[j] - x[target_idx];
+        let kernel_weight = WeightFunction::Tricube.compute_weight(dx.abs() / bandwidth);
+        let weight = custom_weights[j] * kernel_weight;
+        let residual = y[j] - result.y[j];
+        sum_w_r2 += weight * residual * residual;
+        sum_w += weight;
+        s1 += weight * dx;
+        s2 += weight * dx * dx;
+        t0 += weight * weight;
+        t1 += weight * weight * dx;
+        t2 += weight * weight * dx * dx;
+    }
+
+    let expected = IntervalMethod::<f64>::compute_se(sum_w, sum_w_r2, s1, s2, t0, t1, t2);
+    let actual = result.standard_errors.unwrap()[target_idx];
+    assert_relative_eq!(actual, expected, epsilon = 1e-12);
 }
 
 #[test]

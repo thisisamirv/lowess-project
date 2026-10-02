@@ -327,6 +327,7 @@ pub type IntervalPassFn<T> = fn(
     &[T],               // y_smooth
     usize,              // window_size
     &[T],               // robustness_weights
+    Option<&[T]>,       // custom_weights
     WeightFunction,     // weight_function
     &IntervalMethod<T>, // interval configuration
 ) -> Vec<T>; // standard errors
@@ -1396,6 +1397,7 @@ impl<T: Float> LowessExecutor<T> {
                 &buffers.y_smooth,
                 window_size,
                 &buffers.robustness_weights,
+                custom_weights,
                 weight_function,
                 im,
                 interval_pass_fn,
@@ -1485,6 +1487,7 @@ impl<T: Float> LowessExecutor<T> {
         y_smooth: &[T],
         window_size: usize,
         robustness_weights: &[T],
+        custom_weights: Option<&[T]>,
         weight_function: WeightFunction,
         interval_method: &IntervalMethod<T>,
         interval_pass_fn: Option<IntervalPassFn<T>>,
@@ -1496,6 +1499,7 @@ impl<T: Float> LowessExecutor<T> {
                 y_smooth,
                 window_size,
                 robustness_weights,
+                custom_weights,
                 weight_function,
                 interval_method,
             );
@@ -1511,6 +1515,7 @@ impl<T: Float> LowessExecutor<T> {
             y_smooth,
             window_size,
             robustness_weights,
+            custom_weights,
             &mut std_errors,
             &|u| weight_function.compute_weight(u),
         );

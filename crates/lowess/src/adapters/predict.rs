@@ -372,6 +372,7 @@ pub fn predict_one_full<T: Float + WLSSolver>(
             &window,
             eval_point,
             &state.robustness_weights,
+            state.custom_weights.as_deref(),
             &|u| state.weight_function.compute_weight(u),
         ))
     } else {

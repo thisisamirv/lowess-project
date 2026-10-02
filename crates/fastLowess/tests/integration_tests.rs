@@ -409,6 +409,7 @@ fn test_custom_weights_parallel_matches_sequential() {
         .fraction(0.4)
         .iterations(2)
         .custom_weights(weights.clone())
+        .intervals(IntervalsBuilder::new().confidence(0.95))
         .parallel(false)
         .build()
         .unwrap()
@@ -419,6 +420,7 @@ fn test_custom_weights_parallel_matches_sequential() {
         .fraction(0.4)
         .iterations(2)
         .custom_weights(weights)
+        .intervals(IntervalsBuilder::new().confidence(0.95))
         .parallel(true)
         .build()
         .unwrap()
@@ -427,6 +429,15 @@ fn test_custom_weights_parallel_matches_sequential() {
 
     assert_eq!(result_seq.y.len(), result_par.y.len());
     for (s, p) in result_seq.y.iter().zip(result_par.y.iter()) {
+        assert_abs_diff_eq!(s, p, epsilon = 1e-10);
+    }
+    for (s, p) in result_seq
+        .standard_errors
+        .as_ref()
+        .unwrap()
+        .iter()
+        .zip(result_par.standard_errors.as_ref().unwrap())
+    {
         assert_abs_diff_eq!(s, p, epsilon = 1e-10);
     }
 }

@@ -1,8 +1,12 @@
 #![cfg(feature = "dev")]
 //! Tests for Batch out-of-sample prediction (`.retain_model()` + `Predict::call()`).
 
+use approx::assert_relative_eq;
 use lowess::internals::adapters::predict::Predict;
 use lowess::internals::engine::executor::ExtrapolationPolicy;
+use lowess::internals::evaluation::intervals::IntervalMethod;
+use lowess::internals::math::boundary::BoundaryPolicy;
+use lowess::internals::primitives::window::Window;
 use lowess::prelude::*;
 
 /// predict() must error when `.retain_model(true)` was not set before `fit()`.
@@ -408,6 +412,55 @@ fn test_predict_se_and_intervals() {
             "prediction interval should not be narrower than confidence interval at i={i}"
         );
     }
+}
+
+#[test]
+fn test_predict_standard_errors_include_custom_weights() {
+    let x: Vec<f64> = (0..30).map(f64::from).collect();
+    let mut y: Vec<f64> = x
+        .iter()
+        .map(|&value| 0.3 * value + (0.7 * value).sin())
+        .collect();
+    y[14] += 10.0;
+    let mut custom_weights = vec![1.0; x.len()];
+    custom_weights[14] = 0.05;
+    let query = 12.5;
+
+    let result = Lowess::new()
+        .fraction(0.5)
+        .boundary_policy(BoundaryPolicy::NoBoundary)
+        .custom_weights(custom_weights)
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    let prediction = Predict::new()
+        .return_se()
+        .build()
+        .unwrap()
+        .call(&result, &[query])
+        .unwrap();
+
+    let state = result.fit_state.as_deref().unwrap();
+    let seed = Window::locate(&state.x, query);
+    let mut window = Window::initialize(seed, state.window_size, state.x.len());
+    window.recenter_at(&state.x, query, state.x.len());
+    let expected = IntervalMethod::<f64>::compute_se_at_query(
+        &state.x,
+        &state.y,
+        &state.y_smooth,
+        &window,
+        query,
+        &state.robustness_weights,
+        state.custom_weights.as_deref(),
+        &|u| state.weight_function.compute_weight(u),
+    );
+    assert_relative_eq!(
+        prediction.standard_errors.unwrap()[0],
+        expected,
+        epsilon = 1e-12
+    );
 }
 
 #[test]

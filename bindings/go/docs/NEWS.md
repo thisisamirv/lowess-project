@@ -28,6 +28,7 @@ This changelog includes end-user changes only. For internal development notes, s
 * Fixed fraction-1 global fits ignoring custom weights, including when Batch sorts observations by x.
 * Fixed Batch `missing = "drop"` accepting custom weights with a length different from the original input; weights are validated before rows are dropped.
 * Fixed standard errors for global weighted fits to account for observation weights and weighted prediction leverage.
+* Fixed local Batch and retained-model prediction standard errors ignoring `custom_weights`; local SE moments now include the per-observation case weights.
 * Fixed global fits with all-zero custom weights to honor the configured zero-weight fallback policy.
 * Fixed fraction-1 global fits ignoring configured robustness iterations; they now reweight observations and report iterations used.
 * Fixed Batch cross-validation candidate fits ignoring `custom_weights`; K-fold CV now rejects more folds than observations instead of returning zero scores.
