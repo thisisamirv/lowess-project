@@ -20,6 +20,8 @@ This changelog includes end-user changes only. For internal development notes, s
 * Fixed global OLS fits treating predictor values with a large offset as degenerate; translated inputs now retain their fitted slope.
 * Fixed fraction-1 global fits ignoring custom weights, including when Batch sorts observations by x.
 * Fixed Batch `missing = "drop"` accepting custom weights with a length different from the original input; weights are validated before rows are dropped.
+* Fixed standard errors for global weighted fits to account for observation weights and weighted prediction leverage.
+* Fixed global fits with all-zero custom weights to honor the configured zero-weight fallback policy.
 
 * Improved agreement with R/Cleveland on sparse, asymmetric, and high-iteration fits by aligning effective-zero robustness stopping, local-linear degeneracy handling, span and endpoint traversal, delta interpolation, and adjusted-weight accumulation.
 * Fixed zero-radius neighborhoods dropping tied observations and accumulating adjusted weights in an order that diverged under robust iterations; the full tied run now contributes using reference-compatible normalization.

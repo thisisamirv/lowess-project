@@ -1652,6 +1652,85 @@ fn test_batch_global_ols_applies_custom_weights() {
 }
 
 #[test]
+fn test_batch_global_weighted_standard_errors_use_wls_formula() {
+    let x = [4.0_f64, 0.0, 3.0, 1.0, 2.0];
+    let y = [5.0_f64, 0.0, 4.0, 2.0, 1.0];
+    let weights = [3.0_f64, 1.0, 0.5, 2.0, 1.5];
+
+    let fit = |weights: Vec<f64>| {
+        Lowess::new()
+            .fraction(1.0)
+            .custom_weights(weights)
+            .intervals(IntervalsBuilder::new().confidence(0.95))
+            .build()
+            .unwrap()
+            .fit(&x, &y)
+            .unwrap()
+    };
+    let result = fit(weights.to_vec());
+    let scaled_result = fit(weights.iter().map(|weight| weight * 10.0).collect());
+    let standard_errors = result.standard_errors.unwrap();
+    let scaled_standard_errors = scaled_result.standard_errors.unwrap();
+
+    let weight_sum: f64 = weights.iter().sum();
+    let weighted_x_mean: f64 = x
+        .iter()
+        .zip(weights.iter())
+        .map(|(x, weight)| x * weight)
+        .sum::<f64>()
+        / weight_sum;
+    let weighted_x_ss: f64 = x
+        .iter()
+        .zip(weights.iter())
+        .map(|(x, weight)| weight * (x - weighted_x_mean).powi(2))
+        .sum();
+    let weighted_sse: f64 = y
+        .iter()
+        .zip(result.y.iter())
+        .zip(weights.iter())
+        .map(|((observed, fitted), weight)| weight * (observed - fitted).powi(2))
+        .sum();
+    let residual_variance = weighted_sse / (x.len() as f64 - 2.0);
+
+    for i in 0..x.len() {
+        let leverage = 1.0 / weight_sum + (x[i] - weighted_x_mean).powi(2) / weighted_x_ss;
+        let expected = (residual_variance * leverage).sqrt();
+        assert_relative_eq!(standard_errors[i], expected, epsilon = 1e-12);
+        assert_relative_eq!(scaled_standard_errors[i], expected, epsilon = 1e-12);
+    }
+}
+
+#[test]
+fn test_batch_global_zero_custom_weights_respect_fallback_policy() {
+    let x = [0.0_f64, 1.0, 2.0, 3.0];
+    let y = [2.0_f64, 4.0, 10.0, 12.0];
+    let cases = [
+        ("use_local_mean", [7.0_f64, 7.0, 7.0, 7.0]),
+        ("return_original", y),
+        ("return_none", y),
+    ];
+
+    for (fallback, expected) in cases {
+        let result = Lowess::new()
+            .fraction(1.0)
+            .custom_weights(vec![0.0; x.len()])
+            .zero_weight_fallback(fallback)
+            .outputs(["derivative"])
+            .build()
+            .unwrap()
+            .fit(&x, &y)
+            .unwrap();
+
+        assert_eq!(result.y, expected, "fallback policy: {fallback}");
+        assert_eq!(
+            result.derivative.unwrap(),
+            vec![0.0; x.len()],
+            "fallback derivative for policy: {fallback}"
+        );
+    }
+}
+
+#[test]
 fn test_batch_missing_drop_rejects_custom_weights_with_wrong_original_length() {
     use lowess::internals::primitives::errors::LowessError;
 

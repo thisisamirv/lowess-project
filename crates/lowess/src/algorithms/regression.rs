@@ -284,6 +284,66 @@ impl<T: Float> LinearFit<T> {
             })
             .collect()
     }
+
+    // Compute weighted least-squares standard errors for fitted mean responses.
+    pub fn wls_std_errors(&self, x: &[T], y: &[T], weights: &[T]) -> Vec<T> {
+        let n = x.len();
+        if n == 0 {
+            return Vec::new();
+        }
+
+        let weight_sum = weights.iter().copied().fold(T::zero(), |sum, w| sum + w);
+        if weight_sum <= T::zero() {
+            return vec![T::zero(); n];
+        }
+
+        let x_origin = x[0];
+        let weighted_x_offset = x
+            .iter()
+            .zip(weights.iter())
+            .fold(T::zero(), |sum, (&xi, &weight)| {
+                sum + weight * (xi - x_origin)
+            });
+        let x_mean = x_origin + weighted_x_offset / weight_sum;
+
+        let mut weighted_sxx = T::zero();
+        let mut weighted_x_offset_sq = T::zero();
+        let mut weighted_sse = T::zero();
+        let mut positive_weight_count = 0usize;
+        for i in 0..n {
+            let x_offset = x[i] - x_origin;
+            let dx = x[i] - x_mean;
+            let residual = y[i] - self.predict(x[i]);
+            weighted_sxx = weighted_sxx + weights[i] * dx * dx;
+            weighted_x_offset_sq = weighted_x_offset_sq + weights[i] * x_offset * x_offset;
+            weighted_sse = weighted_sse + weights[i] * residual * residual;
+            if weights[i] > T::zero() {
+                positive_weight_count += 1;
+            }
+        }
+
+        let degenerate_tolerance = T::epsilon() * weighted_x_offset_sq;
+        let is_degenerate = weighted_sxx <= degenerate_tolerance;
+        let parameter_count = if is_degenerate { 1usize } else { 2usize };
+        let degrees_of_freedom = positive_weight_count.saturating_sub(parameter_count);
+        if degrees_of_freedom == 0 {
+            return vec![T::zero(); n];
+        }
+
+        let df = T::from(degrees_of_freedom).unwrap_or(T::one());
+        let sigma_hat = (weighted_sse / df).sqrt();
+        x.iter()
+            .map(|&xi| {
+                let leverage = if is_degenerate {
+                    T::one() / weight_sum
+                } else {
+                    let dx = xi - x_mean;
+                    T::one() / weight_sum + (dx * dx) / weighted_sxx
+                };
+                sigma_hat * leverage.sqrt()
+            })
+            .collect()
+    }
 }
 
 impl<T: Float + WLSSolver> LinearFit<T> {

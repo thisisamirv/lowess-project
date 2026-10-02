@@ -969,16 +969,51 @@ impl<T: Float> LowessExecutor<T> {
 
         // Handle global regression (fraction >= 1.0)
         if eff_fraction >= T::one() {
-            let model = if let Some(custom_weights) = self.custom_weights.as_ref() {
-                let mut weights = custom_weights.clone();
+            let custom_weights = self.custom_weights.as_deref();
+            if let Some(weights) = custom_weights {
+                let weight_sum = weights.iter().copied().fold(T::zero(), |sum, w| sum + w);
+                if weight_sum <= T::zero() {
+                    let fallback = ZeroWeightFallback::from_u8(self.zero_weight_fallback);
+                    let mean = y.iter().copied().fold(T::zero(), |sum, yi| sum + yi)
+                        / T::from(n).unwrap_or(T::one());
+                    let smoothed = match fallback {
+                        ZeroWeightFallback::UseLocalMean => vec![mean; n],
+                        ZeroWeightFallback::ReturnOriginal | ZeroWeightFallback::ReturnNone => {
+                            y.to_vec()
+                        }
+                    };
+                    return Ok(ExecutorOutput {
+                        smoothed,
+                        std_errors: confidence_method.map(|_| vec![T::zero(); n]),
+                        iterations: None,
+                        used_fraction: eff_fraction,
+                        cv_scores: None,
+                        robustness_weights: vec![T::one(); n],
+                        residuals: None,
+                        confidence_lower: None,
+                        confidence_upper: None,
+                        prediction_lower: None,
+                        prediction_upper: None,
+                        derivative: self.return_derivative.then(|| vec![T::zero(); n]),
+                        predict_state: None,
+                    });
+                }
+            }
+
+            let model = if let Some(custom_weights) = custom_weights {
+                let mut weights = custom_weights.to_vec();
                 LinearFit::fit_wls(x, y, &mut weights, x[0], T::zero())
             } else {
                 LinearFit::fit_ols(x, y)
             };
             let smoothed = x.iter().map(|&xi| model.predict(xi)).collect();
+            let std_errors = confidence_method.map(|_| match custom_weights {
+                Some(weights) => model.wls_std_errors(x, y, weights),
+                None => model.ols_std_errors(x, y),
+            });
             return Ok(ExecutorOutput {
                 smoothed,
-                std_errors: confidence_method.map(|_| model.ols_std_errors(x, y)),
+                std_errors,
                 iterations: None,
                 used_fraction: eff_fraction,
                 cv_scores: None,
