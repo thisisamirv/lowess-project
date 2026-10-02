@@ -43,6 +43,7 @@ This changelog includes end-user changes only. For internal development notes, s
 * Fixed k-fold counts below two being silently changed to two; active k-fold CV now rejects invalid counts, while LOOCV continues to ignore `cv.k`.
 * Fixed GPU installation interpolating paths into shell commands; paths with shell-special characters are handled safely.
 * Fixed the GPU installer selecting Linux GNU artifacts on musl and other unsupported targets; unsupported platform/libc/architecture pairs now fail before download.
+* Validate local and downloaded GPU libraries before reporting installation success, suppress Windows loader-error dialogs while probing candidates, and stage downloads so failed transfers do not leave a partial cache artifact.
 * Fixed the default `boundary_policy` (`"extend"`) letting synthetic boundary points bias the shared robustness scale estimate used to reweight every point, compounding across robustness iterations.
 * Improved agreement with R/Cleveland on sparse, asymmetric, and high-iteration fits by aligning robustness stopping, local-linear degeneracy handling, neighborhood traversal, delta interpolation, and weighted accumulation.
 * Fixed zero-radius neighborhoods dropping tied observations or accumulating normalized weights in a different order under robust fits.

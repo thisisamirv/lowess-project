@@ -572,6 +572,11 @@ void testGpuCopySupportsShellCharactersInPaths() {
     std::ofstream output(source, std::ios::binary);
     output << "test";
   }
+  assertTrue(!fastlowess::gpu::detail::installLocalGpuFile(
+                 source.string(), destination.string()),
+             "GPU installer should reject a non-library candidate");
+  assertTrue(!std::filesystem::exists(destination),
+             "Rejected GPU candidate should not create an install file");
   assertTrue(
       fastlowess::gpu::detail::copyFile(source.string(), destination.string()),
       "GPU installer copy should handle shell characters in paths");

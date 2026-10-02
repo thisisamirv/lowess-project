@@ -9,7 +9,15 @@
 #ifndef FASTLOWESS_HPP
 #define FASTLOWESS_HPP
 
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h> // NOLINT(misc-include-cleaner)
+#endif
+
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <cstdint>
 #include <cstdio> // stdin, fileno / _fileno
@@ -23,6 +31,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <system_error>
 #include <utility>
 #include <vector>
 
@@ -39,6 +48,7 @@
 #include <process.h>
 #else
 #include <cerrno>
+#include <dlfcn.h>
 #include <spawn.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -1080,6 +1090,83 @@ inline bool copyFile(const std::string &src, const std::string &dst) {
       src, dst, std::filesystem::copy_options::overwrite_existing, error);
 }
 
+inline bool gpuLibraryEnabled(const std::string &path) {
+  using GpuEnabledFunction = int (*)();
+#ifdef _WIN32
+  DWORD previous_error_mode = 0;
+  const bool restore_error_mode =
+      SetThreadErrorMode(SEM_FAILCRITICALERRORS | SEM_NOOPENFILEERRORBOX,
+                         &previous_error_mode) != 0;
+  const HMODULE library = LoadLibraryA(path.c_str());
+  if (restore_error_mode) {
+    SetThreadErrorMode(previous_error_mode, nullptr);
+  }
+  if (library == nullptr) {
+    return false;
+  }
+  const auto gpu_enabled = reinterpret_cast<GpuEnabledFunction>(
+      GetProcAddress(library, "cpp_gpu_enabled"));
+  const bool enabled = gpu_enabled != nullptr && gpu_enabled() != 0;
+  FreeLibrary(library);
+#else
+  void *library = dlopen(path.c_str(), RTLD_NOW | RTLD_LOCAL);
+  if (library == nullptr) {
+    return false;
+  }
+  const auto gpu_enabled =
+      reinterpret_cast<GpuEnabledFunction>(dlsym(library, "cpp_gpu_enabled"));
+  const bool enabled = gpu_enabled != nullptr && gpu_enabled() != 0;
+  dlclose(library);
+#endif
+  return enabled;
+}
+
+inline std::string stagingPath(const std::string &destination) {
+  static std::atomic<unsigned long long> sequence{0};
+#ifdef _WIN32
+  const auto process_id = GetCurrentProcessId();
+#else
+  const auto process_id = getpid();
+#endif
+  return destination + ".tmp-" + std::to_string(process_id) + "-" +
+         std::to_string(sequence.fetch_add(1, std::memory_order_relaxed));
+}
+
+inline void removeFile(const std::string &path) {
+  std::error_code error;
+  std::filesystem::remove(path, error);
+}
+
+inline bool promoteFile(const std::string &staging,
+                        const std::string &destination) {
+#ifdef _WIN32
+  return MoveFileExA(staging.c_str(), destination.c_str(),
+                     MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != 0;
+#else
+  std::error_code error;
+  std::filesystem::rename(staging, destination, error);
+  return !error;
+#endif
+}
+
+inline bool installLocalGpuFile(const std::filesystem::path &source,
+                                const std::string &destination) {
+  const std::string source_path = source.string();
+  if (!gpuLibraryEnabled(source_path)) {
+    return false;
+  }
+  const std::string staging = stagingPath(destination);
+  if (!copyFile(source_path, staging)) {
+    removeFile(staging);
+    return false;
+  }
+  if (!gpuLibraryEnabled(staging) || !promoteFile(staging, destination)) {
+    removeFile(staging);
+    return false;
+  }
+  return true;
+}
+
 inline bool runProcess(const std::vector<std::string> &arguments) {
   if (arguments.empty()) {
     return false;
@@ -1160,6 +1247,11 @@ inline bool install(bool yes = false, const std::string &local_path = "") {
       std::cerr << "No such file: " << local_path << "\n";
       return false;
     }
+    if (!detail::gpuLibraryEnabled(local_path)) {
+      std::cerr << "The library at " << local_path
+                << " does not report GPU support.\n";
+      return false;
+    }
     if (!yes) {
       if (!detail::stdinIsInteractive()) {
         std::cerr << "install_gpu() requires confirmation; pass yes=true to "
@@ -1181,8 +1273,9 @@ inline bool install(bool yes = false, const std::string &local_path = "") {
                               std::filesystem::path(local_path).filename())
                                  .string();
     std::cout << "Installing " << local_path << " ...\n";
-    if (!detail::copyFile(local_path, dest)) {
-      std::cerr << "Failed to copy " << local_path << " to " << dest << "\n";
+    if (!detail::installLocalGpuFile(local_path, dest)) {
+      std::cerr << "Failed to validate/install " << local_path << " to " << dest
+                << "\n";
       return false;
     }
     std::cout << "Installed to " << dest << "\n";
@@ -1231,12 +1324,25 @@ inline bool install(bool yes = false, const std::string &local_path = "") {
   }
 
   const std::string dest = (std::filesystem::path(dir) / asset).string();
+  const std::string staging = detail::stagingPath(dest);
 
   std::cout << "Downloading " << url << " ...\n";
-  if (!detail::runProcess({"curl", "-fL", "--progress-bar", "-o", dest, url})) {
+  if (!detail::runProcess(
+          {"curl", "-fL", "--progress-bar", "-o", staging, url})) {
+    detail::removeFile(staging);
     std::cerr << "Download failed. A matching GPU build may not exist for "
                  "this platform/version yet, or `curl` is not installed."
               << "\n";
+    return false;
+  }
+  if (!detail::gpuLibraryEnabled(staging)) {
+    detail::removeFile(staging);
+    std::cerr << "Downloaded library does not report GPU support.\n";
+    return false;
+  }
+  if (!detail::promoteFile(staging, dest)) {
+    detail::removeFile(staging);
+    std::cerr << "Failed to install downloaded library to " << dest << "\n";
     return false;
   }
 

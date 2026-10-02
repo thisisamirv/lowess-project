@@ -205,6 +205,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed shell injection in the GPU installer, result and retained-handle cleanup leaks and empty-result accessors, silent acceptance of unsupported options/output names, swallowed constructor errors, negative iteration and CV-fold coercion, Windows FFI length truncation, and unsafe reuse of a fixed C++ test temp directory.
 - Fixed the GPU installer guessing x86_64/Linux for unsupported targets, including musl; it now refuses unsupported platform/libc/architecture pairs.
+- Validate local and downloaded GPU libraries before reporting installation success, suppress Windows loader-error dialogs while probing candidates, and stage downloads so failed transfers do not leave a partial cache artifact.
 
 **Go:**
 
