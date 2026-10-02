@@ -65,6 +65,39 @@ fn test_gpu_requests_limits_from_max_entrypoint_resources() {
     );
 }
 
+#[cfg(target_os = "windows")]
+#[test]
+fn test_dx12_backend_loads_without_dxc_dlls() {
+    let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+        backends: wgpu::Backends::DX12,
+        ..wgpu::InstanceDescriptor::new_without_display_handle()
+    });
+    let adapter =
+        match pollster::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions::default()))
+        {
+            Ok(adapter) => adapter,
+            Err(error) => {
+                println!("No DX12 adapter available, skipping DX12 loader regression: {error}");
+                return;
+            }
+        };
+    let (device, _queue) =
+        pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor::default()))
+            .expect("DX12 device creation should succeed");
+    let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        label: None,
+        source: wgpu::ShaderSource::Wgsl("@compute @workgroup_size(1) fn main() {}".into()),
+    });
+    let _ = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
+        label: None,
+        layout: None,
+        module: &shader,
+        entry_point: Some("main"),
+        compilation_options: Default::default(),
+        cache: None,
+    });
+}
+
 #[test]
 fn test_gpu_batch_unsorted_input_preserves_original_result_order() {
     if pollster::block_on(GpuExecutor::new()).is_err() {

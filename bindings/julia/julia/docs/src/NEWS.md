@@ -7,6 +7,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Added
 
+* Enabled the optional wgpu DirectX 12 backend for GPU-enabled Windows builds. DXC is loaded dynamically with an FXC fallback, avoiding eager imports of `dxcompiler.dll` and `dxil.dll`.
 * Added grouped `outputs` and `cv` keywords for `Lowess`, grouped outputs for Streaming and Online constructors, and retained-model prediction.
 * Added a grouped `intervals` keyword with residual-bootstrap intervals for `Lowess`, `StreamingLowess`, full-update `OnlineLowess`, and `predict`.
 * Added an "Alternative Software" guide comparing `FastLOWESS.jl` with the general-purpose LOESS implementation in `Loess.jl`.

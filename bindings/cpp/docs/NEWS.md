@@ -7,6 +7,10 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ## [Unreleased]
 
+### Added
+
+* Enabled the optional wgpu DirectX 12 backend for GPU-enabled Windows builds. DXC is loaded dynamically with an FXC fallback, avoiding eager imports of `dxcompiler.dll` and `dxil.dll`.
+
 ### Changed
 
 * Breaking change: replaced flat interval levels with grouped `intervals.confidence`, `intervals.prediction`, and `intervals.bootstrap` on Batch, Streaming, Online, and Predict options. Use the optional outer `seed` for CV and fit-time bootstrap, or on Predict options for prediction-time bootstrap; zero is a valid seed.

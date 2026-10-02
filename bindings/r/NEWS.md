@@ -5,6 +5,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Added
 
+* Enabled the optional wgpu DirectX 12 backend for GPU-enabled Windows builds. DXC is loaded dynamically with an FXC fallback, avoiding eager imports of `dxcompiler.dll` and `dxil.dll`.
 * Added `cv_opts()` to configure grouped cross-validation options for `Lowess(cv = ...)`.
 * Added `intervals_opts()` and an `intervals` argument to `Lowess()`, `StreamingLowess()`, `OnlineLowess()`, and `predict()`, including bootstrap intervals via `bootstrap`.
 * Added a `seed` argument to `Lowess()`, `StreamingLowess()`, `OnlineLowess()`, and `predict()` for reproducible cross-validation and bootstrap resampling.

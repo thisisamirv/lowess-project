@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **fastLowess:**
 
+- Enabled the optional wgpu DirectX 12 backend for GPU-enabled Windows builds. DXC is loaded dynamically with an FXC fallback, avoiding eager imports of `dxcompiler.dll` and `dxil.dll`.
 - Added a full-featured quick-start example for the existing Batch `Predict` API.
 - Added GPU-resident Batch residual-bootstrap sampling, refits, and pointwise SE/percentile reduction. Replicates are processed sequentially on the device without per-replicate readback; GPU draws are reproducible for a given seed but differ from CPU bootstrap draws.
 - Added crate-level Streaming and Online quick starts covering typical use, annotated full-feature options, result/error handling, and ndarray input.

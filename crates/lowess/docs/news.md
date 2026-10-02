@@ -7,6 +7,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Added
 
+* Enabled the optional wgpu DirectX 12 backend for GPU-enabled Windows builds. DXC is loaded dynamically with an FXC fallback, avoiding eager imports of `dxcompiler.dll` and `dxil.dll`.
 * Added `LowessBuilder::outputs(names)` as a grouped replacement for the individual output toggles. Unknown names are collected and reported together by `.build()`.
 * Added grouped cross-validation configuration through `CVBuilder` and `.cv(...)`.
 * Added `PredictBuilder::outputs(names)` to group prediction outputs such as standard errors and derivatives.
