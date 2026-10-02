@@ -55,6 +55,7 @@ constexpr double k_cw_outlier_value = 100.0;
 constexpr double k_cw_slope = 2.0;
 constexpr double k_cv_low_fraction = 0.4;
 constexpr double k_cv_high_fraction = 0.6;
+constexpr std::size_t k_temp_directory_attempts = 1000U;
 constexpr std::size_t k_bootstrap_replicates = 12U;
 constexpr int k_bootstrap_online_min_points = 5;
 
@@ -395,6 +396,16 @@ void testGroupedCvBootstrapAndPredict() {
   assertTrue(first.derivative().size() == 2,
              "predict should return requested derivatives");
 
+  fastlowess::PredictOptions invalid_outputs;
+  invalid_outputs.outputs = {"standard_errors"};
+  bool predict_rejected = false;
+  try {
+    const auto invalid = model.predict({2.5}, invalid_outputs);
+  } catch (const fastlowess::LowessError &) {
+    predict_rejected = true;
+  }
+  assertTrue(predict_rejected, "Predict should reject unknown output names");
+
   fastlowess::PredictOptions invalid_options;
   invalid_options.extrapolation = "error";
   const auto failed = model.predict({-1.0}, invalid_options);
@@ -428,33 +439,133 @@ void testStreamingRejectsBatchOnlyOptions() {
   assertTrue(rejected, "streaming should reject inherited Batch-only options");
 }
 
+void testUnknownOutputNamesAreRejected() {
+  fastlowess::LowessOptions batch_options;
+  batch_options.outputs = {"standard_errors"};
+  bool batch_rejected = false;
+  try {
+    const fastlowess::Lowess model(batch_options);
+  } catch (const fastlowess::LowessError &) {
+    batch_rejected = true;
+  }
+  assertTrue(batch_rejected, "Batch should reject unknown output names");
+
+  fastlowess::OnlineOptions online_options;
+  online_options.outputs = {"diagnostics"};
+  bool online_rejected = false;
+  try {
+    const fastlowess::OnlineLowess model(online_options);
+  } catch (const fastlowess::LowessError &) {
+    online_rejected = true;
+  }
+  assertTrue(online_rejected, "Online should reject unsupported output names");
+
+  fastlowess::StreamingOptions streaming_options;
+  streaming_options.outputs = {"diagnostic"};
+  bool streaming_rejected = false;
+  try {
+    const fastlowess::StreamingLowess model(streaming_options);
+  } catch (const fastlowess::LowessError &) {
+    streaming_rejected = true;
+  }
+  assertTrue(streaming_rejected,
+             "Streaming should reject unknown output names");
+}
+
 void testNegativeAdapterIterationsAreRejectedClearly() {
+  fastlowess::LowessOptions batch_options;
+  batch_options.iterations = -1;
+  bool batch_rejected = false;
+  try {
+    const fastlowess::Lowess batch(batch_options);
+  } catch (const fastlowess::LowessError &error) {
+    batch_rejected =
+        std::string(error.what()).find("iterations must be non-negative") !=
+        std::string::npos;
+  }
+  assertTrue(batch_rejected,
+             "Batch construction should report negative iterations");
+
   fastlowess::StreamingOptions streaming_options;
   streaming_options.iterations = -1;
-  const fastlowess::StreamingLowess streaming(streaming_options);
-  const char *streaming_error = cpp_last_error_message();
-  assertTrue(streaming_error != nullptr &&
-                 std::string(streaming_error)
-                         .find("iterations must be non-negative") !=
-                     std::string::npos,
-             "streaming should reject negative iterations before conversion");
+  bool streaming_rejected = false;
+  try {
+    const fastlowess::StreamingLowess streaming(streaming_options);
+  } catch (const fastlowess::LowessError &error) {
+    streaming_rejected =
+        std::string(error.what()).find("iterations must be non-negative") !=
+        std::string::npos;
+  }
+  assertTrue(streaming_rejected,
+             "streaming construction should report negative iterations");
 
   fastlowess::OnlineOptions online_options;
   online_options.iterations = -1;
-  const fastlowess::OnlineLowess online(online_options);
-  const char *online_error = cpp_last_error_message();
-  assertTrue(
-      online_error != nullptr &&
-          std::string(online_error).find("iterations must be non-negative") !=
-              std::string::npos,
-      "online should reject negative iterations before conversion");
+  bool online_rejected = false;
+  try {
+    const fastlowess::OnlineLowess online(online_options);
+  } catch (const fastlowess::LowessError &error) {
+    online_rejected =
+        std::string(error.what()).find("iterations must be non-negative") !=
+        std::string::npos;
+  }
+  assertTrue(online_rejected,
+             "online construction should report negative iterations");
+}
+
+void testKfoldRejectsFewerThanTwoFolds() {
+  fastlowess::LowessOptions options;
+  options.cv.fractions = {k_basic_fraction};
+  options.cv.k = 1;
+  bool one_fold_rejected = false;
+  try {
+    const fastlowess::Lowess model(options);
+  } catch (const fastlowess::LowessError &error) {
+    one_fold_rejected =
+        std::string(error.what()).find("cv.k must be at least 2") !=
+        std::string::npos;
+  }
+  assertTrue(one_fold_rejected, "k-fold CV should reject k=1 at construction");
+
+  options.cv.k = -1;
+  bool negative_k_rejected = false;
+  try {
+    const fastlowess::Lowess invalid_model(options);
+  } catch (const fastlowess::LowessError &error) {
+    negative_k_rejected =
+        std::string(error.what()).find("cv.k must be at least 2") !=
+        std::string::npos;
+  }
+  assertTrue(negative_k_rejected,
+             "negative cv.k should be rejected at construction");
+
+  options.cv.method = "loocv";
+  fastlowess::Lowess loocv_model(options);
+  const auto loocv_result =
+      loocv_model.fit(toVector(k_sample_x_values), toVector(k_sample_y_values));
+  assertTrue(loocv_result.has_value(), "LOOCV should ignore cv.k");
+  assertTrue(loocv_result.value().cv_scores().size() == 1,
+             "LOOCV should still evaluate its candidate fraction");
 }
 
 void testGpuCopySupportsShellCharactersInPaths() {
-  const auto directory =
+  const auto base =
       std::filesystem::temp_directory_path() / "fastlowess-cpp-copy-test";
-  std::filesystem::remove_all(directory);
-  std::filesystem::create_directories(directory);
+  std::filesystem::path directory;
+  for (std::size_t attempt = 0; attempt < k_temp_directory_attempts;
+       ++attempt) {
+    const auto candidate = base.string() + "-" + std::to_string(attempt);
+    std::error_code error;
+    if (std::filesystem::create_directory(candidate, error)) {
+      directory = candidate;
+      break;
+    }
+    if (error && error != std::errc::file_exists) {
+      throw std::filesystem::filesystem_error(
+          "Could not create GPU copy test directory", candidate, error);
+    }
+  }
+  assertTrue(!directory.empty(), "Could not allocate a unique temp directory");
   const auto source = directory / "source ; & file.bin";
   const auto destination = directory / "destination ; & file.bin";
   {
@@ -846,16 +957,18 @@ void testOnlineReturnSeAndIntervalsRequiresFullMode() {
   options.fraction = k_basic_fraction;
   options.window_capacity = k_online_window_capacity;
   options.outputs = {"se"};
-  fastlowess::OnlineLowess online_lowess(options);
 
-  bool caught = false;
+  bool caught_expected_error = false;
   try {
+    fastlowess::OnlineLowess online_lowess(options);
     const auto result =
         online_lowess.add_point(1.0, k_online_return_se_test_y).value();
-  } catch (...) {
-    caught = true;
+  } catch (const fastlowess::LowessError &error) {
+    caught_expected_error =
+        std::string(error.what()).find("update_mode(\"full\")") !=
+        std::string::npos;
   }
-  assertTrue(caught,
+  assertTrue(caught_expected_error,
              "return_se without update_mode=full should fail at construction");
 }
 
@@ -940,7 +1053,9 @@ int main() {
     testGroupedCvBootstrapAndPredict();
     testEmptyResultAccessors();
     testStreamingRejectsBatchOnlyOptions();
+    testUnknownOutputNamesAreRejected();
     testNegativeAdapterIterationsAreRejectedClearly();
+    testKfoldRejectsFewerThanTwoFolds();
     testGpuCopySupportsShellCharactersInPaths();
     testLowessReuse();
     testStreamingReturnsAllPoints();

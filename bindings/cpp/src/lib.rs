@@ -378,7 +378,21 @@ pub unsafe extern "C" fn cpp_lowess_new(
 
         let cv_fractions_vec = shared_parse::option_vec_from_ptr(cv_fractions, cv_fractions_len);
         let cv_method_str = shared_parse::parse_c_str_or_default(cv_method, "kfold").to_string();
-        let cv_k_usize = cv_k.max(2) as usize;
+        let uses_kfold = cv_fractions_vec
+            .as_ref()
+            .is_some_and(|fractions| !fractions.is_empty())
+            && matches!(
+                cv_method_str.to_ascii_lowercase().as_str(),
+                "kfold" | "k_fold" | "k-fold"
+            );
+        let cv_k_usize = if uses_kfold {
+            if cv_k < 2 {
+                return null_with_error("cv.k must be at least 2 for k-fold CV");
+            }
+            cv_k as usize
+        } else {
+            0
+        };
 
         let backend_str =
             shared_parse::parse_c_str_or_default(backend, shared_parse::DEFAULT_BACKEND);

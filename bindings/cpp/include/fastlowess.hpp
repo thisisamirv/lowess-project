@@ -17,6 +17,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <initializer_list>
 #include <iostream>
 #include <limits>
 #include <optional>
@@ -82,6 +83,26 @@ public:
   explicit LowessError(const std::string &message)
       : std::runtime_error(message) {}
 };
+
+inline void validateOutputs(const std::vector<std::string> &outputs,
+                            std::initializer_list<const char *> supported,
+                            const char *adapter) {
+  for (const auto &output : outputs) {
+    const auto *const found =
+        std::find_if(supported.begin(), supported.end(),
+                     [&output](const char *name) { return output == name; });
+    if (found == supported.end()) {
+      throw LowessError("Unknown output '" + output + "' for " + adapter);
+    }
+  }
+}
+
+[[noreturn]] inline void throwInitializationError(const char *fallback) {
+  if (const char *message = cpp_last_error_message()) {
+    throw LowessError(message);
+  }
+  throw LowessError(fallback);
+}
 
 /**
  * @brief A result type that holds either a value or an error.
@@ -522,6 +543,7 @@ public:
   /// training set.
   PredictResult predict(const std::vector<double> &new_x,
                         const PredictOptions &options = {}) const {
+    validateOutputs(options.outputs, {"se", "derivative"}, "Predict");
     const auto result = cpp_predict(
         ptr_, new_x.data(), static_cast<size_t>(new_x.size()),
         hasOutput(options.outputs, "se") ? 1 : 0, options.intervals.confidence,
@@ -719,6 +741,10 @@ private:
 class Lowess {
 public:
   explicit Lowess(const LowessOptions &options = {}) {
+    validateOutputs(
+        options.outputs,
+        {"diagnostics", "residuals", "weights", "derivative", "se", "sorted"},
+        "Lowess");
     ptr_ = cpp_lowess_new(
         options.fraction, options.iterations, options.delta,
         options.weight_function.c_str(), options.robustness_method.c_str(),
@@ -735,6 +761,9 @@ public:
         hasOutput(options.outputs, "se") ? 1 : 0,
         hasOutput(options.outputs, "sorted") ? 1 : 0, options.backend.c_str(),
         options.missing.c_str(), options.retain_model ? 1 : 0);
+    if (ptr_ == nullptr) {
+      throwInitializationError("Failed to initialize Lowess");
+    }
     if (options.seed.has_value()) {
       cpp_lowess_set_seed(ptr_, *options.seed);
     }
@@ -819,6 +848,9 @@ public:
         hasOutput(options.outputs, "se") ? 1 : 0, options.intervals.confidence,
         options.intervals.prediction, options.intervals.bootstrap,
         options.seed.value_or(0), options.seed.has_value() ? 1 : 0);
+    if (ptr_ == nullptr) {
+      throwInitializationError("Failed to initialize StreamingLowess");
+    }
   }
 
   ~StreamingLowess() {
@@ -880,6 +912,9 @@ public:
 
 private:
   static void validate_options(const StreamingOptions &options) {
+    validateOutputs(options.outputs,
+                    {"diagnostics", "residuals", "weights", "derivative", "se"},
+                    "StreamingLowess");
     if (!options.cv.fractions.empty() || options.backend != "cpu" ||
         !options.custom_weights.empty() ||
         hasOutput(options.outputs, "sorted") || options.retain_model) {
@@ -899,6 +934,8 @@ private:
 class OnlineLowess {
 public:
   explicit OnlineLowess(const OnlineOptions &options = {}) {
+    validateOutputs(options.outputs, {"weights", "derivative", "se"},
+                    "OnlineLowess");
     ptr_ = cpp_online_new(
         options.fraction, options.iterations, options.delta,
         options.weight_function.c_str(), options.robustness_method.c_str(),
@@ -911,6 +948,9 @@ public:
         hasOutput(options.outputs, "se") ? 1 : 0, options.intervals.confidence,
         options.intervals.prediction, options.intervals.bootstrap,
         options.seed.value_or(0), options.seed.has_value() ? 1 : 0);
+    if (ptr_ == nullptr) {
+      throwInitializationError("Failed to initialize OnlineLowess");
+    }
   }
 
   ~OnlineLowess() {
@@ -959,21 +999,27 @@ private:
 namespace gpu {
 
 namespace detail {
-inline std::string platformTag() {
+inline std::optional<std::string> platformTag() {
 #ifdef _WIN32
   return "windows";
 #elif defined(__APPLE__)
   return "macos";
-#else
+#elif defined(__ANDROID__)
+  return std::nullopt;
+#elif defined(__linux__)
   return "linux";
+#else
+  return std::nullopt;
 #endif
 }
 
-inline std::string archTag() {
+inline std::optional<std::string> archTag() {
 #if defined(__aarch64__) || defined(_M_ARM64)
   return "aarch64";
-#else
+#elif defined(__x86_64__) || defined(_M_X64)
   return "x86_64";
+#else
+  return std::nullopt;
 #endif
 }
 
@@ -1138,10 +1184,19 @@ inline bool install(bool yes = false, const std::string &local_path = "") {
     return true;
   }
 
+  const auto platform = detail::platformTag();
+  const auto architecture = detail::archTag();
+  if (!platform || !architecture) {
+    std::cerr << "No prebuilt GPU library is available for this platform and "
+                 "architecture."
+              << "\n";
+    return false;
+  }
+
   const std::string version = cpp_version();
   const std::string asset = "libfastlowess_cpp-gpu-v" + version + "-" +
-                            detail::platformTag() + "-" + detail::archTag() +
-                            "." + detail::libraryExt();
+                            *platform + "-" + *architecture + "." +
+                            detail::libraryExt();
   // GPU artifacts across all versions live in this one perpetual release
   // instead of cluttering each version's own release page; the source
   // version is embedded in the asset filename above instead.

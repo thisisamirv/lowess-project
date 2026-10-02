@@ -37,8 +37,12 @@ This changelog includes end-user changes only. For internal development notes, s
 * Fixed Online incremental mode accepting positive `delta` and `auto_converge` settings it cannot use; unsupported combinations now error.
 * Fixed grouped intervals discarding distinct confidence and prediction levels; each requested coverage is now applied independently.
 * Fixed empty or failed results producing invalid vector ranges and leaking owned error/retained-model state; result accessors now return empty vectors safely and RAII releases unclaimed resources.
+* Fixed unknown output names being silently ignored; Batch, Streaming, Online, and Predict now reject names not supported by that operation.
+* Fixed model initialization failures being hidden behind null-model errors; C++ constructors now throw the original configuration error.
 * Fixed `StreamingOptions` silently accepting Batch-only settings and negative iteration counts producing misleading errors; unsupported options and negative counts are now rejected clearly.
+* Fixed k-fold counts below two being silently changed to two; active k-fold CV now rejects invalid counts, while LOOCV continues to ignore `cv.k`.
 * Fixed GPU installation interpolating paths into shell commands; paths with shell-special characters are handled safely.
+* Fixed the GPU installer selecting x86_64/Linux artifacts for unsupported targets; unsupported platform/architecture pairs now fail before download.
 
 * Fixed the default `boundary_policy` (`"extend"`) letting synthetic boundary points bias the shared robustness scale estimate used to reweight every point, compounding across robustness iterations.
 * Improved agreement with R/Cleveland on sparse, asymmetric, and high-iteration fits by aligning robustness stopping, local-linear degeneracy handling, neighborhood traversal, delta interpolation, and weighted accumulation.
