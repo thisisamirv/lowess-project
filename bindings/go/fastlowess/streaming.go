@@ -11,8 +11,9 @@ import (
 	"runtime"
 )
 
-// StreamingOptions configures a StreamingLowess model. Cross-validation and
-// the GPU Backend are Batch-only and have no effect here.
+// StreamingOptions configures a StreamingLowess model. Start with
+// DefaultStreamingOptions; the zero value is not equivalent to those defaults.
+// Cross-validation and the GPU Backend are Batch-only and have no effect here.
 type StreamingOptions struct {
 	// Fraction is the smoothing fraction, in (0, 1]. Default: 0.67.
 	Fraction float64

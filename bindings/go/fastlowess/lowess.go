@@ -32,11 +32,13 @@ type IntervalsOptions struct {
 }
 
 // Options configures a Lowess, StreamingLowess, or OnlineLowess model.
-// Use DefaultOptions and override only the fields you need.
+// Use DefaultOptions and override only the fields you need. The zero value
+// Options{} is not equivalent to DefaultOptions: fields such as Fraction,
+// Iterations, and Parallel remain zero/false unless initialized by the helper.
 type Options struct {
-	// Fraction is the smoothing fraction, in (0, 1]. Default: 0.67.
+	// Fraction is the smoothing fraction, in (0, 1]. DefaultOptions value: 0.67.
 	Fraction float64
-	// Iterations is the number of robustness iterations, in [0, 1000]. Default: 3.
+	// Iterations is the number of robustness iterations, in [0, 1000]. DefaultOptions value: 3.
 	Iterations int
 	// Delta is the interpolation distance threshold, as a non-negative
 	// fraction of the x range; points within Delta of each other on x share
@@ -94,7 +96,8 @@ type Options struct {
 	// calling Fit twice.
 	ReturnSorted bool
 
-	// Parallel enables parallel processing. Default: true.
+	// Parallel enables parallel processing. DefaultOptions value: true. The zero-value
+	// Options struct leaves this false.
 	Parallel bool
 	// Backend selects the execution backend: "cpu" (default) or "gpu". GPU
 	// support requires the native library to be built with the `gpu`

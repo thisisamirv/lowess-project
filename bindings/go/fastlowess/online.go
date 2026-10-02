@@ -11,9 +11,10 @@ import (
 	"runtime"
 )
 
-// OnlineOptions configures an OnlineLowess model. Online LOWESS processes
-// one point at a time, so it has no Parallel or Backend option, and
-// ReturnDiagnostics/ReturnResiduals are always computed for free.
+// OnlineOptions configures an OnlineLowess model. Start with
+// DefaultOnlineOptions; the zero value is not equivalent to those defaults.
+// Online LOWESS processes one point at a time, so it has no Parallel or Backend
+// option, and ReturnDiagnostics/ReturnResiduals are always computed for free.
 type OnlineOptions struct {
 	// Fraction is the smoothing fraction, in (0, 1]. Default: 0.67.
 	Fraction float64
