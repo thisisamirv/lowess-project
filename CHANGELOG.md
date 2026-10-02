@@ -225,7 +225,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Node.js:**
 
 - Fixed `OnlineLowess` and `LowessResult.predict()` silently ignoring `outputs`; online `"weights"`/`"derivative"`/`"se"` and prediction `"se"`/`"derivative"` are now applied.
-- Reject unknown output names, validate local and downloaded GPU addons before installing them to a Windows-safe versioned sidecar, and declare `fit_async()` as returning `Promise<LowessResult>`.
+- Reject unknown output names, reliably detect musl when selecting GPU addons, validate installs to a Windows-safe versioned sidecar, reject unsupported musl ARM, and preserve the `fit_async()` return type across builds.
 
 **WASM:**
 

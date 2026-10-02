@@ -30,13 +30,34 @@ const GPU_RELEASE_TAG = 'gpu-builds'
 // here rather than imported).
 const isFileMusl = (f) => f.includes('libc.musl-') || f.includes('ld-musl-')
 
-function isMusl() {
-    if (process.platform !== 'linux') return false
+function isMuslFromReport(report) {
+    if (report === undefined) {
+        try {
+            if (process.report && typeof process.report.getReport === 'function') {
+                process.report.excludeNetwork = true
+                report = process.report.getReport()
+            }
+        } catch {
+            return null
+        }
+    }
+    if (!report) return null
+    if (report.header && report.header.glibcVersionRuntime) return false
+    if (Array.isArray(report.sharedObjects) && report.sharedObjects.some(isFileMusl)) {
+        return true
+    }
+    return false
+}
+
+function isMuslFromFilesystem() {
     try {
         return readFileSync('/usr/bin/ldd', 'utf-8').includes('musl')
     } catch {
-        // fall through
+        return null
     }
+}
+
+function isMuslFromChildProcess() {
     try {
         return execFileSync('ldd', ['--version'], { encoding: 'utf8' }).includes('musl')
     } catch {
@@ -44,22 +65,30 @@ function isMusl() {
     }
 }
 
+function isMusl() {
+    if (process.platform !== 'linux') return false
+    let musl = isMuslFromFilesystem()
+    if (musl === null) musl = isMuslFromReport()
+    if (musl === null) musl = isMuslFromChildProcess()
+    return musl
+}
+
 // These 9 platforms are built by release-gpu.yml.
-function currentPlatformSuffix() {
-    if (process.platform === 'win32') {
-        if (process.arch === 'x64') return 'win32-x64-msvc'
-        if (process.arch === 'arm64') return 'win32-arm64-msvc'
+function currentPlatformSuffix(platform = process.platform, arch = process.arch, musl = isMusl()) {
+    if (platform === 'win32') {
+        if (arch === 'x64') return 'win32-x64-msvc'
+        if (arch === 'arm64') return 'win32-arm64-msvc'
         return null
     }
-    if (process.platform === 'darwin') {
-        if (process.arch === 'x64') return 'darwin-x64'
-        if (process.arch === 'arm64') return 'darwin-arm64'
+    if (platform === 'darwin') {
+        if (arch === 'x64') return 'darwin-x64'
+        if (arch === 'arm64') return 'darwin-arm64'
         return null
     }
-    if (process.platform === 'linux') {
-        if (process.arch === 'x64') return isMusl() ? 'linux-x64-musl' : 'linux-x64-gnu'
-        if (process.arch === 'arm64') return isMusl() ? 'linux-arm64-musl' : 'linux-arm64-gnu'
-        if (process.arch === 'arm') return 'linux-arm-gnueabihf'
+    if (platform === 'linux') {
+        if (arch === 'x64') return musl ? 'linux-x64-musl' : 'linux-x64-gnu'
+        if (arch === 'arm64') return musl ? 'linux-arm64-musl' : 'linux-arm64-gnu'
+        if (arch === 'arm' && !musl) return 'linux-arm-gnueabihf'
         return null
     }
     return null
@@ -199,4 +228,8 @@ async function installGpu(options = {}) {
     console.log('Restart Node.js for the change to take effect.')
 }
 
-module.exports = { gpuAvailable, installGpu }
+module.exports = {
+    gpuAvailable,
+    installGpu,
+    _testing: { currentPlatformSuffix, isMuslFromReport },
+}

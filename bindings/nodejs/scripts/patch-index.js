@@ -1,14 +1,14 @@
 'use strict'
 
-// napi-rs fully regenerates index.js on every `napi build`, wiping any manual
-// additions. Re-append the `installGpu` export after each build so
-// `require('fastlowess').installGpu()` (the documented API) keeps working.
+// napi-rs regenerates the loader and declarations on every build. Restore the
+// GPU sidecar hook, installer export, and async result type after generation.
 
 const fs = require('fs')
 const path = require('path')
 const { version } = require('../package.json')
 
 const indexPath = path.join(__dirname, '..', 'index.js')
+const declarationsPath = path.join(__dirname, '..', 'index.d.ts')
 const nativeLoaderMarker = 'function requireNative() {\n'
 const gpuLoaderMarker = '  // fastlowess versioned GPU override\n'
 const gpuLoader = `${gpuLoaderMarker}  if (!process.env.NAPI_RS_NATIVE_LIBRARY_PATH) {
@@ -35,3 +35,11 @@ if (!contents.includes(marker)) {
     contents += `\n${marker}\n`
 }
 fs.writeFileSync(indexPath, contents)
+
+let declarations = fs.readFileSync(declarationsPath, 'utf8')
+const asyncResultType = /(fit_async\([^\r\n]*\): Promise<)unknown(>)/
+declarations = declarations.replace(asyncResultType, '$1LowessResult$2')
+if (!/fit_async\([^\r\n]*\): Promise<LowessResult>/.test(declarations)) {
+    throw new Error('Could not locate the generated fit_async declaration')
+}
+fs.writeFileSync(declarationsPath, declarations)

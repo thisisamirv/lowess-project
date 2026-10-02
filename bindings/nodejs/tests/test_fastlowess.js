@@ -5,6 +5,29 @@ const os = require('node:os');
 const path = require('node:path');
 
 const fastlowess = require('..');
+const gpuInstallerTesting = require('../gpu-installer')._testing;
+
+test('GPU target detection handles musl reports and rejects unsupported ARM musl', () => {
+    assert.strictEqual(
+        gpuInstallerTesting.isMuslFromReport({
+            header: {},
+            sharedObjects: ['/lib/ld-musl-x86_64.so.1'],
+        }),
+        true
+    );
+    assert.strictEqual(
+        gpuInstallerTesting.isMuslFromReport({
+            header: { glibcVersionRuntime: '2.39' },
+            sharedObjects: [],
+        }),
+        false
+    );
+    assert.strictEqual(
+        gpuInstallerTesting.currentPlatformSuffix('linux', 'x64', true),
+        'linux-x64-musl'
+    );
+    assert.strictEqual(gpuInstallerTesting.currentPlatformSuffix('linux', 'arm', true), null);
+});
 
 test('unknown outputs are rejected for each API mode', () => {
     const x = new Float64Array([1, 2, 3, 4, 5]);
