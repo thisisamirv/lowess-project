@@ -69,8 +69,11 @@ impl<T: Float> Default for IntervalsBuilder<T> {
 // Configuration for computing confidence/prediction intervals and standard errors.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct IntervalMethod<T> {
-    // Desired probability coverage (e.g., 0.95 for 95% intervals).
+    // Confidence interval coverage (or the sole interval level for single-level methods).
     pub level: T,
+
+    // Prediction interval coverage; None falls back to `level`.
+    pub prediction_level: Option<T>,
 
     // Whether to compute confidence intervals for the mean function.
     pub confidence: bool,
@@ -93,6 +96,7 @@ impl<T: Float> IntervalMethod<T> {
     fn none() -> Self {
         Self {
             level: T::from(0.95).unwrap(),
+            prediction_level: None,
             confidence: false,
             prediction: false,
             se: false,
@@ -103,6 +107,7 @@ impl<T: Float> IntervalMethod<T> {
     pub fn confidence(level: T) -> Self {
         Self {
             level,
+            prediction_level: None,
             confidence: true,
             prediction: false,
             se: true,
@@ -113,6 +118,7 @@ impl<T: Float> IntervalMethod<T> {
     pub fn prediction(level: T) -> Self {
         Self {
             level,
+            prediction_level: Some(level),
             confidence: false,
             prediction: true,
             se: true,
@@ -123,10 +129,15 @@ impl<T: Float> IntervalMethod<T> {
     pub fn se() -> Self {
         Self {
             level: T::from(0.95).unwrap(),
+            prediction_level: None,
             confidence: false,
             prediction: false,
             se: true,
         }
+    }
+
+    pub fn prediction_coverage(&self) -> T {
+        self.prediction_level.unwrap_or(self.level)
     }
 }
 
@@ -382,8 +393,17 @@ impl<T: Float> IntervalMethod<T> {
         let (mut pred_lower, mut pred_upper) = if self.prediction {
             let rsd = Self::calculate_residual_sd(residuals);
             let (lower, upper) = self
-                .compute_prediction_intervals_impl(y_smooth, std_errors, rsd)
-                .map_err(|_| LowessError::InvalidIntervals(self.level.to_f64().unwrap_or(0.0)))?;
+                .compute_prediction_intervals_impl(
+                    y_smooth,
+                    std_errors,
+                    rsd,
+                    self.prediction_coverage(),
+                )
+                .map_err(|_| {
+                    LowessError::InvalidIntervals(
+                        self.prediction_coverage().to_f64().unwrap_or(0.0),
+                    )
+                })?;
             (Some(lower), Some(upper))
         } else {
             (None, None)
@@ -447,8 +467,9 @@ impl<T: Float> IntervalMethod<T> {
         y_smooth: &[T],
         std_errors: &[T],
         residual_sd: T,
+        level: T,
     ) -> Result<(Vec<T>, Vec<T>), &'static str> {
-        let z = Self::approximate_z_score(self.level)?;
+        let z = Self::approximate_z_score(level)?;
         let rsd_sq = residual_sd * residual_sd;
 
         let lower: Vec<T> = y_smooth
@@ -687,9 +708,12 @@ impl BootstrapConfig {
             done += len;
         }
 
-        let half_alpha = (T::one() - method.level) / T::from(2.0).unwrap();
-        let q_lo = half_alpha;
-        let q_hi = T::one() - half_alpha;
+        let confidence_tail = (T::one() - method.level) / T::from(2.0).unwrap();
+        let prediction_tail = (T::one() - method.prediction_coverage()) / T::from(2.0).unwrap();
+        let confidence_q_lo = confidence_tail;
+        let confidence_q_hi = T::one() - confidence_tail;
+        let prediction_q_lo = prediction_tail;
+        let prediction_q_hi = T::one() - prediction_tail;
         let b_t = T::from(b).unwrap();
 
         let mut std_errors = Vec::with_capacity(n_output);
@@ -714,14 +738,14 @@ impl BootstrapConfig {
                     *p = f + centered[rng.next_index(n)];
                 }
                 sort_floats(&mut pred);
-                pl.push(quantile_sorted(&pred, q_lo));
-                pu.push(quantile_sorted(&pred, q_hi));
+                pl.push(quantile_sorted(&pred, prediction_q_lo));
+                pu.push(quantile_sorted(&pred, prediction_q_hi));
             }
 
             if method.confidence {
                 sort_floats(col);
-                cl.push(quantile_sorted(col, q_lo));
-                cu.push(quantile_sorted(col, q_hi));
+                cl.push(quantile_sorted(col, confidence_q_lo));
+                cu.push(quantile_sorted(col, confidence_q_hi));
             }
         }
 

@@ -12,14 +12,16 @@
 #' in memory, see \code{\link{Lowess}}; for point-by-point real-time data,
 #' see \code{\link{OnlineLowess}}.
 #'
+#' Confidence and prediction interval coverage levels are independent.
+#'
 #' Overlapping regions between chunks are reconciled via `merge_strategy`:
 #'
 #' | Strategy | Alias | Behavior |
 #' | --- | --- | --- |
-#' | `"weighted_average"` (default) | `"weighted"` | Distance-weighted blend |
-#' | `"average"` | `"mean"` | Average overlapping values |
-#' | `"take_first"` | `"first"` | Keep left chunk values |
-#' | `"take_last"` | `"last"` | Keep right chunk values |
+#' | "weighted_average" (default) | "weighted" | Distance-weighted blend |
+#' | "average" | "mean" | Average overlapping values |
+#' | "take_first" | "first" | Keep left chunk values |
+#' | "take_last" | "last" | Keep right chunk values |
 #'
 #' @srrstats {G2.0} Input validation for fraction, chunk_size.
 #' @srrstats {G1.6} Memory-efficient streaming for large datasets.

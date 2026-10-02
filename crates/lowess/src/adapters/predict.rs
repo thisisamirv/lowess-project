@@ -27,6 +27,7 @@ use crate::algorithms::regression::{RegressionContext, WLSSolver, ZeroWeightFall
 use crate::engine::executor::LowessExecutor;
 use crate::engine::executor::LowessResult;
 use crate::engine::executor::{ExtrapolationPolicy, PredictQuery, PredictState, RawPredictValues};
+use crate::engine::validator::Validator;
 use crate::evaluation::intervals::{
     BootstrapConfig, IntervalMethod, IntervalsBuilder, MIN_BOOTSTRAP_SAMPLES,
 };
@@ -175,14 +176,11 @@ impl<T: Float> PredictBuilder<T> {
         if let Some(e) = self.pending_error {
             return Err(e);
         }
-        if let (Some(confidence), Some(prediction)) =
-            (self.confidence_intervals, self.prediction_intervals)
-            && confidence != prediction
-        {
-            return Err(LowessError::MismatchedIntervalLevels {
-                confidence: confidence.to_f64().unwrap_or(f64::NAN),
-                prediction: prediction.to_f64().unwrap_or(f64::NAN),
-            });
+        if let Some(level) = self.confidence_intervals {
+            Validator::validate_interval_level(level)?;
+        }
+        if let Some(level) = self.prediction_intervals {
+            Validator::validate_interval_level(level)?;
         }
         if let Some(n_boot) = self.bootstrap
             && n_boot < MIN_BOOTSTRAP_SAMPLES
@@ -479,9 +477,10 @@ pub fn predict_batch<T: Float + WLSSolver + Debug + Send + Sync + 'static>(
         }
         let method = IntervalMethod {
             level: options
-                .prediction_intervals
-                .or(options.confidence_intervals)
+                .confidence_intervals
+                .or(options.prediction_intervals)
                 .unwrap_or_else(|| T::from(0.95).unwrap()),
+            prediction_level: options.prediction_intervals,
             confidence: options.confidence_intervals.is_some(),
             prediction: options.prediction_intervals.is_some(),
             se: true,

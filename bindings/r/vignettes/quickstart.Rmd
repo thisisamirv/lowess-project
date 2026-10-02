@@ -49,7 +49,7 @@ model <- Lowess(
     fraction = 0.5,
     iterations = 3,
     outputs = "diagnostics",
-    intervals = intervals_opts(confidence = 0.95, prediction = 0.95)
+    intervals = intervals_opts(confidence = 0.90, prediction = 0.99)
 )
 result <- fit(model, x, y)
 

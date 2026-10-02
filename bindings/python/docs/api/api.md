@@ -194,7 +194,7 @@ The `"sorted"` output reorders every result field by ascending `x` instead of pr
 
 *See: [Intervals](../guide/intervals.md)*
 
-A dict such as `{"confidence": 0.95, "prediction": 0.95, "bootstrap": 200}`. `confidence` bounds the mean response and `prediction` bounds a new observation; omitted levels disable that bound. `bootstrap` (at least `2`) replaces analytic intervals with residual-bootstrap standard errors and percentile bounds. `seed` controls fit-time bootstrap draws but does not enable bootstrap by itself. Unknown keys raise `ValueError`.
+A dict such as `{"confidence": 0.90, "prediction": 0.99, "bootstrap": 200}`. Confidence and prediction coverage levels are independent: `confidence` bounds the mean response and `prediction` bounds a new observation; omitted levels disable that bound. `bootstrap` (at least `2`) replaces analytic intervals with residual-bootstrap standard errors and percentile bounds. `seed` controls fit-time bootstrap draws but does not enable bootstrap by itself. Unknown keys raise `ValueError`.
 
 ### CV Options
 

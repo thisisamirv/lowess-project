@@ -453,6 +453,7 @@ fn test_interval_method_constructors() {
 
     let pi = IntervalMethod::prediction(0.99);
     assert_relative_eq!(pi.level, 0.99, epsilon = 1e-12);
+    assert_relative_eq!(pi.prediction_coverage(), 0.99, epsilon = 1e-12);
 
     let se: IntervalMethod<f64> = IntervalMethod::se();
     // SE method should have default level

@@ -209,7 +209,7 @@ Enable multi-threaded execution via Rayon.
 
 *See: [Intervals](../guide/intervals.md)*
 
-A `NamedTuple` such as `(confidence=0.95, prediction=0.95, bootstrap=200)`, populating `result.confidence_lower`/`result.confidence_upper` and `result.prediction_lower`/`result.prediction_upper`. Computed per combined chunk and merged across overlap boundaries via `merge_strategy`. `bootstrap` (at least `2`) refits each combined chunk from resampled residuals; with `parallel=true`, refits run concurrently.
+A `NamedTuple` such as `(confidence=0.90, prediction=0.99, bootstrap=200)`, populating `result.confidence_lower`/`result.confidence_upper` and `result.prediction_lower`/`result.prediction_upper`. The coverage levels are independent. Computed per combined chunk and merged across overlap boundaries via `merge_strategy`. `bootstrap` (at least `2`) refits each combined chunk from resampled residuals; with `parallel=true`, refits run concurrently.
 
 ### seed
 

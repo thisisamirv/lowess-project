@@ -5,24 +5,24 @@
 \title{LOWESS Streaming Smoothing}
 \usage{
 StreamingLowess(
-    fraction = 0.67,
-    ...,
-    iterations = 3L,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    delta = NULL,
-    zero_weight_fallback = "use_local_mean",
-    boundary_policy = "extend",
-    scaling_method = "mad",
-    auto_converge = NULL,
-    missing = "error",
-    chunk_size = 5000L,
-    overlap = NULL,
-    merge_strategy = "weighted_average",
-    parallel = TRUE,
-    outputs = NULL,
-    intervals = NULL,
-    seed = NULL
+  fraction = 0.67,
+  ...,
+  iterations = 3L,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  delta = NULL,
+  zero_weight_fallback = "use_local_mean",
+  boundary_policy = "extend",
+  scaling_method = "mad",
+  auto_converge = NULL,
+  missing = "error",
+  chunk_size = 5000L,
+  overlap = NULL,
+  merge_strategy = "weighted_average",
+  parallel = TRUE,
+  outputs = NULL,
+  intervals = NULL,
+  seed = NULL
 )
 }
 \arguments{
@@ -94,7 +94,9 @@ less than \code{chunk_size}. \code{NULL} (default) computes
 \item{intervals}{Interval options, created with
 \code{\link{intervals_opts}} (or a named list with any of
 \code{confidence}, \code{prediction}, \code{bootstrap}): e.g.
-\code{intervals = intervals_opts(confidence = 0.95, bootstrap = 200)}.
+\code{intervals = intervals_opts(confidence = 0.90, prediction = 0.99,
+bootstrap = 200)}. Confidence and prediction coverage levels are
+independent and may differ.
 \code{NULL} (default) disables intervals.}
 
 \item{seed}{Non-negative whole-number seed shared by cross-validation and
@@ -117,12 +119,14 @@ environments, or batch processing pipelines. For smaller datasets that fit
 in memory, see \code{\link{Lowess}}; for point-by-point real-time data,
 see \code{\link{OnlineLowess}}.
 
+Confidence and prediction interval coverage levels are independent.
+
 Overlapping regions between chunks are reconciled via \code{merge_strategy}:\tabular{lll}{
-    Strategy \tab Alias \tab Behavior \cr
-    \code{"weighted_average"} (default) \tab \code{"weighted"} \tab Distance-weighted blend \cr
-    \code{"average"} \tab \code{"mean"} \tab Average overlapping values \cr
-    \code{"take_first"} \tab \code{"first"} \tab Keep left chunk values \cr
-    \code{"take_last"} \tab \code{"last"} \tab Keep right chunk values \cr
+   Strategy \tab Alias \tab Behavior \cr
+   "weighted_average" (default) \tab "weighted" \tab Distance-weighted blend \cr
+   "average" \tab "mean" \tab Average overlapping values \cr
+   "take_first" \tab "first" \tab Keep left chunk values \cr
+   "take_last" \tab "last" \tab Keep right chunk values \cr
 }
 }
 \examples{

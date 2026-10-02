@@ -241,7 +241,7 @@ Computes standard errors per chunk the same way Batch does, then merges the over
 
 *See: [Intervals](crate::doc::guide::intervals)*
 
-Configure confidence and/or prediction bounds with `.intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))`. Optional `.bootstrap(n)` replaces analytic intervals with per-chunk residual-bootstrap estimates; set `.seed(seed)` on `StreamingLowess::new()` to control draws. A seed alone does not enable bootstrap. Bounds and standard errors are merged across overlap boundaries via `merge_strategy`. With `parallel(true)`, bootstrap refits run concurrently.
+Configure independent confidence and prediction bounds with `.intervals(IntervalsBuilder::new().confidence(0.90).prediction(0.99))`. Optional `.bootstrap(n)` replaces analytic intervals with per-chunk residual-bootstrap estimates; set `.seed(seed)` on `StreamingLowess::new()` to control draws. A seed alone does not enable bootstrap. Bounds and standard errors are merged across overlap boundaries via `merge_strategy`. With `parallel(true)`, bootstrap refits run concurrently.
 
 ### parallel
 

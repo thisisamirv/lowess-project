@@ -7,11 +7,12 @@
 intervals_opts(confidence = NULL, prediction = NULL, bootstrap = 0L)
 }
 \arguments{
-\item{confidence}{Confidence level for confidence intervals, greater than
-0 and less than 1 (e.g. 0.95). \code{NULL} (default) disables them.}
+\item{confidence}{Coverage for confidence intervals, greater than 0 and
+less than 1 (e.g. 0.90). \code{NULL} (default) disables them.}
 
-\item{prediction}{Confidence level for prediction intervals, greater than
-0 and less than 1 (e.g. 0.95). \code{NULL} (default) disables them.}
+\item{prediction}{Coverage for prediction intervals, greater than 0 and
+less than 1 (e.g. 0.99). \code{NULL} (default) disables them. This level
+is independent of \code{confidence}.}
 
 \item{bootstrap}{Number of bootstrap resamples used to compute the
 intervals. \code{0} (default) uses the analytic intervals.}
@@ -26,7 +27,9 @@ Build an interval options list to pass to \code{intervals = ...} in
 }
 \examples{
 model <- Lowess(
-    intervals = intervals_opts(confidence = 0.95, bootstrap = 200),
+    intervals = intervals_opts(
+        confidence = 0.90, prediction = 0.99, bootstrap = 200
+    ),
     seed = 42
 )
 }

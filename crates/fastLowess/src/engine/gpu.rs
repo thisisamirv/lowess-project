@@ -67,7 +67,7 @@ struct Config {
     has_se: u32,
     has_custom_weights: u32,
     reduce_output_offset: u32,
-    _pad2: u32,
+    prediction_z_score: f32,
     _pad3: u32,
 }
 
@@ -921,17 +921,18 @@ fn compute_interval_bounds(@builtin(global_invocation_id) global_id: vec3<u32>) 
     let ys = y_smooth[i];
     let se = std_errors[i];
     let rsd = config.residual_sd;
-    let z = config.z_score;
+    let confidence_z = config.z_score;
+    let prediction_z = config.prediction_z_score;
 
     if (config.has_conf != 0u) {
-        conf_lower[i] = ys - z * se;
-        conf_upper[i] = ys + z * se;
+        conf_lower[i] = ys - confidence_z * se;
+        conf_upper[i] = ys + confidence_z * se;
     }
 
     if (config.has_pred != 0u) {
         let pred_se = sqrt(se * se + rsd * rsd);
-        pred_lower[i] = ys - z * pred_se;
-        pred_upper[i] = ys + z * pred_se;
+        pred_lower[i] = ys - prediction_z * pred_se;
+        pred_upper[i] = ys + prediction_z * pred_se;
     }
 }
 
@@ -1625,7 +1626,7 @@ pub struct GpuConfig {
     pub has_se: u32,
     pub has_custom_weights: u32,
     pub reduce_output_offset: u32,
-    pub _pad2: u32,
+    pub prediction_z_score: f32,
     pub _pad3: u32,
 }
 
@@ -3755,10 +3756,14 @@ fn record_intervals_pass<T>(
     };
 
     // Calculate parameters for intervals
-    let z_score = IntervalMethod::approximate_z_score(im.level).unwrap_or(T::from(1.96).unwrap());
+    let confidence_z =
+        IntervalMethod::approximate_z_score(im.level).unwrap_or(T::from(1.96).unwrap());
+    let prediction_z = IntervalMethod::approximate_z_score(im.prediction_coverage())
+        .unwrap_or(T::from(1.96).unwrap());
 
     // Update GPU config for interval pass (Part 1: CPU-known values)
-    gpu_config.z_score = z_score.to_f32().unwrap_or(1.96);
+    gpu_config.z_score = confidence_z.to_f32().unwrap_or(1.96);
+    gpu_config.prediction_z_score = prediction_z.to_f32().unwrap_or(1.96);
     gpu_config.residual_sd = 0.0;
     gpu_config.has_conf = if im.confidence { 1 } else { 0 };
     gpu_config.has_pred = if im.prediction { 1 } else { 0 };
@@ -3845,7 +3850,7 @@ struct Params {
     level: f32,
     confidence: u32,
     prediction: u32,
-    unused: u32,
+    prediction_level: f32,
 }
 @group(0) @binding(0) var<uniform> params: Params;
 @group(0) @binding(1) var<storage, read> smooth: array<f32>;
@@ -3913,7 +3918,7 @@ fn summarize(@builtin(global_invocation_id) id: vec3<u32>) {
                 k -= 1u;
             }
         }
-        let lower = (1.0 - params.level) * 0.5;
+        let lower = (1.0 - params.prediction_level) * 0.5;
         output[3u * params.n + i] = quantile(base, lower, true);
         output[4u * params.n + i] = quantile(base, 1.0 - lower, true);
     }
@@ -3947,7 +3952,7 @@ struct BootstrapParams {
     level: f32,
     confidence: u32,
     prediction: u32,
-    unused: u32,
+    prediction_level: f32,
 }
 
 struct BootstrapGpuState {
@@ -4051,7 +4056,7 @@ where
         level: method.level.to_f32().unwrap(),
         confidence: u32::from(method.confidence),
         prediction: u32::from(method.prediction),
-        unused: 0,
+        prediction_level: method.prediction_coverage().to_f32().unwrap(),
     };
     let uniform = make_buffer(
         "Bootstrap parameters",
@@ -4300,6 +4305,7 @@ where
                 .map(|t| t.to_f32().unwrap())
                 .unwrap_or(0.0),
             z_score: 0.0,
+            prediction_z_score: 1.96,
             has_conf: 0,
             has_pred: 0,
             residual_sd: 0.0,
@@ -4312,7 +4318,6 @@ where
             },
             has_custom_weights: u32::from(custom_weights_f32.is_some()),
             reduce_output_offset: 0,
-            _pad2: 0,
             _pad3: 0,
         };
 
@@ -4628,6 +4633,7 @@ where
             max_iterations: 1,
             tolerance: 1e-3,
             z_score: 1.96,
+            prediction_z_score: 1.96,
             has_conf: 0,
             has_pred: 0,
             residual_sd: 1.0,
@@ -4636,7 +4642,6 @@ where
             has_se: 0,
             has_custom_weights: 0,
             reduce_output_offset: 0,
-            _pad2: 0,
             _pad3: 0,
         };
         exec.reset_buffers(&x_f32, &y_f32, gpu_config, 0, 0);
@@ -4812,6 +4817,7 @@ where
                     .map(|t| t.to_f32().unwrap())
                     .unwrap_or(0.0),
                 z_score: run.test_start as f32,
+                prediction_z_score: 1.96,
                 has_conf: 0,
                 has_pred: 0,
                 residual_sd: 0.0,
@@ -4820,7 +4826,6 @@ where
                 has_se: 0,
                 has_custom_weights: 0,
                 reduce_output_offset: 0,
-                _pad2: 0,
                 _pad3: 0,
             };
             all_configs.extend_from_slice(cast_slice(&[gpu_cfg]));

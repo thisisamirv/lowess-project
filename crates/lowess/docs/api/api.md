@@ -176,7 +176,7 @@ Convergence tolerance for early stopping of robustness iterations. `NaN` (defaul
 
 ### intervals
 
-Group confidence and prediction levels with optional residual-bootstrap refits. `IntervalsBuilder` is in the prelude; start every configuration with `IntervalsBuilder::new()`. Both interval types share one coverage level, so use the same level for confidence and prediction. Bootstrap refits replace analytic standard errors; `n < 2` returns `InvalidBootstrapSamples`. Set `.seed(seed)` on `Lowess::new()` to seed both CV and bootstrap. Without it, each feature retains its own default seed; setting a seed alone does not enable bootstrap.
+Group independent confidence and prediction coverage levels with optional residual-bootstrap refits using `IntervalsBuilder::new().confidence(0.90).prediction(0.99)`. `IntervalsBuilder` is in the prelude. Bootstrap refits replace analytic standard errors; `n < 2` returns `InvalidBootstrapSamples`. Set `.seed(seed)` on `Lowess::new()` to seed both CV and bootstrap. Without it, each feature retains its own default seed; setting a seed alone does not enable bootstrap.
 
 ```rust
 use lowess::prelude::*;

@@ -208,7 +208,7 @@ The batch `Lowess` class can optionally run on a GPU-accelerated backend powered
 
 _See: xref:../guide/intervals.adoc[Intervals]_
 
-Build with `IntervalsOptions.builder()`. Set `confidence(level)` and/or `prediction(level)` to coverage levels such as `0.95`; unset levels disable that bound. Set `bootstrap(n)` to at least `2` to replace analytic intervals with residual-bootstrap standard errors and percentile bounds. `seed` controls both CV and fit-time bootstrap when enabled, but does not enable either by itself.
+Build with `IntervalsOptions.builder()`. Set `confidence(level)` and/or `prediction(level)` independently; for example, use `0.90` for confidence coverage and `0.99` for prediction coverage. Unset levels disable that bound. Set `bootstrap(n)` to at least `2` to replace analytic intervals with residual-bootstrap standard errors and percentile bounds. `seed` controls both CV and fit-time bootstrap when enabled, but does not enable either by itself.
 
 === CV Options
 

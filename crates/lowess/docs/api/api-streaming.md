@@ -221,7 +221,7 @@ Unknown names are collected and reported together by `.build()` as `LowessError:
 
 *See: [Intervals](crate::doc::guide::intervals)*
 
-Configure confidence and/or prediction bounds with `.intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))`. Optional `.bootstrap(n)` replaces analytic intervals with per-chunk residual-bootstrap estimates. Bounds and standard errors are merged across overlap boundaries via `merge_strategy`. Set `.seed(seed)` on `StreamingLowess::new()` for reproducible bootstrap draws; without it bootstrap uses a fixed default. A seed alone does not enable bootstrap.
+Configure independent confidence and prediction bounds with `.intervals(IntervalsBuilder::new().confidence(0.90).prediction(0.99))`. Optional `.bootstrap(n)` replaces analytic intervals with per-chunk residual-bootstrap estimates. Bounds and standard errors are merged across overlap boundaries via `merge_strategy`. Set `.seed(seed)` on `StreamingLowess::new()` for reproducible bootstrap draws; without it bootstrap uses a fixed default. A seed alone does not enable bootstrap.
 
 ### chunk_size
 

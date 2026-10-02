@@ -11,7 +11,8 @@
 #' that fit in memory, see \code{\link{Lowess}}; for large batches processed
 #' in chunks, see \code{\link{StreamingLowess}}.
 #'
-#' Confidence and prediction intervals require \code{update_mode = "full"}.
+#' Confidence and prediction interval coverage levels are independent; both
+#' interval types require \code{update_mode = "full"}.
 #' Positive \code{delta} values also require \code{update_mode = "full"}.
 #' A non-\code{NULL} \code{auto_converge} requires full mode and at least one
 #' robustness iteration; unsupported combinations are rejected.

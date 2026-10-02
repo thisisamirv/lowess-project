@@ -515,16 +515,37 @@ fn test_predict_bootstrap_intervals_are_seeded_at_query_points() {
 }
 
 #[test]
-fn test_predict_rejects_mismatched_confidence_and_prediction_levels() {
-    let result = Predict::new()
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.9)
-        .build();
-
-    assert!(
-        matches!(result, Err(LowessError::MismatchedIntervalLevels { .. })),
-        "PredictBuilder should reject coverage levels that cannot both be represented"
-    );
+fn test_predict_accepts_different_confidence_and_prediction_levels() {
+    let x: Vec<f64> = (0..40).map(f64::from).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .map(|&value| {
+            (0.25 * value).sin()
+                + if (value as usize).is_multiple_of(9) {
+                    0.4
+                } else {
+                    0.0
+                }
+        })
+        .collect();
+    let fitted = Lowess::new()
+        .fraction(0.4)
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    let options = Predict::new()
+        .confidence_intervals(0.9)
+        .prediction_intervals(0.99)
+        .build()
+        .unwrap();
+    let result = options.call(&fitted, &[20.5]).unwrap();
+    let confidence_width =
+        result.confidence_upper.unwrap()[0] - result.confidence_lower.unwrap()[0];
+    let prediction_width =
+        result.prediction_upper.unwrap()[0] - result.prediction_lower.unwrap()[0];
+    assert!(prediction_width > confidence_width);
 }
 
 #[test]

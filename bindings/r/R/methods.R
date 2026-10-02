@@ -159,7 +159,9 @@ fit.Lowess <- function(model, x, y, custom_weights = NULL, ...) {
 #'   returns only predicted values.
 #' @param intervals Interval options, created with
 #'   \code{\link{intervals_opts}} (or a named list with any of
-#'   \code{confidence}, \code{prediction}, \code{bootstrap}). \code{NULL}
+#'   \code{confidence}, \code{prediction}, \code{bootstrap}). Confidence and
+#'   prediction coverage levels are independent; for example,
+#'   \code{intervals_opts(confidence = 0.90, prediction = 0.99)}. \code{NULL}
 #'   (default) disables intervals.
 #' @param seed Non-negative whole-number seed for bootstrap resampling.
 #'   \code{NULL} (default) uses a random seed.

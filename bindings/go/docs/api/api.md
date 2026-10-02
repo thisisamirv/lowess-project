@@ -191,7 +191,7 @@ The batch `Lowess` type can optionally run on a GPU-accelerated backend powered 
 
 *See: [Intervals](../guide/intervals.md)*
 
-Set `Intervals.Confidence` and/or `Intervals.Prediction` to coverage levels such as `0.95`; nil disables each bound. Set `Intervals.Bootstrap` to at least 2 to replace analytic intervals with residual-bootstrap standard errors and percentile bounds. `Seed` controls both CV and fit-time bootstrap when enabled, but does not enable either by itself.
+Set `Intervals.Confidence` and/or `Intervals.Prediction` independently; for example, use `0.90` for confidence coverage and `0.99` for prediction coverage. Nil disables each bound. Set `Intervals.Bootstrap` to at least 2 to replace analytic intervals with residual-bootstrap standard errors and percentile bounds. `Seed` controls both CV and fit-time bootstrap when enabled, but does not enable either by itself.
 
 ### CV Options
 

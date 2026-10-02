@@ -200,7 +200,7 @@ Minimum number of points required before smoothing starts. `add_point()` returns
 
 *See: [Intervals](../guide/intervals.md)*
 
-An object such as `{ confidence: 0.95, prediction: 0.95, bootstrap: 200 }`, populating `confidence_lower`/`confidence_upper` and `prediction_lower`/`prediction_upper` for the latest point. Same `update_mode: "full"` requirement as `return_se`. `bootstrap` (at least `2`) refits each sliding window from resampled residuals.
+An object such as `{ confidence: 0.90, prediction: 0.99, bootstrap: 200 }`, populating `confidence_lower`/`confidence_upper` and `prediction_lower`/`prediction_upper` for the latest point. The coverage levels are independent. Same `update_mode: "full"` requirement as `return_se`. `bootstrap` (at least `2`) refits each sliding window from resampled residuals.
 
 ### seed
 

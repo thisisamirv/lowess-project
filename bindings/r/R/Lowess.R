@@ -79,7 +79,9 @@
 #' @param intervals Interval options, created with
 #'   \code{\link{intervals_opts}} (or a named list with any of
 #'   \code{confidence}, \code{prediction}, \code{bootstrap}): e.g.
-#'   \code{intervals = intervals_opts(confidence = 0.95, bootstrap = 200)}.
+#'   \code{intervals = intervals_opts(confidence = 0.90, prediction = 0.99,
+#'   bootstrap = 200)}. Confidence and prediction coverage levels are
+#'   independent and may differ.
 #'   \code{NULL} (default) disables intervals.
 #' @param cv Cross-validation options, created with \code{\link{cv_opts}}:
 #'   e.g. \code{cv = cv_opts(method = "kfold", k = 5,
@@ -221,17 +223,20 @@ cv_opts <- function(method = "kfold", k = 5L, fractions) {
 #' \code{\link{Lowess}}, \code{\link{StreamingLowess}},
 #' \code{\link{OnlineLowess}}, or \code{\link{predict.Lowess}}.
 #'
-#' @param confidence Confidence level for confidence intervals, greater than
-#'   0 and less than 1 (e.g. 0.95). \code{NULL} (default) disables them.
-#' @param prediction Confidence level for prediction intervals, greater than
-#'   0 and less than 1 (e.g. 0.95). \code{NULL} (default) disables them.
+#' @param confidence Coverage for confidence intervals, greater than 0 and
+#'   less than 1 (e.g. 0.90). \code{NULL} (default) disables them.
+#' @param prediction Coverage for prediction intervals, greater than 0 and
+#'   less than 1 (e.g. 0.99). \code{NULL} (default) disables them. This level
+#'   is independent of \code{confidence}.
 #' @param bootstrap Number of bootstrap resamples used to compute the
 #'   intervals. \code{0} (default) uses the analytic intervals.
 #'
 #' @return An \code{intervals_opts} list.
 #' @examples
 #' model <- Lowess(
-#'     intervals = intervals_opts(confidence = 0.95, bootstrap = 200),
+#'     intervals = intervals_opts(
+#'         confidence = 0.90, prediction = 0.99, bootstrap = 200
+#'     ),
 #'     seed = 42
 #' )
 #' @export

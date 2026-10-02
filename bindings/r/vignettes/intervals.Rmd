@@ -23,6 +23,8 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 > and **Online** mode when `update_mode = "full"` is set (errors if
 > combined with the default `"incremental"` mode).
 
+Confidence and prediction coverage levels are independent; for example, a 90% confidence interval can be paired with a 99% prediction interval.
+
 | Type | Represents | Width | Use |
 | --- | --- | --- | --- |
 | **Confidence** | Uncertainty in mean curve | Narrow | Trend location |
@@ -93,7 +95,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(
     fraction = 0.5,
-    intervals = intervals_opts(confidence = 0.95, prediction = 0.95)
+    intervals = intervals_opts(confidence = 0.90, prediction = 0.99)
 )
 result <- fit(model, x, y)
 

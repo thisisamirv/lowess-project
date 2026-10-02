@@ -797,15 +797,73 @@ fn test_batch_confidence_and_prediction_intervals() {
 }
 
 #[test]
-fn test_batch_rejects_mismatched_confidence_and_prediction_levels() {
+fn test_batch_accepts_different_confidence_and_prediction_levels() {
+    let x: Vec<f64> = (0..40).map(f64::from).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .map(|&value| {
+            (0.25 * value).sin()
+                + if (value as usize).is_multiple_of(9) {
+                    0.4
+                } else {
+                    0.0
+                }
+        })
+        .collect();
     let result = Lowess::new()
-        .intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.9))
+        .fraction(0.4)
+        .intervals(IntervalsBuilder::new().confidence(0.9).prediction(0.99))
         .build();
+    let result = result.unwrap().fit(&x, &y).unwrap();
+    let confidence_width =
+        result.confidence_upper.unwrap()[20] - result.confidence_lower.unwrap()[20];
+    let prediction_width =
+        result.prediction_upper.unwrap()[20] - result.prediction_lower.unwrap()[20];
+    assert!(prediction_width > confidence_width);
+}
 
-    assert!(
-        result.is_err(),
-        "the shared-level interval configuration should reject mismatched levels"
+#[test]
+fn test_batch_bootstrap_uses_separate_interval_levels() {
+    let x: Vec<f64> = (0..40).map(f64::from).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .map(|&value| {
+            (0.25 * value).sin()
+                + if (value as usize).is_multiple_of(9) {
+                    0.4
+                } else {
+                    0.0
+                }
+        })
+        .collect();
+    let fit = |prediction_level| {
+        Lowess::new()
+            .fraction(0.4)
+            .iterations(0)
+            .seed(42)
+            .intervals(
+                IntervalsBuilder::new()
+                    .confidence(0.9)
+                    .prediction(prediction_level)
+                    .bootstrap(64),
+            )
+            .build()
+            .unwrap()
+            .fit(&x, &y)
+            .unwrap()
+    };
+    let lower_prediction_coverage = fit(0.9);
+    let higher_prediction_coverage = fit(0.99);
+
+    assert_eq!(
+        lower_prediction_coverage.confidence_lower,
+        higher_prediction_coverage.confidence_lower
     );
+    let lower_width = lower_prediction_coverage.prediction_upper.unwrap()[20]
+        - lower_prediction_coverage.prediction_lower.unwrap()[20];
+    let higher_width = higher_prediction_coverage.prediction_upper.unwrap()[20]
+        - higher_prediction_coverage.prediction_lower.unwrap()[20];
+    assert!(higher_width > lower_width);
 }
 
 /// Test diagnostic metrics computation.

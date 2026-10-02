@@ -34,7 +34,7 @@ This changelog includes end-user changes only. For internal development notes, s
 * Fixed GPU Batch silently ignoring `custom_weights`; GPU fit and CV candidate kernels now apply them directly.
 * Reduced GPU adapter buffer requirements from 30 storage/32 total buffer bindings to 7 storage/8 total per shader stage by using per-compute-pipeline resource layouts.
 * Fixed Online incremental mode accepting positive `delta` and `auto_converge` settings it cannot use; unsupported combinations now error.
-* Fixed grouped intervals silently collapsing different confidence and prediction levels; mismatches now error during build.
+* Fixed grouped intervals discarding distinct confidence and prediction levels; each requested coverage is now applied independently.
 
 * Fixed `OnlineLowess` and `LowessResult.predict()` ignoring the `outputs` option.
 * Fixed the default `boundary_policy` (`"extend"`) letting synthetic boundary points bias the shared robustness scale estimate used to reweight every point, compounding across robustness iterations.

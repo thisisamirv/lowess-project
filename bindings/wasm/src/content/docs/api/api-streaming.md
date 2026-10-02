@@ -229,7 +229,7 @@ Enable multi-threaded execution via the Rayon-based web worker pool.
 
 *See: [Intervals](../guide/intervals.md)*
 
-An object such as `{ confidence: 0.95, prediction: 0.95, bootstrap: 200 }`, populating `result.confidence_lower`/`result.confidence_upper` and `result.prediction_lower`/`result.prediction_upper`. Computed per combined chunk and merged across overlap boundaries via `merge_strategy`. `bootstrap` (at least `2`) refits each combined chunk from resampled residuals.
+An object such as `{ confidence: 0.90, prediction: 0.99, bootstrap: 200 }`, populating `result.confidence_lower`/`result.confidence_upper` and `result.prediction_lower`/`result.prediction_upper`. The coverage levels are independent. Computed per combined chunk and merged across overlap boundaries via `merge_strategy`. `bootstrap` (at least `2`) refits each combined chunk from resampled residuals.
 
 ### seed
 

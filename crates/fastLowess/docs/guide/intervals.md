@@ -10,6 +10,8 @@ Confidence and prediction intervals for uncertainty quantification.
 !!! note "Adapter support"
     Analytic and residual-bootstrap intervals are available in **Batch**, **Streaming** (per chunk with overlap merging), and **Online** with `update_mode("full")`. Online's default `"incremental"` mode rejects intervals at `.build()`.
 
+Confidence and prediction coverage levels are independent; for example, a 90% confidence interval can be paired with a 99% prediction interval.
+
 | Type | Represents | Width | Use |
 | --- | --- | --- | --- |
 | **Confidence** | Uncertainty in mean curve | Narrow | Where is the true trend? |

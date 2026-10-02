@@ -205,7 +205,7 @@ Convergence tolerance for early stopping of robustness iterations. `NaN` (defaul
 
 *See: [Intervals](../guide/intervals.md)*
 
-Set `intervals.confidence` and/or `intervals.prediction` to a coverage level such as `0.95`. Both default to `NaN` (disabled). Set `intervals.bootstrap` to at least 2 to replace analytic uncertainty with residual-bootstrap refits. `seed` controls both CV and bootstrap when configured; it does not enable either by itself.
+Set `intervals.confidence` and/or `intervals.prediction` independently; for example, use `0.90` for confidence coverage and `0.99` for prediction coverage. Both default to `NaN` (disabled). Set `intervals.bootstrap` to at least 2 to replace analytic uncertainty with residual-bootstrap refits. `seed` controls both CV and bootstrap when configured; it does not enable either by itself.
 
 ### outputs
 

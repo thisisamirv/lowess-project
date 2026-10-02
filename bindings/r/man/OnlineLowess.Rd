@@ -5,23 +5,23 @@
 \title{LOWESS Online Smoothing}
 \usage{
 OnlineLowess(
-    fraction = 0.67,
-    ...,
-    iterations = 0L,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    delta = NULL,
-    zero_weight_fallback = "use_local_mean",
-    boundary_policy = "extend",
-    scaling_method = "mad",
-    auto_converge = NULL,
-    missing = "error",
-    window_capacity = 1000L,
-    min_points = 2L,
-    update_mode = "incremental",
-    outputs = NULL,
-    intervals = NULL,
-    seed = NULL
+  fraction = 0.67,
+  ...,
+  iterations = 0L,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  delta = NULL,
+  zero_weight_fallback = "use_local_mean",
+  boundary_policy = "extend",
+  scaling_method = "mad",
+  auto_converge = NULL,
+  missing = "error",
+  window_capacity = 1000L,
+  min_points = 2L,
+  update_mode = "incremental",
+  outputs = NULL,
+  intervals = NULL,
+  seed = NULL
 )
 }
 \arguments{
@@ -90,7 +90,9 @@ result.}
 \item{intervals}{Interval options, created with
 \code{\link{intervals_opts}} (or a named list with any of
 \code{confidence}, \code{prediction}, \code{bootstrap}): e.g.
-\code{intervals = intervals_opts(confidence = 0.95, bootstrap = 200)}.
+\code{intervals = intervals_opts(confidence = 0.90, prediction = 0.99,
+bootstrap = 200)}. Confidence and prediction coverage levels are
+independent and may differ.
 \code{NULL} (default) disables intervals.}
 
 \item{seed}{Non-negative whole-number seed shared by cross-validation and
@@ -112,7 +114,8 @@ real-time smoothed values are needed, or memory is fixed. For datasets
 that fit in memory, see \code{\link{Lowess}}; for large batches processed
 in chunks, see \code{\link{StreamingLowess}}.
 
-Confidence and prediction intervals require \code{update_mode = "full"}.
+Confidence and prediction interval coverage levels are independent; both
+interval types require \code{update_mode = "full"}.
 Positive \code{delta} values also require \code{update_mode = "full"}.
 A non-\code{NULL} \code{auto_converge} requires full mode and at least one
 robustness iteration; unsupported combinations are rejected.

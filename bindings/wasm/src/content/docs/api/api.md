@@ -180,7 +180,7 @@ Enable multi-threaded execution via the Rayon-based web worker pool.
 
 *See: [Intervals](../guide/intervals.md)*
 
-An object such as `{ confidence: 0.95, prediction: 0.95, bootstrap: 200 }`. `confidence` bounds the mean response and `prediction` bounds a new observation; omitted levels disable that bound. `bootstrap` (at least `2`) replaces analytic intervals with residual-bootstrap standard errors and percentile bounds. `seed` controls fit-time bootstrap draws but does not enable bootstrap by itself.
+An object such as `{ confidence: 0.90, prediction: 0.99, bootstrap: 200 }`. Confidence and prediction coverage levels are independent: `confidence` bounds the mean response and `prediction` bounds a new observation; omitted levels disable that bound. `bootstrap` (at least `2`) replaces analytic intervals with residual-bootstrap standard errors and percentile bounds. `seed` controls fit-time bootstrap draws but does not enable bootstrap by itself.
 
 ### CV Options
 

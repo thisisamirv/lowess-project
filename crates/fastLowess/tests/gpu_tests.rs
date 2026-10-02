@@ -364,7 +364,7 @@ fn test_gpu_padding_values() {
             has_se: 0,
             has_custom_weights: 0,
             reduce_output_offset: 0,
-            _pad2: 0,
+            prediction_z_score: 1.96,
             _pad3: 0,
         };
 
@@ -550,7 +550,7 @@ fn test_cpu_gpu_padding_equivalence() {
                 has_se: 0,
                 has_custom_weights: 0,
                 reduce_output_offset: 0,
-                _pad2: 0,
+                prediction_z_score: 1.96,
                 _pad3: 0,
             };
 
@@ -1055,7 +1055,7 @@ fn test_cpu_gpu_interval_equivalence() {
     let cpu_res = Lowess::new()
         .fraction(0.3)
         .iterations(3)
-        .intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))
+        .intervals(IntervalsBuilder::new().confidence(0.9).prediction(0.99))
         .backend(CPU)
         .boundary_policy(BoundaryPolicy::NoBoundary)
         .build()
@@ -1067,7 +1067,7 @@ fn test_cpu_gpu_interval_equivalence() {
     let gpu_res = Lowess::new()
         .fraction(0.3)
         .iterations(3)
-        .intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))
+        .intervals(IntervalsBuilder::new().confidence(0.9).prediction(0.99))
         .backend(GPU)
         .boundary_policy(BoundaryPolicy::NoBoundary)
         .build()
@@ -1098,6 +1098,28 @@ fn test_cpu_gpu_interval_equivalence() {
                 diff
             );
         }
+        for (cpu_bounds, gpu_bounds) in [
+            (
+                cpu_res.confidence_lower.as_ref().unwrap(),
+                gpu_res.confidence_lower.as_ref().unwrap(),
+            ),
+            (
+                cpu_res.confidence_upper.as_ref().unwrap(),
+                gpu_res.confidence_upper.as_ref().unwrap(),
+            ),
+            (
+                cpu_res.prediction_lower.as_ref().unwrap(),
+                gpu_res.prediction_lower.as_ref().unwrap(),
+            ),
+            (
+                cpu_res.prediction_upper.as_ref().unwrap(),
+                gpu_res.prediction_upper.as_ref().unwrap(),
+            ),
+        ] {
+            for (cpu_bound, gpu_bound) in cpu_bounds.iter().zip(gpu_bounds) {
+                assert!((cpu_bound - gpu_bound).abs() < 5e-3);
+            }
+        }
         println!("GPU intervals passed CPU/GPU equivalence");
     } else {
         println!("Skipping GPU intervals test (GPU not available)");
@@ -1119,7 +1141,7 @@ fn test_gpu_bootstrap_intervals_are_reproducible() {
             .intervals(
                 IntervalsBuilder::new()
                     .confidence(0.9)
-                    .prediction(0.9)
+                    .prediction(0.99)
                     .bootstrap(16),
             )
             .backend(GPU)
@@ -1138,6 +1160,11 @@ fn test_gpu_bootstrap_intervals_are_reproducible() {
     assert_eq!(first.prediction_upper, again.prediction_upper);
     assert_ne!(first.standard_errors, other.standard_errors);
     assert_ne!(first.standard_errors, high_bits.standard_errors);
+    let confidence_width =
+        first.confidence_upper.as_ref().unwrap()[24] - first.confidence_lower.as_ref().unwrap()[24];
+    let prediction_width =
+        first.prediction_upper.as_ref().unwrap()[24] - first.prediction_lower.as_ref().unwrap()[24];
+    assert!(prediction_width > confidence_width);
     for values in [
         first.standard_errors.unwrap(),
         first.confidence_lower.unwrap(),
@@ -1240,7 +1267,7 @@ fn test_gpu_median_diagnostic() {
                 has_se: 0,
                 has_custom_weights: 0,
                 reduce_output_offset: 0,
-                _pad2: 0,
+                prediction_z_score: 1.96,
                 _pad3: 0,
             },
             0,
@@ -1283,7 +1310,7 @@ fn test_gpu_median_diagnostic() {
                 has_se: 0,
                 has_custom_weights: 0,
                 reduce_output_offset: 0,
-                _pad2: 0,
+                prediction_z_score: 1.96,
                 _pad3: 0,
             },
             0,
@@ -1375,7 +1402,7 @@ fn test_gpu_median_large() {
                     has_se: 0,
                     has_custom_weights: 0,
                     reduce_output_offset: 0,
-                    _pad2: 0,
+                    prediction_z_score: 1.96,
                     _pad3: 0,
                 },
                 0,

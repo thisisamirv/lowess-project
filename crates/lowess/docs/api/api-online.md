@@ -217,7 +217,7 @@ Unknown names are collected and reported together by `.build()` as `LowessError:
 
 *See: [Intervals](crate::doc::guide::intervals)*
 
-Use `.intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))` to return bounds for the latest point. Optional `.bootstrap(n)` bootstraps the current sliding window instead of computing analytic intervals; set `.seed(seed)` on `OnlineLowess::new()` to control its draws. A seed alone does not enable bootstrap. Online requires `update_mode("full")`; the default incremental mode rejects intervals at `.build()` with `LowessError::StandardErrorRequiresFullUpdateMode`.
+Use `.intervals(IntervalsBuilder::new().confidence(0.90).prediction(0.99))` to return bounds for the latest point; the coverage levels are independent. Optional `.bootstrap(n)` bootstraps the current sliding window instead of computing analytic intervals; set `.seed(seed)` on `OnlineLowess::new()` to control its draws. A seed alone does not enable bootstrap. Online requires `update_mode("full")`; the default incremental mode rejects intervals at `.build()` with `LowessError::StandardErrorRequiresFullUpdateMode`.
 
 ### window_capacity
 

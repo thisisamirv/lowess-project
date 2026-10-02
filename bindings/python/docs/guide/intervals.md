@@ -10,6 +10,8 @@ Confidence and prediction intervals for uncertainty quantification.
 Confidence and prediction intervals are available in **Batch** mode, **Streaming** mode (computed per chunk and merged across overlap boundaries via `merge_strategy`, like `y`/`derivative`), and **Online** mode when `update_mode="full"` is set (raises if combined with the default `"incremental"` mode).
 :::
 
+Confidence and prediction coverage levels are independent; for example, a 90% confidence interval can be paired with a 99% prediction interval.
+
 | Type | Represents | Width | Use |
 | --- | --- | --- | --- |
 | **Confidence** | Uncertainty in mean curve | Narrow | Where is the true trend? |
