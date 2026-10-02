@@ -26,6 +26,10 @@
 #include <utility>
 #include <vector>
 
+#if defined(__APPLE__)
+#include <TargetConditionals.h>
+#endif
+
 #ifdef _WIN32
 #include <io.h> // _isatty  // NOLINT(misc-include-cleaner)
 #include <process.h>
@@ -1002,7 +1006,7 @@ namespace detail {
 inline std::optional<std::string> platformTag() {
 #ifdef _WIN32
   return "windows";
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) && TARGET_OS_OSX
   return "macos";
 #elif defined(__ANDROID__)
   return std::nullopt;
