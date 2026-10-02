@@ -78,6 +78,27 @@ class LowessTest {
     }
 
     @Test
+    void rejectsEmptyCustomWeights() {
+        double[] x = linspace(5);
+        try (Lowess model = new Lowess(Options.builder().build())) {
+            IllegalArgumentException ex = org.junit.jupiter.api.Assertions.assertThrows(
+                    IllegalArgumentException.class, () -> model.fit(x, x, new double[0]));
+            assertNotNull(ex);
+        }
+    }
+
+    @Test
+    void rejectsInvalidKfoldCountAndEmptyFractions() {
+        CVOptions invalidK = CVOptions.builder().fractions(0.5).k(1).build();
+        RuntimeException invalidKError = org.junit.jupiter.api.Assertions.assertThrows(
+                RuntimeException.class, () -> new Lowess(Options.builder().cv(invalidK).build()));
+        assertNotNull(invalidKError);
+        IllegalStateException emptyFractionsError = org.junit.jupiter.api.Assertions.assertThrows(
+                IllegalStateException.class, () -> CVOptions.builder().fractions().build());
+        assertNotNull(emptyFractionsError);
+    }
+
+    @Test
     void throwsAfterClose() {
         Lowess model = new Lowess(Options.builder().build());
         model.close();

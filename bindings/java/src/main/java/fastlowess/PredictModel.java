@@ -7,7 +7,8 @@ package fastlowess;
  * {@link Lowess#fit}.
  *
  * <p>
- * Not thread-safe; each instance wraps a native handle that must be freed.
+ * Operations on one instance are synchronized; each instance wraps a native
+ * handle that must be freed.
  */
 public final class PredictModel implements AutoCloseable {
 
@@ -24,7 +25,7 @@ public final class PredictModel implements AutoCloseable {
      * @param newX the query points
      * @return the prediction result
      */
-    public PredictResult predict(double[] newX) {
+    public synchronized PredictResult predict(double[] newX) {
         return predict(newX, PredictOptions.builder().build());
     }
 
@@ -36,7 +37,7 @@ public final class PredictModel implements AutoCloseable {
      * @param options prediction options
      * @return the prediction result
      */
-    public PredictResult predict(double[] newX, PredictOptions options) {
+    public synchronized PredictResult predict(double[] newX, PredictOptions options) {
         checkOpen();
         IntervalsOptions iv = options.intervals();
         Long seed = options.seed();
@@ -63,7 +64,7 @@ public final class PredictModel implements AutoCloseable {
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         if (handle != 0) {
             NativeBridge.predictHandleFree(handle);
             handle = 0;

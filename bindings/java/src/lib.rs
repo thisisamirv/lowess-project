@@ -88,29 +88,27 @@ fn jstring_or_default(env: &mut Env, s: &JString, default: &str) -> String {
     jstring_to_string(env, s).unwrap_or_else(|| default.to_string())
 }
 
-fn jarray_len(env: &mut Env, arr: &JDoubleArray) -> usize {
+fn jarray_len(env: &mut Env, arr: &JDoubleArray) -> AppResult<usize> {
     if arr.is_null() {
-        0
+        Ok(0)
     } else {
-        env.get_array_length(arr).unwrap_or(0) as usize
+        Ok(env.get_array_length(arr)? as usize)
     }
 }
 
-fn jarray_to_vec(env: &mut Env, arr: &JDoubleArray) -> Vec<f64> {
-    let len = jarray_len(env, arr);
+fn jarray_to_vec(env: &mut Env, arr: &JDoubleArray) -> AppResult<Vec<f64>> {
+    let len = jarray_len(env, arr)?;
     if len == 0 {
-        return Vec::new();
+        return Ok(Vec::new());
     }
     let mut buf = vec![0f64; len];
-    if env.get_double_array_region(arr, 0, &mut buf).is_err() {
-        return Vec::new();
-    }
-    buf
+    env.get_double_array_region(arr, 0, &mut buf)?;
+    Ok(buf)
 }
 
-fn jarray_to_option_vec(env: &mut Env, arr: &JDoubleArray) -> Option<Vec<f64>> {
-    let v = jarray_to_vec(env, arr);
-    if v.is_empty() { None } else { Some(v) }
+fn jarray_to_option_vec(env: &mut Env, arr: &JDoubleArray) -> AppResult<Option<Vec<f64>>> {
+    let v = jarray_to_vec(env, arr)?;
+    if v.is_empty() { Ok(None) } else { Ok(Some(v)) }
 }
 
 fn opt_f64(value: jdouble) -> Option<f64> {
@@ -164,14 +162,6 @@ fn result_to_jobject<'local>(
     let (rmse, mae, r_squared, aic, aicc, effective_df, residual_sd) =
         shared_parse::extract_diagnostics(&result);
     let has_diagnostics = result.diagnostics.is_some();
-    // Extracted before the field-by-field moves below (moving a struct field out of an
-    // owned value doesn't require the whole struct to still be intact afterward).
-    let predict_handle: jlong = result
-        .fit_state
-        .clone()
-        .map(|state| Box::into_raw(Box::new(JavaPredictHandle { state })) as jlong)
-        .unwrap_or(0);
-
     let x = vec_to_jdoublearray(env, &Some(result.x))?;
     let y = vec_to_jdoublearray(env, &Some(result.y))?;
     let standard_errors = vec_to_jdoublearray(env, &result.standard_errors)?;
@@ -185,6 +175,13 @@ fn result_to_jobject<'local>(
     let derivative = vec_to_jdoublearray(env, &result.derivative)?;
     let fraction_used = result.fraction_used;
     let iterations_used = result.iterations_used.map(|i| i as jint).unwrap_or(-1);
+    let predict_handle = result
+        .fit_state
+        .clone()
+        .map(|state| Box::new(JavaPredictHandle { state }));
+    let predict_handle_value = predict_handle
+        .as_ref()
+        .map_or(0, |handle| (&**handle as *const JavaPredictHandle) as jlong);
 
     let class = env.find_class(RESULT_CLASS)?;
     let obj = env.new_object(
@@ -212,9 +209,12 @@ fn result_to_jobject<'local>(
             JValue::Double(effective_df),
             JValue::Double(residual_sd),
             JValue::Bool(has_diagnostics as jboolean),
-            JValue::Long(predict_handle),
+            JValue::Long(predict_handle_value),
         ],
     )?;
+    if let Some(handle) = predict_handle {
+        let _ = Box::into_raw(handle);
+    }
     Ok(obj)
 }
 
@@ -226,6 +226,28 @@ pub extern "system" fn Java_fastlowess_NativeBridge_gpuEnabled(
 ) -> jboolean {
     cfg!(feature = "gpu") as jboolean
 }
+
+#[cfg(all(
+    feature = "gpu",
+    target_os = "linux",
+    target_env = "gnu",
+    target_arch = "x86_64"
+))]
+#[unsafe(no_mangle)]
+pub static FASTLOWESS_JAVA_GPU_BUILD_MARKER: &[u8] =
+    b"fastlowess-java-gpu|abi-v4|linux-x86_64-glibc";
+
+#[cfg(all(feature = "gpu", target_os = "macos", target_arch = "x86_64"))]
+#[unsafe(no_mangle)]
+pub static FASTLOWESS_JAVA_GPU_BUILD_MARKER: &[u8] = b"fastlowess-java-gpu|abi-v4|macos-x86_64";
+
+#[cfg(all(feature = "gpu", target_os = "macos", target_arch = "aarch64"))]
+#[unsafe(no_mangle)]
+pub static FASTLOWESS_JAVA_GPU_BUILD_MARKER: &[u8] = b"fastlowess-java-gpu|abi-v4|macos-aarch64";
+
+#[cfg(all(feature = "gpu", target_os = "windows", target_arch = "x86_64"))]
+#[unsafe(no_mangle)]
+pub static FASTLOWESS_JAVA_GPU_BUILD_MARKER: &[u8] = b"fastlowess-java-gpu|abi-v4|windows-x86_64";
 
 // ----------------------------------------------------------------------------
 // Batch (Lowess)
@@ -296,7 +318,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_lowessNew<'local>(
         let cv_method_str = jstring_or_default(env, &cv_method, "kfold");
         let backend_str = jstring_or_default(env, &backend, shared_parse::DEFAULT_BACKEND);
         let missing_str = jstring_or_default(env, &missing, shared_parse::DEFAULT_MISSING_POLICY);
-        let cv_fractions_vec = jarray_to_option_vec(env, &cv_fractions);
+        let cv_fractions_vec = jarray_to_option_vec(env, &cv_fractions)?;
 
         let iterations = shared_parse::require_non_negative_usize("iterations", iterations)?;
         let bootstrap = opt_bootstrap(bootstrap)?;
@@ -332,11 +354,27 @@ pub extern "system" fn Java_fastlowess_NativeBridge_lowessNew<'local>(
         }
         builder = apply_bootstrap_and_seed(builder, bootstrap, opt_seed(seed, has_seed));
 
+        let uses_kfold = cv_fractions_vec
+            .as_ref()
+            .is_some_and(|fractions| !fractions.is_empty())
+            && matches!(
+                cv_method_str.to_ascii_lowercase().as_str(),
+                "kfold" | "k_fold" | "k-fold"
+            );
+        let cv_k_usize = if uses_kfold {
+            if cv_k < 2 {
+                return Err("k-fold CV requires at least 2 folds".into());
+            }
+            cv_k as usize
+        } else {
+            0
+        };
+
         Ok(Box::into_raw(Box::new(JavaLowess {
             builder: Some(builder),
             cv_fractions: cv_fractions_vec,
             cv_method: Some(cv_method_str),
-            cv_k: cv_k.max(2) as usize,
+            cv_k: cv_k_usize,
         })) as jlong)
     })
     .resolve::<ThrowRuntimeExAndDefault>()
@@ -356,12 +394,12 @@ pub extern "system" fn Java_fastlowess_NativeBridge_lowessFit<'local>(
             return Err(shared_parse::MODEL_POINTER_IS_NULL.into());
         }
         let lowess = unsafe { &mut *(handle as *mut JavaLowess) };
-        let x_vec = jarray_to_vec(env, &x);
-        let y_vec = jarray_to_vec(env, &y);
+        let x_vec = jarray_to_vec(env, &x)?;
+        let y_vec = jarray_to_vec(env, &y)?;
         if x_vec.is_empty() || y_vec.is_empty() {
             return Err(shared_parse::INVALID_DATA_INPUTS.into());
         }
-        let cw = jarray_to_option_vec(env, &custom_weights);
+        let cw = jarray_to_option_vec(env, &custom_weights)?;
 
         let Some(mut builder) = lowess.builder.clone() else {
             return Err(shared_parse::MODEL_NOT_INITIALIZED.into());
@@ -416,7 +454,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_predict<'local>(
             return Err(shared_parse::MODEL_POINTER_IS_NULL.into());
         }
         let predict_handle = unsafe { &*(handle as *const JavaPredictHandle) };
-        let new_x_vec = jarray_to_vec(env, &new_x);
+        let new_x_vec = jarray_to_vec(env, &new_x)?;
         if new_x_vec.is_empty() {
             return Err(shared_parse::INVALID_DATA_INPUTS.into());
         }
@@ -537,6 +575,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_streamingNew<'local>(
         );
         let missing_str = jstring_or_default(env, &missing, shared_parse::DEFAULT_MISSING_POLICY);
 
+        let iterations = shared_parse::require_non_negative_usize("iterations", iterations)?;
         let chunk_size = shared_parse::require_positive_usize("chunkSize", chunk_size)?;
         let bootstrap = opt_bootstrap(bootstrap)?;
 
@@ -544,7 +583,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_streamingNew<'local>(
             LowessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
-                iterations: Some(iterations as usize),
+                iterations: Some(iterations),
                 delta: opt_f64(delta),
                 weight_function: Some(&wf),
                 robustness_method: Some(&rm),
@@ -594,8 +633,8 @@ pub extern "system" fn Java_fastlowess_NativeBridge_streamingProcess<'local>(
             return Err(shared_parse::MODEL_POINTER_IS_NULL.into());
         }
         let streaming = unsafe { &mut *(handle as *mut JavaStreamingLowess) };
-        let x_vec = jarray_to_vec(env, &x);
-        let y_vec = jarray_to_vec(env, &y);
+        let x_vec = jarray_to_vec(env, &x)?;
+        let y_vec = jarray_to_vec(env, &y)?;
         if x_vec.is_empty() || y_vec.is_empty() {
             return Err(shared_parse::INVALID_DATA_INPUTS.into());
         }
@@ -688,6 +727,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineNew<'local>(
         let um = jstring_or_default(env, &update_mode, shared_parse::DEFAULT_ONLINE_UPDATE_MODE);
         let missing_str = jstring_or_default(env, &missing, shared_parse::DEFAULT_MISSING_POLICY);
 
+        let iterations = shared_parse::require_non_negative_usize("iterations", iterations)?;
         let window_capacity =
             shared_parse::require_positive_usize("windowCapacity", window_capacity)?;
         let min_points = shared_parse::require_positive_usize("minPoints", min_points)?;
@@ -697,7 +737,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineNew<'local>(
             LowessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
-                iterations: Some(iterations as usize),
+                iterations: Some(iterations),
                 delta: opt_f64(delta),
                 weight_function: Some(&wf),
                 robustness_method: Some(&rm),

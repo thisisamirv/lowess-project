@@ -10,6 +10,13 @@ import org.junit.jupiter.api.Test;
 class OnlineLowessTest {
 
     @Test
+    void rejectsNegativeIterations() {
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> new OnlineLowess(OnlineOptions.builder().iterations(-1).build()));
+        assertTrue(ex.getMessage() != null && !ex.getMessage().isEmpty());
+    }
+
+    @Test
     void addsPointsAndEventuallyProducesOutput() {
         try (OnlineLowess model = new OnlineLowess(OnlineOptions.builder().minPoints(5).build())) {
             boolean sawValue = false;

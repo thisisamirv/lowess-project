@@ -1,7 +1,8 @@
 package fastlowess;
 
 /**
- * A streaming LOWESS model that processes data in chunks.
+ * A streaming LOWESS model that processes data in chunks. Operations on one
+ * instance are synchronized because it owns mutable native state.
  */
 public final class StreamingLowess implements AutoCloseable {
 
@@ -49,7 +50,7 @@ public final class StreamingLowess implements AutoCloseable {
      * @param y the y values of this chunk
      * @return the partial fit result for this chunk
      */
-    public Result processChunk(double[] x, double[] y) {
+    public synchronized Result processChunk(double[] x, double[] y) {
         checkOpen();
         NativeResult r = NativeBridge.streamingProcess(handle, x, y);
         return Result.fromNative(r);
@@ -60,7 +61,7 @@ public final class StreamingLowess implements AutoCloseable {
      *
      * @return the final merged result
      */
-    public Result finish() {
+    public synchronized Result finish() {
         checkOpen();
         NativeResult r = NativeBridge.streamingFinalize(handle);
         return Result.fromNative(r);
@@ -73,7 +74,7 @@ public final class StreamingLowess implements AutoCloseable {
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         if (handle != 0) {
             NativeBridge.streamingFree(handle);
             handle = 0;

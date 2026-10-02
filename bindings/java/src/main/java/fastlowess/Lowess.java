@@ -54,7 +54,7 @@ public final class Lowess implements AutoCloseable {
      * @param y the y values
      * @return the fit result
      */
-    public Result fit(double[] x, double[] y) {
+    public synchronized Result fit(double[] x, double[] y) {
         return fit(x, y, null);
     }
 
@@ -67,8 +67,11 @@ public final class Lowess implements AutoCloseable {
      * {@code null}
      * @return the fit result
      */
-    public Result fit(double[] x, double[] y, double[] customWeights) {
+    public synchronized Result fit(double[] x, double[] y, double[] customWeights) {
         checkOpen();
+        if (customWeights != null && customWeights.length != x.length) {
+            throw new IllegalArgumentException("customWeights must match x and y length");
+        }
         NativeResult r = NativeBridge.lowessFit(handle, x, y, customWeights);
         return Result.fromNative(r);
     }
@@ -80,7 +83,7 @@ public final class Lowess implements AutoCloseable {
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         if (handle != 0) {
             NativeBridge.lowessFree(handle);
             handle = 0;

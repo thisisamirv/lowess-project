@@ -122,6 +122,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Breaking change: replaced flat `confidenceIntervals`/`predictionIntervals` setters (and `PredictOptions` `confidenceLevel`/`predictionLevel`) with `intervals(IntervalsOptions)`; removed flat `cvFractions`/`cvMethod`/`cvK`/`cvSeed` setters and `CVOptions.seed` in favor of `cv(CVOptions)` plus one outer `seed(long)` shared by CV and fit-time bootstrap. `PredictOptions` has its own `seed`. Seeds are now interpreted as unsigned 64-bit values instead of rejecting negatives.
 - Bumped the pinned Checkstyle standalone jar version from `14.1.0` to `14.3.0`.
+- Fixed retained-model handles leaking when JNI result construction fails, silent empty CV/weight arrays, invalid k-fold and iteration coercion, JNI array error swallowing, and unsupported GPU installer targets/local archives.
+- Serialized operations on Java model instances to protect mutable native handles during concurrent calls.
 
 **Julia:**
 

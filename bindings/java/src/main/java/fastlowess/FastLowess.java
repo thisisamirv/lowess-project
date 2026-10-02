@@ -1,11 +1,13 @@
 package fastlowess;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -109,7 +111,7 @@ public final class FastLowess {
 
         String platform = platformTag();
         String arch = archTag();
-        if (platform == null) {
+        if (platform == null || arch == null) {
             throw new IllegalStateException(
                     "No prebuilt GPU library available for " + System.getProperty("os.name")
                     + "/" + System.getProperty("os.arch") + ". Build from source instead: "
@@ -123,6 +125,15 @@ public final class FastLowess {
             Path src = Paths.get(localPath);
             if (!Files.isRegularFile(src)) {
                 throw new IllegalStateException("No such file: " + src);
+            }
+            try {
+                if (!containsGpuBuildMarker(src, gpuBuildMarker(platform, arch))) {
+                    throw new IllegalStateException(
+                            "Local library is not a GPU-enabled Java library for "
+                            + platform + "/" + arch + " with ABI v4: " + src);
+                }
+            } catch (IOException e) {
+                throw new UncheckedIOException("Failed to validate " + src, e);
             }
             if (!yes) {
                 if (System.console() == null) {
@@ -203,23 +214,74 @@ public final class FastLowess {
     // Only these 4 platforms are built by release-gpu.yml.
     private static String platformTag() {
         String os = System.getProperty("os.name", "").toLowerCase();
-        String arch = System.getProperty("os.arch", "").toLowerCase();
-        boolean isArm = arch.contains("aarch64") || arch.contains("arm64");
-        if (os.contains("win")) {
-            return isArm ? null : "windows";
+        String arch = archTag();
+        if (arch == null) {
+            return null;
         }
-        if (os.contains("mac") || os.contains("darwin")) {
+        if (os.contains("win") && "x86_64".equals(arch)) {
+            return "windows";
+        }
+        if ((os.contains("mac") || os.contains("darwin"))
+                && ("x86_64".equals(arch) || "aarch64".equals(arch))) {
             return "macos";
         }
-        if (os.contains("linux")) {
-            return isArm ? null : "linux";
+        if (os.contains("linux") && "x86_64".equals(arch) && !NativeBridge.isMuslLibc()) {
+            return "linux";
         }
         return null;
     }
 
     private static String archTag() {
         String arch = System.getProperty("os.arch", "").toLowerCase();
-        return (arch.contains("aarch64") || arch.contains("arm64")) ? "aarch64" : "x86_64";
+        if (arch.contains("aarch64") || arch.contains("arm64")) {
+            return "aarch64";
+        }
+        if (arch.contains("amd64") || arch.contains("x86_64")) {
+            return "x86_64";
+        }
+        return null;
+    }
+
+    private static String gpuBuildMarker(String platform, String arch) {
+        String libc = "linux".equals(platform) ? "-glibc" : "";
+        return "fastlowess-java-gpu|abi-v4|" + platform + "-" + arch + libc;
+    }
+
+    static boolean containsGpuBuildMarker(Path archive, String marker) throws IOException {
+        byte[] needle = marker.getBytes(StandardCharsets.US_ASCII);
+        int chunkSize = 32 * 1024;
+        byte[] buffer = new byte[chunkSize + needle.length - 1];
+        int carry = 0;
+        try (InputStream input = Files.newInputStream(archive)) {
+            while (true) {
+                int count = input.read(buffer, carry, chunkSize);
+                if (count < 0) {
+                    return false;
+                }
+                if (count == 0) {
+                    continue;
+                }
+                int length = carry + count;
+                if (containsBytes(buffer, length, needle)) {
+                    return true;
+                }
+                carry = Math.min(needle.length - 1, length);
+                System.arraycopy(buffer, length - carry, buffer, 0, carry);
+            }
+        }
+    }
+
+    private static boolean containsBytes(byte[] data, int length, byte[] needle) {
+        for (int offset = 0; offset <= length - needle.length; offset++) {
+            int index = 0;
+            while (index < needle.length && data[offset + index] == needle[index]) {
+                index++;
+            }
+            if (index == needle.length) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String libraryExt(String platform) {

@@ -80,6 +80,9 @@ public final class CVOptions {
             if (fractions == null) {
                 throw new IllegalStateException("CV fractions must be provided");
             }
+            if (fractions.length == 0) {
+                throw new IllegalStateException("CV fractions must not be empty");
+            }
             return new CVOptions(this);
         }
     }

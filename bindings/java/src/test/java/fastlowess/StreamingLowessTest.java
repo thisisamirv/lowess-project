@@ -9,6 +9,13 @@ import org.junit.jupiter.api.Test;
 class StreamingLowessTest {
 
     @Test
+    void rejectsNegativeIterations() {
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> new StreamingLowess(StreamingOptions.builder().iterations(-1).build()));
+        assertTrue(ex.getMessage() != null && !ex.getMessage().isEmpty());
+    }
+
+    @Test
     void processesChunksAndFinalizes() {
         try (StreamingLowess model = new StreamingLowess(StreamingOptions.builder().chunkSize(10).overlap(5).build())) {
             double[] x1 = new double[10];

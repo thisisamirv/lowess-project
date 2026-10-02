@@ -89,8 +89,11 @@ final class NativeBridge {
     private static String osArchDir() {
         String os = System.getProperty("os.name", "").toLowerCase();
         String arch = System.getProperty("os.arch", "").toLowerCase();
-        String osName = os.contains("win") ? "windows" : (os.contains("mac") ? "macos" : "linux");
-        String archName = (arch.contains("aarch64") || arch.contains("arm64")) ? "aarch64" : "x86_64";
+        String osName = os.contains("win") ? "windows"
+                : (os.contains("mac") || os.contains("darwin") ? "macos"
+                : (os.contains("linux") ? "linux" : "unsupported-os"));
+        String archName = (arch.contains("aarch64") || arch.contains("arm64")) ? "aarch64"
+                : (arch.contains("amd64") || arch.contains("x86_64") ? "x86_64" : "unsupported-arch");
         String libcSuffix = "linux".equals(osName) && isMuslLibc() ? "-musl" : "";
         return osName + "-" + archName + libcSuffix;
     }
@@ -100,7 +103,7 @@ final class NativeBridge {
     // is this", so this checks for well-known musl markers instead: Alpine's
     // /etc/alpine-release file, and musl's dynamic linker (ld-musl-<arch>.so.1),
     // which glibc systems never have.
-    private static boolean isMuslLibc() {
+    static boolean isMuslLibc() {
         if (new File("/etc/alpine-release").isFile()) {
             return true;
         }
