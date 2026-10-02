@@ -86,11 +86,13 @@ check_gpu_backend <- function(backend) {
 gpu_asset_info <- function(
     version,
     sys_name = Sys.info()[["sysname"]],
-    machine = Sys.info()[["machine"]],
-    r_platform = R.version$platform
+    machine = R.version$arch,
+    r_platform = R.version$platform,
+    musl = grepl("musl", r_platform, ignore.case = TRUE) ||
+        length(Sys.glob("/lib/ld-musl-*.so.1")) > 0L
 ) {
     if (identical(sys_name, "Windows")) {
-        if (!grepl("^(x86[-_]64|amd64)$", machine, ignore.case = TRUE)) {
+        if (!grepl("^(x86[-_]64|amd64|arm64|aarch64)$", machine, ignore.case = TRUE)) {
             stop(
                 "No prebuilt R GPU library is available for this Windows architecture.",
                 call. = FALSE
@@ -106,16 +108,13 @@ gpu_asset_info <- function(
         # R uses .so as the package shared-object extension on macOS too
         ext <- ".so"
     } else if (identical(sys_name, "Linux")) {
-        if (grepl("musl", r_platform, ignore.case = TRUE)) {
-            stop("Prebuilt R GPU libraries are not available for musl Linux.", call. = FALSE)
+        if (!musl && !grepl("linux.*gnu", r_platform, ignore.case = TRUE)) {
+            stop("Prebuilt R GPU libraries require glibc or musl Linux.", call. = FALSE)
         }
-        if (!grepl("linux.*gnu", r_platform, ignore.case = TRUE)) {
-            stop("Prebuilt R GPU libraries are available only for glibc Linux.", call. = FALSE)
+        if (!grepl("^(x86[-_]64|amd64|arm64|aarch64)$", machine, ignore.case = TRUE)) {
+            stop("No prebuilt R GPU library is available for this Linux architecture.", call. = FALSE)
         }
-        if (!grepl("^(x86[-_]64|amd64)$", machine, ignore.case = TRUE)) {
-            stop("Prebuilt R GPU libraries are available only for Linux x86_64.", call. = FALSE)
-        }
-        platform_tag <- "linux"
+        platform_tag <- if (musl) "linux-musl" else "linux"
         ext <- ".so"
     } else {
         stop("No prebuilt R GPU library is available for this operating system.", call. = FALSE)

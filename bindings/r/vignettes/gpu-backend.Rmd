@@ -80,10 +80,10 @@ install_gpu(yes = TRUE) # non-interactive
 individual version release pages stay uncluttered — and copies it into the
 installed package's `libs/` directory.
 
-Prebuilt R GPU libraries are available for Linux x86_64 with glibc, macOS
-x86_64/ARM64, and Windows x86_64. Musl/Alpine, Linux ARM64, and Windows ARM64
-must build from source. The installer verifies GPU support in the candidate
-library and requires atomic replacement of the installed library.
+Prebuilt R GPU libraries are built for Linux x86_64/ARM64 with glibc or
+musl (Alpine), macOS x86_64/ARM64, and Windows x86_64/ARM64. The installer
+selects a matching R architecture and Linux libc, verifies GPU support in the
+candidate library, and requires atomic replacement of the installed library.
 
 **Restart R after installation.**
 

@@ -62,6 +62,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **R:**
 
+- Added prebuilt GPU library release jobs and installer selection for Linux ARM64, musl/Alpine x86_64 and ARM64, and Windows ARM64, with GPU-feature checks before artifact upload.
+- Preserved compile-time `objc2` example inputs when vendoring GPU-enabled R builds.
 - Added `cv_opts()` to build grouped cross-validation options for `Lowess(cv = ...)`.
 - Extended the existing R fit and prediction APIs with `intervals_opts()` (`confidence`, `prediction`, `bootstrap`), including residual-bootstrap intervals across `Lowess()`, `StreamingLowess()`, full-update `OnlineLowess()`, and `predict()`.
 - Added unit coverage for `cv_opts()` and output-flag parsing, bringing R package line coverage to 100%.

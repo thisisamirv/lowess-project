@@ -5,6 +5,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Added
 
+* Added prebuilt GPU library release jobs and installer selection for Linux ARM64, musl/Alpine x86_64 and ARM64, and Windows ARM64.
 * Enabled the optional wgpu DirectX 12 backend for GPU-enabled Windows builds. DXC is loaded dynamically with an FXC fallback, avoiding eager imports of `dxcompiler.dll` and `dxil.dll`.
 * Added GLES for Android GPU builds with a target-scoped `wgpu` feature; Windows continues to omit the GLES-only loader imports.
 * Added `cv_opts()` to configure grouped cross-validation options for `Lowess(cv = ...)`.

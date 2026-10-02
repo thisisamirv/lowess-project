@@ -952,17 +952,26 @@ jobs:
           path: bindings/nodejs/dist
 
   # ============================================================================
-  # BUILD GPU LIBRARY - R (Linux x86_64)
+  # BUILD GPU LIBRARY - R (Linux glibc x86_64/ARM64)
   # ============================================================================
   r-linux-x86_64:
-    name: Build R GPU library (Linux x86_64)
-    runs-on: ubuntu-latest
+    name: Build R GPU library (Linux ${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x86_64
+          - os: ubuntu-24.04-arm
+            arch: aarch64
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.inputs.commit || github.sha }}
 
       - uses: r-lib/actions/setup-r@v2
+
+      - uses: dtolnay/rust-toolchain@stable
 
       - name: Install R dependencies
         run: Rscript -e 'options(repos = c(CRAN = "https://cloud.r-project.org")); if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager"); BiocManager::install("BiocGenerics", ask = FALSE, update = FALSE)'
@@ -973,16 +982,55 @@ jobs:
 
       - name: Locate and rename shared library
         run: |
+          Rscript -e 'stopifnot(rfastlowess::gpu_available())'
           LIBDIR=$(Rscript -e 'cat(system.file("libs", package="rfastlowess"))')
           mkdir -p dist
           VERSION=$(grep "^Version:" bindings/r/DESCRIPTION | sed 's/Version: //')
-          cp "$LIBDIR/rfastlowess.so" "dist/librfastlowess-gpu-v$VERSION-linux-x86_64.so"
+          cp "$LIBDIR/rfastlowess.so" "dist/librfastlowess-gpu-v$VERSION-linux-${{ matrix.arch }}.so"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: gpu-r-linux-x86_64
+          name: gpu-r-linux-${{ matrix.arch }}
           path: dist
+
+  r-linux-musl:
+    name: Build R GPU library (Alpine ${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x86_64
+          - os: ubuntu-24.04-arm
+            arch: aarch64
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+
+      - name: Build and verify native musl library
+        run: |
+          docker run --rm -v "$PWD:/work" -w /work \
+            -e WITH_GPU=1 -e RUSTFLAGS="-C target-feature=-crt-static" \
+            -e ASSET_ARCH=${{ matrix.arch }} rust:alpine sh -ec '
+              apk add --no-cache R R-dev build-base gfortran linux-headers bash git curl python3 tar xz pkgconf perl
+              Rscript -e "stopifnot(getRversion() >= \"4.4.0\")"
+              (cd bindings/r/src && sh vendor-update.sh)
+              R CMD INSTALL --no-docs --no-html bindings/r
+              Rscript -e "stopifnot(rfastlowess::gpu_available())"
+              LIBDIR=$(Rscript -e "cat(system.file(\"libs\", package=\"rfastlowess\"))")
+              VERSION=$(sed -n "s/^Version: //p" bindings/r/DESCRIPTION)
+              mkdir -p dist
+              cp "$LIBDIR/rfastlowess.so" "dist/librfastlowess-gpu-v$VERSION-linux-musl-$ASSET_ARCH.so"
+            '
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-r-linux-musl-${{ matrix.arch }}
+          path: dist
+          if-no-files-found: error
 
   # ============================================================================
   # BUILD GPU LIBRARY - R (macOS x86_64)
@@ -1086,6 +1134,61 @@ jobs:
         with:
           name: gpu-r-windows-x86_64
           path: dist
+
+  # ============================================================================
+  # BUILD GPU LIBRARY - R (Windows ARM64)
+  # ============================================================================
+  r-windows-aarch64:
+    name: Build R GPU library (Windows ARM64)
+    runs-on: windows-11-arm
+    env:
+      SETUP_R_ARCH: arm64
+      CARGO_BUILD_TARGET: aarch64-pc-windows-gnullvm
+      CARGO_TARGET_AARCH64_PC_WINDOWS_GNULLVM_LINKER: aarch64-w64-mingw32-clang
+      CC_aarch64_pc_windows_gnullvm: aarch64-w64-mingw32-clang
+      AR_aarch64_pc_windows_gnullvm: llvm-ar
+      WITH_GPU: "1"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          rtools-version: "45"
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-pc-windows-gnullvm
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.x"
+
+      - name: Build and install with GPU feature
+        shell: bash
+        run: |
+          (cd bindings/r/src && sh vendor-update.sh)
+          R CMD INSTALL --no-docs --no-html bindings/r
+
+      - name: Verify and rename shared library
+        shell: pwsh
+        run: |
+          Rscript -e "stopifnot(grepl('aarch64', R.version[['platform']]), rfastlowess::gpu_available())"
+          if ($LASTEXITCODE -ne 0) { throw "ARM64 GPU library validation failed" }
+          $libDir = Rscript -e "cat(system.file('libs', package='rfastlowess'))"
+          $dlls = @(Get-ChildItem -Path $libDir -Filter rfastlowess.dll -Recurse)
+          if ($dlls.Count -ne 1) { throw "Expected one R GPU DLL" }
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $version = (Select-String -Path bindings/r/DESCRIPTION -Pattern '^Version: (.*)').Matches[0].Groups[1].Value
+          Copy-Item $dlls[0].FullName "dist/librfastlowess-gpu-v$version-windows-aarch64.dll"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: gpu-r-windows-aarch64
+          path: dist
+          if-no-files-found: error
 
   # ============================================================================
   # BUILD GPU LIBRARY - Go (Linux x86_64)
@@ -1416,9 +1519,11 @@ jobs:
       - node-linux-arm-gnueabihf
       - node-win32-arm64-msvc
       - r-linux-x86_64
+      - r-linux-musl
       - r-macos-x86_64
       - r-macos-aarch64
       - r-windows-x86_64
+      - r-windows-aarch64
       - go-linux-x86_64
       - go-macos-x86_64
       - go-macos-aarch64

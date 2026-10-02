@@ -87,7 +87,7 @@ test_that("gpu_asset_info handles Windows platform", {
         `Sys.info` = function() c(sysname = "Windows", machine = "x86-64"),
         .package = "base"
     )
-    info <- gpu_asset_info("1.0.0")
+    info <- gpu_asset_info("1.0.0", machine = "x86-64")
     expect_identical(info$ext, ".dll")
     expect_true(grepl("windows-x86_64\\.dll$", info$asset))
 })
@@ -97,7 +97,7 @@ test_that("gpu_asset_info handles macOS arm64 platform", {
         `Sys.info` = function() c(sysname = "Darwin", machine = "arm64"),
         .package = "base"
     )
-    info <- gpu_asset_info("1.0.0")
+    info <- gpu_asset_info("1.0.0", machine = "arm64")
     expect_identical(info$ext, ".so")
     expect_true(grepl("macos-aarch64\\.so$", info$asset))
 })
@@ -107,22 +107,33 @@ test_that("gpu_asset_info handles Linux platform", {
         `Sys.info` = function() c(sysname = "Linux", machine = "x86_64"),
         .package = "base"
     )
-    info <- gpu_asset_info("1.0.0", r_platform = "x86_64-pc-linux-gnu")
+    info <- gpu_asset_info("1.0.0", machine = "x86_64", r_platform = "x86_64-pc-linux-gnu", musl = FALSE)
     expect_identical(info$ext, ".so")
     expect_true(grepl("linux-x86_64\\.so$", info$asset))
 })
 
+test_that("gpu_asset_info selects ARM64 and musl R GPU targets", {
+    targets <- list(
+        c("Linux", "x86_64", "x86_64-alpine-linux-musl", "linux-musl-x86_64.so"),
+        c("Linux", "aarch64", "aarch64-alpine-linux-musl", "linux-musl-aarch64.so"),
+        c("Linux", "aarch64", "aarch64-unknown-linux-gnu", "linux-aarch64.so"),
+        c("Windows", "ARM64", "aarch64-w64-mingw32", "windows-aarch64.dll")
+    )
+    for (target in targets) {
+        info <- gpu_asset_info("1.0.0", target[1], target[2], target[3], musl = grepl("musl", target[3]))
+        expect_identical(info$asset, paste0("librfastlowess-gpu-v1.0.0-", target[4]))
+    }
+    info <- gpu_asset_info("1.0.0", "Linux", "x86_64", "x86_64-pc-linux-gnu", musl = TRUE)
+    expect_true(endsWith(info$asset, "linux-musl-x86_64.so"))
+})
+
 test_that("gpu_asset_info rejects unsupported R GPU targets", {
     expect_error(
-        gpu_asset_info("1.0.0", "Linux", "x86_64", "x86_64-alpine-linux-musl"),
-        "not available for musl Linux"
+        gpu_asset_info("1.0.0", "Linux", "riscv64", "riscv64-unknown-linux-gnu"),
+        "Linux architecture"
     )
     expect_error(
-        gpu_asset_info("1.0.0", "Linux", "aarch64", "aarch64-unknown-linux-gnu"),
-        "only for Linux x86_64"
-    )
-    expect_error(
-        gpu_asset_info("1.0.0", "Windows", "ARM64", "aarch64-w64-mingw32"),
+        gpu_asset_info("1.0.0", "Windows", "i686", "i686-w64-mingw32"),
         "Windows architecture"
     )
 })

@@ -53,7 +53,13 @@ mv Cargo.toml.orig Cargo.toml
 
 # Drop directories that bulk up the archive
 for d in tests benches examples doc docs assets .github .config; do
-	rm -rf "vendor/$d" vendor/*/"$d" 2>/dev/null || true
+	rm -rf "vendor/$d" 2>/dev/null || true
+	for crate_dir in vendor/*; do
+		if [ "$d" = "examples" ] && [ "$crate_dir" = "vendor/objc2" ]; then
+			continue
+		fi
+		rm -rf "$crate_dir/$d" 2>/dev/null || true
+	done
 done
 for f in vendor/*/Makefile; do [ -f "$f" ] && rm -f "$f"; done || true
 rm -f vendor/*/CITATION.cff vendor/*/CITATION
