@@ -107,6 +107,21 @@ type OnlineLowess struct {
 
 // NewOnlineLowess creates a new online model with the given options.
 func NewOnlineLowess(opts OnlineOptions) (*OnlineLowess, error) {
+	if err := validateOutputs(opts.Outputs, "OnlineLowess", "weights", "derivative", "se"); err != nil {
+		return nil, err
+	}
+	for _, option := range []struct {
+		name  string
+		value int
+	}{
+		{"Iterations", opts.Iterations},
+		{"WindowCapacity", opts.WindowCapacity},
+		{"MinPoints", opts.MinPoints},
+	} {
+		if err := validateCInt(option.name, option.value); err != nil {
+			return nil, err
+		}
+	}
 	wf := cStringOrNil(opts.WeightFunction)
 	defer freeCString(wf)
 	rm := cStringOrNil(opts.RobustnessMethod)
@@ -155,7 +170,7 @@ func NewOnlineLowess(opts OnlineOptions) (*OnlineLowess, error) {
 			boolToCInt(opts.ReturnSE || hasOutput(opts.Outputs, "se")),
 			optFloat(ciValue, ciSet),
 			optFloat(piValue, piSet),
-			C.ulong(bootstrap), C.ulonglong(seed), boolToCInt(opts.Seed != nil),
+			C.size_t(bootstrap), C.ulonglong(seed), boolToCInt(opts.Seed != nil),
 		)
 		if ptr == nil {
 			errMsg = lastError()
@@ -183,6 +198,7 @@ func (o *OnlineLowess) AddPoint(x, y float64) (res PointResult, ok bool, err err
 	}
 
 	cout := C.go_online_add_point(o.ptr, C.double(x), C.double(y))
+	runtime.KeepAlive(o)
 	if cout.error != nil {
 		msg := C.GoString(cout.error)
 		C.go_online_free_output(&cout)

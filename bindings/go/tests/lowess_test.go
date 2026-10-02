@@ -4,6 +4,7 @@ import (
 	"math"
 	"slices"
 	"sort"
+	"strconv"
 	"testing"
 
 	"github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v4"
@@ -966,6 +967,47 @@ func TestErrorHandling(t *testing.T) {
 			t.Fatal("expected Fit to reject an invalid CV method")
 		}
 	})
+
+	t.Run("UnknownOutput", func(t *testing.T) {
+		opts := fastlowess.DefaultOptions()
+		opts.Outputs = []string{"standard_errors"}
+		if _, err := fastlowess.NewLowess(opts); err == nil {
+			t.Fatal("expected an error for an unknown output name")
+		}
+	})
+
+	t.Run("InvalidKFoldCount", func(t *testing.T) {
+		opts := fastlowess.DefaultOptions()
+		opts.CV = &fastlowess.CVOptions{Fractions: []float64{0.5}, Method: "kfold", K: 1}
+		if _, err := fastlowess.NewLowess(opts); err == nil {
+			t.Fatal("expected k-fold CV to reject K < 2")
+		}
+	})
+}
+
+func TestAdapterOutputValidation(t *testing.T) {
+	streamOpts := fastlowess.DefaultStreamingOptions()
+	streamOpts.Outputs = []string{"residuls"}
+	if _, err := fastlowess.NewStreamingLowess(streamOpts); err == nil {
+		t.Fatal("expected StreamingLowess to reject an unknown output")
+	}
+
+	onlineOpts := fastlowess.DefaultOnlineOptions()
+	onlineOpts.Outputs = []string{"diagnostics"}
+	if _, err := fastlowess.NewOnlineLowess(onlineOpts); err == nil {
+		t.Fatal("expected OnlineLowess to reject an unsupported output")
+	}
+}
+
+func TestCIntOptionsRejectOverflow(t *testing.T) {
+	if strconv.IntSize <= 32 {
+		t.Skip("Go int is already no wider than C int")
+	}
+	opts := fastlowess.DefaultOptions()
+	opts.Iterations = int(int64(1) << 32)
+	if _, err := fastlowess.NewLowess(opts); err == nil {
+		t.Fatal("expected an error when Iterations exceeds C int range")
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -1169,7 +1211,7 @@ func TestCrossValidation(t *testing.T) {
 		x, y := sineData(20)
 
 		opts := fastlowess.DefaultOptions()
-		opts.CV = &fastlowess.CVOptions{Fractions: []float64{0.4, 0.6}, Method: "loocv"}
+		opts.CV = &fastlowess.CVOptions{Fractions: []float64{0.4, 0.6}, Method: "loocv", K: 1}
 		res := fitOrFatal(t, opts, x, y)
 
 		if !inSet(res.FractionUsed, opts.CV.Fractions) {
@@ -1263,6 +1305,11 @@ func TestGroupedBootstrapIntervals(t *testing.T) {
 		}
 		if !slices.Equal(first.StandardErrors, again.StandardErrors) || len(first.ConfidenceLower) != 2 || len(first.PredictionUpper) != 2 || len(first.Derivative) != 2 {
 			t.Fatal("Predict should return reproducible bootstrap intervals and derivatives")
+		}
+		invalidPredictOpts := predictOpts
+		invalidPredictOpts.Outputs = []string{"standard_errors"}
+		if _, err := result.PredictModel.Predict([]float64{1.5}, invalidPredictOpts); err == nil {
+			t.Fatal("expected Predict to reject an unknown output name")
 		}
 	})
 
@@ -1485,6 +1532,22 @@ func TestCustomWeights(t *testing.T) {
 		defer model.Close()
 		if _, err := model.Fit(x, y, weights); err == nil {
 			t.Fatal("expected an error for mismatched custom_weights length")
+		}
+	})
+
+	t.Run("MultipleWeightSlicesRaiseError", func(t *testing.T) {
+		x, y := sineData(10)
+		weights := make([]float64, len(x))
+		for i := range weights {
+			weights[i] = 1
+		}
+		model, err := fastlowess.NewLowess(fastlowess.DefaultOptions())
+		if err != nil {
+			t.Fatalf("NewLowess failed: %v", err)
+		}
+		defer model.Close()
+		if _, err := model.Fit(x, y, weights, weights); err == nil {
+			t.Fatal("expected Fit to reject multiple custom weight slices")
 		}
 	})
 

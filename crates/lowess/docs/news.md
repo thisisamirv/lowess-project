@@ -39,7 +39,6 @@ This changelog includes end-user changes only. For internal development notes, s
 * Reduced GPU adapter buffer requirements from 30 storage/32 total buffer bindings to 7 storage/8 total per shader stage by using per-compute-pipeline resource layouts.
 * Fixed Online incremental mode accepting positive `delta` and `auto_converge` settings it cannot use; unsupported combinations now error.
 * Fixed grouped intervals discarding distinct confidence and prediction levels; each requested coverage is now applied independently.
-
 * Improved agreement with R/Cleveland on sparse, asymmetric, and high-iteration fits by aligning effective-zero robustness stopping, local-linear degeneracy handling, span and endpoint traversal, delta interpolation, and adjusted-weight accumulation.
 * Fixed zero-radius neighborhoods dropping tied observations and accumulating adjusted weights in an order that diverged under robust iterations; the full tied run now contributes using reference-compatible normalization.
 * Fixed synthetic boundary observations contaminating robustness scale estimates; padding points still receive weights but no longer affect the scale used to reweight original observations.

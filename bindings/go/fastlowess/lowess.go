@@ -8,7 +8,9 @@ import "C"
 
 import (
 	"errors"
+	"fmt"
 	"runtime"
+	"strings"
 )
 
 // CVOptions configures batch cross-validation. Nil disables CV.
@@ -118,6 +120,44 @@ func hasOutput(outputs []string, name string) bool {
 	return false
 }
 
+const maxCIntValue = int64(1<<31 - 1)
+const minCIntValue = -maxCIntValue - 1
+
+func validateCInt(name string, value int) error {
+	if int64(value) < minCIntValue || int64(value) > maxCIntValue {
+		return fmt.Errorf("fastlowess: %s is outside the C int range", name)
+	}
+	return nil
+}
+
+func validateOutputs(outputs []string, adapter string, supported ...string) error {
+	for _, output := range outputs {
+		valid := false
+		for _, name := range supported {
+			if output == name {
+				valid = true
+				break
+			}
+		}
+		if !valid {
+			return fmt.Errorf("fastlowess: unknown %s output %q", adapter, output)
+		}
+	}
+	return nil
+}
+
+func usesKfold(cv *CVOptions) bool {
+	if cv == nil || len(cv.Fractions) == 0 {
+		return false
+	}
+	switch strings.ToLower(cv.Method) {
+	case "", "kfold", "k_fold", "k-fold":
+		return true
+	default:
+		return false
+	}
+}
+
 // DefaultOptions returns the library's recommended defaults. Start from this
 // and override only the fields you need.
 func DefaultOptions() Options {
@@ -154,6 +194,24 @@ type Lowess struct {
 
 // NewLowess creates a new batch Lowess model with the given options.
 func NewLowess(opts Options) (*Lowess, error) {
+	if err := validateOutputs(opts.Outputs, "Lowess", "diagnostics", "residuals", "weights", "derivative", "se", "sorted"); err != nil {
+		return nil, err
+	}
+	if err := validateCInt("Iterations", opts.Iterations); err != nil {
+		return nil, err
+	}
+	if usesKfold(opts.CV) {
+		folds := opts.CV.K
+		if folds == 0 {
+			folds = 5
+		}
+		if folds < 2 {
+			return nil, errors.New("fastlowess: k-fold CV requires at least 2 folds")
+		}
+		if err := validateCInt("CV.K", folds); err != nil {
+			return nil, err
+		}
+	}
 	wf := cStringOrNil(opts.WeightFunction)
 	defer freeCString(wf)
 	rm := cStringOrNil(opts.RobustnessMethod)
@@ -228,7 +286,7 @@ func NewLowess(opts Options) (*Lowess, error) {
 		C.go_lowess_set_seed(ptr, C.ulonglong(*opts.Seed))
 	}
 	if opts.Intervals != nil && opts.Intervals.Bootstrap > 0 {
-		C.go_lowess_set_bootstrap(ptr, C.ulong(opts.Intervals.Bootstrap))
+		C.go_lowess_set_bootstrap(ptr, C.size_t(opts.Intervals.Bootstrap))
 	}
 
 	l := &Lowess{ptr: ptr}
@@ -249,6 +307,9 @@ func (l *Lowess) Fit(x, y []float64, customWeights ...[]float64) (Result, error)
 	if len(x) == 0 || len(x) != len(y) {
 		return Result{}, errors.New("fastlowess: x and y must be non-empty and the same length")
 	}
+	if len(customWeights) > 1 {
+		return Result{}, errors.New("fastlowess: Fit accepts at most one custom weight slice")
+	}
 	var cw []float64
 	if len(customWeights) > 0 {
 		cw = customWeights[0]
@@ -259,6 +320,7 @@ func (l *Lowess) Fit(x, y []float64, customWeights ...[]float64) (Result, error)
 	cwPtr, cwLen := cDoubles(cw)
 
 	cres := C.go_lowess_fit(l.ptr, xPtr, yPtr, xLen, cwPtr, cwLen)
+	runtime.KeepAlive(l)
 	return resultFromC(cres)
 }
 

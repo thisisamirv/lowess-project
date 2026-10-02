@@ -109,6 +109,21 @@ type StreamingLowess struct {
 
 // NewStreamingLowess creates a new streaming model with the given options.
 func NewStreamingLowess(opts StreamingOptions) (*StreamingLowess, error) {
+	if err := validateOutputs(opts.Outputs, "StreamingLowess", "diagnostics", "residuals", "weights", "derivative", "se"); err != nil {
+		return nil, err
+	}
+	for _, option := range []struct {
+		name  string
+		value int
+	}{
+		{"Iterations", opts.Iterations},
+		{"ChunkSize", opts.ChunkSize},
+		{"Overlap", opts.Overlap},
+	} {
+		if err := validateCInt(option.name, option.value); err != nil {
+			return nil, err
+		}
+	}
 	wf := cStringOrNil(opts.WeightFunction)
 	defer freeCString(wf)
 	rm := cStringOrNil(opts.RobustnessMethod)
@@ -160,7 +175,7 @@ func NewStreamingLowess(opts StreamingOptions) (*StreamingLowess, error) {
 			boolToCInt(opts.ReturnSE || hasOutput(opts.Outputs, "se")),
 			optFloat(ciValue, ciSet),
 			optFloat(piValue, piSet),
-			C.ulong(bootstrap), C.ulonglong(seed), boolToCInt(opts.Seed != nil),
+			C.size_t(bootstrap), C.ulonglong(seed), boolToCInt(opts.Seed != nil),
 		)
 		if ptr == nil {
 			errMsg = lastError()
@@ -190,6 +205,7 @@ func (s *StreamingLowess) ProcessChunk(x, y []float64) (Result, error) {
 	xPtr, xLen := cDoubles(x)
 	yPtr, _ := cDoubles(y)
 	cres := C.go_streaming_process(s.ptr, xPtr, yPtr, xLen)
+	runtime.KeepAlive(s)
 	return resultFromC(cres)
 }
 
@@ -199,6 +215,7 @@ func (s *StreamingLowess) Finalize() (Result, error) {
 		return Result{}, errors.New("fastlowess: Finalize called on a closed StreamingLowess model")
 	}
 	cres := C.go_streaming_finalize(s.ptr)
+	runtime.KeepAlive(s)
 	return resultFromC(cres)
 }
 

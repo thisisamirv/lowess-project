@@ -1,3 +1,5 @@
+#include <stddef.h>
+
 typedef struct fastlowess_GoLowess fastlowess_GoLowess;
 
 typedef struct fastlowess_GoOnlineLowess fastlowess_GoOnlineLowess;
@@ -19,10 +21,7 @@ typedef struct fastlowess_GoLowessResult {
    * Smoothed y values (length = n)
    */
   double *y;
-  /**
-   * Number of data points
-   */
-  unsigned long n;
+  size_t n;
   /**
    * Standard errors (NULL if not computed)
    */
@@ -62,7 +61,7 @@ typedef struct fastlowess_GoLowessResult {
   /**
    * Number of cross-validation scores
    */
-  unsigned long cv_scores_len;
+  size_t cv_scores_len;
   /**
    * Fraction used for smoothing
    */
@@ -104,7 +103,7 @@ typedef struct fastlowess_GoPredictResult {
   /**
    * Number of query points
    */
-  unsigned long n;
+  size_t n;
   /**
    * Standard errors (NULL if not requested)
    */
@@ -193,7 +192,7 @@ struct fastlowess_GoLowess *go_lowess_new(double fraction,
                                           const char *zero_weight_fallback,
                                           double auto_converge,
                                           const double *cv_fractions,
-                                          unsigned long cv_fractions_len,
+                                          size_t cv_fractions_len,
                                           const char *cv_method,
                                           int cv_k,
                                           int parallel,
@@ -218,7 +217,7 @@ void go_lowess_set_seed(struct fastlowess_GoLowess *ptr, unsigned long long seed
  * # Safety
  * `ptr` must be a valid pointer returned by `go_lowess_new`, or null.
  */
-void go_lowess_set_bootstrap(struct fastlowess_GoLowess *ptr, unsigned long n_boot);
+void go_lowess_set_bootstrap(struct fastlowess_GoLowess *ptr, size_t n_boot);
 
 /**
  * Fit the batch model.
@@ -230,9 +229,9 @@ void go_lowess_set_bootstrap(struct fastlowess_GoLowess *ptr, unsigned long n_bo
 struct fastlowess_GoLowessResult go_lowess_fit(struct fastlowess_GoLowess *ptr,
                                                const double *x_values,
                                                const double *y_values,
-                                               unsigned long n,
+                                               size_t n,
                                                const double *custom_weights,
-                                               unsigned long custom_weights_len);
+                                               size_t custom_weights_len);
 
 /**
  * Free batch model.
@@ -253,7 +252,7 @@ void go_lowess_free(struct fastlowess_GoLowess *ptr);
  */
 struct fastlowess_GoPredictResult go_predict(struct fastlowess_GoPredictHandle *handle,
                                              const double *new_x,
-                                             unsigned long new_x_len,
+                                             size_t new_x_len,
                                              int return_se,
                                              double confidence_level,
                                              double prediction_level,
@@ -261,7 +260,7 @@ struct fastlowess_GoPredictResult go_predict(struct fastlowess_GoPredictHandle *
                                              const char *extrapolation,
                                              double max_extrapolation_distance,
                                              double max_neighbor_distance,
-                                             unsigned long n_boot,
+                                             size_t n_boot,
                                              unsigned long long seed,
                                              int has_seed);
 
@@ -308,7 +307,7 @@ struct fastlowess_GoStreamingLowess *go_streaming_new(double fraction,
                                                       int return_se,
                                                       double confidence_intervals,
                                                       double prediction_intervals,
-                                                      unsigned long n_boot,
+                                                      size_t n_boot,
                                                       unsigned long long seed,
                                                       int has_seed);
 
@@ -322,7 +321,7 @@ struct fastlowess_GoStreamingLowess *go_streaming_new(double fraction,
 struct fastlowess_GoLowessResult go_streaming_process(struct fastlowess_GoStreamingLowess *ptr,
                                                       const double *x_values,
                                                       const double *y_values,
-                                                      unsigned long n);
+                                                      size_t n);
 
 /**
  * Finalize the streaming process.
@@ -364,7 +363,7 @@ struct fastlowess_GoOnlineLowess *go_online_new(double fraction,
                                                 int return_se,
                                                 double confidence_intervals,
                                                 double prediction_intervals,
-                                                unsigned long n_boot,
+                                                size_t n_boot,
                                                 unsigned long long seed,
                                                 int has_seed);
 

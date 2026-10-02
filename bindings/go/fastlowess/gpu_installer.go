@@ -31,6 +31,9 @@ const gpuReleaseTag = "gpu-builds"
 func platformArchTag() string {
 	switch runtime.GOOS {
 	case "linux":
+		if !nativeUsesGlibc() {
+			return ""
+		}
 		switch runtime.GOARCH {
 		case "amd64":
 			return "linux-x86_64"

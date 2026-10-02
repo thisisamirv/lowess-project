@@ -10,7 +10,7 @@
 
 use std::cell::RefCell;
 use std::ffi::CString;
-use std::os::raw::{c_char, c_double, c_int, c_ulong, c_ulonglong};
+use std::os::raw::{c_char, c_double, c_int, c_ulonglong};
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::ptr;
 use std::slice::from_raw_parts;
@@ -139,8 +139,7 @@ pub struct GoLowessResult {
     pub x: *mut c_double,
     /// Smoothed y values (length = n)
     pub y: *mut c_double,
-    /// Number of data points
-    pub n: c_ulong,
+    pub n: usize,
 
     /// Standard errors (NULL if not computed)
     pub standard_errors: *mut c_double,
@@ -161,7 +160,7 @@ pub struct GoLowessResult {
     /// Cross-validation scores (NULL if not computed, length = cv_scores_len)
     pub cv_scores: *mut c_double,
     /// Number of cross-validation scores
-    pub cv_scores_len: c_ulong,
+    pub cv_scores_len: usize,
 
     /// Fraction used for smoothing
     pub fraction_used: c_double,
@@ -250,7 +249,7 @@ impl From<LowessResult<f64>> for GoLowessResult {
         GoLowessResult {
             x: p.x,
             y: p.y,
-            n: p.n as c_ulong,
+            n: p.n,
             standard_errors: p.standard_errors,
             confidence_lower: p.confidence_lower,
             confidence_upper: p.confidence_upper,
@@ -260,7 +259,7 @@ impl From<LowessResult<f64>> for GoLowessResult {
             robustness_weights: p.robustness_weights,
             derivative: shared_parse::opt_vec_to_raw_ptr(derivative),
             cv_scores: p.cv_scores,
-            cv_scores_len: p.cv_scores_len as c_ulong,
+            cv_scores_len: p.cv_scores_len,
             fraction_used: p.fraction_used,
             iterations_used: p.iterations_used,
             rmse: p.rmse,
@@ -333,7 +332,7 @@ pub unsafe extern "C" fn go_lowess_new(
     zero_weight_fallback: *const c_char,
     auto_converge: c_double,
     cv_fractions: *const c_double,
-    cv_fractions_len: c_ulong,
+    cv_fractions_len: usize,
     cv_method: *const c_char,
     cv_k: c_int,
     parallel: c_int,
@@ -372,10 +371,23 @@ pub unsafe extern "C" fn go_lowess_new(
             Err(e) => return null_with_error(&e),
         };
 
-        let cv_fractions_vec =
-            shared_parse::option_vec_from_ptr(cv_fractions, cv_fractions_len as usize);
+        let cv_fractions_vec = shared_parse::option_vec_from_ptr(cv_fractions, cv_fractions_len);
         let cv_method_str = shared_parse::parse_c_str_or_default(cv_method, "kfold").to_string();
-        let cv_k_usize = cv_k.max(2) as usize;
+        let uses_kfold = cv_fractions_vec
+            .as_ref()
+            .is_some_and(|fractions| !fractions.is_empty())
+            && matches!(
+                cv_method_str.to_ascii_lowercase().as_str(),
+                "kfold" | "k_fold" | "k-fold"
+            );
+        let cv_k_usize = if uses_kfold {
+            if cv_k < 2 {
+                return null_with_error("k-fold CV requires at least 2 folds");
+            }
+            cv_k as usize
+        } else {
+            0
+        };
 
         let backend_str =
             shared_parse::parse_c_str_or_default(backend, shared_parse::DEFAULT_BACKEND);
@@ -450,10 +462,10 @@ pub unsafe extern "C" fn go_lowess_set_seed(ptr: *mut GoLowess, seed: c_ulonglon
 /// # Safety
 /// `ptr` must be a valid pointer returned by `go_lowess_new`, or null.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn go_lowess_set_bootstrap(ptr: *mut GoLowess, n_boot: c_ulong) {
+pub unsafe extern "C" fn go_lowess_set_bootstrap(ptr: *mut GoLowess, n_boot: usize) {
     with_panic_void(|| {
         if !ptr.is_null() {
-            unsafe { (*ptr).bootstrap = (n_boot > 0).then_some(n_boot as usize) };
+            unsafe { (*ptr).bootstrap = (n_boot > 0).then_some(n_boot) };
         }
     });
 }
@@ -468,9 +480,9 @@ pub unsafe extern "C" fn go_lowess_fit(
     ptr: *mut GoLowess,
     x_values: *const c_double,
     y_values: *const c_double,
-    n: c_ulong,
+    n: usize,
     custom_weights: *const c_double,
-    custom_weights_len: c_ulong,
+    custom_weights_len: usize,
 ) -> GoLowessResult {
     with_panic_result(|| {
         if ptr.is_null() {
@@ -481,10 +493,10 @@ pub unsafe extern "C" fn go_lowess_fit(
         }
 
         let lowess = &mut *ptr;
-        let x_slice = from_raw_parts(x_values, n as usize);
-        let y_slice = from_raw_parts(y_values, n as usize);
+        let x_slice = from_raw_parts(x_values, n);
+        let y_slice = from_raw_parts(y_values, n);
 
-        let cw = shared_parse::option_vec_from_ptr(custom_weights, custom_weights_len as usize);
+        let cw = shared_parse::option_vec_from_ptr(custom_weights, custom_weights_len);
 
         if let Some(mut builder) = lowess.builder.clone() {
             builder = match map_invalid_arg_result(shared_parse::apply_cross_validation(
@@ -537,7 +549,7 @@ pub struct GoPredictResult {
     /// Predicted y values, one per query point (length = n)
     pub y: *mut c_double,
     /// Number of query points
-    pub n: c_ulong,
+    pub n: usize,
     /// Standard errors (NULL if not requested)
     pub standard_errors: *mut c_double,
     /// Lower confidence bounds (NULL if not requested)
@@ -589,7 +601,7 @@ fn predict_error_result(msg: &str) -> GoPredictResult {
 pub unsafe extern "C" fn go_predict(
     handle: *mut GoPredictHandle,
     new_x: *const c_double,
-    new_x_len: c_ulong,
+    new_x_len: usize,
     return_se: c_int,
     confidence_level: c_double,
     prediction_level: c_double,
@@ -597,7 +609,7 @@ pub unsafe extern "C" fn go_predict(
     extrapolation: *const c_char,
     max_extrapolation_distance: c_double,
     max_neighbor_distance: c_double,
-    n_boot: c_ulong,
+    n_boot: usize,
     seed: c_ulonglong,
     has_seed: c_int,
 ) -> GoPredictResult {
@@ -608,7 +620,7 @@ pub unsafe extern "C" fn go_predict(
         if new_x.is_null() || new_x_len == 0 {
             return predict_error_result(shared_parse::INVALID_DATA_INPUTS);
         }
-        let new_x_slice = from_raw_parts(new_x, new_x_len as usize);
+        let new_x_slice = from_raw_parts(new_x, new_x_len);
         let extrapolation_str = (!extrapolation.is_null())
             .then_some(shared_parse::parse_c_str_or_default(extrapolation, "clamp"));
 
@@ -627,7 +639,7 @@ pub unsafe extern "C" fn go_predict(
                 max_neighbor_distance: (!max_neighbor_distance.is_nan())
                     .then_some(max_neighbor_distance),
             },
-            (n_boot > 0).then_some(n_boot as usize),
+            (n_boot > 0).then_some(n_boot),
             (has_seed != 0).then_some(seed),
         ) {
             Ok(o) => o,
@@ -635,7 +647,7 @@ pub unsafe extern "C" fn go_predict(
         };
 
         GoPredictResult {
-            n: output.y.len() as c_ulong,
+            n: output.y.len(),
             y: shared_parse::vec_to_raw_ptr(output.y),
             standard_errors: shared_parse::opt_vec_to_raw_ptr(output.standard_errors),
             confidence_lower: shared_parse::opt_vec_to_raw_ptr(output.confidence_lower),
@@ -662,7 +674,7 @@ pub unsafe extern "C" fn go_predict_free_result(result: *mut GoPredictResult) {
             return;
         }
         let r = &mut *result;
-        let n = r.n as usize;
+        let n = r.n;
         shared_parse::free_raw_f64_buffer(r.y, n);
         shared_parse::free_raw_f64_buffer(r.standard_errors, n);
         shared_parse::free_raw_f64_buffer(r.confidence_lower, n);
@@ -715,7 +727,7 @@ pub unsafe extern "C" fn go_streaming_new(
     return_se: c_int,
     confidence_intervals: c_double,
     prediction_intervals: c_double,
-    n_boot: c_ulong,
+    n_boot: usize,
     seed: c_ulonglong,
     has_seed: c_int,
 ) -> *mut GoStreamingLowess {
@@ -789,7 +801,7 @@ pub unsafe extern "C" fn go_streaming_new(
             builder
         };
         if n_boot > 0 {
-            builder = builder.intervals(IntervalsBuilder::new().bootstrap(n_boot as usize));
+            builder = builder.intervals(IntervalsBuilder::new().bootstrap(n_boot));
         }
         if has_seed != 0 {
             builder = builder.seed(seed);
@@ -819,7 +831,7 @@ pub unsafe extern "C" fn go_streaming_process(
     ptr: *mut GoStreamingLowess,
     x_values: *const c_double,
     y_values: *const c_double,
-    n: c_ulong,
+    n: usize,
 ) -> GoLowessResult {
     with_panic_result(|| {
         if ptr.is_null() {
@@ -829,8 +841,8 @@ pub unsafe extern "C" fn go_streaming_process(
         if x_values.is_null() || y_values.is_null() || n == 0 {
             return error_result(shared_parse::INVALID_DATA_INPUTS);
         }
-        let x_slice = from_raw_parts(x_values, n as usize);
-        let y_slice = from_raw_parts(y_values, n as usize);
+        let x_slice = from_raw_parts(x_values, n);
+        let y_slice = from_raw_parts(y_values, n);
 
         if let Some(model) = &mut lowess.model {
             match map_runtime_result(model.process_chunk(x_slice, y_slice)) {
@@ -903,7 +915,7 @@ pub unsafe extern "C" fn go_online_new(
     return_se: c_int,
     confidence_intervals: c_double,
     prediction_intervals: c_double,
-    n_boot: c_ulong,
+    n_boot: usize,
     seed: c_ulonglong,
     has_seed: c_int,
 ) -> *mut GoOnlineLowess {
@@ -982,7 +994,7 @@ pub unsafe extern "C" fn go_online_new(
             builder
         };
         if n_boot > 0 {
-            builder = builder.intervals(IntervalsBuilder::new().bootstrap(n_boot as usize));
+            builder = builder.intervals(IntervalsBuilder::new().bootstrap(n_boot));
         }
         if has_seed != 0 {
             builder = builder.seed(seed);
@@ -1098,8 +1110,8 @@ pub unsafe extern "C" fn go_lowess_free_result(result: *mut GoLowessResult) {
         }
 
         let r = &mut *result;
-        let n = r.n as usize;
-        let cv_n = r.cv_scores_len as usize;
+        let n = r.n;
+        let cv_n = r.cv_scores_len;
 
         shared_parse::free_raw_f64_buffer(r.x, n);
         shared_parse::free_raw_f64_buffer(r.y, n);

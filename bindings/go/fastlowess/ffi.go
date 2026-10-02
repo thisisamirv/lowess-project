@@ -11,6 +11,14 @@ package fastlowess
 // cross-compiler driver itself.
 #cgo windows,arm64 LDFLAGS: -static -L${SRCDIR}/../../../target/aarch64-pc-windows-gnullvm/release-c -lfastlowess_go -lws2_32 -luserenv -lbcrypt -lntdll -lpthread
 #include <stdlib.h>
+#if defined(__linux__)
+#include <features.h>
+#endif
+#if defined(__linux__) && defined(__GLIBC__)
+#define FASTLOWESS_GO_GLIBC 1
+#else
+#define FASTLOWESS_GO_GLIBC 0
+#endif
 #include "fastlowess_go.h"
 */
 import "C"
@@ -21,6 +29,10 @@ import (
 	"runtime"
 	"unsafe"
 )
+
+func nativeUsesGlibc() bool {
+	return C.FASTLOWESS_GO_GLIBC != 0
+}
 
 // GPUEnabled reports whether this build of the native library was compiled
 // with GPU backend support (the `gpu` Cargo feature).
@@ -79,15 +91,15 @@ func optFloat(v float64, set bool) C.double {
 }
 
 // cDoubles returns a pointer to the first element of xs (or nil if empty)
-// and its length, suitable for passing to a `const double *, unsigned long`
+// and its length, suitable for passing to a `const double *, size_t`
 // FFI parameter pair. The backing array of a []float64 contains no Go
 // pointers, so passing its address across cgo is safe per the cgo pointer
 // passing rules.
-func cDoubles(xs []float64) (*C.double, C.ulong) {
+func cDoubles(xs []float64) (*C.double, C.size_t) {
 	if len(xs) == 0 {
 		return nil, 0
 	}
-	return (*C.double)(unsafe.Pointer(&xs[0])), C.ulong(len(xs))
+	return (*C.double)(unsafe.Pointer(&xs[0])), C.size_t(len(xs))
 }
 
 // cDoubleSliceToGo copies n float64s out of a Rust-allocated buffer. Returns
@@ -284,6 +296,9 @@ func (pm *PredictModel) Predict(newX []float64, opts PredictOptions) (PredictRes
 	if pm == nil || pm.ptr == nil {
 		return PredictResult{}, errors.New("fastlowess: Predict called on a nil/closed PredictModel (was RetainModel set?)")
 	}
+	if err := validateOutputs(opts.Outputs, "Predict", "se", "derivative"); err != nil {
+		return PredictResult{}, err
+	}
 	if len(newX) == 0 {
 		return PredictResult{}, errors.New("fastlowess: newX must be non-empty")
 	}
@@ -316,8 +331,9 @@ func (pm *PredictModel) Predict(newX []float64, opts PredictOptions) (PredictRes
 		extrap,
 		optFloat(maxExtrap, maxExtrapSet),
 		optFloat(maxNeighbor, maxNeighborSet),
-		C.ulong(bootstrap), C.ulonglong(seed), boolToCInt(opts.Seed != nil),
+		C.size_t(bootstrap), C.ulonglong(seed), boolToCInt(opts.Seed != nil),
 	)
+	runtime.KeepAlive(pm)
 	if cres.error != nil {
 		msg := C.GoString(cres.error)
 		C.go_predict_free_result(&cres)
