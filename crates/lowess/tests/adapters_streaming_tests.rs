@@ -72,6 +72,19 @@ fn test_streaming_invalid_fraction() {
     );
 }
 
+#[test]
+fn test_streaming_rejects_invalid_auto_converge_tolerance() {
+    for tolerance in [0.0, -1.0, f64::NAN, f64::INFINITY] {
+        let result = StreamingLowess::<f64>::new()
+            .auto_converge(tolerance)
+            .build();
+        assert!(
+            result.is_err(),
+            "invalid auto_converge tolerance {tolerance} should be rejected"
+        );
+    }
+}
+
 /// Test mismatched input lengths.
 ///
 /// Verifies that process_chunk rejects mismatched x and y arrays.

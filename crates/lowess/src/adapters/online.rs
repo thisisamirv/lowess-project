@@ -166,6 +166,15 @@ impl<T: Float> OnlineLowessBuilder<T> {
         // Validate iterations
         Validator::validate_iterations(self.iterations)?;
 
+        // NaN is the documented sentinel for Online's default (disabled) delta.
+        if !self.delta.is_nan() {
+            Validator::validate_delta(self.delta)?;
+        }
+
+        if let Some(tolerance) = self.auto_converge {
+            Validator::validate_tolerance(tolerance)?;
+        }
+
         // Validate configuration early
         Validator::validate_window_capacity(self.window_capacity, 3)?;
         Validator::validate_min_points(self.min_points, self.window_capacity)?;

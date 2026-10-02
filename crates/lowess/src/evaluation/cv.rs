@@ -141,7 +141,7 @@ impl CVKind {
         fractions: &[T],
         seed: Option<u64>,
         mut smoother: F,
-        mut predictor: Option<P>,
+        predictor: Option<P>,
         cv_buffer: &mut CVBuffer<T>,
     ) -> Result<(T, Vec<T>), LowessError>
     where
@@ -149,6 +149,47 @@ impl CVKind {
         F: FnMut(&[T], &[T], T) -> Result<Vec<T>, LowessError>,
         P: FnMut(&[T], &[T], &[T], T) -> Vec<T>,
     {
+        self.run_with_weights(
+            x,
+            y,
+            dimensions,
+            fractions,
+            seed,
+            None,
+            |train_x, train_y, _, fraction| smoother(train_x, train_y, fraction),
+            predictor,
+            cv_buffer,
+        )
+    }
+
+    pub(crate) fn run_with_weights<T, F, P>(
+        self,
+        x: &[T],
+        y: &[T],
+        dimensions: usize,
+        fractions: &[T],
+        seed: Option<u64>,
+        weights: Option<&[T]>,
+        mut smoother: F,
+        mut predictor: Option<P>,
+        cv_buffer: &mut CVBuffer<T>,
+    ) -> Result<(T, Vec<T>), LowessError>
+    where
+        T: Float + Debug + Send + Sync + 'static,
+        F: FnMut(&[T], &[T], Option<&[T]>, T) -> Result<Vec<T>, LowessError>,
+        P: FnMut(&[T], &[T], &[T], T) -> Vec<T>,
+    {
+        let n = x.len() / dimensions;
+        if let Some(weights) = weights
+            && weights.len() != n
+        {
+            return Err(LowessError::InvalidInput(format!(
+                "cross-validation weight count ({}) must match observation count ({})",
+                weights.len(),
+                n
+            )));
+        }
+
         match self {
             CVKind::KFold(k) => Self::kfold_cross_validation(
                 x,
@@ -157,6 +198,7 @@ impl CVKind {
                 fractions,
                 k,
                 seed,
+                weights,
                 &mut smoother,
                 predictor.as_mut(),
                 cv_buffer,
@@ -166,6 +208,7 @@ impl CVKind {
                 y,
                 dimensions,
                 fractions,
+                weights,
                 &mut smoother,
                 predictor.as_mut(),
                 cv_buffer,
@@ -297,21 +340,26 @@ impl CVKind {
         fractions: &[T],
         k: usize,
         seed: Option<u64>,
+        weights: Option<&[T]>,
         smoother: &mut F,
         mut predictor: Option<&mut P>,
         cv_buffer: &mut CVBuffer<T>,
     ) -> Result<(T, Vec<T>), LowessError>
     where
         T: Float + Debug + Send + Sync + 'static,
-        F: FnMut(&[T], &[T], T) -> Result<Vec<T>, LowessError>,
+        F: FnMut(&[T], &[T], Option<&[T]>, T) -> Result<Vec<T>, LowessError>,
         P: FnMut(&[T], &[T], &[T], T) -> Vec<T>,
     {
         let n = x.len() / dims;
-        if n < k || k < 2 {
-            return Ok((
-                fractions.first().copied().unwrap_or(T::zero()),
-                vec![T::zero(); fractions.len()],
-            ));
+        if k < 2 {
+            return Err(LowessError::InvalidInput(format!(
+                "k-fold count must be at least 2, got {k}"
+            )));
+        }
+        if n < k {
+            return Err(LowessError::InvalidInput(format!(
+                "k-fold count ({k}) must not exceed observation count ({n})"
+            )));
         }
 
         let fold_size = n / k;
@@ -350,15 +398,25 @@ impl CVKind {
 
             tx.clear();
             ty.clear();
+            let mut train_weights =
+                weights.map(|_| Vec::with_capacity(n - (test_end - test_start)));
             for &idx in &indices[0..test_start] {
                 let offset = idx * dims;
                 tx.extend_from_slice(&x[offset..offset + dims]);
                 ty.push(y[idx]);
+                if let (Some(all_weights), Some(train_weights)) = (weights, train_weights.as_mut())
+                {
+                    train_weights.push(all_weights[idx]);
+                }
             }
             for &idx in &indices[test_end..n] {
                 let offset = idx * dims;
                 tx.extend_from_slice(&x[offset..offset + dims]);
                 ty.push(y[idx]);
+                if let (Some(all_weights), Some(train_weights)) = (weights, train_weights.as_mut())
+                {
+                    train_weights.push(all_weights[idx]);
+                }
             }
 
             tex.clear();
@@ -370,19 +428,31 @@ impl CVKind {
             }
 
             // Pre-sort training data if no custom predictor is used (1D LOWESS case)
+            let mut sorted_train_weights = weights.map(|_| Vec::new());
             if predictor.is_none() {
-                let mut train_data: Vec<(T, T)> = tx
-                    .iter()
-                    .zip(ty.iter())
-                    .map(|(&xi, &yi)| (xi, yi))
-                    .collect();
-                train_data.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(Equal));
-
                 cv_buffer.sorted_train_x.clear();
                 cv_buffer.sorted_train_y.clear();
-                for (xi, yi) in train_data {
+                let mut train_data: Vec<(T, T, Option<T>)> = tx
+                    .iter()
+                    .zip(ty.iter())
+                    .enumerate()
+                    .map(|(i, (&xi, &yi))| {
+                        (
+                            xi,
+                            yi,
+                            train_weights
+                                .as_ref()
+                                .and_then(|weights| weights.get(i).copied()),
+                        )
+                    })
+                    .collect();
+                train_data.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(Equal));
+                for (xi, yi, weight) in train_data {
                     cv_buffer.sorted_train_x.push(xi);
                     cv_buffer.sorted_train_y.push(yi);
+                    if let Some(sorted_weights) = sorted_train_weights.as_mut() {
+                        sorted_weights.push(weight.unwrap_or(T::one()));
+                    }
                 }
             }
 
@@ -390,8 +460,12 @@ impl CVKind {
                 let predictions = if let Some(ref mut p_fn) = predictor {
                     p_fn(tx, ty, tex, frac)
                 } else {
-                    let train_smooth =
-                        smoother(&cv_buffer.sorted_train_x, &cv_buffer.sorted_train_y, frac)?;
+                    let train_smooth = smoother(
+                        &cv_buffer.sorted_train_x,
+                        &cv_buffer.sorted_train_y,
+                        sorted_train_weights.as_deref(),
+                        frac,
+                    )?;
                     let mut preds = vec![T::zero(); tex.len() / dims];
                     Self::interpolate_prediction_batch(
                         &cv_buffer.sorted_train_x,
@@ -442,13 +516,14 @@ impl CVKind {
         y: &[T],
         dims: usize,
         fractions: &[T],
+        weights: Option<&[T]>,
         smoother: &mut F,
         mut predictor: Option<&mut P>,
         cv_buffer: &mut CVBuffer<T>,
     ) -> Result<(T, Vec<T>), LowessError>
     where
         T: Float + Debug + Send + Sync + 'static,
-        F: FnMut(&[T], &[T], T) -> Result<Vec<T>, LowessError>,
+        F: FnMut(&[T], &[T], Option<&[T]>, T) -> Result<Vec<T>, LowessError>,
         P: FnMut(&[T], &[T], &[T], T) -> Vec<T>,
     {
         let n = x.len() / dims;
@@ -464,6 +539,7 @@ impl CVKind {
             for i in 0..n {
                 // Build training set (all points except i)
                 let (tx, ty) = (&mut cv_buffer.train_x, &mut cv_buffer.train_y);
+                let mut train_weights = weights.map(|_| Vec::with_capacity(n.saturating_sub(1)));
 
                 tx.clear();
                 ty.clear();
@@ -471,11 +547,21 @@ impl CVKind {
                     let offset = j * dims;
                     tx.extend_from_slice(&x[offset..offset + dims]);
                     ty.push(val);
+                    if let (Some(all_weights), Some(train_weights)) =
+                        (weights, train_weights.as_mut())
+                    {
+                        train_weights.push(all_weights[j]);
+                    }
                 }
                 for (j, &val) in y.iter().enumerate().take(n).skip(i + 1) {
                     let offset = j * dims;
                     tx.extend_from_slice(&x[offset..offset + dims]);
                     ty.push(val);
+                    if let (Some(all_weights), Some(train_weights)) =
+                        (weights, train_weights.as_mut())
+                    {
+                        train_weights.push(all_weights[j]);
+                    }
                 }
 
                 let test_offset = i * dims;
@@ -485,7 +571,7 @@ impl CVKind {
                     let preds = p_fn(tx, ty, &test_point, frac);
                     preds[0]
                 } else {
-                    let train_smooth = smoother(tx, ty, frac)?;
+                    let train_smooth = smoother(tx, ty, train_weights.as_deref(), frac)?;
                     Self::interpolate_prediction(tx, &train_smooth, test_point[0])
                 };
 

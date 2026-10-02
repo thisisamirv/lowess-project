@@ -172,6 +172,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **lowess:**
 
+- Fixed fraction-1 global fits ignoring configured robustness iterations; global fits now reweight observations and report the iterations used.
+- Fixed Batch cross-validation candidate fits ignoring `custom_weights`, and reject K-fold counts larger than the observation count instead of returning zero scores.
+- Fixed Streaming and Online accepting invalid `auto_converge` tolerances, and Online now rejects invalid explicit `delta` values while retaining NaN as its default sentinel.
 - Fixed global OLS treating translated x-values as degenerate by basing the tolerance and means on centered coordinates.
 - Fixed fraction-1 global OLS ignoring `custom_weights`; weights are now kept aligned when Batch sorts input observations.
 - Fixed `missing("drop")` accepting `custom_weights` whose length did not match the original input, and validating weight values before filtering.

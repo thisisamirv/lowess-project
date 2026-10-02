@@ -189,6 +189,10 @@ impl<T: Float> StreamingLowessBuilder<T> {
         // Validate delta
         Validator::validate_delta(self.delta)?;
 
+        if let Some(tolerance) = self.auto_converge {
+            Validator::validate_tolerance(tolerance)?;
+        }
+
         // Validate chunk size
         Validator::validate_chunk_size(self.chunk_size, 10)?;
 

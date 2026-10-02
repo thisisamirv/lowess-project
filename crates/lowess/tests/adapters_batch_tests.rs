@@ -1403,6 +1403,36 @@ fn test_batch_fraction_exactly_one() {
     }
 }
 
+#[test]
+fn test_batch_global_regression_applies_robustness_iterations() {
+    let x: Vec<f64> = (1..=10).map(|value| value as f64).collect();
+    let mut y = vec![0.0_f64; x.len()];
+    y[9] = 1000.0;
+
+    let ordinary = Lowess::new()
+        .fraction(1.0)
+        .iterations(0)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    let robust = Lowess::new()
+        .fraction(1.0)
+        .iterations(3)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    assert!(
+        (ordinary.y[9] - robust.y[9]).abs() > 100.0,
+        "global robust iterations should downweight the endpoint outlier; OLS={}, robust={}",
+        ordinary.y[9],
+        robust.y[9]
+    );
+    assert!(robust.iterations_used.unwrap_or(0) > 0);
+}
+
 /// Test delta=0.0 vs auto-computed delta.
 #[test]
 fn test_batch_delta_zero_vs_auto() {
@@ -1660,6 +1690,7 @@ fn test_batch_global_weighted_standard_errors_use_wls_formula() {
     let fit = |weights: Vec<f64>| {
         Lowess::new()
             .fraction(1.0)
+            .iterations(0)
             .custom_weights(weights)
             .intervals(IntervalsBuilder::new().confidence(0.95))
             .build()
@@ -1726,6 +1757,48 @@ fn test_batch_global_zero_custom_weights_respect_fallback_policy() {
             result.derivative.unwrap(),
             vec![0.0; x.len()],
             "fallback derivative for policy: {fallback}"
+        );
+    }
+}
+
+#[test]
+fn test_batch_cross_validation_uses_custom_weights_in_candidate_fits() {
+    let x: Vec<f64> = (0..12).map(|value| value as f64).collect();
+    let mut y: Vec<f64> = x.iter().map(|value| value * value).collect();
+    y[11] += 1000.0;
+    let fit = |weights: Vec<f64>, method: &str| {
+        Lowess::new()
+            .cv(CVBuilder::new()
+                .method(method)
+                .k(3)
+                .fraction(vec![0.25, 0.75]))
+            .seed(42)
+            .iterations(0)
+            .custom_weights(weights)
+            .build()
+            .unwrap()
+            .fit(&x, &y)
+            .unwrap()
+    };
+    for method in ["kfold", "loocv"] {
+        let unit_weights = fit(vec![1.0; x.len()], method);
+        let downweighted_outlier = fit(
+            {
+                let mut weights = vec![1.0; x.len()];
+                weights[11] = 0.0;
+                weights
+            },
+            method,
+        );
+        let unit_scores = unit_weights.cv_scores.unwrap();
+        let weighted_scores = downweighted_outlier.cv_scores.unwrap();
+
+        assert!(
+            unit_scores
+                .iter()
+                .zip(weighted_scores.iter())
+                .any(|(unit, weighted)| (unit - weighted).abs() > 1e-9),
+            "changing training weights should change a {method} CV candidate score"
         );
     }
 }

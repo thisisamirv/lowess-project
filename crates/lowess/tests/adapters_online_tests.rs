@@ -299,6 +299,23 @@ fn test_online_invalid_min_points() {
     );
 }
 
+#[test]
+fn test_online_rejects_invalid_auto_converge_tolerance() {
+    for tolerance in [0.0, -1.0, f64::NAN, f64::INFINITY] {
+        let result = OnlineLowess::<f64>::new().auto_converge(tolerance).build();
+        assert!(
+            result.is_err(),
+            "invalid auto_converge tolerance {tolerance} should be rejected"
+        );
+    }
+}
+
+#[test]
+fn test_online_rejects_negative_delta() {
+    let result = OnlineLowess::<f64>::new().delta(-0.1).build();
+    assert!(result.is_err(), "negative delta should be rejected");
+}
+
 /// Test valid builder configuration.
 ///
 /// Verifies that valid configurations are accepted.

@@ -299,7 +299,7 @@ fn test_cv_method_run_edge_cases() {
     assert_eq!(best_mini, 0.5);
 }
 
-/// Test k-fold cross-validation when k > n.
+/// Test that k-fold cross-validation rejects more folds than observations.
 #[test]
 fn test_kfold_insufficient_data() {
     let x = vec![1.0, 2.0, 3.0];
@@ -307,27 +307,22 @@ fn test_kfold_insufficient_data() {
     let fractions = vec![0.5, 0.8];
     let smoother = |_: &[f64], _: &[f64], _: f64| Ok(vec![0.0; 3]);
 
-    // k=5 > n=3. This should work as the last fold will just cover the remaining points (which might be empty or small).
-    // The implementation n/k = 0 for k > n.
-    // fold_size = 0.
-    // fold 0..4: test_start = f*0 = 0. test_end = 0.
-    // Last fold (k-1): test_start = 0, test_end = 3.
     use lowess::internals::primitives::buffer::CVBuffer;
     let mut cv_buffer = CVBuffer::new();
-    let (best, scores) = CVKind::KFold(5)
-        .run(
-            &x,
-            &y,
-            1,
-            &fractions,
-            None,
-            smoother,
-            None::<fn(&[f64], &[f64], &[f64], f64) -> Vec<f64>>,
-            &mut cv_buffer,
-        )
-        .unwrap();
-    assert!(best > 0.0);
-    assert_eq!(scores.len(), 2);
+    let result = CVKind::KFold(5).run(
+        &x,
+        &y,
+        1,
+        &fractions,
+        None,
+        smoother,
+        None::<fn(&[f64], &[f64], &[f64], f64) -> Vec<f64>>,
+        &mut cv_buffer,
+    );
+    assert!(
+        result.is_err(),
+        "k > n must not return fabricated CV scores"
+    );
 }
 
 /// Test leave-one-out cross-validation with minimal data.

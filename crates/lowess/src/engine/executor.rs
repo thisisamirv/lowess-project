@@ -882,13 +882,14 @@ impl<T: Float> LowessExecutor<T> {
             } else {
                 use crate::primitives::buffer::CVBuffer;
                 let mut cv_buffer = CVBuffer::new();
-                cv_kind.run(
+                cv_kind.run_with_weights(
                     x,
                     y,
                     1, // dimensions for LOWESS
                     cv_fracs,
                     config.cv_seed,
-                    |tx, ty, f| {
+                    custom_weights.as_deref(),
+                    |tx, ty, training_weights, f| {
                         executor
                             .clone() // Clone executor to set fraction for CV
                             .fraction(f)
@@ -907,6 +908,7 @@ impl<T: Float> LowessExecutor<T> {
                             .parallel(config.parallel)
                             .backend(config.backend)
                             .delegate_boundary_handling(config.delegate_boundary_handling)
+                            .custom_weights_opt(training_weights.map(|weights| weights.to_vec()))
                             // CV candidate fits never need retained model state or a
                             // per-point derivative - only the final fit (below) does,
                             // avoiding wasted clones/compute per candidate.
@@ -970,13 +972,35 @@ impl<T: Float> LowessExecutor<T> {
         // Handle global regression (fraction >= 1.0)
         if eff_fraction >= T::one() {
             let custom_weights = self.custom_weights.as_deref();
-            if let Some(weights) = custom_weights {
-                let weight_sum = weights.iter().copied().fold(T::zero(), |sum, w| sum + w);
+            let mut robustness_weights = vec![T::one(); n];
+            let mut residuals = vec![T::zero(); n];
+            let mut scale_scratch = vec![T::zero(); n];
+            let mut previous = vec![T::zero(); n];
+            let mut smoothed = vec![T::zero(); n];
+            let mut final_fit_weights = vec![T::one(); n];
+            let mut model = LinearFit::zero();
+            let mut iterations = 0;
+
+            for iter in 0..=target_iterations {
+                iterations = iter;
+                if tolerance.is_some() && iter > 0 {
+                    previous.copy_from_slice(&smoothed);
+                }
+
+                let mut fit_weights = custom_weights
+                    .map(ToOwned::to_owned)
+                    .unwrap_or_else(|| vec![T::one(); n]);
+                for i in 0..n {
+                    fit_weights[i] = fit_weights[i] * robustness_weights[i];
+                }
+                let weight_sum = fit_weights
+                    .iter()
+                    .copied()
+                    .fold(T::zero(), |sum, w| sum + w);
                 if weight_sum <= T::zero() {
-                    let fallback = ZeroWeightFallback::from_u8(self.zero_weight_fallback);
                     let mean = y.iter().copied().fold(T::zero(), |sum, yi| sum + yi)
                         / T::from(n).unwrap_or(T::one());
-                    let smoothed = match fallback {
+                    smoothed = match ZeroWeightFallback::from_u8(self.zero_weight_fallback) {
                         ZeroWeightFallback::UseLocalMean => vec![mean; n],
                         ZeroWeightFallback::ReturnOriginal | ZeroWeightFallback::ReturnNone => {
                             y.to_vec()
@@ -985,10 +1009,10 @@ impl<T: Float> LowessExecutor<T> {
                     return Ok(ExecutorOutput {
                         smoothed,
                         std_errors: confidence_method.map(|_| vec![T::zero(); n]),
-                        iterations: None,
+                        iterations: Some(iterations),
                         used_fraction: eff_fraction,
                         cv_scores: None,
-                        robustness_weights: vec![T::one(); n],
+                        robustness_weights,
                         residuals: None,
                         confidence_lower: None,
                         confidence_upper: None,
@@ -998,26 +1022,56 @@ impl<T: Float> LowessExecutor<T> {
                         predict_state: None,
                     });
                 }
+
+                final_fit_weights.copy_from_slice(&fit_weights);
+                model = if custom_weights.is_none() && iter == 0 {
+                    LinearFit::fit_ols(x, y)
+                } else {
+                    LinearFit::fit_wls(x, y, &mut fit_weights, x[0], T::zero())
+                };
+                for (fitted, &xi) in smoothed.iter_mut().zip(x.iter()) {
+                    *fitted = model.predict(xi);
+                }
+
+                if let Some(tol) = tolerance
+                    && iter > 0
+                    && Self::check_convergence(&smoothed, &previous, tol)
+                {
+                    break;
+                }
+
+                if iter < target_iterations
+                    && Self::update_robustness_weights(
+                        y,
+                        &smoothed,
+                        RobustnessUpdateBuffers {
+                            residuals: &mut residuals,
+                            robustness_weights: &mut robustness_weights,
+                            scratch: &mut scale_scratch,
+                        },
+                        &self.robustness_method,
+                        self.scaling_method,
+                        0..n,
+                    )
+                {
+                    break;
+                }
             }
 
-            let model = if let Some(custom_weights) = custom_weights {
-                let mut weights = custom_weights.to_vec();
-                LinearFit::fit_wls(x, y, &mut weights, x[0], T::zero())
-            } else {
-                LinearFit::fit_ols(x, y)
-            };
-            let smoothed = x.iter().map(|&xi| model.predict(xi)).collect();
-            let std_errors = confidence_method.map(|_| match custom_weights {
-                Some(weights) => model.wls_std_errors(x, y, weights),
-                None => model.ols_std_errors(x, y),
+            let std_errors = confidence_method.map(|_| {
+                if custom_weights.is_some() || target_iterations > 0 {
+                    model.wls_std_errors(x, y, &final_fit_weights)
+                } else {
+                    model.ols_std_errors(x, y)
+                }
             });
             return Ok(ExecutorOutput {
                 smoothed,
                 std_errors,
-                iterations: None,
+                iterations: Some(iterations),
                 used_fraction: eff_fraction,
                 cv_scores: None,
-                robustness_weights: vec![T::one(); n],
+                robustness_weights,
                 residuals: None,
                 confidence_lower: None,
                 confidence_upper: None,
