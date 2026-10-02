@@ -8,7 +8,7 @@
 
 use std::cell::RefCell;
 use std::ffi::CString;
-use std::os::raw::{c_char, c_double, c_int, c_ulong};
+use std::os::raw::{c_char, c_double, c_int};
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::ptr;
 use std::slice::from_raw_parts;
@@ -144,7 +144,7 @@ pub struct CppLowessResult {
     /// Smoothed y values (length = n)
     pub y: *mut c_double,
     /// Number of data points
-    pub n: c_ulong,
+    pub n: usize,
 
     /// Standard errors (NULL if not computed)
     pub standard_errors: *mut c_double,
@@ -165,7 +165,7 @@ pub struct CppLowessResult {
     /// Cross-validation scores (NULL if not computed, length = cv_scores_len)
     pub cv_scores: *mut c_double,
     /// Number of cross-validation scores
-    pub cv_scores_len: c_ulong,
+    pub cv_scores_len: usize,
 
     /// Fraction used for smoothing
     pub fraction_used: c_double,
@@ -254,7 +254,7 @@ impl From<LowessResult<f64>> for CppLowessResult {
         CppLowessResult {
             x: p.x,
             y: p.y,
-            n: p.n as c_ulong,
+            n: p.n,
             standard_errors: p.standard_errors,
             confidence_lower: p.confidence_lower,
             confidence_upper: p.confidence_upper,
@@ -264,7 +264,7 @@ impl From<LowessResult<f64>> for CppLowessResult {
             robustness_weights: p.robustness_weights,
             derivative,
             cv_scores: p.cv_scores,
-            cv_scores_len: p.cv_scores_len as c_ulong,
+            cv_scores_len: p.cv_scores_len,
             fraction_used: p.fraction_used,
             iterations_used: p.iterations_used,
             rmse: p.rmse,
@@ -338,7 +338,7 @@ pub unsafe extern "C" fn cpp_lowess_new(
     zero_weight_fallback: *const c_char,
     auto_converge: c_double,
     cv_fractions: *const c_double,
-    cv_fractions_len: c_ulong,
+    cv_fractions_len: usize,
     cv_method: *const c_char,
     cv_k: c_int,
     parallel: c_int,
@@ -376,8 +376,7 @@ pub unsafe extern "C" fn cpp_lowess_new(
             Err(e) => return null_with_error(&e),
         };
 
-        let cv_fractions_vec =
-            shared_parse::option_vec_from_ptr(cv_fractions, cv_fractions_len as usize);
+        let cv_fractions_vec = shared_parse::option_vec_from_ptr(cv_fractions, cv_fractions_len);
         let cv_method_str = shared_parse::parse_c_str_or_default(cv_method, "kfold").to_string();
         let cv_k_usize = cv_k.max(2) as usize;
 
@@ -440,7 +439,6 @@ pub unsafe extern "C" fn cpp_lowess_new(
 /// # Safety
 /// ptr must be valid.
 #[unsafe(no_mangle)]
-#[allow(clippy::useless_conversion)] // c_ulong is u32 on Windows, u64 on Linux/macOS
 pub unsafe extern "C" fn cpp_lowess_set_seed(ptr: *mut CppLowess, seed: u64) {
     with_panic_void(|| {
         if !ptr.is_null() {
@@ -454,10 +452,10 @@ pub unsafe extern "C" fn cpp_lowess_set_seed(ptr: *mut CppLowess, seed: u64) {
 /// # Safety
 /// `ptr` must be a valid pointer returned by `cpp_lowess_new`, or null.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_lowess_set_bootstrap(ptr: *mut CppLowess, n_boot: c_ulong) {
+pub unsafe extern "C" fn cpp_lowess_set_bootstrap(ptr: *mut CppLowess, n_boot: usize) {
     with_panic_void(|| {
         if !ptr.is_null() {
-            unsafe { (*ptr).bootstrap = (n_boot > 0).then_some(n_boot as usize) };
+            unsafe { (*ptr).bootstrap = (n_boot > 0).then_some(n_boot) };
         }
     });
 }
@@ -472,9 +470,9 @@ pub unsafe extern "C" fn cpp_lowess_fit(
     ptr: *mut CppLowess,
     x_values: *const c_double,
     y_values: *const c_double,
-    n: c_ulong,
+    n: usize,
     custom_weights: *const c_double,
-    custom_weights_len: c_ulong,
+    custom_weights_len: usize,
 ) -> CppLowessResult {
     with_panic_result(|| {
         if ptr.is_null() {
@@ -485,10 +483,10 @@ pub unsafe extern "C" fn cpp_lowess_fit(
         }
 
         let lowess = &mut *ptr;
-        let x_slice = from_raw_parts(x_values, n as usize);
-        let y_slice = from_raw_parts(y_values, n as usize);
+        let x_slice = from_raw_parts(x_values, n);
+        let y_slice = from_raw_parts(y_values, n);
 
-        let cw = shared_parse::option_vec_from_ptr(custom_weights, custom_weights_len as usize);
+        let cw = shared_parse::option_vec_from_ptr(custom_weights, custom_weights_len);
 
         if let Some(mut builder) = lowess.builder.clone() {
             builder = match map_invalid_arg_result(shared_parse::apply_cross_validation(
@@ -541,7 +539,7 @@ pub struct CppPredictResult {
     /// Predicted y values, one per query point (length = n)
     pub y: *mut c_double,
     /// Number of query points
-    pub n: c_ulong,
+    pub n: usize,
     /// Standard errors (NULL if not requested)
     pub standard_errors: *mut c_double,
     /// Lower confidence bounds (NULL if not requested)
@@ -593,7 +591,7 @@ fn predict_error_result(msg: &str) -> CppPredictResult {
 pub unsafe extern "C" fn cpp_predict(
     handle: *mut CppPredictHandle,
     new_x: *const c_double,
-    new_x_len: c_ulong,
+    new_x_len: usize,
     return_se: c_int,
     confidence_level: c_double,
     prediction_level: c_double,
@@ -601,7 +599,7 @@ pub unsafe extern "C" fn cpp_predict(
     extrapolation: *const c_char,
     max_extrapolation_distance: c_double,
     max_neighbor_distance: c_double,
-    n_boot: c_ulong,
+    n_boot: usize,
     seed: u64,
     has_seed: c_int,
 ) -> CppPredictResult {
@@ -612,7 +610,7 @@ pub unsafe extern "C" fn cpp_predict(
         if new_x.is_null() || new_x_len == 0 {
             return predict_error_result(shared_parse::INVALID_DATA_INPUTS);
         }
-        let new_x_slice = from_raw_parts(new_x, new_x_len as usize);
+        let new_x_slice = from_raw_parts(new_x, new_x_len);
         let extrapolation_str = (!extrapolation.is_null())
             .then_some(shared_parse::parse_c_str_or_default(extrapolation, "clamp"));
 
@@ -631,7 +629,7 @@ pub unsafe extern "C" fn cpp_predict(
                 max_neighbor_distance: (!max_neighbor_distance.is_nan())
                     .then_some(max_neighbor_distance),
             },
-            (n_boot > 0).then_some(n_boot as usize),
+            (n_boot > 0).then_some(n_boot),
             (has_seed != 0).then_some(seed),
         ) {
             Ok(o) => o,
@@ -639,7 +637,7 @@ pub unsafe extern "C" fn cpp_predict(
         };
 
         CppPredictResult {
-            n: output.y.len() as c_ulong,
+            n: output.y.len(),
             y: shared_parse::vec_to_raw_ptr(output.y),
             standard_errors: shared_parse::opt_vec_to_raw_ptr(output.standard_errors),
             confidence_lower: shared_parse::opt_vec_to_raw_ptr(output.confidence_lower),
@@ -666,7 +664,7 @@ pub unsafe extern "C" fn cpp_predict_free_result(result: *mut CppPredictResult) 
             return;
         }
         let r = &mut *result;
-        let n = r.n as usize;
+        let n = r.n;
         shared_parse::free_raw_f64_buffer(r.y, n);
         shared_parse::free_raw_f64_buffer(r.standard_errors, n);
         shared_parse::free_raw_f64_buffer(r.confidence_lower, n);
@@ -719,12 +717,16 @@ pub unsafe extern "C" fn cpp_streaming_new(
     return_se: c_int,
     confidence_intervals: c_double,
     prediction_intervals: c_double,
-    n_boot: c_ulong,
+    n_boot: usize,
     seed: u64,
     has_seed: c_int,
 ) -> *mut CppStreamingLowess {
     with_panic_ptr(|| {
         clear_last_error();
+        let iterations = match shared_parse::require_non_negative_usize("iterations", iterations) {
+            Ok(value) => value,
+            Err(error) => return null_with_error(&error),
+        };
         let wf_str = shared_parse::parse_c_str_or_default(
             weight_function,
             shared_parse::DEFAULT_WEIGHT_FUNCTION,
@@ -762,7 +764,7 @@ pub unsafe extern "C" fn cpp_streaming_new(
             LowessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
-                iterations: Some(iterations as usize),
+                iterations: Some(iterations),
                 delta: (!delta.is_nan()).then_some(delta),
                 weight_function: Some(wf_str),
                 robustness_method: Some(rm_str),
@@ -792,7 +794,7 @@ pub unsafe extern "C" fn cpp_streaming_new(
             builder
         };
         if n_boot > 0 {
-            builder = builder.intervals(IntervalsBuilder::new().bootstrap(n_boot as usize));
+            builder = builder.intervals(IntervalsBuilder::new().bootstrap(n_boot));
         }
         if has_seed != 0 {
             builder = builder.seed(seed);
@@ -822,7 +824,7 @@ pub unsafe extern "C" fn cpp_streaming_process(
     ptr: *mut CppStreamingLowess,
     x_values: *const c_double,
     y_values: *const c_double,
-    n: c_ulong,
+    n: usize,
 ) -> CppLowessResult {
     with_panic_result(|| {
         if ptr.is_null() {
@@ -832,8 +834,8 @@ pub unsafe extern "C" fn cpp_streaming_process(
         if x_values.is_null() || y_values.is_null() || n == 0 {
             return error_result(shared_parse::INVALID_DATA_INPUTS);
         }
-        let x_slice = from_raw_parts(x_values, n as usize);
-        let y_slice = from_raw_parts(y_values, n as usize);
+        let x_slice = from_raw_parts(x_values, n);
+        let y_slice = from_raw_parts(y_values, n);
 
         if let Some(model) = &mut lowess.model {
             match map_runtime_result(model.process_chunk(x_slice, y_slice)) {
@@ -906,12 +908,16 @@ pub unsafe extern "C" fn cpp_online_new(
     return_se: c_int,
     confidence_intervals: c_double,
     prediction_intervals: c_double,
-    n_boot: c_ulong,
+    n_boot: usize,
     seed: u64,
     has_seed: c_int,
 ) -> *mut CppOnlineLowess {
     with_panic_ptr(|| {
         clear_last_error();
+        let iterations = match shared_parse::require_non_negative_usize("iterations", iterations) {
+            Ok(value) => value,
+            Err(error) => return null_with_error(&error),
+        };
         let wf_str = shared_parse::parse_c_str_or_default(
             weight_function,
             shared_parse::DEFAULT_WEIGHT_FUNCTION,
@@ -954,7 +960,7 @@ pub unsafe extern "C" fn cpp_online_new(
             LowessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
-                iterations: Some(iterations as usize),
+                iterations: Some(iterations),
                 delta: (!delta.is_nan()).then_some(delta),
                 weight_function: Some(wf_str),
                 robustness_method: Some(rm_str),
@@ -984,7 +990,7 @@ pub unsafe extern "C" fn cpp_online_new(
             builder
         };
         if n_boot > 0 {
-            builder = builder.intervals(IntervalsBuilder::new().bootstrap(n_boot as usize));
+            builder = builder.intervals(IntervalsBuilder::new().bootstrap(n_boot));
         }
         if has_seed != 0 {
             builder = builder.seed(seed);
@@ -1100,8 +1106,8 @@ pub unsafe extern "C" fn cpp_lowess_free_result(result: *mut CppLowessResult) {
         }
 
         let r = &mut *result;
-        let n = r.n as usize;
-        let cv_n = r.cv_scores_len as usize;
+        let n = r.n;
+        let cv_n = r.cv_scores_len;
 
         shared_parse::free_raw_f64_buffer(r.x, n);
         shared_parse::free_raw_f64_buffer(r.y, n);

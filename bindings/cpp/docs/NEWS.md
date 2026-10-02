@@ -18,6 +18,7 @@ This changelog includes end-user changes only. For internal development notes, s
 * Breaking change: replaced flat `return_*`/`cv_*` fields with grouped `outputs` and nested `cv` options; prediction outputs are grouped as well.
 * Requires C++17 for the public wrapper's use of `std::optional`.
 * Represent unavailable diagnostics as empty `std::optional<double>` values instead of `NaN` sentinels.
+* Changed C ABI collection lengths from `unsigned long` to `size_t` so 64-bit Windows can represent full vector lengths; rebuild C/C++ binaries against the updated header and library.
 
 ### Fixed
 
@@ -35,6 +36,9 @@ This changelog includes end-user changes only. For internal development notes, s
 * Reduced GPU adapter buffer requirements from 30 storage/32 total buffer bindings to 7 storage/8 total per shader stage by using per-compute-pipeline resource layouts.
 * Fixed Online incremental mode accepting positive `delta` and `auto_converge` settings it cannot use; unsupported combinations now error.
 * Fixed grouped intervals discarding distinct confidence and prediction levels; each requested coverage is now applied independently.
+* Fixed empty or failed results producing invalid vector ranges and leaking owned error/retained-model state; result accessors now return empty vectors safely and RAII releases unclaimed resources.
+* Fixed `StreamingOptions` silently accepting Batch-only settings and negative iteration counts producing misleading errors; unsupported options and negative counts are now rejected clearly.
+* Fixed GPU installation interpolating paths into shell commands; paths with shell-special characters are handled safely.
 
 * Fixed the default `boundary_policy` (`"extend"`) letting synthetic boundary points bias the shared robustness scale estimate used to reweight every point, compounding across robustness iterations.
 * Improved agreement with R/Cleveland on sparse, asymmetric, and high-iteration fits by aligning robustness stopping, local-linear degeneracy handling, neighborhood traversal, delta interpolation, and weighted accumulation.

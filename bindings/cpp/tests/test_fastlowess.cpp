@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -54,7 +55,7 @@ constexpr double k_cw_outlier_value = 100.0;
 constexpr double k_cw_slope = 2.0;
 constexpr double k_cv_low_fraction = 0.4;
 constexpr double k_cv_high_fraction = 0.6;
-constexpr unsigned long k_bootstrap_replicates = 12UL;
+constexpr std::size_t k_bootstrap_replicates = 12U;
 constexpr int k_bootstrap_online_min_points = 5;
 
 constexpr std::array<double, k_small_sample_size> k_sample_x_values = {
@@ -393,6 +394,79 @@ void testGroupedCvBootstrapAndPredict() {
              "predict bootstrap should return prediction bounds");
   assertTrue(first.derivative().size() == 2,
              "predict should return requested derivatives");
+
+  fastlowess::PredictOptions invalid_options;
+  invalid_options.extrapolation = "error";
+  const auto failed = model.predict({-1.0}, invalid_options);
+  assertTrue(!failed.valid() && !failed.error().empty(),
+             "failed predictions should retain their error message");
+}
+
+void testEmptyResultAccessors() {
+  fastlowess::StreamingLowess streaming;
+  const auto empty = streaming.finalize().value();
+  assertTrue(empty.size() == 0, "empty streaming result should have size zero");
+  assertTrue(empty.x_vector().empty(),
+             "empty x result should return an empty vector");
+  assertTrue(empty.y_vector().empty(),
+             "empty y result should return an empty vector");
+
+  const fastlowess::PredictResult empty_prediction;
+  assertTrue(empty_prediction.y().empty(),
+             "default prediction result should return an empty vector");
+}
+
+void testStreamingRejectsBatchOnlyOptions() {
+  fastlowess::StreamingOptions options;
+  options.retain_model = true;
+  bool rejected = false;
+  try {
+    const fastlowess::StreamingLowess streaming(options);
+  } catch (const fastlowess::LowessError &) {
+    rejected = true;
+  }
+  assertTrue(rejected, "streaming should reject inherited Batch-only options");
+}
+
+void testNegativeAdapterIterationsAreRejectedClearly() {
+  fastlowess::StreamingOptions streaming_options;
+  streaming_options.iterations = -1;
+  const fastlowess::StreamingLowess streaming(streaming_options);
+  const char *streaming_error = cpp_last_error_message();
+  assertTrue(streaming_error != nullptr &&
+                 std::string(streaming_error)
+                         .find("iterations must be non-negative") !=
+                     std::string::npos,
+             "streaming should reject negative iterations before conversion");
+
+  fastlowess::OnlineOptions online_options;
+  online_options.iterations = -1;
+  const fastlowess::OnlineLowess online(online_options);
+  const char *online_error = cpp_last_error_message();
+  assertTrue(
+      online_error != nullptr &&
+          std::string(online_error).find("iterations must be non-negative") !=
+              std::string::npos,
+      "online should reject negative iterations before conversion");
+}
+
+void testGpuCopySupportsShellCharactersInPaths() {
+  const auto directory =
+      std::filesystem::temp_directory_path() / "fastlowess-cpp-copy-test";
+  std::filesystem::remove_all(directory);
+  std::filesystem::create_directories(directory);
+  const auto source = directory / "source ; & file.bin";
+  const auto destination = directory / "destination ; & file.bin";
+  {
+    std::ofstream output(source, std::ios::binary);
+    output << "test";
+  }
+  assertTrue(
+      fastlowess::gpu::detail::copyFile(source.string(), destination.string()),
+      "GPU installer copy should handle shell characters in paths");
+  assertTrue(std::filesystem::file_size(destination) == 4,
+             "GPU installer copy should preserve the file");
+  std::filesystem::remove_all(directory);
 }
 
 void testLowessReuse() {
@@ -864,6 +938,10 @@ int main() {
     testLowessWithConfidenceIntervals();
     testLowessWithPredictionIntervals();
     testGroupedCvBootstrapAndPredict();
+    testEmptyResultAccessors();
+    testStreamingRejectsBatchOnlyOptions();
+    testNegativeAdapterIterationsAreRejectedClearly();
+    testGpuCopySupportsShellCharactersInPaths();
     testLowessReuse();
     testStreamingReturnsAllPoints();
     testStreamingBasic();

@@ -160,6 +160,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Skip comparison snippets when the optional `statsmodels` dependency is unavailable instead of failing verification.
 - Fixed C++ release CI staging the tracked Spack recipe despite the repository's broad `spack/` ignore rule.
 
+**C++:**
+
+- Fixed shell injection in the GPU installer, result and retained-handle cleanup leaks and empty-result accessors, silent acceptance of unsupported Streaming options, negative iteration narrowing, and Windows FFI length truncation.
+
 **Go:**
 
 - Declared cgo seed arguments as `unsigned long long` so the Go type checker sees `C.ulonglong`. `uint64_t` was not exported as `C.uint64_t`.

@@ -15,6 +15,7 @@
 #include <cstdio> // stdin, fileno / _fileno
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <limits>
@@ -26,8 +27,17 @@
 
 #ifdef _WIN32
 #include <io.h> // _isatty  // NOLINT(misc-include-cleaner)
+#include <process.h>
 #else
+#include <cerrno>
+#include <spawn.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h> // isatty
+#endif
+
+#ifndef _WIN32
+extern "C" char **environ;
 #endif
 
 // Include the C header
@@ -56,7 +66,7 @@ struct IntervalsOptions {
   double confidence = NAN;
   double prediction = NAN;
   /// Zero disables bootstrap refits.
-  unsigned long bootstrap = 0;
+  size_t bootstrap = 0;
 };
 
 inline bool hasOutput(const std::vector<std::string> &outputs,
@@ -370,11 +380,7 @@ public:
   explicit PredictResult(const fastlowess_CppPredictResult &c_result)
       : result_(c_result) {}
 
-  ~PredictResult() {
-    if (result_.n > 0) {
-      cpp_predict_free_result(&result_);
-    }
-  }
+  ~PredictResult() { cpp_predict_free_result(&result_); }
 
   // Move-only
   PredictResult(const PredictResult &) = delete;
@@ -386,9 +392,7 @@ public:
 
   PredictResult &operator=(PredictResult &&other) noexcept {
     if (this != &other) {
-      if (result_.n > 0) {
-        cpp_predict_free_result(&result_);
-      }
+      cpp_predict_free_result(&result_);
       result_ = other.result_;
       other.result_ = fastlowess_CppPredictResult{};
     }
@@ -408,6 +412,9 @@ public:
 
   /// Predicted y values, one per query point
   std::vector<double> y() const {
+    if (result_.n == 0 || result_.y == nullptr) {
+      return {};
+    }
     return std::vector<double>(result_.y, result_.y + result_.n);
   }
 
@@ -516,7 +523,7 @@ public:
   PredictResult predict(const std::vector<double> &new_x,
                         const PredictOptions &options = {}) const {
     const auto result = cpp_predict(
-        ptr_, new_x.data(), static_cast<unsigned long>(new_x.size()),
+        ptr_, new_x.data(), static_cast<size_t>(new_x.size()),
         hasOutput(options.outputs, "se") ? 1 : 0, options.intervals.confidence,
         options.intervals.prediction,
         hasOutput(options.outputs, "derivative") ? 1 : 0,
@@ -542,11 +549,7 @@ public:
   explicit LowessResult(const fastlowess_CppLowessResult &c_result)
       : result_(c_result) {}
 
-  ~LowessResult() {
-    if (result_.n > 0) {
-      cpp_lowess_free_result(&result_);
-    }
-  }
+  ~LowessResult() { release(); }
 
   // Move-only
   LowessResult(const LowessResult &) = delete;
@@ -558,9 +561,7 @@ public:
 
   LowessResult &operator=(LowessResult &&other) noexcept {
     if (this != &other) {
-      if (result_.n > 0) {
-        cpp_lowess_free_result(&result_);
-      }
+      release();
       result_ = other.result_;
       other.result_ = fastlowess_CppLowessResult{};
     }
@@ -586,11 +587,17 @@ public:
 
   /// Get x values as vector
   std::vector<double> x_vector() const {
+    if (result_.n == 0 || result_.x == nullptr) {
+      return {};
+    }
     return std::vector<double>(result_.x, result_.x + result_.n);
   }
 
   /// Get smoothed y values as vector
   std::vector<double> y_vector() const {
+    if (result_.n == 0 || result_.y == nullptr) {
+      return {};
+    }
     return std::vector<double>(result_.y, result_.y + result_.n);
   }
 
@@ -695,6 +702,14 @@ public:
   }
 
 private:
+  void release() noexcept {
+    if (result_.predict_handle != nullptr) {
+      cpp_predict_handle_free(result_.predict_handle);
+      result_.predict_handle = nullptr;
+    }
+    cpp_lowess_free_result(&result_);
+  }
+
   fastlowess_CppLowessResult result_ = {};
 };
 
@@ -715,7 +730,7 @@ public:
         hasOutput(options.outputs, "derivative") ? 1 : 0,
         options.zero_weight_fallback.c_str(), options.auto_converge,
         options.cv.fractions.empty() ? nullptr : options.cv.fractions.data(),
-        static_cast<unsigned long>(options.cv.fractions.size()),
+        static_cast<size_t>(options.cv.fractions.size()),
         options.cv.method.c_str(), options.cv.k, options.parallel ? 1 : 0,
         hasOutput(options.outputs, "se") ? 1 : 0,
         hasOutput(options.outputs, "sorted") ? 1 : 0, options.backend.c_str(),
@@ -766,9 +781,9 @@ public:
 
     auto result =
         cpp_lowess_fit(ptr_, x_values.data(), y_values.data(),
-                       static_cast<unsigned long>(x_values.size()),
+                       static_cast<size_t>(x_values.size()),
                        custom_weights.empty() ? nullptr : custom_weights.data(),
-                       static_cast<unsigned long>(custom_weights.size()));
+                       static_cast<size_t>(custom_weights.size()));
 
     if (result.error != nullptr) {
       const std::string error_msg(result.error);
@@ -789,6 +804,7 @@ private:
 class StreamingLowess {
 public:
   explicit StreamingLowess(const StreamingOptions &options = {}) {
+    validate_options(options);
     ptr_ = cpp_streaming_new(
         options.fraction, options.iterations, options.delta,
         options.weight_function.c_str(), options.robustness_method.c_str(),
@@ -836,9 +852,8 @@ public:
       return Expected<LowessResult>::make_error("x and y length mismatch");
     }
 
-    auto result =
-        cpp_streaming_process(ptr_, x_values.data(), y_values.data(),
-                              static_cast<unsigned long>(x_values.size()));
+    auto result = cpp_streaming_process(ptr_, x_values.data(), y_values.data(),
+                                        static_cast<size_t>(x_values.size()));
 
     if (result.error != nullptr) {
       const std::string error_msg(result.error);
@@ -864,6 +879,16 @@ public:
   }
 
 private:
+  static void validate_options(const StreamingOptions &options) {
+    if (!options.cv.fractions.empty() || options.backend != "cpu" ||
+        !options.custom_weights.empty() ||
+        hasOutput(options.outputs, "sorted") || options.retain_model) {
+      throw LowessError(
+          "StreamingLowess does not support Batch-only options: cv, backend, "
+          "custom_weights, outputs containing 'sorted', or retain_model");
+    }
+  }
+
   fastlowess_CppStreamingLowess *ptr_ = nullptr;
   bool expect_finalized_ = false;
 };
@@ -984,13 +1009,10 @@ inline std::string cacheDir() {
   return base + "/.fastlowess/gpu";
 }
 
-inline void makeDir(const std::string &dir) {
-#ifdef _WIN32
-  const std::string cmd = "if not exist \"" + dir + "\" mkdir \"" + dir + "\"";
-#else
-  const std::string cmd = "mkdir -p \"" + dir + "\"";
-#endif
-  std::system(cmd.c_str()); // NOLINT
+inline bool makeDir(const std::string &dir) {
+  std::error_code error;
+  std::filesystem::create_directories(dir, error);
+  return !error && std::filesystem::is_directory(dir, error) && !error;
 }
 
 inline bool fileExists(const std::string &path) {
@@ -999,12 +1021,44 @@ inline bool fileExists(const std::string &path) {
 }
 
 inline bool copyFile(const std::string &src, const std::string &dst) {
+  std::error_code error;
+  return std::filesystem::copy_file(
+      src, dst, std::filesystem::copy_options::overwrite_existing, error);
+}
+
+inline bool runProcess(const std::vector<std::string> &arguments) {
+  if (arguments.empty()) {
+    return false;
+  }
+
 #ifdef _WIN32
-  const std::string cmd = "copy /Y \"" + src + "\" \"" + dst + "\" >NUL";
+  std::vector<const char *> argv;
+  argv.reserve(arguments.size() + 1);
+  for (const auto &argument : arguments) {
+    argv.push_back(argument.c_str());
+  }
+  argv.push_back(nullptr);
+  return _spawnvp(_P_WAIT, argv.front(), argv.data()) == 0;
 #else
-  const std::string cmd = "cp \"" + src + "\" \"" + dst + "\"";
+  std::vector<char *> argv;
+  argv.reserve(arguments.size() + 1);
+  for (const auto &argument : arguments) {
+    argv.push_back(const_cast<char *>(argument.c_str()));
+  }
+  argv.push_back(nullptr);
+
+  pid_t child = 0;
+  if (posix_spawnp(&child, argv.front(), nullptr, nullptr, argv.data(),
+                   environ) != 0) {
+    return false;
+  }
+  int status = 0;
+  pid_t waited;
+  do {
+    waited = waitpid(child, &status, 0);
+  } while (waited < 0 && errno == EINTR);
+  return waited == child && WIFEXITED(status) && WEXITSTATUS(status) == 0;
 #endif
-  return std::system(cmd.c_str()) == 0; // NOLINT
 }
 
 } // namespace detail
@@ -1042,7 +1096,10 @@ inline bool install(bool yes = false, const std::string &local_path = "") {
   }
 
   const std::string dir = detail::cacheDir();
-  detail::makeDir(dir);
+  if (!detail::makeDir(dir)) {
+    std::cerr << "Failed to create GPU cache directory: " << dir << "\n";
+    return false;
+  }
 
   if (!local_path.empty()) {
     if (!detail::fileExists(local_path)) {
@@ -1066,8 +1123,9 @@ inline bool install(bool yes = false, const std::string &local_path = "") {
       }
     }
 
-    const std::string dest =
-        dir + "/" + local_path.substr(local_path.find_last_of("/\\") + 1);
+    const std::string dest = (std::filesystem::path(dir) /
+                              std::filesystem::path(local_path).filename())
+                                 .string();
     std::cout << "Installing " << local_path << " ...\n";
     if (!detail::copyFile(local_path, dest)) {
       std::cerr << "Failed to copy " << local_path << " to " << dest << "\n";
@@ -1109,12 +1167,10 @@ inline bool install(bool yes = false, const std::string &local_path = "") {
     }
   }
 
-  const std::string dest = dir + "/" + asset;
+  const std::string dest = (std::filesystem::path(dir) / asset).string();
 
   std::cout << "Downloading " << url << " ...\n";
-  const std::string curl_cmd =
-      "curl -fL --progress-bar -o \"" + dest + "\" \"" + url + "\"";
-  if (std::system(curl_cmd.c_str()) != 0) { // NOLINT
+  if (!detail::runProcess({"curl", "-fL", "--progress-bar", "-o", dest, url})) {
     std::cerr << "Download failed. A matching GPU build may not exist for "
                  "this platform/version yet, or `curl` is not installed."
               << "\n";
