@@ -62,6 +62,7 @@ struct Config {
     n_test: u32,
     seed: u32,
     has_se: u32,
+    has_custom_weights: u32,
     reduce_output_offset: u32,
     _pad2: u32,
     _pad3: u32,
@@ -186,6 +187,13 @@ struct WeightConfig {
 @group(1) @binding(5) var<storage, read_write> y_global: array<f32>;
 @group(1) @binding(6) var<storage, read_write> shuffled_indices: array<u32>;
 @group(1) @binding(7) var<storage, read_write> cv_test_mask: array<u32>; // 1 for test, 0 for training
+
+fn case_weight(i: u32) -> f32 {
+    if (config.has_custom_weights != 0u) {
+        return x_test[i];
+    }
+    return 1.0;
+}
 
 // Workgroup shared memory for scan
 var<workgroup> s_scan: array<u32, 256>;
@@ -564,7 +572,7 @@ fn fit_anchors(
                 rw = robustness_weights[k];
             }
             
-            let combined_w = rw * kernel_w;
+            let combined_w = rw * kernel_w * case_weight(k);
             my_w += combined_w;
             my_wx += combined_w * rel_x;
             my_wxx += combined_w * rel_x * rel_x;
@@ -894,7 +902,7 @@ fn compute_se(
             let u2 = u * u;
             let kernel_w = get_kernel_weight(u, u2);
             
-            let combined_w = rw * kernel_w;
+            let combined_w = rw * kernel_w * case_weight(k);
             let dx = xj - x_i;
             let w2 = combined_w * combined_w;
             my_w += combined_w;
@@ -1671,6 +1679,7 @@ pub struct GpuConfig {
     pub n_test: u32,
     pub seed: u32,
     pub has_se: u32,
+    pub has_custom_weights: u32,
     pub reduce_output_offset: u32,
     pub _pad2: u32,
     pub _pad3: u32,
@@ -2469,7 +2478,7 @@ impl GpuExecutor {
         robustness_method: u32,
         scaling_method: u32,
     ) {
-        self.reset_buffers_inner(x, y, config, robustness_method, scaling_method, false);
+        self.reset_buffers_inner(x, y, config, robustness_method, scaling_method, false, None);
     }
 
     fn reset_buffers_inner(
@@ -2480,6 +2489,7 @@ impl GpuExecutor {
         robustness_method: u32,
         scaling_method: u32,
         bootstrap_sample: bool,
+        custom_weights: Option<&[f32]>,
     ) {
         let n_padded = config.n;
         let orig_n = config.orig_n;
@@ -2589,11 +2599,31 @@ impl GpuExecutor {
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
         );
 
+        if custom_weights.is_some() {
+            ensure!(
+                "CaseWeights",
+                &mut self.buffers.x_test_buffer,
+                n_bytes_padded,
+                BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
+            );
+        }
+
         if bg_needs_update || self.bg1_topo.is_none() {
             // Ensure test buffers are initialized (even if empty) to satisfy layout
             self.ensure_bg1_dummy_buffers();
 
             self.bg1_topo = Some(self.create_bg1());
+        }
+
+        if let Some(weights) = custom_weights {
+            let mut padded_case_weights = vec![1.0f32; n_padded as usize];
+            let start = pad_len as usize;
+            padded_case_weights[start..start + orig_n as usize].copy_from_slice(weights);
+            self.queue.write_buffer(
+                self.buffers.x_test_buffer.as_ref().unwrap(),
+                0,
+                cast_slice(&padded_case_weights),
+            );
         }
 
         // Group 2: State
@@ -4195,6 +4225,15 @@ where
         } else {
             cast_input_slice(y)
         };
+        let custom_weights_f32 = config.custom_weights.as_deref().map(cast_input_slice);
+        if let Some(weights) = custom_weights_f32.as_deref()
+            && weights.len() != orig_n
+        {
+            return Err(LowessError::InvalidInput(format!(
+                "custom_weights length ({}) must match the number of observations ({orig_n})",
+                weights.len()
+            )));
+        }
 
         // Calculate anchors based on PADDED range
         let mut delta = config.delta.to_f32().unwrap();
@@ -4266,6 +4305,7 @@ where
             } else {
                 0
             },
+            has_custom_weights: u32::from(custom_weights_f32.is_some()),
             reduce_output_offset: 0,
             _pad2: 0,
             _pad3: 0,
@@ -4289,6 +4329,7 @@ where
             robustness_id,
             scaling_id,
             bootstrap.is_some(),
+            custom_weights_f32.as_deref(),
         );
 
         // Execute all GPU operations in a single command encoder (no synchronization)
@@ -4310,8 +4351,11 @@ where
                     (orig_n as u64) * 4,
                 );
             }
-            // 1. Sort and pad input data
-            exec.record_sort_input(&mut encoder);
+            // Weighted inputs were already sorted with their case weights by Batch;
+            // sorting only x/y here would detach observations from their weights.
+            if custom_weights_f32.is_none() {
+                exec.record_sort_input(&mut encoder);
+            }
             exec.record_pad_data(&mut encoder);
 
             // 2. Prepare for fitting (anchors, intervals, init)
@@ -4585,6 +4629,7 @@ where
             n_test: 0,
             seed: config.cv_seed.unwrap_or(12345) as u32,
             has_se: 0,
+            has_custom_weights: 0,
             reduce_output_offset: 0,
             _pad2: 0,
             _pad3: 0,
@@ -4785,6 +4830,7 @@ where
                 n_test: run.n_test,
                 seed: 0,
                 has_se: 0,
+                has_custom_weights: 0,
                 reduce_output_offset: 0,
                 _pad2: 0,
                 _pad3: 0,

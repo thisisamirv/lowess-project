@@ -174,7 +174,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed grouped confidence/prediction interval configuration silently replacing one requested level with the other; mismatched levels now fail during builder setup.
 - Fixed Online incremental mode accepting positive `delta` and `auto_converge` options that it cannot apply; positive delta now requires full mode, and auto-convergence requires full mode with robustness iterations.
-- Fixed GPU Batch results losing the sort mapping for unsorted inputs; host sorting now preserves input order and `return_sorted` behavior. GPU requests with custom weights now use the CPU path instead of ignoring the weights.
+- Fixed GPU Batch results losing the sort mapping for unsorted inputs; host sorting now preserves input order and `return_sorted` behavior. GPU fit and CV candidate kernels now apply `custom_weights` directly.
 - Fixed fraction-1 global fits ignoring configured robustness iterations; global fits now reweight observations and report the iterations used.
 - Fixed Batch cross-validation candidate fits ignoring `custom_weights`, and reject K-fold counts larger than the observation count instead of returning zero scores.
 - Fixed Streaming and Online accepting invalid `auto_converge` tolerances, and Online now rejects invalid explicit `delta` values while retaining NaN as its default sentinel.

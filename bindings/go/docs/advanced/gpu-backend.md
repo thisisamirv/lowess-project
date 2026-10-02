@@ -37,7 +37,7 @@ GPU support is **opt-in** and not included in a default build of `fastlowess-go`
 | Confidence/prediction intervals | ✅ | ✅ | |
 | Cross-validation (k-fold, LOOCV) | ✅ | ✅ | |
 | Unsorted inputs and sorted-output option | ✅ | ✅ | GPU results preserve Batch output ordering. |
-| Custom per-observation weights | ✅ | CPU fallback | Weighted GPU requests run on CPU to preserve weight semantics. |
+| Custom per-observation weights | ✅ | ✅ | Applied in GPU fit and CV candidate kernels. |
 
 ---
 

@@ -36,7 +36,7 @@ GPU support is **opt-in** and not included in the default published npm binaries
 | Confidence/prediction intervals | ✅ | ✅ | |
 | Cross-validation (k-fold, LOOCV) | ✅ | ✅ | |
 | Unsorted inputs and sorted-output option | ✅ | ✅ | GPU results preserve Batch output ordering. |
-| Custom per-observation weights | ✅ | CPU fallback | Weighted GPU requests run on CPU to preserve weight semantics. |
+| Custom per-observation weights | ✅ | ✅ | Applied in GPU fit and CV candidate kernels. |
 
 ---
 

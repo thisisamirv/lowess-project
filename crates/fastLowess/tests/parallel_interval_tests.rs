@@ -84,7 +84,7 @@ fn test_parallel_bootstrap_matches_sequential() {
             .intervals(
                 IntervalsBuilder::new()
                     .confidence(0.95)
-                    .prediction(0.9)
+                    .prediction(0.95)
                     .bootstrap(300),
             )
             .parallel(parallel)
@@ -121,7 +121,7 @@ fn test_streaming_bootstrap_parallel_matches_sequential() {
             .intervals(
                 IntervalsBuilder::new()
                     .confidence(0.95)
-                    .prediction(0.9)
+                    .prediction(0.95)
                     .bootstrap(40),
             )
             .parallel(parallel)
@@ -155,7 +155,7 @@ fn test_online_bootstrap_full_update() {
         .intervals(
             IntervalsBuilder::new()
                 .confidence(0.95)
-                .prediction(0.9)
+                .prediction(0.95)
                 .bootstrap(40),
         )
         .build()

@@ -35,7 +35,7 @@ GPU support is **opt-in**, gated behind the `gpu` Cargo feature (not enabled by 
 | Confidence/prediction intervals | ✅ | ✅ | |
 | Cross-validation (k-fold, LOOCV) | ✅ | ✅ | |
 | Unsorted inputs and sorted-output option | ✅ | ✅ | GPU results preserve Batch output ordering. |
-| Custom per-observation weights | ✅ | CPU fallback | Custom weights preserve fit semantics but are not GPU-accelerated. |
+| Custom per-observation weights | ✅ | ✅ | Applied in GPU fit and CV candidate kernels. |
 
 ---
 

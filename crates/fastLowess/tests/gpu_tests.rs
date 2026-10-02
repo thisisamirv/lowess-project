@@ -132,6 +132,49 @@ fn test_gpu_batch_custom_weights_change_the_fit() {
 }
 
 #[test]
+fn test_gpu_cross_validation_uses_custom_training_weights() {
+    if pollster::block_on(GpuExecutor::new()).is_err() {
+        println!("GPU unavailable, skipping weighted-CV regression");
+        return;
+    }
+
+    let x: Vec<f64> = (0..18).map(|i| i as f64).collect();
+    let mut y: Vec<f64> = x.iter().map(|&xi| xi * xi).collect();
+    y[9] += 500.0;
+    let fit = |weights: Vec<f64>| {
+        FastLowess::new()
+            .backend("gpu")
+            .iterations(0)
+            .custom_weights(weights)
+            .cv(CVBuilder::new()
+                .method("kfold")
+                .k(3)
+                .fraction(vec![0.3, 0.7]))
+            .seed(42)
+            .build()
+            .unwrap()
+            .fit(&x, &y)
+            .unwrap()
+    };
+    let unweighted = fit(vec![1.0; x.len()]);
+    let weighted = fit({
+        let mut weights = vec![1.0; x.len()];
+        weights[9] = 0.0;
+        weights
+    });
+
+    assert!(
+        unweighted
+            .cv_scores
+            .unwrap()
+            .iter()
+            .zip(weighted.cv_scores.unwrap().iter())
+            .any(|(a, b)| (a - b).abs() > 1e-6),
+        "custom training weights should affect GPU-backed CV candidate scores"
+    );
+}
+
+#[test]
 fn test_gpu_robustness() {
     let n = 20;
     let x: Vec<f32> = (0..n).map(|i| i as f32).collect();
@@ -265,6 +308,7 @@ fn test_gpu_padding_values() {
             residual_sd: 0.0,
             seed: 0,
             has_se: 0,
+            has_custom_weights: 0,
             reduce_output_offset: 0,
             _pad2: 0,
             _pad3: 0,
@@ -450,6 +494,7 @@ fn test_cpu_gpu_padding_equivalence() {
                 n_test: 0,
                 seed: 0,
                 has_se: 0,
+                has_custom_weights: 0,
                 reduce_output_offset: 0,
                 _pad2: 0,
                 _pad3: 0,
@@ -1139,6 +1184,7 @@ fn test_gpu_median_diagnostic() {
                 n_test: 0,
                 seed: 0,
                 has_se: 0,
+                has_custom_weights: 0,
                 reduce_output_offset: 0,
                 _pad2: 0,
                 _pad3: 0,
@@ -1181,6 +1227,7 @@ fn test_gpu_median_diagnostic() {
                 n_test: 0,
                 seed: 0,
                 has_se: 0,
+                has_custom_weights: 0,
                 reduce_output_offset: 0,
                 _pad2: 0,
                 _pad3: 0,
@@ -1272,6 +1319,7 @@ fn test_gpu_median_large() {
                     n_test: 0,
                     seed: 0,
                     has_se: 0,
+                    has_custom_weights: 0,
                     reduce_output_offset: 0,
                     _pad2: 0,
                     _pad3: 0,
