@@ -172,6 +172,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **lowess:**
 
+- Fixed global OLS treating translated x-values as degenerate by basing the tolerance and means on centered coordinates.
+- Fixed fraction-1 global OLS ignoring `custom_weights`; weights are now kept aligned when Batch sorts input observations.
+- Fixed `missing("drop")` accepting `custom_weights` whose length did not match the original input, and validating weight values before filtering.
 - Fixed Gaussian fits dropping observations outside the nearest-neighbor window and replaced the artificial far-tail floor with the standard Gaussian formula.
 - Matched R's effective-zero robustness guard: stop when `6 * median(abs(residuals)) < 1e-7 * mean(abs(residuals))`; centered MAD retains its separate fallback.
 - Matched Cleveland/R's local-linear degeneracy rule: suppress the slope when weighted local x-spread is below `0.001 * (max(x) - min(x))`.

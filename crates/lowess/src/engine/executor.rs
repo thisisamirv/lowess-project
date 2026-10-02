@@ -969,7 +969,12 @@ impl<T: Float> LowessExecutor<T> {
 
         // Handle global regression (fraction >= 1.0)
         if eff_fraction >= T::one() {
-            let model = LinearFit::fit_ols(x, y);
+            let model = if let Some(custom_weights) = self.custom_weights.as_ref() {
+                let mut weights = custom_weights.clone();
+                LinearFit::fit_wls(x, y, &mut weights, x[0], T::zero())
+            } else {
+                LinearFit::fit_ols(x, y)
+            };
             let smoothed = x.iter().map(|&xi| model.predict(xi)).collect();
             return Ok(ExecutorOutput {
                 smoothed,

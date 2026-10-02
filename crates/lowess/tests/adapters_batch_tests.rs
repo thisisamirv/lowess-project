@@ -1630,6 +1630,49 @@ fn test_batch_custom_weights_wrong_length_rejected() {
     );
 }
 
+#[test]
+fn test_batch_global_ols_applies_custom_weights() {
+    let x = [3.0_f64, 0.0, 2.0, 1.0];
+    let y = [100.0_f64, 0.0, 0.0, 0.0];
+    let weights = vec![0.0, 1.0, 1.0, 1.0];
+
+    let result = Lowess::new()
+        .fraction(1.0)
+        .custom_weights(weights)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    assert!(
+        result.y.iter().all(|&fitted| fitted.abs() < 1e-12),
+        "the zero-weight outlier must not affect the global fit: {:?}",
+        result.y
+    );
+}
+
+#[test]
+fn test_batch_missing_drop_rejects_custom_weights_with_wrong_original_length() {
+    use lowess::internals::primitives::errors::LowessError;
+
+    let x = [0.0_f64, 1.0, 2.0, 3.0];
+    let y = [f64::NAN, 1.0, 2.0, 3.0];
+    let weights = vec![1.0, 1.0, 1.0, 1.0, 99.0];
+
+    let result = Lowess::new()
+        .fraction(0.75)
+        .missing("drop")
+        .custom_weights(weights)
+        .build()
+        .unwrap()
+        .fit(&x, &y);
+
+    assert!(
+        matches!(result, Err(LowessError::InvalidInput(_))),
+        "custom_weights length must match the original input length"
+    );
+}
+
 /// Setting custom_weights twice is caught at build time.
 #[test]
 fn test_batch_custom_weights_duplicate_detected() {

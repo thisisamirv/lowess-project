@@ -273,6 +273,10 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
     pub fn fit(self, x: &[T], y: &[T]) -> Result<LowessResult<T>, LowessError> {
         Validator::validate_lengths(x, y)?;
 
+        if let Some(ref weights) = self.config.custom_weights {
+            Validator::validate_custom_weights(weights, x.len())?;
+        }
+
         // Apply the missing-value policy before any other validation, so a
         // `Drop` policy sees the filtered data and `Error` sees the raw data.
         let (x_owned, y_owned, custom_weights) = match self.config.missing {
@@ -301,6 +305,13 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> BatchLowess<T> {
         } else {
             sort_by_x(x, y)
         };
+        let custom_weights = custom_weights.map(|weights| {
+            sorted
+                .indices
+                .iter()
+                .map(|&original_idx| weights[original_idx])
+                .collect()
+        });
 
         let delta = calculate_delta(self.config.delta, &sorted.x)?;
 

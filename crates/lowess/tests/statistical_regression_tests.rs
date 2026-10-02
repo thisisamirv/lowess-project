@@ -78,6 +78,27 @@ fn ols_slope_is_scale_invariant() {
     }
 }
 
+#[test]
+fn ols_slope_is_translation_invariant_for_large_x_offsets() {
+    let x: [f64; 4] = [1.0e8, 1.0e8 + 1.0, 1.0e8 + 2.0, 1.0e8 + 3.0];
+    let y: [f64; 4] = [1.0, 3.0, 5.0, 7.0];
+
+    let result = Lowess::new()
+        .fraction(1.0)
+        .outputs(["derivative"])
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    for (&fitted, &expected) in result.y.iter().zip(y.iter()) {
+        assert!((fitted - expected).abs() < 1e-8);
+    }
+    for &slope in result.derivative.unwrap().iter() {
+        assert!((slope - 2.0).abs() < 1e-8);
+    }
+}
+
 /// Local-linear standard errors must scale linearly with the data magnitude rather
 /// than collapse for small-magnitude x.
 #[test]

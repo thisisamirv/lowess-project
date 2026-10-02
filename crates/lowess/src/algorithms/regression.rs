@@ -164,7 +164,7 @@ impl<T: Float> LinearFit<T> {
     // Predict y-value for a given x using the model.
     #[inline]
     pub fn predict(&self, x: T) -> T {
-        self.intercept + self.slope * x
+        self.y_mean + self.slope * (x - self.x_mean)
     }
 
     // Fit Ordinary Least Squares (OLS) regression.
@@ -176,33 +176,34 @@ impl<T: Float> LinearFit<T> {
 
         let n_t = T::from(n).unwrap_or(T::one());
 
-        let mut sum_x = T::zero();
+        let x_origin = x[0];
+        let mut sum_x_offset = T::zero();
         let mut sum_y = T::zero();
-        let mut sum_x_sq = T::zero();
 
         for i in 0..n {
-            sum_x = sum_x + x[i];
+            sum_x_offset = sum_x_offset + (x[i] - x_origin);
             sum_y = sum_y + y[i];
-            sum_x_sq = sum_x_sq + x[i] * x[i];
         }
 
-        let x_mean = sum_x / n_t;
+        let x_mean_offset = sum_x_offset / n_t;
+        let x_mean = x_origin + x_mean_offset;
         let y_mean = sum_y / n_t;
 
         let mut variance = T::zero();
+        let mut centered_sum_x_sq = T::zero();
         let mut covariance = T::zero();
 
         for i in 0..n {
-            let dx = x[i] - x_mean;
+            let x_offset = x[i] - x_origin;
+            let dx = x_offset - x_mean_offset;
             let dy = y[i] - y_mean;
             variance = variance + dx * dx;
+            centered_sum_x_sq = centered_sum_x_sq + x_offset * x_offset;
             covariance = covariance + dx * dy;
         }
 
-        // Relative degeneracy tolerance (see `fit_wls`): `variance` is bounded by
-        // `sum(x_i^2)`, so scaling by it tolerates any x magnitude instead of
-        // silently treating small-magnitude x-values as a degenerate design.
-        let tol = T::epsilon() * sum_x_sq;
+        // Scale degeneracy to the x spread, not the absolute coordinate origin.
+        let tol = T::epsilon() * centered_sum_x_sq;
         if variance <= tol {
             return Self {
                 slope: T::zero(),
@@ -242,17 +243,19 @@ impl<T: Float> LinearFit<T> {
         // Residual sum of squares and corrected sum of squares of x.
         let mut sse = T::zero();
         let mut sxx = T::zero();
-        let mut sum_x_sq = T::zero();
+        let x_origin = x[0];
+        let mut centered_sum_x_sq = T::zero();
         for i in 0..n {
             let r = y[i] - self.predict(x[i]);
             sse = sse + r * r;
             let dx = x[i] - self.x_mean;
             sxx = sxx + dx * dx;
-            sum_x_sq = sum_x_sq + x[i] * x[i];
+            let x_offset = x[i] - x_origin;
+            centered_sum_x_sq = centered_sum_x_sq + x_offset * x_offset;
         }
 
         // Relative degeneracy tolerance (see `fit_wls`).
-        let tol = T::epsilon() * sum_x_sq;
+        let tol = T::epsilon() * centered_sum_x_sq;
         let inv_n = T::one() / n_t;
 
         if sxx <= tol {
