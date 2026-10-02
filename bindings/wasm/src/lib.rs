@@ -1,6 +1,6 @@
 //! WebAssembly bindings for fastLowess.
 
-use js_sys::Float64Array;
+use js_sys::{Float64Array, Object, Reflect};
 use serde::Deserialize;
 use wasm_bindgen::prelude::*;
 
@@ -307,6 +307,38 @@ fn validate_outputs(outputs: Option<&Vec<String>>, allowed: &[&str]) -> Result<(
 
 fn to_float64_array(values: &[f64]) -> Float64Array {
     Float64Array::from(values)
+}
+
+fn validate_option_keys(value: &JsValue, name: &str, allowed: &[&str]) -> Result<(), JsValue> {
+    if value.is_undefined() || value.is_null() || !value.is_object() {
+        return Ok(());
+    }
+
+    let object: &Object = value.unchecked_ref();
+    for key in Object::keys(object).iter() {
+        if let Some(key) = key.as_string() {
+            if !allowed.contains(&key.as_str()) {
+                return Err(JsValue::from_str(&format!(
+                    "unknown {name} option '{key}'. Valid options: {}",
+                    allowed.join(", ")
+                )));
+            }
+        }
+    }
+    Ok(())
+}
+
+fn validate_nested_option_keys(
+    value: &JsValue,
+    parent: &str,
+    key: &str,
+    allowed: &[&str],
+) -> Result<(), JsValue> {
+    if value.is_undefined() || value.is_null() || !value.is_object() {
+        return Ok(());
+    }
+    let nested = Reflect::get(value, &JsValue::from_str(key))?;
+    validate_option_keys(&nested, parent, allowed)
 }
 
 fn bootstrap_count(intervals: Option<&IntervalsOptionsJs>) -> Option<usize> {
@@ -631,6 +663,26 @@ impl LowessResult {
         new_x: &Float64Array,
         options: JsValue,
     ) -> Result<PredictOutput, JsValue> {
+        validate_option_keys(
+            &options,
+            "prediction",
+            &[
+                "outputs",
+                "return_se",
+                "return_derivative",
+                "intervals",
+                "seed",
+                "extrapolation",
+                "max_extrapolation_distance",
+                "max_neighbor_distance",
+            ],
+        )?;
+        validate_nested_option_keys(
+            &options,
+            "intervals",
+            "intervals",
+            &["confidence", "prediction", "bootstrap"],
+        )?;
         let opts: PredictOptionsJs = if options.is_undefined() || options.is_null() {
             PredictOptionsJs::default()
         } else {
@@ -904,6 +956,41 @@ fn smooth(
     options: JsValue,
     custom_weights: Option<Vec<f64>>,
 ) -> Result<LowessResult, JsValue> {
+    validate_option_keys(
+        &options,
+        "batch",
+        &[
+            "fraction",
+            "iterations",
+            "delta",
+            "weight_function",
+            "robustness_method",
+            "zero_weight_fallback",
+            "boundary_policy",
+            "scaling_method",
+            "auto_converge",
+            "outputs",
+            "intervals",
+            "cv",
+            "seed",
+            "return_residuals",
+            "return_robustness_weights",
+            "return_derivative",
+            "return_diagnostics",
+            "return_se",
+            "return_sorted",
+            "parallel",
+            "missing",
+            "retain_model",
+        ],
+    )?;
+    validate_nested_option_keys(
+        &options,
+        "intervals",
+        "intervals",
+        &["confidence", "prediction", "bootstrap"],
+    )?;
+    validate_nested_option_keys(&options, "cv", "cv", &["method", "k", "fractions"])?;
     let opts = if !options.is_undefined() && !options.is_null() {
         Some(serde_wasm_bindgen::from_value::<SmoothOptions>(options)?)
     } else {
@@ -932,6 +1019,42 @@ impl StreamingLowess {
     #[wasm_bindgen(constructor, skip_typescript)]
     #[allow(non_snake_case)]
     pub fn new(options: JsValue, streamingOpts: JsValue) -> Result<StreamingLowess, JsValue> {
+        validate_option_keys(
+            &options,
+            "streaming",
+            &[
+                "fraction",
+                "iterations",
+                "delta",
+                "weight_function",
+                "robustness_method",
+                "zero_weight_fallback",
+                "boundary_policy",
+                "scaling_method",
+                "auto_converge",
+                "outputs",
+                "intervals",
+                "seed",
+                "return_residuals",
+                "return_robustness_weights",
+                "return_derivative",
+                "return_diagnostics",
+                "parallel",
+                "missing",
+                "return_se",
+            ],
+        )?;
+        validate_nested_option_keys(
+            &options,
+            "intervals",
+            "intervals",
+            &["confidence", "prediction", "bootstrap"],
+        )?;
+        validate_option_keys(
+            &streamingOpts,
+            "streamingOpts",
+            &["chunk_size", "overlap", "merge_strategy"],
+        )?;
         let opts = if !options.is_undefined() && !options.is_null() {
             Some(serde_wasm_bindgen::from_value::<StreamingSmoothOptions>(
                 options,
@@ -990,6 +1113,39 @@ impl OnlineLowess {
     #[wasm_bindgen(constructor, skip_typescript)]
     #[allow(non_snake_case)]
     pub fn new(options: JsValue, onlineOpts: JsValue) -> Result<OnlineLowess, JsValue> {
+        validate_option_keys(
+            &options,
+            "online",
+            &[
+                "fraction",
+                "iterations",
+                "delta",
+                "weight_function",
+                "robustness_method",
+                "zero_weight_fallback",
+                "boundary_policy",
+                "scaling_method",
+                "auto_converge",
+                "outputs",
+                "intervals",
+                "seed",
+                "return_robustness_weights",
+                "return_derivative",
+                "missing",
+                "return_se",
+            ],
+        )?;
+        validate_nested_option_keys(
+            &options,
+            "intervals",
+            "intervals",
+            &["confidence", "prediction", "bootstrap"],
+        )?;
+        validate_option_keys(
+            &onlineOpts,
+            "onlineOpts",
+            &["window_capacity", "min_points", "update_mode"],
+        )?;
         let opts = if !options.is_undefined() && !options.is_null() {
             Some(serde_wasm_bindgen::from_value::<OnlineSmoothOptions>(
                 options,

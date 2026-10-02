@@ -18,6 +18,21 @@ test('WASM unknown outputs are rejected for each API mode', () => {
     result.free();
 });
 
+test('WASM unknown option keys are rejected', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2, 4, 6, 8, 10]);
+
+    assert.throws(() => new fastlowess.Lowess({ fraciton: 0.3 }).fit(x, y));
+    assert.throws(() => new fastlowess.Lowess({ cv: { fractions: [0.3], seed: 7 } }).fit(x, y));
+    assert.throws(() => new fastlowess.Lowess({ intervals: { confidence: 0.95, confidnce: 0.9 } }).fit(x, y));
+    assert.throws(() => new fastlowess.StreamingLowess({}, { chunk_szie: 10 }));
+    assert.throws(() => new fastlowess.OnlineLowess({}, { window_capcity: 10 }));
+
+    const result = new fastlowess.Lowess({ retain_model: true }).fit(x, y);
+    assert.throws(() => result.predict(x, { extrapolation: 'clamp', max_neigbor_distance: 2 }));
+    result.free();
+});
+
 test('WASM result arrays are copies that outlive their owners', () => {
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([2, 4, 6, 8, 10]);
