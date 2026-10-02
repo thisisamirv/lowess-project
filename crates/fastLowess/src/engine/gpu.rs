@@ -2526,6 +2526,7 @@ impl GpuExecutor {
         self.reset_buffers_inner(x, y, config, robustness_method, scaling_method, false, None);
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn reset_buffers_inner(
         &mut self,
         x: &[f32],

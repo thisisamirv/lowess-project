@@ -162,6 +162,7 @@ impl CVKind {
         )
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn run_with_weights<T, F, P>(
         self,
         x: &[T],
@@ -510,6 +511,7 @@ impl CVKind {
         Ok(Self::select_best_fraction(fractions, &cv_scores))
     }
 
+    #[allow(clippy::too_many_arguments)]
     // Perform leave-one-out cross-validation (LOOCV).
     fn leave_one_out_cross_validation<T, F, P>(
         x: &[T],

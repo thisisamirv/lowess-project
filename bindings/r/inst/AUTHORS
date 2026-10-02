@@ -156,6 +156,10 @@ Package: dispatch2 (0.3.1)
 Authors: Mads Marquart <mads@marquart.dk>, Mary <mary@mary.zone>
 License: Zlib OR Apache-2.0 OR MIT
 ----------------------------------------
+Package: dlib (0.5.3)
+Authors: Elinor Berger <elinor@safaradeg.net>
+License: MIT
+----------------------------------------
 Package: document-features (0.2.12)
 Authors: Slint Developers <info@slint.dev>
 License: MIT OR Apache-2.0
@@ -228,6 +232,18 @@ Package: getrandom (0.4.3)
 Authors: The Rand Project Developers
 License: MIT OR Apache-2.0
 ----------------------------------------
+Package: gl_generator (0.14.0)
+Authors: Brendan Zabarauskas <bjzaba@yahoo.com.au>, Corey Richardson, Arseny Kapoulkine
+License: Apache-2.0
+----------------------------------------
+Package: glow (0.17.0)
+Authors: Joshua Groves <josh@joshgroves.com>, Dzmitry Malyshau <kvarkus@gmail.com>
+License: MIT OR Apache-2.0 OR Zlib
+----------------------------------------
+Package: glutin_wgl_sys (0.6.1)
+Authors: Kirill Chibisov <contact@kchibisov.com>
+License: Apache-2.0
+----------------------------------------
 Package: gpu-allocator (0.28.0)
 Authors: Traverse Research <opensource@traverseresearch.nl>
 License: MIT OR Apache-2.0
@@ -264,8 +280,8 @@ Package: jni-macros (0.22.4)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: jni-sys (0.4.1)
-Authors: Steven Fackler <sfackler@gmail.com>, Robert Bragg <robert@sixbynine.org>
+Package: jni-sys (0.3.1)
+Authors: Steven Fackler <sfackler@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
 Package: jni-sys-macros (0.4.1)
@@ -275,6 +291,14 @@ License: MIT OR Apache-2.0
 Package: js-sys (0.3.106)
 Authors: The wasm-bindgen Developers
 License: MIT OR Apache-2.0
+----------------------------------------
+Package: khronos-egl (6.0.0)
+Authors: Timothée Haudebourg <author@haudebourg.net>, Sean Kerr <sean@metatomic.io>
+License: MIT/Apache-2.0
+----------------------------------------
+Package: khronos_api (3.1.0)
+Authors: Brendan Zabarauskas <bjzaba@yahoo.com.au>, Corey Richardson, Arseny Kapoulkine, Pierre Krieger <pierre.krieger1708@gmail.com>
+License: Apache-2.0
 ----------------------------------------
 Package: libc (0.2.189)
 Authors: 
@@ -346,6 +370,10 @@ License: MIT
 ----------------------------------------
 Package: ndarray (0.17.2)
 Authors: Ulrik Sverdrup "bluss", Jim Turner
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: ndk-sys (0.6.0+11769913)
+Authors: The Rust Windowing contributors
 License: MIT OR Apache-2.0
 ----------------------------------------
 Package: nohash-hasher (0.2.0)
@@ -432,6 +460,10 @@ Package: pin-project-lite (0.2.17)
 Authors: 
 License: Apache-2.0 OR MIT
 ----------------------------------------
+Package: pkg-config (0.3.34)
+Authors: Alex Crichton <alex@alexcrichton.com>
+License: MIT OR Apache-2.0
+----------------------------------------
 Package: pollster (1.0.1)
 Authors: Joshua Barretto <joshua@jsbarretto.com>
 License: Apache-2.0/MIT
@@ -483,6 +515,10 @@ License: MIT OR Apache-2.0
 Package: r-efi (6.0.0)
 Authors: 
 License: MIT OR Apache-2.0 OR LGPL-2.1-or-later
+----------------------------------------
+Package: range-alloc (0.1.5)
+Authors: the gfx-rs Developers
+License: MIT OR Apache-2.0
 ----------------------------------------
 Package: raw-window-handle (0.6.2)
 Authors: Osspial <osspial@gmail.com>
@@ -580,6 +616,10 @@ Package: slab (0.4.12)
 Authors: Carl Lerche <me@carllerche.com>
 License: MIT
 ----------------------------------------
+Package: slotmap (1.1.1)
+Authors: Orson Peters <orsonpeters@gmail.com>
+License: Zlib
+----------------------------------------
 Package: smallvec (1.16.2)
 Authors: The Servo Project Developers
 License: MIT OR Apache-2.0
@@ -656,6 +696,10 @@ Package: utf8parse (0.2.2)
 Authors: Joe Wilm <joe@jwilm.com>, Christian Duerr <contact@christianduerr.com>
 License: Apache-2.0 OR MIT
 ----------------------------------------
+Package: version_check (0.9.5)
+Authors: Sergio Benitez <sb@sergio.bz>
+License: MIT/Apache-2.0
+----------------------------------------
 Package: walkdir (2.5.0)
 Authors: Andrew Gallant <jamslam@gmail.com>
 License: Unlicense/MIT
@@ -692,6 +736,10 @@ Package: wasm-bindgen-test-shared (0.2.129)
 Authors: The wasm-bindgen Developers
 License: MIT OR Apache-2.0
 ----------------------------------------
+Package: wayland-sys (0.31.11)
+Authors: Elinor Berger <elinor@safaradeg.net>
+License: MIT
+----------------------------------------
 Package: web-sys (0.3.106)
 Authors: The wasm-bindgen Developers
 License: MIT OR Apache-2.0
@@ -705,6 +753,10 @@ Authors: gfx-rs developers
 License: MIT OR Apache-2.0
 ----------------------------------------
 Package: wgpu-core-deps-apple (30.0.1)
+Authors: gfx-rs developers
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: wgpu-core-deps-emscripten (30.0.0)
 Authors: gfx-rs developers
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -778,6 +830,10 @@ License: MIT OR Apache-2.0
 ----------------------------------------
 Package: winnow (0.7.15)
 Authors: 
+License: MIT
+----------------------------------------
+Package: xml-rs (0.8.29)
+Authors: Vladimir Matveev <vmatveev@citrine.cc>
 License: MIT
 ----------------------------------------
 Package: zerocopy (0.8.59)
