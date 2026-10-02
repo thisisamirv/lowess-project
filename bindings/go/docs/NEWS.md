@@ -23,6 +23,9 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Fixed
 
 * Fixed the default `BoundaryPolicy` (`"extend"`) letting synthetic boundary points bias the shared robustness scale estimate used to reweight every point, compounding across robustness iterations.
+* Improved agreement with R/Cleveland on sparse, asymmetric, and high-iteration fits by aligning robustness stopping, local-linear degeneracy handling, neighborhood traversal, delta interpolation, and weighted accumulation.
+* Fixed zero-radius neighborhoods dropping tied observations or accumulating normalized weights in a different order under robust fits.
+* Fixed Gaussian fits clipping the unbounded kernel to the neighbor window and flooring far-tail weights; all observations now contribute under the standard Gaussian formula.
 
 ## 4.1.0
 

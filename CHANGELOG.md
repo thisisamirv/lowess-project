@@ -18,59 +18,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **lowess:**
 
-- Added grouped Predict interval configuration with `.intervals(IntervalsBuilder::new().confidence(level).prediction(level).bootstrap(n))` and `.seed(seed)` for reproducible out-of-sample residual-bootstrap SEs and percentile intervals.
-- Added a full-featured Batch Predict example to the crate-level quick start.
+- Added grouped analytic and residual-bootstrap interval configuration via `.intervals(IntervalsBuilder::new().confidence(level).prediction(level).bootstrap(n))` across Batch fits, Streaming fits, full-update Online fits, and the retained-model `Predict` API introduced in 4.1.0. `IntervalsBuilder` is available from the crate root and prelude; `.seed(seed)` makes out-of-sample bootstrap SEs and percentile intervals reproducible. Bootstrap refits use `custom_bootstrap_pass` in batches of 256, with resampling done beforehand so results do not depend on scheduling. Online incremental mode rejects bootstrap with `StandardErrorRequiresFullUpdateMode`; `n < 2` returns `InvalidBootstrapSamples`. Documented in `crates/lowess/docs/guide/intervals.md`.
+- Added a full-featured quick-start example for the existing Batch `Predict` API.
 - Added crate-level Streaming and Online quick starts covering typical use, full features, result/error handling, and ndarray-to-slice integration examples (ndarray is dev-only).
-- Added `.intervals(IntervalsBuilder::new().confidence(level).prediction(level).bootstrap(n))` to configure analytic or residual-bootstrap intervals as one group in Batch, Streaming, and full-update Online. `IntervalsBuilder` is available from the crate root and prelude.
-- Added `LowessBuilder::outputs(names)` as a grouped replacement for the individual output toggles. Unknown names are collected and reported together by `.build()`.
+- Added grouped output selection via `.outputs(names)` to fit builders and `PredictBuilder` in both Rust crates, replacing individual output toggles. Unknown fit-output names are collected and reported together by `.build()`.
 - Added grouped cross-validation configuration through `CVBuilder` and `.cv(...)`. `CVBuilder` is in the prelude; the internal `CVOptions` result type remains at the crate root.
-- Added `PredictBuilder::outputs(names)` in both Rust crates, supporting `"se"` and `"derivative"` as a grouped replacement for `.return_se()` and `.return_derivative()`.
-- Added residual-bootstrap standard errors and percentile confidence/prediction intervals via `.intervals(IntervalsBuilder::new().bootstrap(n))` (Batch, per-chunk Streaming, and full-update Online per sliding window; also available through `fastLowess`). A distribution-free alternative to the analytic intervals when residual normality is questionable. Online incremental mode rejects it with `StandardErrorRequiresFullUpdateMode`; `n < 2` returns the new `InvalidBootstrapSamples` error. Documented in the crate-level docs and in `crates/lowess/docs/guide/intervals.md`. Bootstrap refits are handed to a new `custom_bootstrap_pass` hook in batches of 256, with all resampling done beforehand so results don't depend on how refits are scheduled.
 
 **fastLowess:**
 
-- Added grouped and residual-bootstrap Predict intervals through the shared Rust API, including parallel CPU refits.
-- Added a full-featured Batch Predict example to the crate-level quick start.
+- Added a full-featured quick-start example for the existing Batch `Predict` API.
 - Added GPU-resident Batch residual-bootstrap sampling, refits, and pointwise SE/percentile reduction. Replicates are processed sequentially on the device without per-replicate readback; GPU draws are reproducible for a given seed but differ from CPU bootstrap draws.
 - Added crate-level Streaming and Online quick starts covering typical use, annotated full-feature options, result/error handling, and ndarray input.
-- Added `.intervals(IntervalsBuilder::new()...)` on Batch, Streaming, and Online Rust entry points, matching the lowess crate's grouped interval configuration.
-- Added residual-bootstrap intervals to Batch `Lowess`, `StreamingLowess`, and full-update `OnlineLowess` via `.intervals(IntervalsBuilder::new().bootstrap(n))`. Batch and Streaming refits run concurrently via `bootstrap_pass_parallel` (Rayon) when `parallel` is on and match sequential results; GPU and Online refits run sequentially. Streaming bootstraps each combined chunk with its incoming overlap; Online bootstraps each sliding window. Documented in the crate-level docs and in `crates/fastLowess/docs/guide/intervals.md`.
+- Added grouped `.intervals(IntervalsBuilder::new()...)` configuration and residual-bootstrap intervals across Batch `Lowess`, Streaming, full-update Online, and retained-model `Predict`. Batch and Streaming CPU refits run concurrently through `bootstrap_pass_parallel` when `parallel` is enabled; GPU and Online refits run sequentially. Streaming bootstraps each combined chunk with its incoming overlap, while Online bootstraps each sliding window. Documented in `crates/fastLowess/docs/guide/intervals.md`.
 - Added `tests/binding_support_tests.rs` (gated on the `dev` feature) covering repeated FFI buffer allocate/read/free cycles, optional buffers, and null-pointer freeing.
 
 **Go:**
 
-- Added grouped `Outputs []string`, `CV *CVOptions`, and `Intervals *IntervalsOptions` for fitting and prediction, with residual-bootstrap intervals across Batch, Streaming, Online, and Predict.
+- Extended the existing Go fit and prediction APIs with grouped `Outputs []string`, `CV *CVOptions`, and `Intervals *IntervalsOptions`, including residual-bootstrap intervals across Batch, Streaming, Online, and Predict.
 
 **Java:**
 
-- Added grouped `outputs(...)`, `cv(CVOptions...)`, and prediction-output APIs while preserving native option mapping.
-- Added `IntervalsOptions` for grouped confidence/prediction levels and residual-bootstrap intervals across Batch, Streaming, full-update Online, and `PredictModel.predict`.
+- Extended the existing Java fit and prediction APIs with grouped `outputs(...)`, `cv(CVOptions...)`, and `IntervalsOptions`, preserving native option mapping and adding residual-bootstrap intervals across Batch, Streaming, full-update Online, and `PredictModel.predict`.
 - Added an "Alternative Software" guide comparing `fastlowess` with Apache Commons Math's `LoessInterpolator`.
 - Added optional `commons-math3` support to the Java snippet runner; unavailable downloads are skipped.
 
 **Julia:**
 
-- Added grouped `outputs` and `cv` keywords for `Lowess`, plus grouped outputs for Streaming/Online constructors and retained-model prediction.
-- Added a grouped `intervals` keyword (`confidence`, `prediction`, `bootstrap`) with residual-bootstrap intervals across `Lowess`, `StreamingLowess`, full-update `OnlineLowess`, and `predict`.
+- Extended the existing Julia fit and retained-model prediction APIs with grouped `outputs`, `cv`, and `intervals` keywords, including residual-bootstrap intervals across `Lowess`, `StreamingLowess`, full-update `OnlineLowess`, and `predict`.
 - Added an "Alternative Software" guide comparing LOWESS in `FastLOWESS.jl` with the more general LOESS implementation in `Loess.jl`.
 - Added optional `Loess.jl` handling to the Julia snippet runner; comparison snippets are skipped when unavailable.
 
 **Node.js:**
 
-- Added grouped `outputs` arrays and nested `cv` option objects for batch, streaming, online, and prediction configuration while preserving legacy fields.
-- Added a grouped `intervals` option (`confidence`, `prediction`, `bootstrap`) with residual-bootstrap intervals across `Lowess`, `StreamingLowess`, full-update `OnlineLowess`, and `LowessResult.predict()`.
+- Extended the existing Node.js fit and prediction APIs with grouped `outputs`, `cv`, and `intervals` options while preserving legacy fields and adding residual-bootstrap intervals to `LowessResult.predict()`.
 
 **Python:**
 
-- Added grouped `outputs` and nested `cv` constructor options, plus grouped prediction outputs, while preserving legacy keyword arguments.
-- Added a grouped `intervals` dict (`confidence`, `prediction`, `bootstrap`) with residual-bootstrap intervals across `Lowess`, `StreamingLowess`, full-update `OnlineLowess`, and `LowessResult.predict()`.
+- Extended the existing Python fit and prediction APIs with grouped `outputs`, `cv`, and `intervals` options while preserving legacy keyword arguments and adding residual-bootstrap intervals to `LowessResult.predict()`.
 - Added an "Alternative Software" guide comparing `fastlowess` with `statsmodels.lowess()`.
 - Added comparison-only `statsmodels` documentation dependency for executable examples.
 
 **R:**
 
 - Added `cv_opts()` to build grouped cross-validation options for `Lowess(cv = ...)`.
-- Added `intervals_opts()` (`confidence`, `prediction`, `bootstrap`) with residual-bootstrap intervals across `Lowess()`, `StreamingLowess()`, full-update `OnlineLowess()`, and `predict()`.
+- Extended the existing R fit and prediction APIs with `intervals_opts()` (`confidence`, `prediction`, `bootstrap`), including residual-bootstrap intervals across `Lowess()`, `StreamingLowess()`, full-update `OnlineLowess()`, and `predict()`.
 - Added unit coverage for `cv_opts()` and output-flag parsing, bringing R package line coverage to 100%.
 - Added `quickcheck` properties covering input-order output, `outputs = "sorted"`, and sparse one-spike initial fits against `stats::lowess`.
 - Bounded broad randomized robustness checks to 12 passes, where branch differences already emerge, while fixed regressions pin long-run roundoff cycles at their original iteration counts.
@@ -80,8 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **WASM:**
 
-- Added grouped `outputs` arrays and nested `cv` option objects for batch, streaming, online, and prediction configuration while preserving legacy fields.
-- Added a grouped `intervals` option (`confidence`, `prediction`, `bootstrap`) with residual-bootstrap intervals across `Lowess`, `StreamingLowess`, full-update `OnlineLowess`, and `LowessResult.predict()`, plus TypeScript declarations for `IntervalsOptions`, `CVOptions`, and `LowessResult.predict()`.
+- Extended the existing WASM fit and prediction APIs with grouped `outputs`, `cv`, and `intervals` options while preserving legacy fields, adding residual-bootstrap intervals to `LowessResult.predict()` and TypeScript declarations for `IntervalsOptions`, `CVOptions`, and `LowessResult.predict()`.
 
 ### Changed
 
@@ -93,7 +83,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **lowess:**
 
-- Standardized Rust Markdown option tables and builder examples to match Batch, Streaming, and Online Full Features argument order.
 - Breaking change: moved CV and residual-bootstrap seeding to one `.seed(seed)` on the outer fit builder; removed nested CV and interval seed setters. A seed alone does not enable bootstrap.
 - Breaking change: removed the individual interval and bootstrap setters in favor of `.intervals(IntervalsBuilder::new()...)`.
 - Breaking change: replaced `CVBuilder::method(...).fractions(...)` with `CVBuilder::new().method(...).fraction(...)`; k-fold with five folds remains the default. Migrated `fastLowess` and validation callers.
@@ -228,7 +217,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added Online `return_se`/`confidence_intervals`/`prediction_intervals` support, with `OnlineOutput` now populating `standard_error` and the four interval bounds in `Full` mode. Using them without `update_mode("full")` now fails at `.build()` with `LowessError::StandardErrorRequiresFullUpdateMode`.
 - Added Streaming `return_se`/`confidence_intervals`/`prediction_intervals` support, computed per chunk and merged across overlaps. `StreamingBuffer` now carries interval scratch state through `process_chunk()`/`finalize()`.
 - Added `return_derivative` to the Batch, Streaming, and Online builders, exposing each point's local slope via `LowessResult::derivative` or `OnlineOutput::derivative`.
-- Added out-of-sample prediction to Batch via `.retain_model(true)` and `Predict::call()`, with configurable standard errors, intervals, derivative output, and extrapolation.
+- Introduced the initial Batch out-of-sample prediction API via `.retain_model(true)` and `Predict::call()`, with configurable standard errors, intervals, derivative output, and extrapolation.
 
 **fastLowess:**
 

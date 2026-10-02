@@ -17,8 +17,12 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
-* Improved agreement with `stats::lowess` on small inputs by preserving its arithmetic order in serial delta interpolation.
-* Fixed the default `boundary_policy` (`"extend"`) letting synthetic boundary points bias the shared robustness scale estimate used to reweight every point, compounding across robustness iterations.
+* Improved agreement with R/Cleveland on sparse, asymmetric, and high-iteration fits by aligning effective-zero robustness stopping, local-linear degeneracy handling, span and endpoint traversal, delta interpolation, and adjusted-weight accumulation.
+* Fixed zero-radius neighborhoods dropping tied observations and accumulating adjusted weights in an order that diverged under robust iterations; the full tied run now contributes using reference-compatible normalization.
+* Fixed synthetic boundary observations contaminating robustness scale estimates; padding points still receive weights but no longer affect the scale used to reweight original observations.
+* Fixed Gaussian fits clipping the unbounded kernel to the nearest-neighbor window and flooring far-tail weights; the neighbor count now selects bandwidth while all observations contribute under the standard Gaussian formula.
+* Fixed parallel fits refitting tied x-values separately when `delta = 0`, which made results on all-tied input depend on the refit position.
+* Fixed GPU Gaussian fits and standard errors to include observations across the full input range.
 
 ## 4.1.0
 
