@@ -11,19 +11,22 @@ use num_traits::Float;
 use pollster::block_on;
 use std::any::{Any, TypeId};
 use std::borrow::Cow;
+use std::cell::RefCell;
 use std::cmp::Ordering::Equal;
+use std::collections::HashMap;
 use std::fmt::Debug;
 use std::mem::size_of;
+use std::ops::Deref;
 use std::slice::from_raw_parts;
 use std::sync::Mutex;
 use wgpu::util::DeviceExt;
 use wgpu::{
-    BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayoutDescriptor,
+    BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindGroupLayoutDescriptor,
     BindGroupLayoutEntry, BindingType, Buffer, BufferBindingType, BufferDescriptor, BufferUsages,
-    CommandEncoder, CommandEncoderDescriptor, ComputePassDescriptor, ComputePipeline,
+    CommandEncoder, CommandEncoderDescriptor, ComputePass, ComputePassDescriptor, ComputePipeline,
     ComputePipelineDescriptor, Device, DeviceDescriptor, Features, Instance, InstanceDescriptor,
-    Limits, MapMode, PipelineCompilationOptions, PipelineLayoutDescriptor, PollType, Queue,
-    RequestAdapterOptions, ShaderModuleDescriptor, ShaderSource, ShaderStages,
+    Limits, MapMode, PipelineCompilationOptions, PipelineLayout, PipelineLayoutDescriptor,
+    PollType, Queue, RequestAdapterOptions, ShaderModuleDescriptor, ShaderSource, ShaderStages,
 };
 
 // Export dependencies from lowess crate
@@ -380,51 +383,36 @@ fn clear_histogram(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
 @compute @workgroup_size(1)
 fn accumulate_score() {
-    // Current SSE is in reduction[0]
     let sse = reduction[0];
     let idx = w_config.radix_pass;
-    
-    // Compute RMSE for this fold: sqrt(SSE / n_test)
     let n_test = f32(config.n_test);
     let mse = sse / max(1.0, n_test);
     let rmse = sqrt(mse);
-    
     cv_results[idx] += rmse;
 }
 
-// -----------------------------------------------------------------------------
-// Kernel: Score CV Points
-// Performs binary search and interpolation for test points against fitted training data
-// -----------------------------------------------------------------------------
+// Score held-out CV points by interpolating the sorted training fit.
 @compute @workgroup_size(256)
 fn score_cv_points(@builtin(global_invocation_id) global_id: vec3<u32>) {
-    let j = global_id.x; // Index into test set
-    // test_errors length is number of test points
+    let j = global_id.x;
     let n_test = arrayLength(&test_errors);
     if (j >= n_test) { return; }
 
     let xt = x_test[j];
     let yt = y_test[j];
-    
-    // x and y_smooth are the TRAINING data (sorted)
-    let n_train = config.n;
     var pred = 0.0;
     let start_idx = config.pad_len;
     let end_idx = config.pad_len + config.orig_n;
-    
-    // Bounds check / Extrapolation (using original unpadded range)
+
     if (config.orig_n == 0u) {
         pred = 0.0;
-    } else if (n_train > 0u && xt <= x[start_idx]) {
+    } else if (xt <= x[start_idx]) {
         pred = y_smooth[start_idx];
-    } else if (n_train > 0u && xt >= x[end_idx - 1u]) {
+    } else if (xt >= x[end_idx - 1u]) {
         pred = y_smooth[end_idx - 1u];
     } else {
-        // Binary search for bracket [L, R] within original range
         var left = start_idx;
         var right = end_idx - 1u;
-        
-        // Loop limit for safety
         for (var k = 0u; k < 64u; k++) {
             if (right - left <= 1u) { break; }
             let mid = (left + right) / 2u;
@@ -434,59 +422,35 @@ fn score_cv_points(@builtin(global_invocation_id) global_id: vec3<u32>) {
                 right = mid;
             }
         }
-        
         pred = get_interpolated_value(xt, x[left], x[right], y_smooth[left], y_smooth[right]);
     }
-    
-    let err = yt - pred;
-    test_errors[j] = err * err;
+
+    let error = yt - pred;
+    test_errors[j] = error * error;
 }
 
-// -----------------------------------------------------------------------------
-// Kernel: Sum SSE Reduction
-// Reduces test_errors to partial sums in reduction buffer
-// -----------------------------------------------------------------------------
 var<workgroup> s_reduce: array<f32, 256>;
 
-
-// -----------------------------------------------------------------------------
-// Kernel: Update Scale Config
-// Copies median result from reduction buffer to w_config
-// Mode 0: Update Scale
-// Mode 1: Update Median Center
-// -----------------------------------------------------------------------------
 @compute @workgroup_size(1)
 fn update_scale_config() {
     if (w_config.converged == 1u) { return; }
-    
-    // Median result (from radix select)
+
     let median_abs = reduction[1048575u];
-    
     if (w_config.update_mode == MODE_UPDATE_SCALE) {
-        // Robustness fallback logic (matches RobustnessMethod::compute_scale)
         let mean_abs = w_config.mean_abs;
-        
         let scale_threshold_const: f32 = 1e-7;
         let min_tuned_scale_const: f32 = 1e-12;
         let threshold = max(scale_threshold_const * mean_abs, min_tuned_scale_const);
-        
         if (median_abs <= threshold) {
             w_config.scale = max(mean_abs, median_abs);
         } else {
             w_config.scale = median_abs;
         }
-        
-        // Ensure scale is at least MIN_TUNED_SCALE
         w_config.scale = max(w_config.scale, min_tuned_scale_const);
     } else {
         w_config.median_center = median_abs;
     }
 }
-
-// -----------------------------------------------------------------------------
-// Kernel 1: Fit at Anchors
-// Dispatched with num_anchors threads
-// -----------------------------------------------------------------------------
 
 struct FitSums {
     w: f32,
@@ -503,70 +467,50 @@ fn fit_anchors(
     @builtin(workgroup_id) workgroup_id: vec3<u32>,
     @builtin(local_invocation_id) local_id: vec3<u32>
 ) {
-    // 2D dispatch support: (N % 65535, N / 65535, 1) to support >65535 anchors
     let anchor_id = workgroup_id.x + workgroup_id.y * 65535u;
     let tid = local_id.x;
-    
     let num_anchors_explicit = w_config.anchor_count;
-
-    if (anchor_id >= num_anchors_explicit) {
-        return;
-    }
+    if (anchor_id >= num_anchors_explicit) { return; }
 
     let i = anchor_indices[anchor_id];
     let x_i = x[i];
-    
     let win = get_adaptive_window(i, x_i);
     let left = win.x;
     let right = win.y;
     let unbounded_kernel = is_unbounded_kernel();
-
-    // Check degenerate window
     let d_max = max(abs(x_i - x[left]), abs(x_i - x[right]));
     if (d_max <= 1e-12 && !unbounded_kernel) {
-        if (tid == 0u) {
-            anchor_output[anchor_id] = y[i];
-        }
+        if (tid == 0u) { anchor_output[anchor_id] = y[i]; }
         return;
     }
 
-    // Initialize local sums
     var my_w = 0.0;
     var my_wx = 0.0;
     var my_wxx = 0.0;
     var my_wy = 0.0;
     var my_wxy = 0.0;
     var my_y_window = 0.0;
-
     let d_max_val = max(d_max, 1e-12);
     let inv_d_max = 1.0 / d_max_val;
     let h1 = 0.001 * d_max_val;
     let h9 = 0.999 * d_max_val;
-    
     let iter = w_config.iteration;
     let fit_left = select(left, 0u, unbounded_kernel);
     let fit_right = select(right, config.n - 1u, unbounded_kernel);
 
-    // Parallel accumulation loop
-    // Stride is 256 (workgroup size)
     for (var k = fit_left + tid; k <= fit_right; k += 256u) {
         let xj = x[k];
         let yj = y[k];
         let rel_x = xj - x_i;
         let dist = abs(rel_x);
-        
-        if (k >= left && k <= right) {
-            my_y_window += yj;
-        }
-        
+        if (k >= left && k <= right) { my_y_window += yj; }
+
         if (unbounded_kernel || dist <= h9) {
             var kernel_w = 1.0;
             if (unbounded_kernel || dist > h1) {
                 let u = dist * inv_d_max;
-                let u2 = u * u;
-                kernel_w = get_kernel_weight(u, u2);
+                kernel_w = get_kernel_weight(u, u * u);
             }
-            
             var rw = 1.0;
             if (iter > 0u) {
                 rw = robustness_weights[k];
@@ -1724,51 +1668,75 @@ pub enum PrepareOp {
     MAD = 2,
 }
 
+pub struct GpuPipeline {
+    pipeline: ComputePipeline,
+    layout_id: usize,
+}
+
+impl Deref for GpuPipeline {
+    type Target = ComputePipeline;
+
+    fn deref(&self) -> &Self::Target {
+        &self.pipeline
+    }
+}
+
+struct PipelineLayoutInfo {
+    pipeline_layout: PipelineLayout,
+    bind_group_layouts: Vec<BindGroupLayout>,
+    bindings: [Vec<u32>; 4],
+    dynamic_offsets: [u32; 4],
+}
+
+struct PipelineBindGroups {
+    variants: [Option<[BindGroup; 4]>; 4],
+}
+
 pub struct GpuPipelines {
-    pub fit_pipelines: [ComputePipeline; 7],
-    pub interpolate_pipeline: ComputePipeline,
-    pub weight_pipeline: ComputePipeline,
-    pub reduce_max_diff_pipeline: ComputePipeline,
-    pub reduce_sum_abs_pipeline: ComputePipeline,
-    pub reduce_block_sums_pipeline: ComputePipeline,
-    pub finalize_scale_pipeline: ComputePipeline,
-    pub init_weights_pipeline: ComputePipeline,
-    pub compute_intervals_pipeline: ComputePipeline,
-    pub prepare_pipelines: [ComputePipeline; 3],
-    pub radix_histogram_pipeline: ComputePipeline,
-    pub radix_scan_histograms_pipeline: ComputePipeline,
-    pub radix_scatter_pipeline: ComputePipeline,
-    pub radix_copy_back_pipeline: ComputePipeline,
-    pub select_median_pipeline: ComputePipeline,
-    pub sort_x_histogram_pipeline: ComputePipeline,
-    pub sort_x_scan_histograms_pipeline: ComputePipeline,
-    pub sort_x_scatter_pipeline: ComputePipeline,
-    pub sort_x_copy_back_pipeline: ComputePipeline,
-    pub se_pipeline: ComputePipeline,
-    pub pad_pipeline: ComputePipeline,
-    pub update_scale_config_pipeline: ComputePipeline,
-    pub clear_histogram_pipeline: ComputePipeline,
-    pub control_pipelines: [ComputePipeline; 7],
-    pub scan_block_pipeline: ComputePipeline,
-    pub scan_add_base_pipeline: ComputePipeline,
-    pub scan_aux_pipeline: ComputePipeline,
-    pub compact_anchors_pipeline: ComputePipeline,
-    pub mark_anchor_candidates_pipeline: ComputePipeline,
-    pub finalize_sum_pipeline: ComputePipeline,
-    pub score_cv_points_pipeline: ComputePipeline,
-    pub sum_sse_reduction_pipeline: ComputePipeline,
-    pub interval_bounds_pipeline: ComputePipeline,
-    pub sum_residuals_squared_pipeline: ComputePipeline,
-    pub cv_prepare_mask_pipeline: ComputePipeline,
-    pub cv_mark_test_indices_pipeline: ComputePipeline,
-    pub cv_prepare_compact_flags_train_pipeline: ComputePipeline,
-    pub cv_prepare_compact_flags_test_pipeline: ComputePipeline,
-    pub cv_compact_training_pipeline: ComputePipeline,
-    pub cv_compact_test_pipeline: ComputePipeline,
-    pub accumulate_score_pipeline: ComputePipeline,
-    pub init_shuffle_pipeline: ComputePipeline,
-    pub compute_residual_sd_pipeline: ComputePipeline,
-    pub update_dispatch_pipeline: ComputePipeline,
+    pub fit_pipelines: [GpuPipeline; 7],
+    pub interpolate_pipeline: GpuPipeline,
+    pub weight_pipeline: GpuPipeline,
+    pub reduce_max_diff_pipeline: GpuPipeline,
+    pub reduce_sum_abs_pipeline: GpuPipeline,
+    pub reduce_block_sums_pipeline: GpuPipeline,
+    pub finalize_scale_pipeline: GpuPipeline,
+    pub init_weights_pipeline: GpuPipeline,
+    pub compute_intervals_pipeline: GpuPipeline,
+    pub prepare_pipelines: [GpuPipeline; 3],
+    pub radix_histogram_pipeline: GpuPipeline,
+    pub radix_scan_histograms_pipeline: GpuPipeline,
+    pub radix_scatter_pipeline: GpuPipeline,
+    pub radix_copy_back_pipeline: GpuPipeline,
+    pub select_median_pipeline: GpuPipeline,
+    pub sort_x_histogram_pipeline: GpuPipeline,
+    pub sort_x_scan_histograms_pipeline: GpuPipeline,
+    pub sort_x_scatter_pipeline: GpuPipeline,
+    pub sort_x_copy_back_pipeline: GpuPipeline,
+    pub se_pipeline: GpuPipeline,
+    pub pad_pipeline: GpuPipeline,
+    pub update_scale_config_pipeline: GpuPipeline,
+    pub clear_histogram_pipeline: GpuPipeline,
+    pub control_pipelines: [GpuPipeline; 7],
+    pub scan_block_pipeline: GpuPipeline,
+    pub scan_add_base_pipeline: GpuPipeline,
+    pub scan_aux_pipeline: GpuPipeline,
+    pub compact_anchors_pipeline: GpuPipeline,
+    pub mark_anchor_candidates_pipeline: GpuPipeline,
+    pub finalize_sum_pipeline: GpuPipeline,
+    pub score_cv_points_pipeline: GpuPipeline,
+    pub sum_sse_reduction_pipeline: GpuPipeline,
+    pub interval_bounds_pipeline: GpuPipeline,
+    pub sum_residuals_squared_pipeline: GpuPipeline,
+    pub cv_prepare_mask_pipeline: GpuPipeline,
+    pub cv_mark_test_indices_pipeline: GpuPipeline,
+    pub cv_prepare_compact_flags_train_pipeline: GpuPipeline,
+    pub cv_prepare_compact_flags_test_pipeline: GpuPipeline,
+    pub cv_compact_training_pipeline: GpuPipeline,
+    pub cv_compact_test_pipeline: GpuPipeline,
+    pub accumulate_score_pipeline: GpuPipeline,
+    pub init_shuffle_pipeline: GpuPipeline,
+    pub compute_residual_sd_pipeline: GpuPipeline,
+    pub update_dispatch_pipeline: GpuPipeline,
 }
 
 pub struct GpuBuffers {
@@ -1857,14 +1825,8 @@ pub struct GpuExecutor {
     // Pipelines
     pub pipelines: GpuPipelines,
     pub buffers: GpuBuffers,
-
-    // Bind Groups
-    bg0_data: Option<BindGroup>,
-    bg1_topo: Option<BindGroup>,
-    bg2_state: Option<BindGroup>,
-    bg3_aux: Option<BindGroup>,
-    bg3_median: Option<BindGroup>, // Alternate BG3 with median_buffer as target
-    bg0_test: Option<BindGroup>,   // BG0 variants for CV (Test Data as Target)
+    pipeline_layouts: Vec<PipelineLayoutInfo>,
+    pipeline_bind_groups: RefCell<Vec<PipelineBindGroups>>,
 
     n: u32,
     orig_n: u32,
@@ -1877,6 +1839,36 @@ pub struct GpuExecutor {
 }
 impl GpuExecutor {
     pub async fn new() -> Result<Self, String> {
+        let naga_module = wgpu::naga::front::wgsl::parse_str(SHADER_SOURCE)
+            .map_err(|error| format!("GPU shader parse failed: {error:?}"))?;
+        let naga_info = wgpu::naga::valid::Validator::new(
+            wgpu::naga::valid::ValidationFlags::all(),
+            wgpu::naga::valid::Capabilities::all(),
+        )
+        .validate(&naga_module)
+        .map_err(|error| format!("GPU shader validation failed: {error:?}"))?;
+
+        let mut entry_bindings = HashMap::new();
+        for (entry_index, entry) in naga_module.entry_points.iter().enumerate() {
+            let entry_info = naga_info.get_entry_point(entry_index);
+            let mut groups: [Vec<u32>; 4] = std::array::from_fn(|_| Vec::new());
+            for (handle, global) in naga_module.global_variables.iter() {
+                if entry_info[handle].is_empty() {
+                    continue;
+                }
+                if let Some(binding) = global.binding.as_ref()
+                    && let Some(group) = groups.get_mut(binding.group as usize)
+                {
+                    group.push(binding.binding);
+                }
+            }
+            for group in &mut groups {
+                group.sort_unstable();
+                group.dedup();
+            }
+            entry_bindings.insert(entry.name.clone(), groups);
+        }
+
         let instance = Instance::new(InstanceDescriptor::new_without_display_handle());
         let adapter = instance
             .request_adapter(&RequestAdapterOptions::default())
@@ -1884,37 +1876,50 @@ impl GpuExecutor {
 
         let adapter = adapter.map_err(|_| "No GPU adapter found")?;
 
-        // The pipeline layout binds 30 storage buffers + 1 uniform buffer = 31 total across all
-        // bind groups. Both per-type and combined limits must be requested explicitly, since
-        // Limits::default() sets the combined cap at 28 (the WebGPU baseline).
-        const REQUIRED_STORAGE_BUFFERS_PER_SHADER_STAGE: u32 = 30;
-        // 30 storage + 1 uniform = 31; round up to 32 for headroom.
-        const REQUIRED_BUFFERS_PER_SHADER_STAGE: u32 = 32;
+        // Each compute pipeline receives only the bindings its entry point actually uses.
+        // Request the maximum per-entry-point requirement, not the union of all shader globals.
+        let required_storage_buffers = entry_bindings
+            .values()
+            .map(|groups| {
+                groups
+                    .iter()
+                    .enumerate()
+                    .map(|(group, bindings)| {
+                        bindings
+                            .iter()
+                            .filter(|&&binding| !(group == 0 && binding == 0))
+                            .count()
+                    })
+                    .sum::<usize>() as u32
+            })
+            .max()
+            .unwrap_or(1);
+        let required_buffers = entry_bindings
+            .values()
+            .map(|groups| groups.iter().map(Vec::len).sum::<usize>() as u32)
+            .max()
+            .unwrap_or(1);
 
         let adapter_limits = adapter.limits();
-        if adapter_limits.max_storage_buffers_per_shader_stage
-            < REQUIRED_STORAGE_BUFFERS_PER_SHADER_STAGE
-        {
+        if adapter_limits.max_storage_buffers_per_shader_stage < required_storage_buffers {
             return Err(format!(
-                "GPU adapter only supports {} storage buffers per shader stage, but {} are required",
-                adapter_limits.max_storage_buffers_per_shader_stage,
-                REQUIRED_STORAGE_BUFFERS_PER_SHADER_STAGE
+                "GPU adapter only supports {} storage buffers per shader stage, but the largest LOWESS compute pass requires {}",
+                adapter_limits.max_storage_buffers_per_shader_stage, required_storage_buffers
             ));
         }
         if adapter_limits.max_buffers_and_acceleration_structures_per_shader_stage
-            < REQUIRED_BUFFERS_PER_SHADER_STAGE
+            < required_buffers
         {
             return Err(format!(
-                "GPU adapter only supports {} total buffer bindings per shader stage, but {} are required",
+                "GPU adapter only supports {} total buffer bindings per shader stage, but the largest LOWESS compute pass requires {}",
                 adapter_limits.max_buffers_and_acceleration_structures_per_shader_stage,
-                REQUIRED_BUFFERS_PER_SHADER_STAGE
+                required_buffers
             ));
         }
 
         let limits = Limits {
-            max_storage_buffers_per_shader_stage: REQUIRED_STORAGE_BUFFERS_PER_SHADER_STAGE,
-            max_buffers_and_acceleration_structures_per_shader_stage:
-                REQUIRED_BUFFERS_PER_SHADER_STAGE,
+            max_storage_buffers_per_shader_stage: required_storage_buffers,
+            max_buffers_and_acceleration_structures_per_shader_stage: required_buffers,
             ..Default::default()
         };
 
@@ -1933,7 +1938,7 @@ impl GpuExecutor {
             source: ShaderSource::Wgsl(SHADER_SOURCE.into()),
         });
 
-        // Layout Helpers
+        // Layout helpers; reflection limits each pipeline layout to its own resources.
         let layout_entry = |binding: u32, read_only: bool| BindGroupLayoutEntry {
             binding,
             visibility: ShaderStages::COMPUTE,
@@ -1967,77 +1972,62 @@ impl GpuExecutor {
             count: None,
         };
 
-        // Layouts
-        let bind_group_layout_0 = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-            label: Some("BG0 Data"),
-            entries: &[
-                uniform_entry(0, true), // Dynamic Config
-                layout_entry(1, false),
-                layout_entry(2, false),
-                layout_entry(3, false),
-                layout_entry(4, false),
-                layout_entry(5, false),
-            ],
-        });
-
-        let bind_group_layout_1 = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-            label: Some("BG1 Topo"),
-            entries: &[
-                layout_entry(0, false),
-                layout_entry(1, false),
-                layout_entry(2, false),
-                layout_entry(3, false),
-                layout_entry(4, false),
-                layout_entry(5, false),
-                layout_entry(6, false),
-                layout_entry(7, false),
-                layout_entry(8, false),
-            ],
-        });
-
-        let bind_group_layout_2 = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-            label: Some("BG2 State"),
-            entries: &[
-                layout_entry(0, false),
-                layout_entry(1, false),
-                layout_entry(2, false),
-                layout_entry(3, false),
-                layout_entry(4, false),
-                layout_entry(5, false),
-                layout_entry(6, false),
-                layout_entry(7, false),
-            ],
-        });
-
-        let bind_group_layout_3 = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-            label: Some("BG3 Aux"),
-            entries: &[
-                layout_entry_dynamic(0, false), // Dynamic WeightConfig
-                layout_entry(1, false),
-                layout_entry(2, false),
-                layout_entry(3, false),
-                layout_entry(4, false),
-                layout_entry(5, false),
-                layout_entry(6, false),
-                layout_entry(7, false),
-            ],
-        });
-
-        let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
-            label: Some("Pipeline Layout"),
-            bind_group_layouts: &[
-                Some(&bind_group_layout_0),
-                Some(&bind_group_layout_1),
-                Some(&bind_group_layout_2),
-                Some(&bind_group_layout_3),
-            ],
-            ..Default::default()
-        });
-
+        let layout_cache = RefCell::new(HashMap::<String, usize>::new());
+        let pipeline_layouts = RefCell::new(Vec::<PipelineLayoutInfo>::new());
         let cp = |label: &str, entry: &str, constants: &[(&str, f64)]| {
-            device.create_compute_pipeline(&ComputePipelineDescriptor {
+            let layout_id = if let Some(&id) = layout_cache.borrow().get(entry) {
+                id
+            } else {
+                let bindings = entry_bindings
+                    .get(entry)
+                    .expect("reflected WGSL entry point")
+                    .clone();
+                let mut bind_group_layouts = Vec::with_capacity(4);
+                let mut dynamic_offsets = [0; 4];
+                for (group, group_bindings) in bindings.iter().enumerate() {
+                    let entries: Vec<BindGroupLayoutEntry> = group_bindings
+                        .iter()
+                        .map(|&binding| {
+                            if group == 0 && binding == 0 {
+                                dynamic_offsets[group] = 1;
+                                uniform_entry(binding, true)
+                            } else if group == 3 && binding == 0 {
+                                dynamic_offsets[group] = 1;
+                                layout_entry_dynamic(binding, false)
+                            } else {
+                                layout_entry(binding, false)
+                            }
+                        })
+                        .collect();
+                    bind_group_layouts.push(device.create_bind_group_layout(
+                        &BindGroupLayoutDescriptor {
+                            label: Some(entry),
+                            entries: &entries,
+                        },
+                    ));
+                }
+                let layout_refs: Vec<Option<&BindGroupLayout>> =
+                    bind_group_layouts.iter().map(Some).collect();
+                let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
+                    label: Some(entry),
+                    bind_group_layouts: &layout_refs,
+                    ..Default::default()
+                });
+                let mut layouts = pipeline_layouts.borrow_mut();
+                let id = layouts.len();
+                layouts.push(PipelineLayoutInfo {
+                    pipeline_layout,
+                    bind_group_layouts,
+                    bindings,
+                    dynamic_offsets,
+                });
+                layout_cache.borrow_mut().insert(entry.to_string(), id);
+                id
+            };
+            let layouts = pipeline_layouts.borrow();
+            let pipeline = device.create_compute_pipeline(&ComputePipelineDescriptor {
                 label: Some(label),
-                layout: Some(&pipeline_layout),
+                layout: Some(&layouts[layout_id].pipeline_layout),
                 module: &shader,
                 entry_point: Some(entry),
                 compilation_options: PipelineCompilationOptions {
@@ -2045,184 +2035,193 @@ impl GpuExecutor {
                     ..Default::default()
                 },
                 cache: None,
-            })
+            });
+            GpuPipeline {
+                pipeline,
+                layout_id,
+            }
         };
         let cps = |entry: &str| cp(entry, entry, &[]);
 
+        let pipelines = GpuPipelines {
+            fit_pipelines: [0, 1, 2, 3, 4, 5, 6]
+                .map(|i| cp("fit_anchors", "fit_anchors", &[("WEIGHT_FN", i as f64)])),
+            interpolate_pipeline: cps("interpolate"),
+            weight_pipeline: cps("update_weights"),
+            reduce_max_diff_pipeline: cp(
+                "reduce_max_diff",
+                "reduce_generic",
+                &[("REDUCE_OP", 1.0), ("REDUCE_SRC", 3.0)],
+            ),
+            reduce_sum_abs_pipeline: cp(
+                "reduce_sum_abs",
+                "reduce_generic",
+                &[("REDUCE_OP", 0.0), ("REDUCE_SRC", 0.0)],
+            ),
+            reduce_block_sums_pipeline: cp(
+                "reduce_block_sums",
+                "reduce_generic",
+                &[("REDUCE_OP", 0.0), ("REDUCE_SRC", 4.0)],
+            ),
+            finalize_scale_pipeline: cp(
+                "finalize_scale",
+                "finalize_reduction_generic",
+                &[("FINALIZE_MODE", 0.0)],
+            ),
+            finalize_sum_pipeline: cp(
+                "finalize_sum",
+                "finalize_reduction_generic",
+                &[("FINALIZE_MODE", 1.0)],
+            ),
+            score_cv_points_pipeline: cps("score_cv_points"),
+            sum_sse_reduction_pipeline: cp(
+                "sum_sse_reduction",
+                "reduce_generic",
+                &[("REDUCE_OP", 0.0), ("REDUCE_SRC", 2.0)],
+            ),
+            sum_residuals_squared_pipeline: cp(
+                "sum_residuals_squared",
+                "reduce_generic",
+                &[("REDUCE_OP", 0.0), ("REDUCE_SRC", 1.0)],
+            ),
+            cv_prepare_mask_pipeline: cps("cv_prepare_mask"),
+            cv_mark_test_indices_pipeline: cps("cv_mark_test_indices"),
+            cv_prepare_compact_flags_train_pipeline: cp(
+                "cv_prepare_compact_flags_train",
+                "cv_prepare_compact_flags",
+                &[("CV_TARGET", 0.0)],
+            ),
+            cv_prepare_compact_flags_test_pipeline: cp(
+                "cv_prepare_compact_flags_test",
+                "cv_prepare_compact_flags",
+                &[("CV_TARGET", 1.0)],
+            ),
+            cv_compact_training_pipeline: cp(
+                "cv_compact_training",
+                "cv_compact_data",
+                &[("CV_TARGET", 0.0)],
+            ),
+            cv_compact_test_pipeline: cp(
+                "cv_compact_test",
+                "cv_compact_data",
+                &[("CV_TARGET", 1.0)],
+            ),
+            accumulate_score_pipeline: cps("accumulate_score"),
+            init_shuffle_pipeline: cps("init_shuffle"),
+            compute_residual_sd_pipeline: cps("compute_residual_sd"),
+            update_dispatch_pipeline: cps("update_dispatch"),
+            interval_bounds_pipeline: cps("compute_interval_bounds"),
+            init_weights_pipeline: cps("init_weights"),
+            compute_intervals_pipeline: cps("compute_intervals"),
+            prepare_pipelines: [
+                cp(
+                    "prepare_mar_residuals",
+                    "prepare_reduction_generic",
+                    &[("PREPARE_MODE", 0.0)],
+                ),
+                cp(
+                    "prepare_residuals_signed",
+                    "prepare_reduction_generic",
+                    &[("PREPARE_MODE", 1.0)],
+                ),
+                cp(
+                    "prepare_mad_residuals",
+                    "prepare_reduction_generic",
+                    &[("PREPARE_MODE", 2.0)],
+                ),
+            ],
+            radix_histogram_pipeline: cp(
+                "radix_histogram",
+                "sort_histogram_block",
+                &[("SORT_MODE", 0.0)],
+            ),
+            radix_scan_histograms_pipeline: cps("radix_prefix_sum"),
+            radix_scatter_pipeline: cp(
+                "radix_scatter",
+                "sort_scatter_parallel",
+                &[("SORT_MODE", 0.0)],
+            ),
+            radix_copy_back_pipeline: cp(
+                "radix_copy_back",
+                "sort_copy_back_generic",
+                &[("SORT_MODE", 0.0)],
+            ),
+            select_median_pipeline: cps("select_median"),
+            sort_x_histogram_pipeline: cp(
+                "sort_x_histogram",
+                "sort_histogram_block",
+                &[("SORT_MODE", 1.0)],
+            ),
+            sort_x_scan_histograms_pipeline: cp(
+                "sort_x_scan_histograms",
+                "radix_prefix_sum",
+                &[("SORT_MODE", 1.0)],
+            ),
+            sort_x_scatter_pipeline: cp(
+                "sort_x_scatter",
+                "sort_scatter_parallel",
+                &[("SORT_MODE", 1.0)],
+            ),
+            sort_x_copy_back_pipeline: cp(
+                "sort_x_copy_back",
+                "sort_copy_back_generic",
+                &[("SORT_MODE", 1.0)],
+            ),
+            se_pipeline: cps("compute_se"),
+            pad_pipeline: cps("pad_data"),
+            update_scale_config_pipeline: cps("update_scale_config"),
+            clear_histogram_pipeline: cps("clear_histogram"),
+            control_pipelines: [
+                cp(
+                    "control_reset_radix",
+                    "control_pass_generic",
+                    &[("CONTROL_OP", 0.0)],
+                ),
+                cp(
+                    "control_inc_radix",
+                    "control_pass_generic",
+                    &[("CONTROL_OP", 1.0)],
+                ),
+                cp(
+                    "control_set_scale_mode",
+                    "control_pass_generic",
+                    &[("CONTROL_OP", 2.0)],
+                ),
+                cp(
+                    "control_set_center_mode",
+                    "control_pass_generic",
+                    &[("CONTROL_OP", 3.0)],
+                ),
+                cp(
+                    "control_finalize_conv",
+                    "control_pass_generic",
+                    &[("CONTROL_OP", 4.0)],
+                ),
+                cp(
+                    "control_prepare_next",
+                    "control_pass_generic",
+                    &[("CONTROL_OP", 5.0)],
+                ),
+                cp(
+                    "control_init",
+                    "control_pass_generic",
+                    &[("CONTROL_OP", 6.0)],
+                ),
+            ],
+            scan_block_pipeline: cps("scan_block"),
+            scan_add_base_pipeline: cps("scan_add_base"),
+            scan_aux_pipeline: cps("scan_aux_parallel"),
+            compact_anchors_pipeline: cps("compact_anchors"),
+            mark_anchor_candidates_pipeline: cps("mark_anchor_candidates"),
+        };
+        let pipeline_layouts = pipeline_layouts.into_inner();
+
         Ok(Self {
-            pipelines: GpuPipelines {
-                fit_pipelines: [0, 1, 2, 3, 4, 5, 6]
-                    .map(|i| cp("fit_anchors", "fit_anchors", &[("WEIGHT_FN", i as f64)])),
-                interpolate_pipeline: cps("interpolate"),
-                weight_pipeline: cps("update_weights"),
-                reduce_max_diff_pipeline: cp(
-                    "reduce_max_diff",
-                    "reduce_generic",
-                    &[("REDUCE_OP", 1.0), ("REDUCE_SRC", 3.0)],
-                ),
-                reduce_sum_abs_pipeline: cp(
-                    "reduce_sum_abs",
-                    "reduce_generic",
-                    &[("REDUCE_OP", 0.0), ("REDUCE_SRC", 0.0)],
-                ),
-                reduce_block_sums_pipeline: cp(
-                    "reduce_block_sums",
-                    "reduce_generic",
-                    &[("REDUCE_OP", 0.0), ("REDUCE_SRC", 4.0)],
-                ),
-                finalize_scale_pipeline: cp(
-                    "finalize_scale",
-                    "finalize_reduction_generic",
-                    &[("FINALIZE_MODE", 0.0)],
-                ),
-                finalize_sum_pipeline: cp(
-                    "finalize_sum",
-                    "finalize_reduction_generic",
-                    &[("FINALIZE_MODE", 1.0)],
-                ),
-                score_cv_points_pipeline: cps("score_cv_points"),
-                sum_sse_reduction_pipeline: cp(
-                    "sum_sse_reduction",
-                    "reduce_generic",
-                    &[("REDUCE_OP", 0.0), ("REDUCE_SRC", 2.0)],
-                ),
-                sum_residuals_squared_pipeline: cp(
-                    "sum_residuals_squared",
-                    "reduce_generic",
-                    &[("REDUCE_OP", 0.0), ("REDUCE_SRC", 1.0)],
-                ),
-                cv_prepare_mask_pipeline: cps("cv_prepare_mask"),
-                cv_mark_test_indices_pipeline: cps("cv_mark_test_indices"),
-                cv_prepare_compact_flags_train_pipeline: cp(
-                    "cv_prepare_compact_flags_train",
-                    "cv_prepare_compact_flags",
-                    &[("CV_TARGET", 0.0)],
-                ),
-                cv_prepare_compact_flags_test_pipeline: cp(
-                    "cv_prepare_compact_flags_test",
-                    "cv_prepare_compact_flags",
-                    &[("CV_TARGET", 1.0)],
-                ),
-                cv_compact_training_pipeline: cp(
-                    "cv_compact_training",
-                    "cv_compact_data",
-                    &[("CV_TARGET", 0.0)],
-                ),
-                cv_compact_test_pipeline: cp(
-                    "cv_compact_test",
-                    "cv_compact_data",
-                    &[("CV_TARGET", 1.0)],
-                ),
-                accumulate_score_pipeline: cps("accumulate_score"),
-                init_shuffle_pipeline: cps("init_shuffle"),
-                compute_residual_sd_pipeline: cps("compute_residual_sd"),
-                update_dispatch_pipeline: cps("update_dispatch"),
-                interval_bounds_pipeline: cps("compute_interval_bounds"),
-                init_weights_pipeline: cps("init_weights"),
-                compute_intervals_pipeline: cps("compute_intervals"),
-                prepare_pipelines: [
-                    cp(
-                        "prepare_mar_residuals",
-                        "prepare_reduction_generic",
-                        &[("PREPARE_MODE", 0.0)],
-                    ),
-                    cp(
-                        "prepare_residuals_signed",
-                        "prepare_reduction_generic",
-                        &[("PREPARE_MODE", 1.0)],
-                    ),
-                    cp(
-                        "prepare_mad_residuals",
-                        "prepare_reduction_generic",
-                        &[("PREPARE_MODE", 2.0)],
-                    ),
-                ],
-                radix_histogram_pipeline: cp(
-                    "radix_histogram",
-                    "sort_histogram_block",
-                    &[("SORT_MODE", 0.0)],
-                ),
-                radix_scan_histograms_pipeline: cps("radix_prefix_sum"),
-                radix_scatter_pipeline: cp(
-                    "radix_scatter",
-                    "sort_scatter_parallel",
-                    &[("SORT_MODE", 0.0)],
-                ),
-                radix_copy_back_pipeline: cp(
-                    "radix_copy_back",
-                    "sort_copy_back_generic",
-                    &[("SORT_MODE", 0.0)],
-                ),
-                select_median_pipeline: cps("select_median"),
-                sort_x_histogram_pipeline: cp(
-                    "sort_x_histogram",
-                    "sort_histogram_block",
-                    &[("SORT_MODE", 1.0)],
-                ),
-                sort_x_scan_histograms_pipeline: cp(
-                    "sort_x_scan_histograms",
-                    "radix_prefix_sum",
-                    &[("SORT_MODE", 1.0)],
-                ),
-                sort_x_scatter_pipeline: cp(
-                    "sort_x_scatter",
-                    "sort_scatter_parallel",
-                    &[("SORT_MODE", 1.0)],
-                ),
-                sort_x_copy_back_pipeline: cp(
-                    "sort_x_copy_back",
-                    "sort_copy_back_generic",
-                    &[("SORT_MODE", 1.0)],
-                ),
-                se_pipeline: cps("compute_se"),
-                pad_pipeline: cps("pad_data"),
-                update_scale_config_pipeline: cps("update_scale_config"),
-                clear_histogram_pipeline: cps("clear_histogram"),
-                control_pipelines: [
-                    cp(
-                        "control_reset_radix",
-                        "control_pass_generic",
-                        &[("CONTROL_OP", 0.0)],
-                    ),
-                    cp(
-                        "control_inc_radix",
-                        "control_pass_generic",
-                        &[("CONTROL_OP", 1.0)],
-                    ),
-                    cp(
-                        "control_set_scale_mode",
-                        "control_pass_generic",
-                        &[("CONTROL_OP", 2.0)],
-                    ),
-                    cp(
-                        "control_set_center_mode",
-                        "control_pass_generic",
-                        &[("CONTROL_OP", 3.0)],
-                    ),
-                    cp(
-                        "control_finalize_conv",
-                        "control_pass_generic",
-                        &[("CONTROL_OP", 4.0)],
-                    ),
-                    cp(
-                        "control_prepare_next",
-                        "control_pass_generic",
-                        &[("CONTROL_OP", 5.0)],
-                    ),
-                    cp(
-                        "control_init",
-                        "control_pass_generic",
-                        &[("CONTROL_OP", 6.0)],
-                    ),
-                ],
-                scan_block_pipeline: cps("scan_block"),
-                scan_add_base_pipeline: cps("scan_add_base"),
-                scan_aux_pipeline: cps("scan_aux_parallel"),
-                compact_anchors_pipeline: cps("compact_anchors"),
-                mark_anchor_candidates_pipeline: cps("mark_anchor_candidates"),
-            },
+            pipelines,
             device,
             queue,
+            pipeline_layouts,
+            pipeline_bind_groups: RefCell::new(Vec::new()),
             buffers: GpuBuffers {
                 config_buffer: None,
                 x_buffer: None,
@@ -2259,12 +2258,6 @@ impl GpuExecutor {
                 cv_results_buffer: None,
                 staging_buffer: None,
             },
-            bg0_data: None,
-            bg1_topo: None,
-            bg2_state: None,
-            bg3_aux: None,
-            bg3_median: None,
-            bg0_test: None,
             n: 0,
             orig_n: 0,
             num_anchors: 0,
@@ -2274,199 +2267,251 @@ impl GpuExecutor {
         })
     }
 
-    fn build_bg(&self, label: &str, layout_idx: u32, buffers: &[&Buffer]) -> BindGroup {
-        let entries: Vec<BindGroupEntry> = buffers
+    fn create_pipeline_bind_group(
+        &self,
+        layout_id: usize,
+        group: usize,
+        variant: usize,
+    ) -> BindGroup {
+        let info = &self.pipeline_layouts[layout_id];
+        let entries: Vec<BindGroupEntry> = info.bindings[group]
             .iter()
-            .enumerate()
-            .map(|(i, buf)| BindGroupEntry {
-                binding: i as u32,
-                resource: buf.as_entire_binding(),
+            .map(|&binding| {
+                let resource = match group {
+                    0 => match binding {
+                        0 => wgpu::BindingResource::Buffer(wgpu::BufferBinding {
+                            buffer: self.buffers.config_buffer.as_ref().unwrap(),
+                            offset: 0,
+                            size: std::num::NonZeroU64::new(256),
+                        }),
+                        1 => if variant & 1 != 0 {
+                            self.buffers.x_test_buffer.as_ref().unwrap()
+                        } else {
+                            self.buffers.x_buffer.as_ref().unwrap()
+                        }
+                        .as_entire_binding(),
+                        2 => if variant & 1 != 0 {
+                            self.buffers.y_test_buffer.as_ref().unwrap()
+                        } else {
+                            self.buffers.y_buffer.as_ref().unwrap()
+                        }
+                        .as_entire_binding(),
+                        3 => self
+                            .buffers
+                            .anchor_indices_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        4 => self
+                            .buffers
+                            .anchor_output_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        5 => self
+                            .buffers
+                            .indirect_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        _ => unreachable!("unexpected group 0 binding {binding}"),
+                    },
+                    1 => match binding {
+                        0 => self
+                            .buffers
+                            .interval_map_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        1 => self
+                            .buffers
+                            .x_test_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        2 => self
+                            .buffers
+                            .y_test_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        3 => self
+                            .buffers
+                            .test_errors_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        4 => self
+                            .buffers
+                            .x_global_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        5 => self
+                            .buffers
+                            .y_global_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        6 => self
+                            .buffers
+                            .shuffled_indices_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        7 => self
+                            .buffers
+                            .cv_test_mask_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        8 => self
+                            .buffers
+                            .cv_results_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        _ => unreachable!("unexpected group 1 binding {binding}"),
+                    },
+                    2 => match binding {
+                        0 => self
+                            .buffers
+                            .weights_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        1 => self
+                            .buffers
+                            .y_smooth_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        2 => self
+                            .buffers
+                            .residuals_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        3 => self
+                            .buffers
+                            .y_prev_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        4 => self
+                            .buffers
+                            .conf_lower_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        5 => self
+                            .buffers
+                            .conf_upper_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        6 => self
+                            .buffers
+                            .pred_lower_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        7 => self
+                            .buffers
+                            .pred_upper_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        _ => unreachable!("unexpected group 2 binding {binding}"),
+                    },
+                    3 => match binding {
+                        0 => self
+                            .buffers
+                            .w_config_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        1 if variant & 2 != 0 => self
+                            .buffers
+                            .median_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        1 => self
+                            .buffers
+                            .reduction_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        2 => self
+                            .buffers
+                            .std_errors_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        3 => self
+                            .buffers
+                            .histogram_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        4 => self
+                            .buffers
+                            .global_max_diff_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        5 => self
+                            .buffers
+                            .scan_block_sums_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        6 => self
+                            .buffers
+                            .scan_indices_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        7 => self
+                            .buffers
+                            .workgroup_histograms_buffer
+                            .as_ref()
+                            .unwrap()
+                            .as_entire_binding(),
+                        _ => unreachable!("unexpected group 3 binding {binding}"),
+                    },
+                    _ => unreachable!("unexpected bind group {group}"),
+                };
+                BindGroupEntry { binding, resource }
             })
             .collect();
-
         self.device.create_bind_group(&BindGroupDescriptor {
-            label: Some(label),
-            layout: &self.pipelines.fit_pipelines[0].get_bind_group_layout(layout_idx),
+            label: Some("Reflected pipeline bind group"),
+            layout: &info.bind_group_layouts[group],
             entries: &entries,
         })
     }
 
-    fn create_bg0(&self, x: &Buffer, y: &Buffer) -> BindGroup {
-        let config_buf = self.buffers.config_buffer.as_ref().unwrap();
-
-        let entries = [
-            BindGroupEntry {
-                binding: 0, // Config (Dynamic)
-                resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
-                    buffer: config_buf,
-                    offset: 0,
-                    size: std::num::NonZeroU64::new(256), // Limit window to stride
-                }),
-            },
-            BindGroupEntry {
-                binding: 1,
-                resource: x.as_entire_binding(),
-            },
-            BindGroupEntry {
-                binding: 2,
-                resource: y.as_entire_binding(),
-            },
-            BindGroupEntry {
-                binding: 3,
-                resource: self
-                    .buffers
-                    .anchor_indices_buffer
-                    .as_ref()
-                    .unwrap()
-                    .as_entire_binding(),
-            },
-            BindGroupEntry {
-                binding: 4,
-                resource: self
-                    .buffers
-                    .anchor_output_buffer
-                    .as_ref()
-                    .unwrap()
-                    .as_entire_binding(),
-            },
-            BindGroupEntry {
-                binding: 5,
-                resource: self
-                    .buffers
-                    .indirect_buffer
-                    .as_ref()
-                    .unwrap()
-                    .as_entire_binding(),
-            },
-        ];
-
-        self.device.create_bind_group(&BindGroupDescriptor {
-            label: Some("BG0"),
-            layout: &self.pipelines.fit_pipelines[0].get_bind_group_layout(0),
-            entries: &entries,
-        })
+    fn pipeline_bind_groups(&self, layout_id: usize, variant: usize) -> [BindGroup; 4] {
+        if self.pipeline_bind_groups.borrow()[layout_id].variants[variant].is_none() {
+            let groups = std::array::from_fn(|group| {
+                self.create_pipeline_bind_group(layout_id, group, variant)
+            });
+            self.pipeline_bind_groups.borrow_mut()[layout_id].variants[variant] = Some(groups);
+        }
+        self.pipeline_bind_groups.borrow()[layout_id].variants[variant]
+            .as_ref()
+            .unwrap()
+            .clone()
     }
 
-    fn create_bg1(&self) -> BindGroup {
-        self.build_bg(
-            "BG1",
-            1,
-            &[
-                self.buffers.interval_map_buffer.as_ref().unwrap(),
-                self.buffers.x_test_buffer.as_ref().unwrap(),
-                self.buffers.y_test_buffer.as_ref().unwrap(),
-                self.buffers.test_errors_buffer.as_ref().unwrap(),
-                self.buffers.x_global_buffer.as_ref().unwrap(),
-                self.buffers.y_global_buffer.as_ref().unwrap(),
-                self.buffers.shuffled_indices_buffer.as_ref().unwrap(),
-                self.buffers.cv_test_mask_buffer.as_ref().unwrap(),
-                self.buffers.cv_results_buffer.as_ref().unwrap(),
-            ],
-        )
-    }
-
-    fn create_bg2(&self) -> BindGroup {
-        self.build_bg(
-            "BG2",
-            2,
-            &[
-                self.buffers.weights_buffer.as_ref().unwrap(),
-                self.buffers.y_smooth_buffer.as_ref().unwrap(),
-                self.buffers.residuals_buffer.as_ref().unwrap(),
-                self.buffers.y_prev_buffer.as_ref().unwrap(),
-                self.buffers.conf_lower_buffer.as_ref().unwrap(),
-                self.buffers.conf_upper_buffer.as_ref().unwrap(),
-                self.buffers.pred_lower_buffer.as_ref().unwrap(),
-                self.buffers.pred_upper_buffer.as_ref().unwrap(),
-            ],
-        )
-    }
-
-    fn create_bg3(&self, median_buffer_override: Option<&Buffer>) -> BindGroup {
-        let label = if median_buffer_override.is_some() {
-            "BG3_Median"
-        } else {
-            "BG3"
-        };
-        let binding1 = median_buffer_override
-            .unwrap_or_else(|| self.buffers.reduction_buffer.as_ref().unwrap());
-
-        let w_config_buf = self.buffers.w_config_buffer.as_ref().unwrap();
-
-        let entries = [
-            BindGroupEntry {
-                binding: 0, // Weight Config (Dynamic)
-                resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
-                    buffer: w_config_buf,
-                    offset: 0,
-                    size: std::num::NonZeroU64::new(256), // Limit window to stride
-                }),
-            },
-            BindGroupEntry {
-                binding: 1,
-                resource: binding1.as_entire_binding(),
-            },
-            BindGroupEntry {
-                binding: 2,
-                resource: self
-                    .buffers
-                    .std_errors_buffer
-                    .as_ref()
-                    .unwrap()
-                    .as_entire_binding(),
-            },
-            BindGroupEntry {
-                binding: 3,
-                resource: self
-                    .buffers
-                    .histogram_buffer
-                    .as_ref()
-                    .unwrap()
-                    .as_entire_binding(),
-            },
-            BindGroupEntry {
-                binding: 4,
-                resource: self
-                    .buffers
-                    .global_max_diff_buffer
-                    .as_ref()
-                    .unwrap()
-                    .as_entire_binding(),
-            },
-            BindGroupEntry {
-                binding: 5,
-                resource: self
-                    .buffers
-                    .scan_block_sums_buffer
-                    .as_ref()
-                    .unwrap()
-                    .as_entire_binding(),
-            },
-            BindGroupEntry {
-                binding: 6,
-                resource: self
-                    .buffers
-                    .scan_indices_buffer
-                    .as_ref()
-                    .unwrap()
-                    .as_entire_binding(),
-            },
-            BindGroupEntry {
-                binding: 7,
-                resource: self
-                    .buffers
-                    .workgroup_histograms_buffer
-                    .as_ref()
-                    .unwrap()
-                    .as_entire_binding(),
-            },
-        ];
-
-        self.device.create_bind_group(&BindGroupDescriptor {
-            label: Some(label),
-            layout: &self.pipelines.fit_pipelines[0].get_bind_group_layout(3),
-            entries: &entries,
-        })
+    fn reset_pipeline_bind_groups(&self) {
+        let mut cache = self.pipeline_bind_groups.borrow_mut();
+        cache.clear();
+        cache.resize_with(self.pipeline_layouts.len(), || PipelineBindGroups {
+            variants: std::array::from_fn(|_| None),
+        });
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -2503,11 +2548,11 @@ impl GpuExecutor {
         self.w_config_offset = 0;
         self.current_config = Some(config);
 
-        let mut bg_needs_update = false;
+        let mut buffers_changed = false;
 
         macro_rules! ensure {
             ($label:expr, $buf:expr, $size:expr, $usage:expr) => {
-                bg_needs_update |=
+                buffers_changed |=
                     GpuBuffers::ensure_capacity(&self.device, $label, $buf, $size, $usage);
             };
         }
@@ -2582,15 +2627,7 @@ impl GpuExecutor {
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
         );
 
-        if bg_needs_update || self.bg0_data.is_none() {
-            self.bg0_data = Some(self.create_bg0(
-                self.buffers.x_buffer.as_ref().unwrap(),
-                self.buffers.y_buffer.as_ref().unwrap(),
-            ));
-        }
-
         // Group 1: Interval Map
-        bg_needs_update = false;
         let interval_bytes = (n_padded as usize * 8) as u64;
         ensure!(
             "IntervalMap",
@@ -2608,12 +2645,8 @@ impl GpuExecutor {
             );
         }
 
-        if bg_needs_update || self.bg1_topo.is_none() {
-            // Ensure test buffers are initialized (even if empty) to satisfy layout
-            self.ensure_bg1_dummy_buffers();
-
-            self.bg1_topo = Some(self.create_bg1());
-        }
+        // Initialize CV-only buffers for reflected entry points that bind them.
+        self.ensure_bg1_dummy_buffers();
 
         if let Some(weights) = custom_weights {
             let mut padded_case_weights = vec![1.0f32; n_padded as usize];
@@ -2627,7 +2660,6 @@ impl GpuExecutor {
         }
 
         // Group 2: State
-        bg_needs_update = false;
         ensure!(
             "RobustnessWeights",
             &mut self.buffers.weights_buffer,
@@ -2677,12 +2709,7 @@ impl GpuExecutor {
             BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
         );
 
-        if bg_needs_update || self.bg2_state.is_none() {
-            self.bg2_state = Some(self.create_bg2());
-        }
-
         // Group 3: Aux
-        bg_needs_update = false;
         ensure!(
             "WConfig",
             &mut self.buffers.w_config_buffer,
@@ -2738,21 +2765,15 @@ impl GpuExecutor {
             BufferUsages::STORAGE | BufferUsages::COPY_DST
         );
 
-        if bg_needs_update || self.bg3_aux.is_none() {
-            self.bg3_aux = Some(self.create_bg3(None));
-        }
-
-        bg_needs_update |= GpuBuffers::ensure_capacity(
-            &self.device,
+        ensure!(
             "Median",
             &mut self.buffers.median_buffer,
             reduction_size,
-            BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
+            BufferUsages::STORAGE | BufferUsages::COPY_SRC | BufferUsages::COPY_DST
         );
 
-        if bg_needs_update || self.bg3_median.is_none() {
-            self.bg3_median =
-                Some(self.create_bg3(Some(self.buffers.median_buffer.as_ref().unwrap())));
+        if buffers_changed {
+            self.reset_pipeline_bind_groups();
         }
 
         // Initialize WeightConfig
@@ -2811,34 +2832,24 @@ impl GpuExecutor {
         }
     }
 
-    pub fn record_full_scan(
-        &self,
-        encoder: &mut CommandEncoder,
-        count: u32,
-        bg0: Option<&BindGroup>,
-        bg3: &BindGroup,
-    ) {
-        let actual_bg0 = bg0.unwrap_or(self.bg0_data.as_ref().unwrap());
+    pub fn record_full_scan(&self, encoder: &mut CommandEncoder, count: u32, variant: usize) {
         self.record_pipeline_with_custom_bgs(
             encoder,
             &self.pipelines.scan_block_pipeline,
             DispatchMode::Direct(count.div_ceil(256)),
-            actual_bg0,
-            bg3,
+            variant,
         );
         self.record_pipeline_with_custom_bgs(
             encoder,
             &self.pipelines.scan_aux_pipeline,
             DispatchMode::Direct(1),
-            actual_bg0,
-            bg3,
+            variant,
         );
         self.record_pipeline_with_custom_bgs(
             encoder,
             &self.pipelines.scan_add_base_pipeline,
             DispatchMode::Direct(count.div_ceil(256)),
-            actual_bg0,
-            bg3,
+            variant,
         );
     }
 
@@ -2846,36 +2857,27 @@ impl GpuExecutor {
         &self,
         encoder: &mut CommandEncoder,
         count: u32,
-        flags_pipeline: &ComputePipeline,
-        compact_pipeline: &ComputePipeline,
-        bg0: Option<&BindGroup>,
+        flags_pipeline: &GpuPipeline,
+        compact_pipeline: &GpuPipeline,
+        variant: usize,
     ) {
-        let actual_bg0 = bg0.unwrap_or(self.bg0_data.as_ref().unwrap());
-
         // 1. Prepare Flags
         self.record_pipeline_with_custom_bgs(
             encoder,
             flags_pipeline,
             DispatchMode::Direct(count.div_ceil(256)),
-            actual_bg0,
-            self.bg3_aux.as_ref().unwrap(),
+            variant,
         );
 
         // 2. Scan
-        self.record_full_scan(
-            encoder,
-            count,
-            Some(actual_bg0),
-            self.bg3_aux.as_ref().unwrap(),
-        );
+        self.record_full_scan(encoder, count, variant);
 
         // 3. Compact
         self.record_pipeline_with_custom_bgs(
             encoder,
             compact_pipeline,
             DispatchMode::Direct(count.div_ceil(256)),
-            actual_bg0,
-            self.bg3_aux.as_ref().unwrap(),
+            variant,
         );
     }
 
@@ -2902,7 +2904,7 @@ impl GpuExecutor {
             n_full,
             &self.pipelines.cv_prepare_compact_flags_train_pipeline,
             &self.pipelines.cv_compact_training_pipeline,
-            None, // Uses bg0_data
+            0,
         );
 
         // 4. Compact Test Set (Writes to X_Test/Y_Test via bg0_test)
@@ -2911,7 +2913,7 @@ impl GpuExecutor {
             n_full,
             &self.pipelines.cv_prepare_compact_flags_test_pipeline,
             &self.pipelines.cv_compact_test_pipeline,
-            self.bg0_test.as_ref(),
+            1,
         );
     }
 
@@ -2930,7 +2932,7 @@ impl GpuExecutor {
             self.n,
             &self.pipelines.cv_prepare_compact_flags_train_pipeline,
             &self.pipelines.cv_compact_training_pipeline,
-            None,
+            0,
         );
 
         // Standard radix sort on x/y
@@ -2982,8 +2984,7 @@ impl GpuExecutor {
             encoder,
             &self.pipelines.score_cv_points_pipeline,
             DispatchMode::Direct(n_test.div_ceil(256)),
-            self.bg0_test.as_ref().unwrap(),
-            self.bg3_aux.as_ref().unwrap(),
+            1,
         );
     }
 
@@ -3010,58 +3011,66 @@ impl GpuExecutor {
     pub fn record_pipeline(
         &self,
         encoder: &mut CommandEncoder,
-        pipeline: &ComputePipeline,
+        pipeline: &GpuPipeline,
         dispatch: DispatchMode,
     ) {
-        self.record_pipeline_with_bg3(encoder, pipeline, dispatch, self.bg3_aux.as_ref().unwrap());
+        self.record_pipeline_with_bg3(encoder, pipeline, dispatch, 0);
     }
 
     pub fn record_pipeline_with_bg3(
         &self,
         encoder: &mut CommandEncoder,
-        pipeline: &ComputePipeline,
+        pipeline: &GpuPipeline,
         dispatch: DispatchMode,
-        bg3: &BindGroup,
+        variant: usize,
     ) {
-        self.record_pipeline_with_custom_bgs(
-            encoder,
-            pipeline,
-            dispatch,
-            self.bg0_data.as_ref().unwrap(),
-            bg3,
-        );
+        self.record_pipeline_with_custom_bgs(encoder, pipeline, dispatch, variant);
     }
 
     pub fn record_pipeline_with_custom_bgs(
         &self,
         encoder: &mut CommandEncoder,
-        pipeline: &ComputePipeline,
+        pipeline: &GpuPipeline,
         dispatch: DispatchMode,
-        bg0: &BindGroup,
-        bg3: &BindGroup,
+        variant: usize,
     ) {
         let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
-        pass.set_pipeline(pipeline);
-        pass.set_bind_group(0, bg0, &[self.config_offset]);
-        pass.set_bind_group(1, self.bg1_topo.as_ref().unwrap(), &[]);
-        pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
-        pass.set_bind_group(3, bg3, &[self.w_config_offset]);
+        self.bind_pipeline_groups(&mut pass, pipeline, variant, self.config_offset);
         match dispatch {
             DispatchMode::Direct(n) => pass.dispatch_workgroups(n, 1, 1),
             DispatchMode::Indirect(offset) => {
                 drop(pass);
                 self.copy_indirect_dispatch_args(encoder, offset);
                 let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
-                pass.set_pipeline(pipeline);
-                pass.set_bind_group(0, bg0, &[self.config_offset]);
-                pass.set_bind_group(1, self.bg1_topo.as_ref().unwrap(), &[]);
-                pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
-                pass.set_bind_group(3, bg3, &[self.w_config_offset]);
+                self.bind_pipeline_groups(&mut pass, pipeline, variant, self.config_offset);
                 pass.dispatch_workgroups_indirect(
                     self.buffers.indirect_dispatch_buffer.as_ref().unwrap(),
                     offset,
                 );
             }
+        }
+    }
+
+    fn bind_pipeline_groups(
+        &self,
+        pass: &mut ComputePass<'_>,
+        pipeline: &GpuPipeline,
+        variant: usize,
+        config_offset: u32,
+    ) {
+        let groups = self.pipeline_bind_groups(pipeline.layout_id, variant);
+        let dynamic_offsets = self.pipeline_layouts[pipeline.layout_id].dynamic_offsets;
+        let config_offsets = [config_offset];
+        let weight_config_offsets = [self.w_config_offset];
+
+        pass.set_pipeline(&pipeline.pipeline);
+        for (group_index, group) in groups.iter().enumerate() {
+            let offsets = match group_index {
+                0 if dynamic_offsets[group_index] > 0 => &config_offsets[..],
+                3 if dynamic_offsets[group_index] > 0 => &weight_config_offsets[..],
+                _ => &[],
+            };
+            pass.set_bind_group(group_index as u32, group, offsets);
         }
     }
 
@@ -3088,8 +3097,8 @@ impl GpuExecutor {
     fn record_reduction(
         &self,
         encoder: &mut CommandEncoder,
-        reduce_pipeline: &ComputePipeline,
-        finalize_pipeline: &ComputePipeline,
+        reduce_pipeline: &GpuPipeline,
+        finalize_pipeline: &GpuPipeline,
         n: u32,
         hierarchical_offset: Option<u32>,
     ) {
@@ -3116,11 +3125,12 @@ impl GpuExecutor {
                 // Re-bind to secondary config (Hierarchical)
                 {
                     let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
-                    pass.set_pipeline(&self.pipelines.reduce_block_sums_pipeline);
-                    pass.set_bind_group(0, self.bg0_data.as_ref().unwrap(), &[offset]);
-                    pass.set_bind_group(1, self.bg1_topo.as_ref().unwrap(), &[]);
-                    pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
-                    pass.set_bind_group(3, self.bg3_aux.as_ref().unwrap(), &[self.w_config_offset]);
+                    self.bind_pipeline_groups(
+                        &mut pass,
+                        &self.pipelines.reduce_block_sums_pipeline,
+                        0,
+                        offset,
+                    );
                     pass.dispatch_workgroups(num_blocks.div_ceil(256), 1, 1);
                 }
                 final_offset_to_use = offset;
@@ -3130,12 +3140,8 @@ impl GpuExecutor {
         // 4. Finalize
         {
             let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
-            pass.set_pipeline(finalize_pipeline);
             // Use the offset (Main or Hierarchical)
-            pass.set_bind_group(0, self.bg0_data.as_ref().unwrap(), &[final_offset_to_use]);
-            pass.set_bind_group(1, self.bg1_topo.as_ref().unwrap(), &[]);
-            pass.set_bind_group(2, self.bg2_state.as_ref().unwrap(), &[]);
-            pass.set_bind_group(3, self.bg3_aux.as_ref().unwrap(), &[self.w_config_offset]);
+            self.bind_pipeline_groups(&mut pass, finalize_pipeline, 0, final_offset_to_use);
             pass.dispatch_workgroups(1, 1, 1);
         }
     }
@@ -3154,25 +3160,23 @@ impl GpuExecutor {
         prepare_op: PrepareOp,
         control_op: ControlOp,
     ) {
-        let bg3_med = self.bg3_median.as_ref().unwrap();
-
         // 1. Prepare
         self.record_pipeline_with_bg3(
             encoder,
             &self.pipelines.prepare_pipelines[prepare_op as usize],
             DispatchMode::Direct(self.n.div_ceil(256)),
-            bg3_med,
+            2,
         );
 
         // 2. Sort
-        self.record_radix_sort_passes(encoder, Some(bg3_med));
+        self.record_radix_sort_passes(encoder, 2);
 
         // 3. Select Median
         self.record_pipeline_with_bg3(
             encoder,
             &self.pipelines.select_median_pipeline,
             DispatchMode::Direct(1),
-            bg3_med,
+            2,
         );
 
         // 4. Set Mode (Center or Scale)
@@ -3183,7 +3187,7 @@ impl GpuExecutor {
             encoder,
             &self.pipelines.update_scale_config_pipeline,
             DispatchMode::Direct(1),
-            bg3_med,
+            2,
         );
     }
 
@@ -3207,12 +3211,12 @@ pub enum DispatchMode {
 
 #[derive(Clone, Copy)]
 pub struct RadixSortConfig<'a> {
-    pub hist_pipeline: &'a ComputePipeline,
+    pub hist_pipeline: &'a GpuPipeline,
     pub hist_dispatch: DispatchMode,
-    pub scan_histograms_pipeline: &'a ComputePipeline,
-    pub scatter_pipeline: &'a ComputePipeline,
+    pub scan_histograms_pipeline: &'a GpuPipeline,
+    pub scatter_pipeline: &'a GpuPipeline,
     pub scatter_dispatch: DispatchMode,
-    pub copy_back_pipeline: &'a ComputePipeline,
+    pub copy_back_pipeline: &'a GpuPipeline,
     pub copy_dispatch: DispatchMode,
 }
 
@@ -3247,7 +3251,7 @@ impl GpuExecutor {
             self.n,
             &self.pipelines.mark_anchor_candidates_pipeline,
             &self.pipelines.compact_anchors_pipeline,
-            None,
+            0,
         );
 
         // 2. Compute intervals (parallel) - Slot 3
@@ -3285,7 +3289,7 @@ impl GpuExecutor {
                 encoder,
                 &self.pipelines.update_dispatch_pipeline,
                 DispatchMode::Direct(1), // Always run updater
-                self.bg3_aux.as_ref().unwrap(),
+                0,
             );
 
             if i > 0 {
@@ -3403,37 +3407,37 @@ impl GpuExecutor {
         results_capacity: u64,
     ) {
         let n = x.len() as u64;
-        let mut bg_needs_update = false;
+        let mut buffers_changed = false;
 
-        bg_needs_update |= GpuBuffers::ensure_capacity(
+        buffers_changed |= GpuBuffers::ensure_capacity(
             &self.device,
             "X Global",
             &mut self.buffers.x_global_buffer,
             n * 4,
             BufferUsages::STORAGE | BufferUsages::COPY_DST,
         );
-        bg_needs_update |= GpuBuffers::ensure_capacity(
+        buffers_changed |= GpuBuffers::ensure_capacity(
             &self.device,
             "Y Global",
             &mut self.buffers.y_global_buffer,
             n * 4,
             BufferUsages::STORAGE | BufferUsages::COPY_DST,
         );
-        bg_needs_update |= GpuBuffers::ensure_capacity(
+        buffers_changed |= GpuBuffers::ensure_capacity(
             &self.device,
             "Shuffled Indices",
             &mut self.buffers.shuffled_indices_buffer,
             n * 4,
             BufferUsages::STORAGE | BufferUsages::COPY_DST,
         );
-        bg_needs_update |= GpuBuffers::ensure_capacity(
+        buffers_changed |= GpuBuffers::ensure_capacity(
             &self.device,
             "CV Test Mask",
             &mut self.buffers.cv_test_mask_buffer,
             n * 4,
             BufferUsages::STORAGE | BufferUsages::COPY_DST | BufferUsages::COPY_SRC,
         );
-        bg_needs_update |= GpuBuffers::ensure_capacity(
+        buffers_changed |= GpuBuffers::ensure_capacity(
             &self.device,
             "CV Results",
             &mut self.buffers.cv_results_buffer,
@@ -3456,51 +3460,44 @@ impl GpuExecutor {
             0,
             bytemuck::cast_slice(shuffled_indices),
         );
-        if bg_needs_update || self.bg1_topo.is_none() {
-            // Ensure ALL buffers for BG1 are initialized (even if empty) to satisfy layout
-            self.ensure_bg1_dummy_buffers();
-
-            // Recreate BG1 which now contains CV global data at bindings 4-7
-            self.bg1_topo = Some(self.create_bg1());
-        }
-
-        if bg_needs_update || self.bg0_test.is_none() {
-            // Create BG0 variant that points to X_Test / Y_Test instead of main X/Y
-            self.bg0_test = Some(self.create_bg0(
-                self.buffers.x_test_buffer.as_ref().unwrap(),
-                self.buffers.y_test_buffer.as_ref().unwrap(),
-            ));
+        self.ensure_bg1_dummy_buffers();
+        if buffers_changed {
+            self.reset_pipeline_bind_groups();
         }
     }
 
     pub fn record_generic_radix_sort(
         &self,
         encoder: &mut CommandEncoder,
-        bg3: Option<&BindGroup>,
+        variant: usize,
         config: RadixSortConfig,
     ) {
         // Reset Radix Pass
         self.record_control(encoder, ControlOp::ResetRadix);
 
-        let bg = bg3.unwrap_or(self.bg3_aux.as_ref().unwrap());
         for _ in 0..4 {
             // 1. Clear Histogram
             self.record_pipeline_with_bg3(
                 encoder,
                 &self.pipelines.clear_histogram_pipeline,
                 DispatchMode::Direct(1), // All 256 bins cleared in one workgroup
-                bg,
+                variant,
             );
 
             // 2. Histogram
-            self.record_pipeline_with_bg3(encoder, config.hist_pipeline, config.hist_dispatch, bg);
+            self.record_pipeline_with_bg3(
+                encoder,
+                config.hist_pipeline,
+                config.hist_dispatch,
+                variant,
+            );
 
             // 3. Prefix Sum (Global and Workgroup)
             self.record_pipeline_with_bg3(
                 encoder,
                 config.scan_histograms_pipeline,
                 DispatchMode::Direct(256), // One workgroup per digit
-                bg,
+                variant,
             );
 
             // 4. Scatter
@@ -3508,7 +3505,7 @@ impl GpuExecutor {
                 encoder,
                 config.scatter_pipeline,
                 config.scatter_dispatch,
-                bg,
+                variant,
             );
 
             // 5. Copy Back
@@ -3516,7 +3513,7 @@ impl GpuExecutor {
                 encoder,
                 config.copy_back_pipeline,
                 config.copy_dispatch,
-                bg,
+                variant,
             );
 
             // 6. Increment Radix Pass
@@ -3524,7 +3521,7 @@ impl GpuExecutor {
         }
     }
 
-    pub fn record_radix_sort_passes(&self, encoder: &mut CommandEncoder, bg3: Option<&BindGroup>) {
+    pub fn record_radix_sort_passes(&self, encoder: &mut CommandEncoder, variant: usize) {
         let config = RadixSortConfig {
             hist_pipeline: &self.pipelines.radix_histogram_pipeline,
             hist_dispatch: DispatchMode::Indirect(24),
@@ -3534,7 +3531,7 @@ impl GpuExecutor {
             copy_back_pipeline: &self.pipelines.radix_copy_back_pipeline,
             copy_dispatch: DispatchMode::Indirect(24),
         };
-        self.record_generic_radix_sort(encoder, bg3, config);
+        self.record_generic_radix_sort(encoder, variant, config);
     }
 
     pub fn record_pad_data(&self, encoder: &mut CommandEncoder) {
@@ -3672,7 +3669,7 @@ impl GpuExecutor {
     pub async fn compute_median_gpu(&mut self) -> Result<f32, String> {
         // Run the 4-pass radix sort
         let mut encoder = self.device.create_command_encoder(&Default::default());
-        self.record_radix_sort_passes(&mut encoder, None);
+        self.record_radix_sort_passes(&mut encoder, 0);
         self.queue.submit(Some(encoder.finish()));
 
         // Final step: Select Median
@@ -3710,7 +3707,7 @@ impl GpuExecutor {
         };
 
         // Use the generic radix sort implementation
-        self.record_generic_radix_sort(encoder, None, config);
+        self.record_generic_radix_sort(encoder, 0, config);
     }
 
     fn record_robust_scale(
@@ -3784,11 +3781,12 @@ fn record_intervals_pass<T>(
     {
         exec.copy_indirect_dispatch_args(&mut encoder, 12);
         let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
-        pass.set_pipeline(&exec.pipelines.compute_residual_sd_pipeline);
-        pass.set_bind_group(0, exec.bg0_data.as_ref().unwrap(), &[exec.config_offset]);
-        pass.set_bind_group(1, exec.bg1_topo.as_ref().unwrap(), &[]);
-        pass.set_bind_group(2, exec.bg2_state.as_ref().unwrap(), &[]);
-        pass.set_bind_group(3, exec.bg3_aux.as_ref().unwrap(), &[exec.w_config_offset]);
+        exec.bind_pipeline_groups(
+            &mut pass,
+            &exec.pipelines.compute_residual_sd_pipeline,
+            0,
+            exec.config_offset,
+        );
         pass.dispatch_workgroups(1, 1, 1);
     }
 
@@ -3808,11 +3806,12 @@ fn record_intervals_pass<T>(
         let mut pass = encoder.begin_compute_pass(&ComputePassDescriptor::default());
 
         // Standard Error Pass
-        pass.set_pipeline(&exec.pipelines.se_pipeline);
-        pass.set_bind_group(0, exec.bg0_data.as_ref().unwrap(), &[exec.config_offset]);
-        pass.set_bind_group(1, exec.bg1_topo.as_ref().unwrap(), &[]);
-        pass.set_bind_group(2, exec.bg2_state.as_ref().unwrap(), &[]);
-        pass.set_bind_group(3, exec.bg3_aux.as_ref().unwrap(), &[exec.w_config_offset]);
+        exec.bind_pipeline_groups(
+            &mut pass,
+            &exec.pipelines.se_pipeline,
+            0,
+            exec.config_offset,
+        );
         pass.dispatch_workgroups_indirect(
             exec.buffers.indirect_dispatch_buffer.as_ref().unwrap(),
             12,
@@ -3820,7 +3819,12 @@ fn record_intervals_pass<T>(
 
         // Interval Bounds Pass (if requested)
         if im.confidence || im.prediction {
-            pass.set_pipeline(&exec.pipelines.interval_bounds_pipeline);
+            exec.bind_pipeline_groups(
+                &mut pass,
+                &exec.pipelines.interval_bounds_pipeline,
+                0,
+                exec.config_offset,
+            );
             pass.dispatch_workgroups_indirect(
                 exec.buffers.indirect_dispatch_buffer.as_ref().unwrap(),
                 12,
@@ -4780,24 +4784,7 @@ where
             },
         ));
 
-        // Update Bind Groups to point to new buffers
-        exec.bg0_data = Some(exec.create_bg0(
-            exec.buffers.x_buffer.as_ref().unwrap(),
-            exec.buffers.y_buffer.as_ref().unwrap(),
-        ));
-
-        // Also recreate bg0_test which depends on config buffer
-        exec.bg0_test = Some(exec.create_bg0(
-            exec.buffers.x_test_buffer.as_ref().unwrap(),
-            exec.buffers.y_test_buffer.as_ref().unwrap(),
-        ));
-
-        exec.bg3_aux = Some(exec.create_bg3(None));
-
-        if exec.buffers.median_buffer.is_some() {
-            let bg = exec.create_bg3(exec.buffers.median_buffer.as_ref());
-            exec.bg3_median = Some(bg);
-        }
+        exec.reset_pipeline_bind_groups();
 
         // Build aggregated config data
         let mut all_configs = Vec::with_capacity(total_bytes as usize);

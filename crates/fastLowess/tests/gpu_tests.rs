@@ -45,6 +45,27 @@ fn test_gpu_batch_fit() {
 }
 
 #[test]
+fn test_gpu_requests_limits_from_max_entrypoint_resources() {
+    let executor = match pollster::block_on(GpuExecutor::new()) {
+        Ok(executor) => executor,
+        Err(error) => {
+            println!("GPU unavailable, skipping reflected-limit regression: {error}");
+            return;
+        }
+    };
+    let limits = executor.device.limits();
+
+    assert!(
+        limits.max_storage_buffers_per_shader_stage < 30,
+        "the reflected limit should be lower than the old union-of-bindings requirement"
+    );
+    assert!(
+        limits.max_buffers_and_acceleration_structures_per_shader_stage < 32,
+        "the reflected total-buffer limit should be lower than the old shared-layout requirement"
+    );
+}
+
+#[test]
 fn test_gpu_batch_unsorted_input_preserves_original_result_order() {
     if pollster::block_on(GpuExecutor::new()).is_err() {
         println!("GPU unavailable, skipping unsorted-order regression");

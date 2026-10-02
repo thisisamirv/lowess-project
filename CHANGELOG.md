@@ -172,6 +172,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **lowess:**
 
+- Reduced GPU adapter buffer requirements from 30 storage/32 total buffer bindings to 7 storage/8 total per shader stage by deriving per-pipeline layouts from WGSL entry-point resource use.
 - Fixed grouped confidence/prediction interval configuration silently replacing one requested level with the other; mismatched levels now fail during builder setup.
 - Fixed Online incremental mode accepting positive `delta` and `auto_converge` options that it cannot apply; positive delta now requires full mode, and auto-convergence requires full mode with robustness iterations.
 - Fixed GPU Batch results losing the sort mapping for unsorted inputs; host sorting now preserves input order and `return_sorted` behavior. GPU fit and CV candidate kernels now apply `custom_weights` directly.

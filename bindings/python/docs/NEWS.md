@@ -27,6 +27,7 @@ This changelog includes end-user changes only. For internal development notes, s
 * Fixed Streaming and Online accepting invalid `auto_converge` tolerances; Online also rejects invalid explicit `delta` values while retaining NaN as its default sentinel.
 * Fixed GPU Batch fits misaligning fitted values with unsorted inputs; results now preserve input and requested sorted order.
 * Fixed GPU Batch silently ignoring `custom_weights`; GPU fit and CV candidate kernels now apply them directly.
+* Reduced GPU adapter buffer requirements from 30 storage/32 total buffer bindings to 7 storage/8 total per shader stage by using per-compute-pipeline resource layouts.
 * Fixed Online incremental mode accepting positive `delta` and `auto_converge` settings it cannot use; unsupported combinations now error.
 * Fixed grouped intervals silently collapsing different confidence and prediction levels; mismatches now error during build.
 

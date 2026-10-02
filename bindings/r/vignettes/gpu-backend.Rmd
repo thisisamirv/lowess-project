@@ -43,6 +43,9 @@ dispatch overhead is accounted for.
 GPU fits preserve Batch output ordering for unsorted input and `return_sorted`.
 Custom per-observation weights are applied in GPU fit and cross-validation
 candidate kernels.
+Each compute pipeline binds only its own resources, so compatible adapter
+limits depend on the largest individual GPU pass rather than all shader
+bindings combined.
 
 ---
 
