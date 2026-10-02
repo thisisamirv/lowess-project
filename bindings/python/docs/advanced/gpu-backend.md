@@ -78,6 +78,11 @@ python -c "import fastlowess; fastlowess.install_gpu(yes=True)"
 fastlowess-install-gpu
 ```
 
+On Windows, the installer keeps the currently loaded CPU extension intact and
+places the verified GPU extension in a versioned sidecar. The package loader
+selects it after Python restarts. Prebuilt Linux GPU wheels currently target
+glibc/manylinux; musl/Alpine systems must build from source.
+
 Build from source instead:
 
 ```sh

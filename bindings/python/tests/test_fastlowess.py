@@ -32,8 +32,8 @@ class TestLowess:
 
     def test_basic_smooth_with_lists(self):
         """Test array-like inputs are coerced to NumPy arrays."""
-        x = np.asarray([1.0, 2.0, 3.0, 4.0, 5.0])
-        y = np.asarray([2.0, 4.1, 5.9, 8.2, 9.8])
+        x = [1.0, 2.0, 3.0, 4.0, 5.0]
+        y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
         lowess = fastlowess.Lowess(fraction=0.5)
         result = lowess.fit(x, y)
@@ -615,6 +615,20 @@ class TestErrorHandling:
         assert result.residuals is not None
         assert result.robustness_weights is not None
 
+    def test_unknown_outputs_are_rejected(self):
+        """Reject misspelled output names instead of silently ignoring them."""
+        x = np.arange(5, dtype=float)
+        y = 2 * x
+        with pytest.raises(ValueError, match="unknown output"):
+            fastlowess.Lowess(outputs=["residuls"]).fit(x, y)
+        with pytest.raises(ValueError, match="unknown output"):
+            fastlowess.StreamingLowess(outputs=["sorted"])
+        with pytest.raises(ValueError, match="unknown output"):
+            fastlowess.OnlineLowess(outputs=["diagnostics"])
+        result = fastlowess.Lowess(retain_model=True).fit(x, y)
+        with pytest.raises(ValueError, match="unknown output"):
+            result.predict(x, outputs=["weights"])
+
     def test_nested_cv_options(self):
         """Test configuring cross-validation with a nested mapping."""
         x = np.linspace(0, 10, 30)
@@ -967,7 +981,7 @@ class TestCustomWeights:
         weights = (1.0 + 0.1 * x).tolist()
 
         result = fastlowess.Lowess(fraction=0.4, iterations=3).fit(
-            x, y, custom_weights=np.asarray(weights)
+            x, y, custom_weights=weights
         )
 
         assert len(result.y) == 30

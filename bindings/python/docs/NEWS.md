@@ -37,6 +37,7 @@ This changelog includes end-user changes only. For internal development notes, s
 * Improved agreement with R/Cleveland on sparse, asymmetric, and high-iteration fits by aligning robustness stopping, local-linear degeneracy handling, neighborhood traversal, delta interpolation, and weighted accumulation.
 * Fixed zero-radius neighborhoods dropping tied observations or accumulating normalized weights in a different order under robust fits.
 * Fixed Gaussian fits clipping the unbounded kernel to the neighbor window and flooring far-tail weights; all observations now contribute under the standard Gaussian formula.
+* Reject unknown output names, release the GIL during online updates, accept documented array-like batch inputs, reject musl GPU-wheel mismatches and non-GPU wheels, and install Windows GPU extensions as versioned sidecars.
 
 ## 4.1.0
 

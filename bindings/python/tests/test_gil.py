@@ -5,7 +5,7 @@ import threading
 import time
 
 import numpy as np
-from fastlowess import Lowess
+from fastlowess import Lowess, OnlineLowess
 
 
 def heavy_computation():
@@ -68,6 +68,45 @@ def test_gil_release():
         sys.exit(1)
     else:
         print("PASS: Main thread remained responsive.")
+
+
+def test_online_add_point_releases_gil():
+    """A full-window online update should not block unrelated Python threads."""
+    online = OnlineLowess(
+        fraction=0.5,
+        window_capacity=2000,
+        min_points=2000,
+        iterations=5,
+        update_mode="full",
+        intervals={"confidence": 0.95, "bootstrap": 50},
+    )
+    for index in range(1999):
+        online.add_point(float(index), float(index))
+
+    started = threading.Event()
+    finished = threading.Event()
+    failures = []
+
+    def update():
+        started.set()
+        try:
+            online.add_point(1999.0, 1999.0)
+        except Exception as error:
+            failures.append(error)
+        finally:
+            finished.set()
+
+    worker = threading.Thread(target=update)
+    worker.start()
+    assert started.wait(timeout=2.0)
+
+    ticks = 0
+    while not finished.wait(timeout=0.01):
+        ticks += 1
+
+    worker.join()
+    assert not failures
+    assert ticks > 0
 
 
 if __name__ == "__main__":

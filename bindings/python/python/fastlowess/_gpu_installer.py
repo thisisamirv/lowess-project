@@ -3,19 +3,24 @@
 The GPU backend (wgpu) is not included in the wheels published to PyPI. This
 module fetches a prebuilt GPU-enabled wheel from the "gpu-builds" GitHub
 Release (a perpetual release holding GPU artifacts for every version, so
-individual version release pages stay uncluttered) and installs it in place
-of the current (CPU-only) installation.
+individual version release pages stay uncluttered). Candidate wheels are
+probed for GPU support before installation. Windows installs a versioned
+extension sidecar so it never overwrites a loaded .pyd file.
 """
 
 from __future__ import annotations
 
+import importlib.machinery
 import json
+import os
 import platform
+import shutil
 import subprocess
 import sys
 import tempfile
 import urllib.error
 import urllib.request
+import zipfile
 from pathlib import Path
 
 from .__version__ import __version__
@@ -50,6 +55,42 @@ def _current_arch_tag() -> str:
     return machine
 
 
+def _linux_libc_tag() -> str | None:
+    if sys.platform != "linux":
+        return None
+    for directory in (
+        Path("/lib"),
+        Path("/usr/lib"),
+        Path("/lib64"),
+        Path("/usr/lib64"),
+    ):
+        if any(directory.glob("ld-musl-*.so.1")):
+            return "musl"
+    try:
+        if any(
+            is_musl_loader(line)
+            for line in Path("/proc/self/maps").read_text().splitlines()
+        ):
+            return "musl"
+    except OSError:
+        pass
+    libc_name = platform.libc_ver()[0].lower()
+    if "musl" in libc_name:
+        return "musl"
+    if "glibc" in libc_name or "gnu libc" in libc_name:
+        return "glibc"
+    try:
+        if os.confstr("CS_GNU_LIBC_VERSION"):
+            return "glibc"
+    except (AttributeError, OSError, ValueError):
+        pass
+    return None
+
+
+def is_musl_loader(line: str) -> bool:
+    return "ld-musl-" in line or "libc.musl-" in line
+
+
 def _asset_matches_platform(name: str) -> bool:
     name = name.lower()
     plat = _current_platform_tag()
@@ -67,6 +108,8 @@ def _asset_matches_platform(name: str) -> bool:
         return "x86_64" in name or "universal2" in name
     # linux
     if "linux" not in name:
+        return False
+    if _linux_libc_tag() != "glibc":
         return False
     return arch in name
 
@@ -98,6 +141,102 @@ def _asset_matches_version(name: str) -> bool:
     return f"-gpu-{__version__}-" in name.lower()
 
 
+def _extract_core_extension(wheel_path: Path, directory: Path) -> Path:
+    try:
+        with zipfile.ZipFile(wheel_path) as wheel:
+            candidates = [
+                name
+                for name in wheel.namelist()
+                if name.startswith("fastlowess/_core")
+                and any(
+                    name.endswith(suffix)
+                    for suffix in importlib.machinery.EXTENSION_SUFFIXES
+                )
+            ]
+            if len(candidates) != 1:
+                raise RuntimeError(
+                    "wheel must contain exactly one fastlowess._core extension"
+                )
+            member = candidates[0]
+            extension_path = directory / Path(member).name
+            with wheel.open(member) as source, extension_path.open("wb") as destination:
+                shutil.copyfileobj(source, destination)
+            return extension_path
+    except (OSError, zipfile.BadZipFile) as error:
+        raise RuntimeError(f"Could not read GPU wheel {wheel_path}: {error}") from error
+
+
+def _extension_gpu_enabled(extension_path: Path) -> bool:
+    script = """
+import ctypes, importlib.util, os, sys, types
+if os.name == "nt":
+    ctypes.windll.kernel32.SetErrorMode(0x0001 | 0x8000)
+package = types.ModuleType("fastlowess")
+package.__path__ = []
+sys.modules["fastlowess"] = package
+spec = importlib.util.spec_from_file_location("fastlowess._core", sys.argv[1])
+if spec is None or spec.loader is None:
+    raise RuntimeError("could not load candidate extension")
+module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = module
+spec.loader.exec_module(module)
+print(bool(module.gpu_enabled()))
+"""
+    try:
+        result = subprocess.run(
+            [sys.executable, "-c", script, str(extension_path)],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return result.returncode == 0 and result.stdout.strip() == "True"
+
+
+def _wheel_gpu_enabled(wheel_path: Path) -> bool:
+    with tempfile.TemporaryDirectory() as temporary_directory:
+        extension_path = _extract_core_extension(wheel_path, Path(temporary_directory))
+        return _extension_gpu_enabled(extension_path)
+
+
+def _install_gpu_wheel(wheel_path: Path) -> None:
+    if not _wheel_gpu_enabled(wheel_path):
+        raise RuntimeError(f"The wheel at {wheel_path} does not report GPU support.")
+
+    if sys.platform.startswith("win"):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            extension_path = _extract_core_extension(
+                wheel_path, Path(temporary_directory)
+            )
+            sidecar = Path(__file__).with_name(f"_core_gpu_{__version__}.pyd")
+            staging = sidecar.with_name(f".{sidecar.name}.{os.getpid()}.tmp.pyd")
+            try:
+                shutil.copyfile(extension_path, staging)
+                if not _extension_gpu_enabled(staging):
+                    raise RuntimeError(
+                        f"The wheel at {wheel_path} does not report GPU support."
+                    )
+                os.replace(staging, sidecar)
+            finally:
+                staging.unlink(missing_ok=True)
+        return
+
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "--force-reinstall",
+            "--no-deps",
+            str(wheel_path),
+        ],
+        check=True,
+    )
+
+
 def _find_gpu_wheel_asset() -> dict:
     assets = _fetch_release_assets()
     candidates = [
@@ -123,9 +262,12 @@ def install_gpu(yes: bool = False, local_path: str | None = None) -> None:
 
     Fetches a prebuilt wheel (built with the ``gpu`` Cargo feature) matching
     this installation's version from the "gpu-builds" GitHub Release over
-    HTTPS and installs it in place of the current (CPU-only) installation
-    via pip. Restart the Python process afterwards — a loaded native
-    extension cannot be swapped in place.
+    HTTPS and verifies that its native extension reports GPU support. On
+    Windows the extension is installed as a versioned sidecar to avoid
+    replacing the currently loaded .pyd file; on other platforms pip installs
+    the wheel normally. Restart the Python process afterwards.
+
+    Prebuilt Linux GPU wheels currently target glibc/manylinux, not musl/Alpine.
 
     Parameters
     ----------
@@ -162,18 +304,7 @@ def install_gpu(yes: bool = False, local_path: str | None = None) -> None:
                 return
 
         print(f"Installing {wheel_path} ...")
-        subprocess.run(
-            [
-                sys.executable,
-                "-m",
-                "pip",
-                "install",
-                "--force-reinstall",
-                "--no-deps",
-                str(wheel_path),
-            ],
-            check=True,
-        )
+        _install_gpu_wheel(wheel_path)
         print(
             "GPU backend installed. Restart your Python process/kernel for the "
             "change to take effect."
@@ -202,24 +333,14 @@ def install_gpu(yes: bool = False, local_path: str | None = None) -> None:
     req = urllib.request.Request(url, headers={"User-Agent": _USER_AGENT})
     with tempfile.TemporaryDirectory() as tmp:
         wheel_path = Path(tmp) / asset["name"]
-        with urllib.request.urlopen(req, timeout=300) as resp:
-            data = resp.read()
-        with open(wheel_path, "wb") as f:
-            f.write(data)
+        with (
+            urllib.request.urlopen(req, timeout=300) as response,
+            wheel_path.open("wb") as wheel_file,
+        ):
+            shutil.copyfileobj(response, wheel_file)
 
         print("Installing...")
-        subprocess.run(
-            [
-                sys.executable,
-                "-m",
-                "pip",
-                "install",
-                "--force-reinstall",
-                "--no-deps",
-                str(wheel_path),
-            ],
-            check=True,
-        )
+        _install_gpu_wheel(wheel_path)
 
     print(
         "GPU backend installed. Restart your Python process/kernel for the "

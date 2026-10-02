@@ -233,6 +233,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `OnlineLowess` silently ignoring `outputs`; `"weights"`, `"derivative"`, and `"se"` are now applied.
 - Reject unknown option keys and `outputs` names, and return owned typed-array copies so results remain valid after freeing their WASM owners.
 
+**Python:**
+
+- Reject unknown output names, release the GIL during online updates, accept documented array-like batch inputs, reject musl GPU-wheel mismatches and non-GPU wheels, and install Windows GPU extensions as versioned sidecars.
+
 ## 4.1.0
 
 ### Added

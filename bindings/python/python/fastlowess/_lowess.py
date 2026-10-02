@@ -1,5 +1,7 @@
 """Batch Lowess wrapper adding a friendly error for the opt-in GPU backend."""
 
+import numpy as np
+
 from . import _core
 
 _GPU_HELP = (
@@ -19,3 +21,10 @@ class Lowess(_core.Lowess):
         if backend == "gpu" and not _core.gpu_enabled():
             raise RuntimeError(_GPU_HELP)
         return super().__new__(cls, *args, backend=backend, **kwargs)
+
+    def fit(self, x, y, custom_weights=None):
+        x = np.ascontiguousarray(x, dtype=np.float64)
+        y = np.ascontiguousarray(y, dtype=np.float64)
+        if custom_weights is not None:
+            custom_weights = np.ascontiguousarray(custom_weights, dtype=np.float64)
+        return super().fit(x, y, custom_weights)

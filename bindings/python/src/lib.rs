@@ -53,6 +53,20 @@ fn has_output(outputs: Option<&Vec<String>>, name: &str) -> bool {
     outputs.is_some_and(|v| v.iter().any(|x| x == name))
 }
 
+fn validate_outputs(outputs: Option<&Vec<String>>, allowed: &[&str]) -> PyResult<()> {
+    if let Some(output) = outputs
+        .into_iter()
+        .flatten()
+        .find(|value| !allowed.contains(&value.as_str()))
+    {
+        return Err(PyValueError::new_err(format!(
+            "unknown output '{output}'; expected one of: {}",
+            allowed.join(", ")
+        )));
+    }
+    Ok(())
+}
+
 struct ParsedCvOptions {
     fractions: Option<Vec<f64>>,
     method: String,
@@ -436,6 +450,7 @@ impl PyLowessResult {
         max_extrapolation_distance: Option<f64>,
         max_neighbor_distance: Option<f64>,
     ) -> PyResult<PyPredictOutput> {
+        validate_outputs(outputs.as_ref(), &["se", "derivative"])?;
         let new_x_vec = new_x.as_slice().map_err(to_py_invalid_arg_error)?.to_vec();
         let iv = parse_intervals(intervals.as_ref())?;
         let query = binding_support::build_predict_options_with_bootstrap(
@@ -530,6 +545,10 @@ impl PyStreamingLowess {
         merge_strategy: &str,
         missing: &str,
     ) -> PyResult<Self> {
+        validate_outputs(
+            outputs.as_ref(),
+            &["diagnostics", "residuals", "weights", "derivative", "se"],
+        )?;
         let overlap_size = overlap.unwrap_or_else(|| binding_support::default_overlap(chunk_size));
         let iv = parse_intervals(intervals.as_ref())?;
 
@@ -735,6 +754,7 @@ impl PyOnlineLowess {
         zero_weight_fallback: &str,
         missing: &str,
     ) -> PyResult<Self> {
+        validate_outputs(outputs.as_ref(), &["weights", "derivative", "se"])?;
         let iv = parse_intervals(intervals.as_ref())?;
         let mut builder = map_invalid_arg(binding_support::apply_builder_options(
             LowessBuilder::<f64>::new(),
@@ -792,15 +812,17 @@ impl PyOnlineLowess {
 
     /// Add a single point and return its smoothed value, or None if the window
     /// is still filling up.
-    fn add_point(&self, x: f64, y: f64) -> PyResult<Option<PyOnlineOutput>> {
-        let mut inner = self.inner.lock().map_err(|e| {
-            to_py_error(binding_support::BindingError::runtime(
-                binding_support::mutex_poisoned_message(&e.to_string()),
-            ))
+    fn add_point(&self, py: Python<'_>, x: f64, y: f64) -> PyResult<Option<PyOnlineOutput>> {
+        let result = py.detach(move || {
+            let mut inner = self.inner.lock().map_err(|e| {
+                to_py_error(binding_support::BindingError::runtime(
+                    binding_support::mutex_poisoned_message(&e.to_string()),
+                ))
+            })?;
+            inner
+                .add_point(x, y)
+                .map_err(|e| to_py_error(binding_support::BindingError::invalid_arg(e.to_string())))
         })?;
-        let result = inner
-            .add_point(x, y)
-            .map_err(|e| to_py_error(binding_support::BindingError::invalid_arg(e.to_string())))?;
         Ok(result.map(|o| PyOnlineOutput {
             y: o.y,
             standard_error: o.standard_error,
@@ -885,6 +907,17 @@ impl PyLowess {
         retain_model: bool,
         return_derivative: bool,
     ) -> PyResult<Self> {
+        validate_outputs(
+            outputs.as_ref(),
+            &[
+                "diagnostics",
+                "residuals",
+                "weights",
+                "derivative",
+                "se",
+                "sorted",
+            ],
+        )?;
         let cv = parse_cv_options(cv.as_ref())?;
         let iv = parse_intervals(intervals.as_ref())?;
         let output = |name: &str| has_output(outputs.as_ref(), name);
