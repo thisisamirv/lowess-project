@@ -26,6 +26,10 @@
 #include <utility>
 #include <vector>
 
+#if defined(__linux__) && !defined(__ANDROID__)
+#include <features.h>
+#endif
+
 #if defined(__APPLE__)
 #include <TargetConditionals.h>
 #endif
@@ -1010,7 +1014,7 @@ inline std::optional<std::string> platformTag() {
   return "macos";
 #elif defined(__ANDROID__)
   return std::nullopt;
-#elif defined(__linux__)
+#elif defined(__linux__) && defined(__GLIBC__)
   return "linux";
 #else
   return std::nullopt;
