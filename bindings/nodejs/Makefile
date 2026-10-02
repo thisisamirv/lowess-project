@@ -58,7 +58,9 @@ dev:
 	@cd $(NODE_DIR) && $(NPM) install
 	@cd $(NODE_DIR) && $(NPM) update
 	@cd $(NODE_DIR) && $(NPM) audit || true
-	@cd $(NODE_DIR) && $(NPX) -y depcheck --ignores="fastlowess-*,oxlint,typedoc-plugin-pages,typedoc-plugin-markdown,astro:content,katex"
+	@# Snippet verification writes temporary JS files here; remove leftovers from interrupted runs before depcheck scans the package.
+	@cd $(NODE_DIR) && rm -f _snippet_*.js
+	@cd $(NODE_DIR) && $(NPX) -y depcheck --ignores="fastlowess,fastlowess-*,oxlint,typedoc-plugin-pages,typedoc-plugin-markdown,astro:content,katex"
 	@cd $(NODE_DIR) && ($(NPM) outdated | grep -v "fastlowess-" || true)
 	@cd $(NODE_DIR) && $(NPM) ci --dry-run
 	@cd $(NODE_DIR) && $(NPX) -y -p typescript tsc -p tsconfig.typedoc.json

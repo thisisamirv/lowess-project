@@ -709,6 +709,12 @@ def main(argv: list[str] | None = None) -> int:
                 break
         return lang_results
 
+    # On Windows, keep MSVC separate from other language toolchains. Running
+    # cl.exe concurrently with their build processes can lose its initialized
+    # standard-library include environment; the C++ batch still parallelizes
+    # its independent snippet compiles internally.
+    serialized_cpp = _by_runner.pop("cpp", None) if os.name == "nt" else None
+
     n_workers = len(_by_runner) or 1
     with concurrent.futures.ThreadPoolExecutor(max_workers=n_workers) as executor:
         futures = [
@@ -723,6 +729,16 @@ def main(argv: list[str] | None = None) -> int:
                     n_pass += 1
                 else:
                     n_fail += 1
+
+    if serialized_cpp:
+        for res in _run_language(serialized_cpp):
+            results.append(res)
+            if res.skipped:
+                n_skip += 1
+            elif res.passed:
+                n_pass += 1
+            else:
+                n_fail += 1
 
     # ---- Output injection -----------------------------------------------------
     if args.update_outputs:

@@ -121,7 +121,7 @@ fn main() -> Result<(), LowessError> {
 ```
 
 ```output
-First smoothed value (gaussian kernel): 0.43821329757703703
+First smoothed value (gaussian kernel): 0.3540140546455968
 ```
 
 ---

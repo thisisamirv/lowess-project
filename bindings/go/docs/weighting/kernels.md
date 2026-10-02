@@ -174,7 +174,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (gaussian kernel): 0.43821329757703703
+First smoothed value (gaussian kernel): 0.35401405464559677
 ```
 
 ---

@@ -129,7 +129,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Node.js:**
 
 - Breaking change: replaced `confidence_intervals`/`prediction_intervals` (and `predict()`'s `confidence_level`/`prediction_level`) with `intervals`; removed `cv_fractions`/`cv_method`/`cv_k`/`cv_seed` and `cv.seed` in favor of `cv: { method, k, fractions }` plus one outer `seed` shared by CV and fit-time bootstrap. `predict()` has its own `seed`. Negative seeds throw.
-- Updated `oxlint` to v1.86.0.
 
 **Python:**
 
@@ -151,7 +150,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **WASM:**
 
 - Breaking change: replaced `confidence_intervals`/`prediction_intervals` (and `predict()`'s `confidence_level`/`prediction_level`) with `intervals`; removed `cv_fractions`/`cv_method`/`cv_k`/`cv_seed` and `cv.seed` in favor of `cv: { method, k, fractions }` plus one outer `seed` shared by CV and fit-time bootstrap. `predict()` has its own `seed`.
-- Updated `oxlint` to v1.86.0.
 
 ### Fixed
 
