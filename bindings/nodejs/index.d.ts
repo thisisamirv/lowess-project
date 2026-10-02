@@ -16,7 +16,7 @@ export declare class Lowess {
   /** Fit the model. */
   fit(x: Float64Array, y: Float64Array, customWeights?: Float64Array | undefined | null): LowessResult
   /** Fit the model asynchronously. */
-  fit_async(x: Float64Array, y: Float64Array, customWeights?: Float64Array | undefined | null): Promise<unknown>
+  fit_async(x: Float64Array, y: Float64Array, customWeights?: Float64Array | undefined | null): Promise<LowessResult>
 }
 
 /** Result of a LOWESS fit. */

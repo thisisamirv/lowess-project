@@ -191,6 +191,7 @@ impl LowessResult {
         options: Option<PredictOptions>,
     ) -> Result<PredictOutput> {
         let opts = options.unwrap_or_default();
+        validate_outputs(opts.outputs.as_ref(), &["se", "derivative"])?;
         let intervals = opts.intervals.as_ref();
         let query = binding_support::build_predict_options_with_bootstrap(
             binding_support::PredictOptionSet {
@@ -334,6 +335,22 @@ pub struct IntervalsOptions {
 
 fn has_output(outputs: Option<&Vec<String>>, name: &str) -> bool {
     outputs.is_some_and(|values| values.iter().any(|value| value == name))
+}
+
+fn validate_outputs(outputs: Option<&Vec<String>>, allowed: &[&str]) -> Result<()> {
+    if let Some(output) = outputs
+        .into_iter()
+        .flatten()
+        .find(|value| !allowed.contains(&value.as_str()))
+    {
+        return Err(to_napi_error(binding_support::BindingError::invalid_arg(
+            format!(
+                "unknown output '{output}'. Valid outputs: {}",
+                allowed.join(", ")
+            ),
+        )));
+    }
+    Ok(())
 }
 
 fn bootstrap_count(intervals: Option<&IntervalsOptions>) -> Option<usize> {
@@ -552,6 +569,17 @@ pub struct OnlineSmoothOptions {
 fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LowessBuilder<f64>> {
     let mut builder = LowessBuilder::<f64>::new();
     if let Some(opts) = opts {
+        validate_outputs(
+            opts.outputs.as_ref(),
+            &[
+                "diagnostics",
+                "residuals",
+                "weights",
+                "derivative",
+                "se",
+                "sorted",
+            ],
+        )?;
         let grouped_cv = opts.cv.as_ref();
         let intervals = opts.intervals.as_ref();
         builder = map_invalid_arg(binding_support::apply_builder_options(
@@ -604,6 +632,10 @@ fn streaming_options_to_builder(
 ) -> Result<LowessBuilder<f64>> {
     let mut builder = LowessBuilder::<f64>::new();
     if let Some(opts) = opts {
+        validate_outputs(
+            opts.outputs.as_ref(),
+            &["diagnostics", "residuals", "weights", "derivative", "se"],
+        )?;
         builder = map_invalid_arg(binding_support::apply_builder_options(
             builder,
             binding_support::BuilderOptionSet {
@@ -645,6 +677,7 @@ fn streaming_options_to_builder(
 fn online_options_to_builder(opts: Option<&OnlineSmoothOptions>) -> Result<LowessBuilder<f64>> {
     let mut builder = LowessBuilder::<f64>::new();
     if let Some(opts) = opts {
+        validate_outputs(opts.outputs.as_ref(), &["weights", "derivative", "se"])?;
         builder = map_invalid_arg(binding_support::apply_builder_options(
             builder,
             binding_support::BuilderOptionSet {

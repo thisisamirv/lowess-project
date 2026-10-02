@@ -1,7 +1,51 @@
 const test = require('node:test');
 const assert = require('node:assert');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 
 const fastlowess = require('..');
+
+test('unknown outputs are rejected for each API mode', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2, 4, 6, 8, 10]);
+    const invalidOutput = /unknown output/i;
+
+    assert.throws(() => new fastlowess.Lowess({ outputs: ['typo'] }).fit(x, y), invalidOutput);
+    assert.throws(() => new fastlowess.StreamingLowess({ outputs: ['sorted'] }), invalidOutput);
+    assert.throws(() => new fastlowess.OnlineLowess({ outputs: ['diagnostics'] }), invalidOutput);
+
+    const result = new fastlowess.Lowess({ retain_model: true }).fit(x, y);
+    assert.throws(() => result.predict(x, { outputs: ['weights'] }), invalidOutput);
+});
+
+test('GPU installer rejects a CPU-only local addon', async () => {
+    await assert.rejects(
+        fastlowess.installGpu({ yes: true, localPath: require.resolve('..') }),
+        /does not report GPU support/
+    );
+});
+
+test('GPU installer rejects an active native-library override', async () => {
+    const previousOverride = process.env.NAPI_RS_NATIVE_LIBRARY_PATH;
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fastlowess-addon-'));
+    const overridePath = path.join(tempDir, 'cpu-addon.js');
+    fs.writeFileSync(overridePath, 'module.exports = { gpu_enabled: () => false };\n');
+    process.env.NAPI_RS_NATIVE_LIBRARY_PATH = overridePath;
+    try {
+        await assert.rejects(
+            fastlowess.installGpu({ yes: true, localPath: require.resolve('..') }),
+            /NAPI_RS_NATIVE_LIBRARY_PATH overrides/
+        );
+    } finally {
+        if (previousOverride === undefined) {
+            delete process.env.NAPI_RS_NATIVE_LIBRARY_PATH;
+        } else {
+            process.env.NAPI_RS_NATIVE_LIBRARY_PATH = previousOverride;
+        }
+        fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+});
 
 test('batch smoothing', () => {
     const x = new Float64Array([1, 2, 3, 4, 5]);

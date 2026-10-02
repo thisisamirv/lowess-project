@@ -15,7 +15,7 @@
 
 const path = require('path')
 const { execFileSync } = require('child_process')
-const { readFileSync, copyFileSync, existsSync } = require('fs')
+const { readFileSync, copyFileSync, existsSync, renameSync, unlinkSync } = require('fs')
 const gpuDownload = require('./gpu-download')
 
 const { version } = require('./package.json')
@@ -81,15 +81,27 @@ function gpuAvailable() {
     }
 }
 
+function gpuEnabledAtPath(addonPath) {
+    try {
+        const out = execFileSync(process.execPath, ['-e', "const addon = require(process.env.FASTLOWESS_GPU_CHECK_PATH); process.stdout.write(String(typeof addon.gpu_enabled === 'function' && addon.gpu_enabled()))"], {
+            cwd: __dirname,
+            encoding: 'utf8',
+            env: { ...process.env, FASTLOWESS_GPU_CHECK_PATH: path.resolve(addonPath) },
+        })
+        return out.trim() === 'true'
+    } catch {
+        return false
+    }
+}
+
 /**
  * Install the GPU-enabled fastlowess native addon for this platform, then
  * restart Node.js to use it.
  *
  * Fetches a prebuilt `.node` addon (built with the `gpu` Cargo feature) from
- * the matching GitHub Release and saves it as `fastlowess.<platform>.node`
- * next to this file — the same local-override path index.js's loader
- * already checks first. A running process cannot swap an already-loaded
- * native addon, so a restart is required afterwards.
+ * the matching GitHub Release and saves it as a versioned GPU sidecar next to
+ * this file. The loader prefers that sidecar on the next process start, so
+ * installation never overwrites a currently loaded native addon.
  *
  * @param {{ yes?: boolean, localPath?: string }} [options] Pass
  *   `{ yes: true }` to skip the interactive y/N confirmation prompt
@@ -104,6 +116,11 @@ async function installGpu(options = {}) {
         console.log('GPU backend is already active.')
         return
     }
+    if (process.env.NAPI_RS_NATIVE_LIBRARY_PATH) {
+        throw new Error(
+            'NAPI_RS_NATIVE_LIBRARY_PATH overrides the package loader; unset it before installing a GPU addon.'
+        )
+    }
 
     const suffix = currentPlatformSuffix()
     if (!suffix) {
@@ -113,11 +130,15 @@ async function installGpu(options = {}) {
         )
     }
 
-    const destPath = path.join(__dirname, `fastlowess.${suffix}.node`)
+    const destPath = path.join(__dirname, `fastlowess.gpu-v${version}.node`)
+    const stagingPath = path.join(__dirname, `.fastlowess.gpu-v${version}.${process.pid}.tmp.node`)
 
     if (localPath !== undefined) {
         if (!existsSync(localPath)) {
             throw new Error(`No such file: ${localPath}`)
+        }
+        if (!gpuEnabledAtPath(localPath)) {
+            throw new Error(`The addon at ${localPath} does not report GPU support.`)
         }
 
         if (!yes) {
@@ -131,7 +152,12 @@ async function installGpu(options = {}) {
         }
 
         console.log(`Installing ${localPath} ...`)
-        copyFileSync(localPath, destPath)
+        copyFileSync(localPath, stagingPath)
+        if (!gpuEnabledAtPath(stagingPath)) {
+            unlinkSync(stagingPath)
+            throw new Error(`The addon at ${localPath} does not report GPU support.`)
+        }
+        renameSync(stagingPath, destPath)
         console.log(`GPU backend installed at ${destPath}.`)
         console.log('Restart Node.js for the change to take effect.')
         return
@@ -152,8 +178,17 @@ async function installGpu(options = {}) {
 
     console.log(`Downloading ${url} ...`)
     try {
-        await gpuDownload.downloadToFile(url, destPath)
+        await gpuDownload.downloadToFile(url, stagingPath)
+        if (!gpuEnabledAtPath(stagingPath)) {
+            throw new Error('Downloaded addon does not report GPU support.')
+        }
+        renameSync(stagingPath, destPath)
     } catch (e) {
+        try {
+            unlinkSync(stagingPath)
+        } catch {
+            // Nothing to clean up if the download or rename never created it.
+        }
         throw new Error(
             `Failed to download ${url}: ${e.message}\n` +
             'A matching GPU build may not exist for this platform/version yet.'
