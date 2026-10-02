@@ -434,6 +434,38 @@ using FastLOWESS
 		end
 	end
 
+	@testset "Concurrent stateful access" begin
+		online = OnlineLowess(window_capacity = 64, min_points = 2)
+		online_tasks = [Threads.@spawn add_point(online, 1.0, 1.0) for _ ∈ 1:32]
+		online_results = fetch.(online_tasks)
+		@test count(result -> result !== nothing, online_results) == 31
+
+		stream = StreamingLowess(fraction = 0.5, chunk_size = 100, overlap = 10)
+		stream_tasks = [
+			Threads.@spawn process_chunk(stream, fill(1.0, 10), fill(1.0, 10)) for _ ∈ 1:8
+		]
+		stream_results = fetch.(stream_tasks)
+		@test all(result -> result isa LowessResult, stream_results)
+		@test finalize(stream) isa LowessResult
+	end
+
+	@testset "Appending results" begin
+		x = collect(1.0:5.0)
+		y = 2 .* x
+		first = fit(Lowess(return_residuals = true), x, y)
+		second = fit(Lowess(), x, y)
+		original_x = copy(first.x)
+
+		@test_throws ArgumentError append!(first, second)
+		@test first.x == original_x
+		@test length(first.residuals) == length(first.x)
+
+		matching = fit(Lowess(return_residuals = true), x, y)
+		append!(first, matching)
+		@test length(first.x) == 2length(x)
+		@test length(first.residuals) == length(first.x)
+	end
+
 	@testset "Result Fields" begin
 		@testset "optional fields none" begin
 			x = [1.0, 2.0, 3.0, 4.0, 5.0]

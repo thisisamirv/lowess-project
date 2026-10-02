@@ -220,7 +220,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Julia:**
 
-- Preserved Julia model owners across native calls, passed GPU library paths as subprocess arguments, rejected unsupported GPU targets, and surfaced native constructor validation errors.
+- Preserved Julia model owners across native calls, serialized mutable Streaming/Online calls, rejected result appends with mismatched optional fields, passed GPU library paths as subprocess arguments, rejected unsupported GPU targets, and surfaced native constructor validation errors.
 
 **Node.js:**
 

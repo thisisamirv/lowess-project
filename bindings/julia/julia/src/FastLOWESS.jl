@@ -772,32 +772,34 @@ end
 """
 	Base.append!(a::LowessResult, b::LowessResult) -> LowessResult
 
-Append the results from `b` to `a`. This modifies `a` in place.
+	Append the results from `b` to `a`. This modifies `a` in place. Per-point
+	optional fields must be present in both results or neither.
 """
+const _APPENDABLE_RESULT_FIELDS = (
+	:standard_errors,
+	:confidence_lower,
+	:confidence_upper,
+	:prediction_lower,
+	:prediction_upper,
+	:residuals,
+	:robustness_weights,
+	:derivative,
+)
+
 function Base.append!(a::LowessResult, b::LowessResult)
+	for field ∈ _APPENDABLE_RESULT_FIELDS
+		left = getfield(a, field)
+		right = getfield(b, field)
+		(left === nothing) == (right === nothing) ||
+			throw(ArgumentError("cannot append results with mismatched optional field: $field"))
+	end
+
 	append!(a.x, b.x)
 	append!(a.y, b.y)
 
-	if a.standard_errors !== nothing && b.standard_errors !== nothing
-		append!(a.standard_errors, b.standard_errors)
-	end
-	if a.confidence_lower !== nothing && b.confidence_lower !== nothing
-		append!(a.confidence_lower, b.confidence_lower)
-	end
-	if a.confidence_upper !== nothing && b.confidence_upper !== nothing
-		append!(a.confidence_upper, b.confidence_upper)
-	end
-	if a.prediction_lower !== nothing && b.prediction_lower !== nothing
-		append!(a.prediction_lower, b.prediction_lower)
-	end
-	if a.prediction_upper !== nothing && b.prediction_upper !== nothing
-		append!(a.prediction_upper, b.prediction_upper)
-	end
-	if a.residuals !== nothing && b.residuals !== nothing
-		append!(a.residuals, b.residuals)
-	end
-	if a.robustness_weights !== nothing && b.robustness_weights !== nothing
-		append!(a.robustness_weights, b.robustness_weights)
+	for field ∈ _APPENDABLE_RESULT_FIELDS
+		values = getfield(a, field)
+		values === nothing || append!(values, getfield(b, field))
 	end
 
 	# Update fraction_used and iterations_used if they differ?
@@ -1082,6 +1084,7 @@ Stateful streaming LOWESS smoother.
 """
 mutable struct StreamingLowess
 	handle::Ptr{Cvoid}
+	lock::ReentrantLock
 
 	function StreamingLowess(;
 		fraction::Float64 = 0.67,
@@ -1170,7 +1173,7 @@ mutable struct StreamingLowess
 			error("fastlowess error: $error_message")
 		end
 
-		obj = new(handle)
+		obj = new(handle, ReentrantLock())
 		finalizer(
 			x -> ccall(
 				(:jl_streaming_lowess_free, libfastlowess),
@@ -1195,15 +1198,17 @@ function process_chunk(s::StreamingLowess, x::Vector{Float64}, y::Vector{Float64
 		throw(ArgumentError("x and y must have the same length"))
 	end
 
-	c_result = GC.@preserve s x y ccall(
-		(:jl_streaming_lowess_process_chunk, libfastlowess),
-		CJlLowessResult,
-		(Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
-		s.handle,
-		x,
-		y,
-		Culong(n),
-	)
+	c_result = lock(s.lock) do
+		GC.@preserve s x y ccall(
+			(:jl_streaming_lowess_process_chunk, libfastlowess),
+			CJlLowessResult,
+			(Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
+			s.handle,
+			x,
+			y,
+			Culong(n),
+		)
+	end
 
 	return convert_result(c_result)
 end
@@ -1214,12 +1219,14 @@ end
 Finalize streaming and return remaining buffered data.
 """
 function finalize(s::StreamingLowess)
-	c_result = GC.@preserve s ccall(
-		(:jl_streaming_lowess_finalize, libfastlowess),
-		CJlLowessResult,
-		(Ptr{Cvoid},),
-		s.handle,
-	)
+	c_result = lock(s.lock) do
+		GC.@preserve s ccall(
+			(:jl_streaming_lowess_finalize, libfastlowess),
+			CJlLowessResult,
+			(Ptr{Cvoid},),
+			s.handle,
+		)
+	end
 
 	return convert_result(c_result)
 end
@@ -1262,6 +1269,7 @@ Online always runs sequentially.
 """
 mutable struct OnlineLowess
 	handle::Ptr{Cvoid}
+	lock::ReentrantLock
 
 	function OnlineLowess(;
 		fraction::Float64 = 0.67,
@@ -1341,7 +1349,7 @@ mutable struct OnlineLowess
 			error("fastlowess error: $error_message")
 		end
 
-		obj = new(handle)
+		obj = new(handle, ReentrantLock())
 		finalizer(
 			x -> ccall(
 				(:jl_online_lowess_free, libfastlowess),
@@ -1363,14 +1371,16 @@ Returns `nothing` while the window is still filling (fewer than `min_points`
 have been seen), and an `OnlineOutput` once smoothing begins.
 """
 function add_point(o::OnlineLowess, x::Float64, y::Float64)
-	c_result = GC.@preserve o ccall(
-		(:jl_online_lowess_add_point, libfastlowess),
-		CJlOnlineOutput,
-		(Ptr{Cvoid}, Cdouble, Cdouble),
-		o.handle,
-		x,
-		y,
-	)
+	c_result = lock(o.lock) do
+		GC.@preserve o ccall(
+			(:jl_online_lowess_add_point, libfastlowess),
+			CJlOnlineOutput,
+			(Ptr{Cvoid}, Cdouble, Cdouble),
+			o.handle,
+			x,
+			y,
+		)
+	end
 
 	if c_result.error != Ptr{Cchar}(C_NULL)
 		error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
