@@ -4,6 +4,40 @@ const assert = require('node:assert');
 // Import WASM bindings using require (works in Node with generated pkg)
 const fastlowess = require('../pkg/fastlowess_wasm.js');
 
+test('WASM unknown outputs are rejected for each API mode', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2, 4, 6, 8, 10]);
+    const invalidOutput = /unknown output/i;
+
+    assert.throws(() => new fastlowess.Lowess({ outputs: ['typo'] }).fit(x, y), invalidOutput);
+    assert.throws(() => new fastlowess.StreamingLowess({ outputs: ['sorted'] }), invalidOutput);
+    assert.throws(() => new fastlowess.OnlineLowess({ outputs: ['diagnostics'] }), invalidOutput);
+
+    const result = new fastlowess.Lowess({ retain_model: true }).fit(x, y);
+    assert.throws(() => result.predict(x, { outputs: ['weights'] }), invalidOutput);
+    result.free();
+});
+
+test('WASM result arrays are copies that outlive their owners', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2, 4, 6, 8, 10]);
+    const result = new fastlowess.Lowess({ retain_model: true }).fit(x, y);
+    const resultY = result.y;
+    const expectedY = Array.from(resultY);
+    const prediction = result.predict(new Float64Array([1.5, 3.5]));
+    const predictionY = prediction.y;
+    const expectedPredictionY = Array.from(predictionY);
+
+    resultY[0] = NaN;
+    assert.deepStrictEqual(Array.from(result.y), expectedY);
+    predictionY[0] = NaN;
+    assert.deepStrictEqual(Array.from(prediction.y), expectedPredictionY);
+    result.free();
+    prediction.free();
+    assert.ok(Number.isNaN(resultY[0]));
+    assert.ok(Number.isNaN(predictionY[0]));
+});
+
 test('WASM batch smoothing', () => {
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([2, 4, 6, 8, 10]);

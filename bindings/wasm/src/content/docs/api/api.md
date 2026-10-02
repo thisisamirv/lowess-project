@@ -272,6 +272,8 @@ To get both orderings, sort the default result client-side (e.g. by the returned
 | `diagnostics` | `Diagnostics` \| `undefined` | Fit metrics (if `return_diagnostics`) |
 | `derivative` | `Float64Array` \| `undefined` | Per-point local fit derivative/slope (if `return_derivative`) |
 
+Each `Float64Array` property is an owned copy, not a view into WASM memory, so it remains valid after the result is freed or WASM memory grows. Call `result.free()` and `prediction.free()` when finished to release their WASM allocations.
+
 ### `Diagnostics`
 
 | Field | Type | Description |

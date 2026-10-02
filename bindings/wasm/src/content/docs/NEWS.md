@@ -34,6 +34,7 @@ This changelog includes end-user changes only. For internal development notes, s
 * Fixed Online incremental mode accepting positive `delta` and `auto_converge` settings it cannot use; unsupported combinations now error.
 * Fixed grouped intervals discarding distinct confidence and prediction levels; each requested coverage is now applied independently.
 * Fixed `OnlineLowess` ignoring the `outputs` option.
+* Reject unknown `outputs` names, return owned typed-array copies for results, and expose `PredictOutput.free()` in TypeScript.
 * Fixed the default `boundary_policy` (`"extend"`) letting synthetic boundary points bias the shared robustness scale estimate used to reweight every point, compounding across robustness iterations.
 * Improved agreement with R/Cleveland on sparse, asymmetric, and high-iteration fits by aligning robustness stopping, local-linear degeneracy handling, neighborhood traversal, delta interpolation, and weighted accumulation.
 * Fixed zero-radius neighborhoods dropping tied observations or accumulating normalized weights in a different order under robust fits.

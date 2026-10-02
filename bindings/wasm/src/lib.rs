@@ -105,6 +105,8 @@ export interface PredictOptions {
 
 /** Result of `LowessResult.predict()`. */
 export interface PredictOutput {
+    /** Release the WASM result allocation. */
+    free(): void;
     /** Predicted y values, one per query point. */
     readonly y: Float64Array;
     /** Standard errors (if requested). */
@@ -287,6 +289,24 @@ fn map_runtime<T, E: ToString>(result: Result<T, E>) -> Result<T, JsValue> {
 
 fn has_output(outputs: Option<&Vec<String>>, name: &str) -> bool {
     outputs.is_some_and(|values| values.iter().any(|value| value == name))
+}
+
+fn validate_outputs(outputs: Option<&Vec<String>>, allowed: &[&str]) -> Result<(), JsValue> {
+    if let Some(output) = outputs
+        .into_iter()
+        .flatten()
+        .find(|value| !allowed.contains(&value.as_str()))
+    {
+        return Err(JsValue::from_str(&format!(
+            "unknown output '{output}'. Valid outputs: {}",
+            allowed.join(", ")
+        )));
+    }
+    Ok(())
+}
+
+fn to_float64_array(values: &[f64]) -> Float64Array {
+    Float64Array::from(values)
 }
 
 fn bootstrap_count(intervals: Option<&IntervalsOptionsJs>) -> Option<usize> {
@@ -508,20 +528,17 @@ pub struct LowessResult {
 impl LowessResult {
     #[wasm_bindgen(getter)]
     pub fn x(&self) -> Float64Array {
-        unsafe { Float64Array::view(&self.inner.x) }
+        to_float64_array(&self.inner.x)
     }
 
     #[wasm_bindgen(getter)]
     pub fn y(&self) -> Float64Array {
-        unsafe { Float64Array::view(&self.inner.y) }
+        to_float64_array(&self.inner.y)
     }
 
     #[wasm_bindgen(getter)]
     pub fn residuals(&self) -> Option<Float64Array> {
-        self.inner
-            .residuals
-            .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+        self.inner.residuals.as_ref().map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = standard_errors)]
@@ -529,7 +546,7 @@ impl LowessResult {
         self.inner
             .standard_errors
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = confidence_lower)]
@@ -537,7 +554,7 @@ impl LowessResult {
         self.inner
             .confidence_lower
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = confidence_upper)]
@@ -545,7 +562,7 @@ impl LowessResult {
         self.inner
             .confidence_upper
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = prediction_lower)]
@@ -553,7 +570,7 @@ impl LowessResult {
         self.inner
             .prediction_lower
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = prediction_upper)]
@@ -561,7 +578,7 @@ impl LowessResult {
         self.inner
             .prediction_upper
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = robustness_weights)]
@@ -569,15 +586,12 @@ impl LowessResult {
         self.inner
             .robustness_weights
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter)]
     pub fn derivative(&self) -> Option<Float64Array> {
-        self.inner
-            .derivative
-            .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+        self.inner.derivative.as_ref().map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter)]
@@ -595,10 +609,7 @@ impl LowessResult {
 
     #[wasm_bindgen(getter, js_name = cv_scores)]
     pub fn cv_scores(&self) -> Option<Float64Array> {
-        self.inner
-            .cv_scores
-            .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+        self.inner.cv_scores.as_ref().map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = fraction_used)]
@@ -625,6 +636,7 @@ impl LowessResult {
         } else {
             serde_wasm_bindgen::from_value(options)?
         };
+        validate_outputs(opts.outputs.as_ref(), &["se", "derivative"])?;
         let new_x_vec = new_x.to_vec();
         let intervals = opts.intervals.as_ref();
         let query = shared_parse::build_predict_options_with_bootstrap(
@@ -658,7 +670,7 @@ pub struct PredictOutput {
 impl PredictOutput {
     #[wasm_bindgen(getter)]
     pub fn y(&self) -> Float64Array {
-        unsafe { Float64Array::view(&self.inner.y) }
+        to_float64_array(&self.inner.y)
     }
 
     #[wasm_bindgen(getter, js_name = standard_errors)]
@@ -666,7 +678,7 @@ impl PredictOutput {
         self.inner
             .standard_errors
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = confidence_lower)]
@@ -674,7 +686,7 @@ impl PredictOutput {
         self.inner
             .confidence_lower
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = confidence_upper)]
@@ -682,7 +694,7 @@ impl PredictOutput {
         self.inner
             .confidence_upper
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = prediction_lower)]
@@ -690,7 +702,7 @@ impl PredictOutput {
         self.inner
             .prediction_lower
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = prediction_upper)]
@@ -698,15 +710,12 @@ impl PredictOutput {
         self.inner
             .prediction_upper
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter)]
     pub fn derivative(&self) -> Option<Float64Array> {
-        self.inner
-            .derivative
-            .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+        self.inner.derivative.as_ref().map(|v| to_float64_array(v))
     }
 }
 
@@ -746,6 +755,17 @@ impl Lowess {
 fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LowessBuilder<f64>, JsValue> {
     let mut builder = LowessBuilder::<f64>::new();
     if let Some(opts) = opts {
+        validate_outputs(
+            opts.outputs.as_ref(),
+            &[
+                "diagnostics",
+                "residuals",
+                "weights",
+                "derivative",
+                "se",
+                "sorted",
+            ],
+        )?;
         let cv = opts.cv.as_ref();
         let intervals = opts.intervals.as_ref();
         builder = map_invalid_arg(shared_parse::apply_builder_options(
@@ -798,6 +818,10 @@ fn streaming_options_to_builder(
 ) -> Result<LowessBuilder<f64>, JsValue> {
     let mut builder = LowessBuilder::<f64>::new();
     if let Some(opts) = opts {
+        validate_outputs(
+            opts.outputs.as_ref(),
+            &["diagnostics", "residuals", "weights", "derivative", "se"],
+        )?;
         builder = map_invalid_arg(shared_parse::apply_builder_options(
             builder,
             shared_parse::BuilderOptionSet {
@@ -841,6 +865,7 @@ fn online_options_to_builder(
 ) -> Result<LowessBuilder<f64>, JsValue> {
     let mut builder = LowessBuilder::<f64>::new();
     if let Some(opts) = opts {
+        validate_outputs(opts.outputs.as_ref(), &["weights", "derivative", "se"])?;
         builder = map_invalid_arg(shared_parse::apply_builder_options(
             builder,
             shared_parse::BuilderOptionSet {
