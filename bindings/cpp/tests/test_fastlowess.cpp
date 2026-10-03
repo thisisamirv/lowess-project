@@ -14,12 +14,10 @@
 #include <system_error>
 #include <vector>
 
-static_assert(FASTLOWESS_CPP_VERSION_MAJOR >= 0,
-              "Header major version must be non-negative");
-static_assert(FASTLOWESS_CPP_VERSION_MINOR >= 0,
-              "Header minor version must be non-negative");
-static_assert(FASTLOWESS_CPP_VERSION_PATCH >= 0,
-              "Header patch version must be non-negative");
+#if FASTLOWESS_CPP_VERSION_MAJOR < 0 || FASTLOWESS_CPP_VERSION_MINOR < 0 ||    \
+    FASTLOWESS_CPP_VERSION_PATCH < 0
+#error "Header version components must be non-negative"
+#endif
 static_assert(sizeof(FASTLOWESS_CPP_VERSION_STRING) > 1,
               "Header version string must not be empty");
 
