@@ -1,7 +1,7 @@
 //! User guide and API reference for the `fastLowess` crate.
 //!
 //! Browse the submodules below for conceptual guides and worked examples.
-//! For the API itself, see [`prelude`](crate::prelude).
+//! For the API itself, see [`crate::prelude`].
 
 /// Getting started: concepts, installation, and a quick tour.
 #[cfg(doc)]
