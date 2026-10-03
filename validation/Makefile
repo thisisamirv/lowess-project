@@ -37,7 +37,7 @@ python-tests: python-deps
 
 validation-deps:
 	@echo "Installing Locfit and quickcheck into the validation library when missing..."
-	@Rscript -e "lib <- normalizePath('$(R_LIB_DIR)', winslash='/', mustWork=FALSE); dir.create(lib, recursive=TRUE, showWarnings=FALSE); missing <- c('locfit', 'quickcheck')[!dir.exists(file.path(lib, c('locfit', 'quickcheck')))]; if (length(missing)) install.packages(missing, lib=lib, repos='https://cloud.r-project.org'); if (length(missing)) stopifnot(all(vapply(missing, requireNamespace, logical(1), quietly=TRUE, lib.loc=lib)))"
+	@Rscript -e "lib <- normalizePath('$(R_LIB_DIR)', winslash='/', mustWork=FALSE); dir.create(lib, recursive=TRUE, showWarnings=FALSE); missing <- c('locfit', 'quickcheck')[!dir.exists(file.path(lib, c('locfit', 'quickcheck')))]; if (length(missing)) install.packages(missing, lib=lib, repos=getOption('repos')); if (length(missing)) stopifnot(all(vapply(missing, requireNamespace, logical(1), quietly=TRUE, lib.loc=lib)))"
 
 r-tests: validation-deps
 	@echo "Running R validation tests..."

@@ -37,7 +37,6 @@ jobs:
         run: |
           dir.create(Sys.getenv("R_LIBS_USER"), recursive = TRUE, showWarnings = FALSE)
           .libPaths(c(Sys.getenv("R_LIBS_USER"), .libPaths()))
-          options(repos = c(CRAN = "https://cloud.r-project.org"))
           install.packages(c("digest", "jsonlite", "testthat", "lintr"))
 
       - name: Install R binding
