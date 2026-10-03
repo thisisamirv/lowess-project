@@ -61,10 +61,6 @@
 #include <unistd.h> // isatty
 #endif
 
-#ifndef _WIN32
-extern "C" char **environ;
-#endif
-
 // Include the C header
 #include "fastlowess.h"
 #include "fastlowess_version.h" // IWYU pragma: export
@@ -1205,6 +1201,7 @@ inline bool runProcess(const std::vector<std::string> &arguments) {
   do {
     waited = waitpid(child, &status, 0);
   } while (waited < 0 && errno == EINTR);
+  // NOLINTNEXTLINE(misc-include-cleaner): wait macros come from sys/wait.h.
   return waited == child && WIFEXITED(status) && WEXITSTATUS(status) == 0;
 #endif
 }
