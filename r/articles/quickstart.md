@@ -38,18 +38,17 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 model <- Lowess(
     fraction = 0.5,
     iterations = 3,
-    confidence_intervals = 0.95,
-    prediction_intervals = 0.95,
-    outputs = "diagnostics"
+    outputs = "diagnostics",
+    intervals = intervals_opts(confidence = 0.90, prediction = 0.99)
 )
 result <- fit(model, x, y)
 
 cat("Smoothed (first 5):", head(result$y, 5), "\n")
 #> Smoothed (first 5): 0.4814511 0.4921418 0.5035375 0.5156728 0.528477
 cat("CI lower (first 5):", head(result$confidence_lower, 5), "\n")
-#> CI lower (first 5): 0.4076832 0.415085 0.4231661 0.4320027 0.441572
+#> CI lower (first 5): 0.4195388 0.4274692 0.4360829 0.4454497 0.4555389
 cat("CI upper (first 5):", head(result$confidence_upper, 5), "\n")
-#> CI upper (first 5): 0.555219 0.5691987 0.5839089 0.5993429 0.615382
+#> CI upper (first 5): 0.5433635 0.5568145 0.5709921 0.5858959 0.6014151
 cat("R2:", result$diagnostics$r_squared, "\n")
 #> R2: 0.7984579
 ```

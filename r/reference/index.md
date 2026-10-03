@@ -23,6 +23,9 @@ Objects returned by fit methods and helper functions.
 
   Cross-validation options for `Lowess`
 
+- [`intervals_opts()`](https://thisisamirv.github.io/lowess-project/r/reference/intervals_opts.md)
+  : Interval options for LOWESS models
+
 - [`predict(`*`<Lowess>`*`)`](https://thisisamirv.github.io/lowess-project/r/reference/predict.Lowess.md)
   : Predict from a fitted LOWESS model at out-of-sample points
 

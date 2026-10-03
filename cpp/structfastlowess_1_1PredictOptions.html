@@ -116,12 +116,10 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a305accd25711dd3a179a7cf3459adeab" id="r_a305accd25711dd3a179a7cf3459adeab"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1PredictOptions.html#a305accd25711dd3a179a7cf3459adeab">outputs</a></td></tr>
 <tr class="memdesc:a305accd25711dd3a179a7cf3459adeab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optional prediction components: "se" and/or "derivative".  <br /></td></tr>
 <tr class="separator:a305accd25711dd3a179a7cf3459adeab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a609d772756178317fa079a367c987ccd" id="r_a609d772756178317fa079a367c987ccd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1PredictOptions.html#a609d772756178317fa079a367c987ccd">confidence_level</a> = <a class="el" href="classfastlowess_1_1Expected.html">NAN</a></td></tr>
-<tr class="memdesc:a609d772756178317fa079a367c987ccd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confidence level (NaN = disabled)  <br /></td></tr>
-<tr class="separator:a609d772756178317fa079a367c987ccd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae0c166e9dea8f7c2a2455cd7e08d9847" id="r_ae0c166e9dea8f7c2a2455cd7e08d9847"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1PredictOptions.html#ae0c166e9dea8f7c2a2455cd7e08d9847">prediction_level</a> = <a class="el" href="classfastlowess_1_1Expected.html">NAN</a></td></tr>
-<tr class="memdesc:ae0c166e9dea8f7c2a2455cd7e08d9847"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prediction level (NaN = disabled)  <br /></td></tr>
-<tr class="separator:ae0c166e9dea8f7c2a2455cd7e08d9847"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d09716f4e9e302eac369ab7fcf644c2" id="r_a1d09716f4e9e302eac369ab7fcf644c2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structfastlowess_1_1IntervalsOptions.html">IntervalsOptions</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1PredictOptions.html#a1d09716f4e9e302eac369ab7fcf644c2">intervals</a></td></tr>
+<tr class="separator:a1d09716f4e9e302eac369ab7fcf644c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9a5002999e0833b1415ce9c42dd4bf3a" id="r_a9a5002999e0833b1415ce9c42dd4bf3a"><td class="memItemLeft" align="right" valign="top">std::optional&lt; <a class="el" href="classfastlowess_1_1Expected.html">uint64_t</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1PredictOptions.html#a9a5002999e0833b1415ce9c42dd4bf3a">seed</a></td></tr>
+<tr class="separator:a9a5002999e0833b1415ce9c42dd4bf3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac91e50da36de9e0d880fe59b1c5370a2" id="r_ac91e50da36de9e0d880fe59b1c5370a2"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1PredictOptions.html#ac91e50da36de9e0d880fe59b1c5370a2">extrapolation</a> = &quot;clamp&quot;</td></tr>
 <tr class="memdesc:ac91e50da36de9e0d880fe59b1c5370a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Behavior for query points outside the training range ("clamp", "linear", "error").  <br /></td></tr>
 <tr class="separator:ac91e50da36de9e0d880fe59b1c5370a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -135,22 +133,6 @@ Public Attributes</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Options for <code><a class="el" href="classfastlowess_1_1PredictModel.html#a724df1181a3f0da7d687b19448c67bd8" title="Evaluate the fitted model at out-of-sample query points not in the training set.">PredictModel::predict()</a></code>. </p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
-<a id="a609d772756178317fa079a367c987ccd" name="a609d772756178317fa079a367c987ccd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a609d772756178317fa079a367c987ccd">&#9670;&#160;</a></span>confidence_level</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">double</a> fastlowess::PredictOptions::confidence_level = <a class="el" href="classfastlowess_1_1Expected.html">NAN</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Confidence level (NaN = disabled) </p>
-
-</div>
-</div>
 <a id="ac91e50da36de9e0d880fe59b1c5370a2" name="ac91e50da36de9e0d880fe59b1c5370a2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac91e50da36de9e0d880fe59b1c5370a2">&#9670;&#160;</a></span>extrapolation</h2>
 
@@ -164,6 +146,20 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Behavior for query points outside the training range ("clamp", "linear", "error"). </p>
+
+</div>
+</div>
+<a id="a1d09716f4e9e302eac369ab7fcf644c2" name="a1d09716f4e9e302eac369ab7fcf644c2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1d09716f4e9e302eac369ab7fcf644c2">&#9670;&#160;</a></span>intervals</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structfastlowess_1_1IntervalsOptions.html">IntervalsOptions</a> fastlowess::PredictOptions::intervals</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>
@@ -215,19 +211,17 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="ae0c166e9dea8f7c2a2455cd7e08d9847" name="ae0c166e9dea8f7c2a2455cd7e08d9847"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae0c166e9dea8f7c2a2455cd7e08d9847">&#9670;&#160;</a></span>prediction_level</h2>
+<a id="a9a5002999e0833b1415ce9c42dd4bf3a" name="a9a5002999e0833b1415ce9c42dd4bf3a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9a5002999e0833b1415ce9c42dd4bf3a">&#9670;&#160;</a></span>seed</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">double</a> fastlowess::PredictOptions::prediction_level = <a class="el" href="classfastlowess_1_1Expected.html">NAN</a></td>
+          <td class="memname">std::optional&lt;<a class="el" href="classfastlowess_1_1Expected.html">uint64_t</a>&gt; fastlowess::PredictOptions::seed</td>
         </tr>
       </table>
 </div><div class="memdoc">
-
-<p>Prediction level (NaN = disabled) </p>
 
 </div>
 </div>

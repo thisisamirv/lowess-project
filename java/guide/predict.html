@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Out-of-Sample Prediction :: fastlowess (Java)</title>
     <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/guide/predict.html">
-    <meta name="generator" content="Antora 3.2.0">
+    <meta name="generator" content="Antora 3.2.1">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
   <body class="article">
@@ -248,22 +248,16 @@ Out-of-sample prediction is available in <strong>Batch</strong> mode only. Strea
 <td class="tableblock halign-left valign-top"><p class="tableblock">Select <code>"se"</code> and/or <code>"derivative"</code>.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>confidenceLevel</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Confidence interval coverage level (e.g. <code>0.95</code>; NaN to disable).</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intervals(IntervalsOptions)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IntervalsOptions</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">disabled</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Confidence/prediction levels and optional residual-bootstrap refits.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>predictionLevel</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Prediction interval coverage level (e.g. <code>0.95</code>; NaN to disable).</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDerivative</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Include the local fit&#8217;s derivative (slope) at each query point.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>seed(long)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>long</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">unset</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Reproducible prediction-time bootstrap draws; <code>0</code> is valid.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>extrapolation</code></p></td>
@@ -286,27 +280,24 @@ Out-of-sample prediction is available in <strong>Batch</strong> mode only. Strea
 </tbody>
 </table>
 <div class="sect2">
-<h3 id="returnse"><a class="anchor" href="#returnse"></a>returnSe</h3>
+<h3 id="outputs"><a class="anchor" href="#outputs"></a>outputs</h3>
 <div class="paragraph">
-<p>Computes standard errors for each query point, using the retained model&#8217;s residual scale and per-point leverage. Required for <code>confidenceLevel</code>/<code>predictionLevel</code> to be populated. <code>false</code> by default.</p>
+<p>Request <code>"se"</code> for standard errors (from the retained model&#8217;s residual scale and per-point leverage) and <code>"derivative"</code> for the local slope at each query point. Analytic intervals compute their required standard errors even without an explicit <code>"se"</code> output.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="confidencelevel"><a class="anchor" href="#confidencelevel"></a>confidenceLevel</h3>
+<h3 id="intervals"><a class="anchor" href="#intervals"></a>intervals</h3>
 <div class="paragraph">
-<p>Confidence level for the confidence interval around the mean response at each query point (e.g. <code>0.95</code>). Uses the same z-score convention as <code>fit&#8217;s own confidence intervals. `NaN</code> (default) disables it.</p>
+<p>Build with <code>IntervalsOptions.builder()</code>. <code>confidence(level)</code> bounds the mean response and <code>prediction(level)</code> bounds a new observation at each query point (e.g. <code>0.95</code>). Without bootstrap, these use normal-theory standard errors and the retained residual scale.</p>
+</div>
+<div class="paragraph">
+<p>Set <code>bootstrap(n)</code> to at least <code>2</code> to resample the retained Batch residuals, refit the model, and calculate query-point percentile intervals and standard errors.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="predictionlevel"><a class="anchor" href="#predictionlevel"></a>predictionLevel</h3>
+<h3 id="seed"><a class="anchor" href="#seed"></a>seed</h3>
 <div class="paragraph">
-<p>Confidence level for the prediction interval for a new observation at each query point (e.g. <code>0.95</code>). Widens using the same MAD-based residual scale <code>fit</code> uses for its own intervals. <code>NaN</code> (default) disables it.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="returnderivative"><a class="anchor" href="#returnderivative"></a>returnDerivative</h3>
-<div class="paragraph">
-<p>Includes the local fit&#8217;s derivative (slope) at each query point in the output. <code>false</code> by default.</p>
+<p>Seeds prediction-time bootstrap draws, independently of the fit/CV <code>seed</code> on <code>Options</code>. It does not enable bootstrap by itself.</p>
 </div>
 </div>
 <div class="sect2">
@@ -390,6 +381,18 @@ try (Lowess model = new Lowess(options)) {
         .outputs("se", "derivative")
         .build();
 PredictResult prediction = predictModel.predict(new double[] { 2.5 }, options);</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="bootstrap-intervals"><a class="anchor" href="#bootstrap-intervals"></a>Bootstrap Intervals</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">PredictOptions options = PredictOptions.builder()
+        .intervals(IntervalsOptions.builder().confidence(0.95).prediction(0.95).bootstrap(200).build())
+        .seed(7L)
+        .build();
+PredictResult prediction = predictModel.predict(new double[] { 2.5, 4.5 }, options);</code></pre>
 </div>
 </div>
 </div>

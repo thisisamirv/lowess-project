@@ -111,7 +111,7 @@ $(document).ready(function(){initNavTree('use_case_genomics.html',''); initResiz
 <h3>The Challenge</h3>
 <p>DNA methylation data (from bisulfite sequencing or arrays) shows position-dependent patterns that can be obscured by measurement noise.</p>
 <h3>Solution</h3>
-<p>A small <code>fraction = 0.1</code> lets LOWESS follow fine-scale spatial structure without smearing the transitions between methylated and unmethylated regions. <code>confidence_intervals = 0.95</code> produces uncertainty bands that naturally widen at positions with sparser CpG coverage, making low-confidence segments immediately apparent in the plot.</p>
+<p>A small <code>fraction = 0.1</code> lets LOWESS follow fine-scale spatial structure without smearing the transitions between methylated and unmethylated regions. <code>intervals.confidence = 0.95</code> produces uncertainty bands that naturally widen at positions with sparser CpG coverage, making low-confidence segments immediately apparent in the plot.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastlowess_8hpp.html">fastlowess.hpp</a>&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
@@ -126,8 +126,12 @@ $(document).ready(function(){initNavTree('use_case_genomics.html',''); initResiz
 <div class="line">    }</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// positions and observed are std::vector&lt;double&gt;</span></div>
-<div class="line">    <a class="code hl_class" href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a> model({ .fraction = 0.1, .iterations = 3, .confidence_intervals = 0.95 });</div>
-<div class="line">    <span class="keyword">auto</span> result = model.<a class="code hl_function" href="classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e">fit</a>(positions, observed).<a class="code hl_function" href="classfastlowess_1_1Expected.html#aeb88e40ff81b811771e6e2013fad7a6c">value</a>();</div>
+<div class="line">    <a class="code hl_struct" href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a> options;</div>
+<div class="line">    options.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fraction</a> = 0.1;</div>
+<div class="line">    options.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a3a9b03636d3cb266eb345e3f405ba66b">iterations</a> = 3;</div>
+<div class="line">    options.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a1756ec432dde53ce3f10059e91726d4d">intervals</a>.<a class="code hl_variable" href="structfastlowess_1_1IntervalsOptions.html#a4d5cff09006469752a2b99839de13cbc">confidence</a> = 0.95;</div>
+<div class="line">    <a class="code hl_class" href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a> model(options);</div>
+<div class="line">    <span class="keyword">auto</span> result = model.fit(positions, observed).value();</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// Smoothed profile in result.y_vector()</span></div>
 <div class="line">    <span class="comment">// CI bounds in result.confidence_lower()/result.confidence_upper()</span></div>
@@ -135,10 +139,13 @@ $(document).ready(function(){initNavTree('use_case_genomics.html',''); initResiz
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastlowess_1_1Expected_html_aeb88e40ff81b811771e6e2013fad7a6c"><div class="ttname"><a href="classfastlowess_1_1Expected.html#aeb88e40ff81b811771e6e2013fad7a6c">fastlowess::Expected::value</a></div><div class="ttdeci">T &amp; value() &amp;</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:90</div></div>
-<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:700</div></div>
-<div class="ttc" id="aclassfastlowess_1_1Lowess_html_a504a722970109b32ab8318352d224a2e"><div class="ttname"><a href="classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e">fastlowess::Lowess::fit</a></div><div class="ttdeci">Expected&lt; LowessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:748</div></div>
+<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:766</div></div>
 <div class="ttc" id="afastlowess_8hpp_html"><div class="ttname"><a href="fastlowess_8hpp.html">fastlowess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLowess library.</div></div>
+<div class="ttc" id="astructfastlowess_1_1IntervalsOptions_html_a4d5cff09006469752a2b99839de13cbc"><div class="ttname"><a href="structfastlowess_1_1IntervalsOptions.html#a4d5cff09006469752a2b99839de13cbc">fastlowess::IntervalsOptions::confidence</a></div><div class="ttdeci">double confidence</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:92</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a></div><div class="ttdoc">Options for configuring LOWESS smoothing.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:195</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_a1756ec432dde53ce3f10059e91726d4d"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#a1756ec432dde53ce3f10059e91726d4d">fastlowess::LowessOptions::intervals</a></div><div class="ttdeci">IntervalsOptions intervals</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:206</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_a3a9b03636d3cb266eb345e3f405ba66b"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#a3a9b03636d3cb266eb345e3f405ba66b">fastlowess::LowessOptions::iterations</a></div><div class="ttdeci">int iterations</div><div class="ttdoc">Robustness iterations.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:197</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ac4c7e581cd561fc11a928f9901bb5ec6"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fastlowess::LowessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:196</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [53.2792, 67.1554]</div>
 </div><!-- fragment --><hr  />
 <h2>ChIP-seq Signal Smoothing</h2>
@@ -159,7 +166,7 @@ $(document).ready(function(){initNavTree('use_case_genomics.html',''); initResiz
 <div class="line">    }</div>
 <div class="line"> </div>
 <div class="line">    <a class="code hl_class" href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a> model({ .fraction = 0.05, .iterations = 5 });</div>
-<div class="line">    <span class="keyword">auto</span> result = model.fit(positions, observed).<a class="code hl_function" href="classfastlowess_1_1Expected.html#aeb88e40ff81b811771e6e2013fad7a6c">value</a>();</div>
+<div class="line">    <span class="keyword">auto</span> result = model.<a class="code hl_function" href="classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e">fit</a>(positions, observed).<a class="code hl_function" href="classfastlowess_1_1Expected.html#aeb88e40ff81b811771e6e2013fad7a6c">value</a>();</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// Find peaks above threshold</span></div>
 <div class="line">    <span class="keywordtype">int</span> peak_count = 0;</div>
@@ -171,6 +178,8 @@ $(document).ready(function(){initNavTree('use_case_genomics.html',''); initResiz
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Peak count: &quot;</span> &lt;&lt; peak_count &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+<div class="ttc" id="aclassfastlowess_1_1Expected_html_aeb88e40ff81b811771e6e2013fad7a6c"><div class="ttname"><a href="classfastlowess_1_1Expected.html#aeb88e40ff81b811771e6e2013fad7a6c">fastlowess::Expected::value</a></div><div class="ttdeci">T &amp; value() &amp;</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:151</div></div>
+<div class="ttc" id="aclassfastlowess_1_1Lowess_html_a504a722970109b32ab8318352d224a2e"><div class="ttname"><a href="classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e">fastlowess::Lowess::fit</a></div><div class="ttdeci">Expected&lt; LowessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:824</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 59.9376</div>
 <div class="line">Peak count: 26</div>
 </div><!-- fragment --><hr  />
@@ -202,13 +211,11 @@ $(document).ready(function(){initNavTree('use_case_genomics.html',''); initResiz
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastlowess_1_1StreamingLowess_html"><div class="ttname"><a href="classfastlowess_1_1StreamingLowess.html">fastlowess::StreamingLowess</a></div><div class="ttdoc">Streaming LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:782</div></div>
-<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_a3a9b03636d3cb266eb345e3f405ba66b"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#a3a9b03636d3cb266eb345e3f405ba66b">fastlowess::LowessOptions::iterations</a></div><div class="ttdeci">int iterations</div><div class="ttdoc">Robustness iterations.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:136</div></div>
-<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ac4c7e581cd561fc11a928f9901bb5ec6"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fastlowess::LowessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:135</div></div>
-<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html">fastlowess::StreamingOptions</a></div><div class="ttdoc">Options for streaming LOWESS.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:175</div></div>
-<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_a493fdf1cc257a60df0d57efc7e9f7cc5"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#a493fdf1cc257a60df0d57efc7e9f7cc5">fastlowess::StreamingOptions::overlap</a></div><div class="ttdeci">int overlap</div><div class="ttdoc">Negative (the default) means &quot;use the library default&quot; (chunk_size / 10, clamped to [1,...</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:179</div></div>
-<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_a5c33b791424c7b5f6aa95e1f8e8a6121"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#a5c33b791424c7b5f6aa95e1f8e8a6121">fastlowess::StreamingOptions::merge_strategy</a></div><div class="ttdeci">std::string merge_strategy</div><div class="ttdoc">weighted_average, average, take_first, take_last</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:180</div></div>
-<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_aef557d1b8515c43f5027f0afea85018a"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#aef557d1b8515c43f5027f0afea85018a">fastlowess::StreamingOptions::chunk_size</a></div><div class="ttdeci">int chunk_size</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:176</div></div>
+<div class="ttc" id="aclassfastlowess_1_1StreamingLowess_html"><div class="ttname"><a href="classfastlowess_1_1StreamingLowess.html">fastlowess::StreamingLowess</a></div><div class="ttdoc">Streaming LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:858</div></div>
+<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html">fastlowess::StreamingOptions</a></div><div class="ttdoc">Options for streaming LOWESS.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:236</div></div>
+<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_a493fdf1cc257a60df0d57efc7e9f7cc5"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#a493fdf1cc257a60df0d57efc7e9f7cc5">fastlowess::StreamingOptions::overlap</a></div><div class="ttdeci">int overlap</div><div class="ttdoc">Negative (the default) means &quot;use the library default&quot; (chunk_size / 10, clamped to [1,...</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:240</div></div>
+<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_a5c33b791424c7b5f6aa95e1f8e8a6121"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#a5c33b791424c7b5f6aa95e1f8e8a6121">fastlowess::StreamingOptions::merge_strategy</a></div><div class="ttdeci">std::string merge_strategy</div><div class="ttdoc">weighted_average, average, take_first, take_last</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:241</div></div>
+<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_aef557d1b8515c43f5027f0afea85018a"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#aef557d1b8515c43f5027f0afea85018a">fastlowess::StreamingOptions::chunk_size</a></div><div class="ttdeci">int chunk_size</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:237</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 41.2839</div>
 </div><!-- fragment --><hr  />
 <h2>Best Practices for Genomic Data</h2>

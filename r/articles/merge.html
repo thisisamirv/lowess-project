@@ -137,9 +137,9 @@ option.</p>
 <span><span class="va">y_chunk</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">50</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLowess.html">StreamingLowess</a></span><span class="op">(</span></span>
-<span>    merge_strategy <span class="op">=</span> <span class="st">"weighted_average"</span>,</span>
 <span>    chunk_size <span class="op">=</span> <span class="fl">5000</span>,</span>
-<span>    overlap <span class="op">=</span> <span class="fl">500</span></span>
+<span>    overlap <span class="op">=</span> <span class="fl">500</span>,</span>
+<span>    merge_strategy <span class="op">=</span> <span class="st">"weighted_average"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x_chunk</span>, <span class="va">y_chunk</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (weighted_average strategy):\n"</span><span class="op">)</span></span>
@@ -157,9 +157,9 @@ in the overlap region.</p>
 has uniform data density.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLowess.html">StreamingLowess</a></span><span class="op">(</span></span>
-<span>    merge_strategy <span class="op">=</span> <span class="st">"average"</span>,</span>
 <span>    chunk_size <span class="op">=</span> <span class="fl">5000</span>,</span>
-<span>    overlap <span class="op">=</span> <span class="fl">500</span></span>
+<span>    overlap <span class="op">=</span> <span class="fl">500</span>,</span>
+<span>    merge_strategy <span class="op">=</span> <span class="st">"average"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x_chunk</span>, <span class="va">y_chunk</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (average strategy):\n"</span><span class="op">)</span></span>
@@ -176,9 +176,9 @@ has uniform data density.</p>
 and is expected to be more accurate at the overlap boundary.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLowess.html">StreamingLowess</a></span><span class="op">(</span></span>
-<span>    merge_strategy <span class="op">=</span> <span class="st">"take_first"</span>,</span>
 <span>    chunk_size <span class="op">=</span> <span class="fl">5000</span>,</span>
-<span>    overlap <span class="op">=</span> <span class="fl">500</span></span>
+<span>    overlap <span class="op">=</span> <span class="fl">500</span>,</span>
+<span>    merge_strategy <span class="op">=</span> <span class="st">"take_first"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x_chunk</span>, <span class="va">y_chunk</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (take_first strategy):\n"</span><span class="op">)</span></span>
@@ -195,9 +195,9 @@ and is expected to be more accurate at the overlap boundary.</p>
 better context (e.g., more data follows).</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLowess.html">StreamingLowess</a></span><span class="op">(</span></span>
-<span>    merge_strategy <span class="op">=</span> <span class="st">"take_last"</span>,</span>
 <span>    chunk_size <span class="op">=</span> <span class="fl">5000</span>,</span>
-<span>    overlap <span class="op">=</span> <span class="fl">500</span></span>
+<span>    overlap <span class="op">=</span> <span class="fl">500</span>,</span>
+<span>    merge_strategy <span class="op">=</span> <span class="st">"take_last"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x_chunk</span>, <span class="va">y_chunk</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (take_last strategy):\n"</span><span class="op">)</span></span>

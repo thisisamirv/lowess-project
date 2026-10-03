@@ -33,8 +33,9 @@ repository](https://github.com/thisisamirv/lowess-project).
 
 ### GPU Backend
 
-GPU acceleration (`wgpu`: Vulkan/Metal/DX12) is also supported for
-high-throughput batch smoothing. See the [GPU Backend
+GPU acceleration (`wgpu`: Vulkan, Metal, DirectX 12, and GLES on
+Android) is also supported for high-throughput batch smoothing. See the
+[GPU Backend
 guide](https://thisisamirv.github.io/lowess-project/r/articles/gpu-backend.html)
 for details.
 
@@ -125,17 +126,17 @@ A variety of features, supporting a range of use cases:
 |----------------------|:------------:|:------------:|:------------:|
 | Kernel               |  7 options   | only Tricube | only Tricube |
 | Robustness Weighting |  3 options   |  only Huber  |  only Huber  |
-| Scale Estimation     |  2 options   |   only MAR   |   only MAR   |
-| Boundary Padding     |  4 options   |  no padding  |  no padding  |
 | Zero Weight Fallback |  3 options   |      no      |      no      |
+| Boundary Padding     |  4 options   |  no padding  |  no padding  |
+| Scale Estimation     |  2 options   |   only MAR   |   only MAR   |
 | Auto Convergence     |     yes      |      no      |      no      |
-| Online Mode          |     yes      |      no      |      no      |
-| Streaming Mode       |     yes      |      no      |      no      |
+| Parallel Execution   |     yes      |      no      |      no      |
+| GPU Acceleration     |     yes      |      no      |      no      |
 | Confidence Intervals |     yes      |      no      |      no      |
 | Prediction Intervals |     yes      |      no      |      no      |
 | Cross-Validation     |  2 options   |      no      |      no      |
-| Parallel Execution   |     yes      |      no      |      no      |
-| GPU Acceleration     |     yes      |      no      |      no      |
+| Streaming Mode       |     yes      |      no      |      no      |
+| Online Mode          |     yes      |      no      |      no      |
 | `no-std` Support     |     yes      |      no      |      no      |
 
 ## Validation

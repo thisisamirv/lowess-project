@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Changelog :: fastlowess (Java)</title>
     <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/NEWS.html">
-    <meta name="generator" content="Antora 3.2.0">
+    <meta name="generator" content="Antora 3.2.1">
     <link rel="stylesheet" href="./_/css/site.css">
   </head>
   <body class="article">
@@ -202,10 +202,29 @@
 <div class="ulist">
 <ul>
 <li>
+<p>Enabled the optional wgpu DirectX 12 backend for GPU-enabled Windows builds. DXC is loaded dynamically with an FXC fallback, avoiding eager imports of <code>dxcompiler.dll</code> and <code>dxil.dll</code>.</p>
+</li>
+<li>
+<p>Added GLES for Android GPU builds with a target-scoped <code>wgpu</code> feature; Windows continues to omit the GLES-only loader imports.</p>
+</li>
+<li>
 <p>Added grouped <code>outputs(&#8230;&#8203;)</code>, <code>cv(CVOptions&#8230;&#8203;)</code>, and prediction-output APIs while preserving native option mapping.</p>
 </li>
 <li>
+<p>Added <code>IntervalsOptions</code> for grouped confidence/prediction levels and residual-bootstrap intervals in <code>Lowess</code>, <code>StreamingLowess</code>, full-update <code>OnlineLowess</code>, and <code>PredictModel.predict</code>.</p>
+</li>
+<li>
 <p>Added an "Alternative Software" guide comparing <code>fastlowess</code> with Apache Commons Math&#8217;s <code>LoessInterpolator</code>.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="changed"><a class="anchor" href="#changed"></a>Changed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Breaking change: replaced flat interval setters and <code>PredictOptions</code> interval levels with <code>intervals(IntervalsOptions)</code>, and replaced flat CV setters and <code>CVOptions.seed</code> with <code>cv(CVOptions)</code> plus one outer <code>seed(long)</code> shared by CV and bootstrap. <code>PredictOptions</code> has its own <code>seed</code> for prediction-time bootstrap.</p>
 </li>
 </ul>
 </div>
@@ -215,7 +234,70 @@
 <div class="ulist">
 <ul>
 <li>
+<p>Fixed global OLS fits treating predictor values with a large offset as degenerate; translated inputs now retain their fitted slope.</p>
+</li>
+<li>
+<p>Fixed fraction-1 global fits ignoring custom weights, including when Batch sorts observations by x.</p>
+</li>
+<li>
+<p>Fixed Batch <code>missing = "drop"</code> accepting custom weights with a length different from the original input; weights are validated before rows are dropped.</p>
+</li>
+<li>
+<p>Fixed standard errors for global weighted fits to account for observation weights and weighted prediction leverage.</p>
+</li>
+<li>
+<p>Fixed local Batch and retained-model prediction standard errors ignoring <code>custom_weights</code>; local SE moments now include the per-observation case weights.</p>
+</li>
+<li>
+<p>Fixed global fits with all-zero custom weights to honor the configured zero-weight fallback policy.</p>
+</li>
+<li>
+<p>Fixed fraction-1 global fits ignoring configured robustness iterations; they now reweight observations and report iterations used.</p>
+</li>
+<li>
+<p>Fixed Batch cross-validation candidate fits ignoring <code>custom_weights</code>; K-fold CV now rejects more folds than observations instead of returning zero scores.</p>
+</li>
+<li>
+<p>Fixed Streaming and Online accepting invalid <code>auto_converge</code> tolerances; Online also rejects invalid explicit <code>delta</code> values while retaining NaN as its default sentinel.</p>
+</li>
+<li>
+<p>Fixed GPU Batch fits misaligning fitted values with unsorted inputs; results now preserve input and requested sorted order.</p>
+</li>
+<li>
+<p>Fixed GPU Batch silently ignoring <code>custom_weights</code>; GPU fit and CV candidate kernels now apply them directly.</p>
+</li>
+<li>
+<p>Reduced GPU adapter buffer requirements from 30 storage/32 total buffer bindings to 7 storage/8 total per shader stage by using per-compute-pipeline resource layouts.</p>
+</li>
+<li>
+<p>Fixed Online incremental mode accepting positive <code>delta</code> and <code>auto_converge</code> settings it cannot use; unsupported combinations now error.</p>
+</li>
+<li>
+<p>Fixed grouped intervals discarding distinct confidence and prediction levels; each requested coverage is now applied independently.</p>
+</li>
+<li>
+<p>Fixed retained-model handles leaking when JNI result conversion fails and array-read failures being hidden as empty inputs.</p>
+</li>
+<li>
+<p>Fixed invalid k-fold counts and negative Streaming/Online iterations being silently coerced; CV grids and explicit custom-weight arrays must now be non-empty/valid.</p>
+</li>
+<li>
+<p>Fixed GPU installation selecting unsupported libc/architecture targets or accepting incompatible local libraries; supported targets and a matching GPU ABI marker are now required.</p>
+</li>
+<li>
+<p>Serialized operations on each Java model instance to protect mutable native state during concurrent calls.</p>
+</li>
+<li>
 <p>Fixed the default <code>boundaryPolicy</code> (<code>"extend"</code>) letting synthetic boundary points bias the shared robustness scale estimate used to reweight every point, compounding across robustness iterations.</p>
+</li>
+<li>
+<p>Improved agreement with R/Cleveland on sparse, asymmetric, and high-iteration fits by aligning robustness stopping, local-linear degeneracy handling, neighborhood traversal, delta interpolation, and weighted accumulation.</p>
+</li>
+<li>
+<p>Fixed zero-radius neighborhoods dropping tied observations or accumulating normalized weights in a different order under robust fits.</p>
+</li>
+<li>
+<p>Fixed Gaussian fits clipping the unbounded kernel to the neighbor window and flooring far-tail weights; all observations now contribute under the standard Gaussian formula.</p>
 </li>
 </ul>
 </div>
@@ -282,7 +364,7 @@
 </div>
 </div>
 <div class="sect2">
-<h3 id="changed"><a class="anchor" href="#changed"></a>Changed</h3>
+<h3 id="changed-2"><a class="anchor" href="#changed-2"></a>Changed</h3>
 <div class="ulist">
 <ul>
 <li>
@@ -306,7 +388,7 @@
 <h2 id="3-2-1"><a class="anchor" href="#3-2-1"></a>3.2.1</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="changed-2"><a class="anchor" href="#changed-2"></a>Changed</h3>
+<h3 id="changed-3"><a class="anchor" href="#changed-3"></a>Changed</h3>
 <div class="ulist">
 <ul>
 <li>

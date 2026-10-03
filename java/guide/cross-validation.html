@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Cross-Validation :: fastlowess (Java)</title>
     <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/guide/cross-validation.html">
-    <meta name="generator" content="Antora 3.2.0">
+    <meta name="generator" content="Antora 3.2.1">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
   <body class="article">
@@ -305,7 +305,7 @@ public class Example {
 <h2 id="seeded-randomization"><a class="anchor" href="#seeded-randomization"></a>Seeded Randomization</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Set a seed for reproducible fold assignments:</p>
+<p>Set a seed on the outer options for reproducible fold assignments. The same seed also controls residual bootstrap when <code>intervals</code> enable it:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -326,7 +326,8 @@ public class Example {
 
         Options options = Options.builder()
                 .cv(CVOptions.builder().method("kfold").k(5)
-                    .fractions(0.3, 0.5, 0.7).seed(42L).build())
+                    .fractions(0.3, 0.5, 0.7).build())
+                .seed(42L)
                 .build();
 
         try (Lowess model = new Lowess(options)) {
@@ -428,7 +429,8 @@ public class Example {
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.CVOptions;
+import fastlowess.Lowess;
 import fastlowess.Options;
 import fastlowess.Result;
 
@@ -443,9 +445,8 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .cvMethod("kfold")
-                .cvK(5)
-                .cvFractions(new double[] { 0.1, 0.3, 0.5, 0.7 })
+                .cv(CVOptions.builder().method("kfold").k(5)
+                    .fractions(0.1, 0.3, 0.5, 0.7).build())
                 .build();
 
         // Fraction  | CV Score (MSE)

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Intervals :: fastlowess (Java)</title>
     <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/guide/intervals.html">
-    <meta name="generator" content="Antora 3.2.0">
+    <meta name="generator" content="Antora 3.2.1">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
   <body class="article">
@@ -226,24 +226,24 @@
 </colgroup>
 <thead>
 <tr>
+<th class="tableblock halign-left valign-top">Confidence and prediction coverage levels are independent; for example, a 90% confidence interval can be paired with a 99% prediction interval.</th>
 <th class="tableblock halign-left valign-top">Type</th>
 <th class="tableblock halign-left valign-top">Represents</th>
 <th class="tableblock halign-left valign-top">Width</th>
-<th class="tableblock halign-left valign-top">Use</th>
 </tr>
 </thead>
 <tbody>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Confidence</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Uncertainty in mean curve</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Narrow</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Where is the true trend?</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Where is the true trend?</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Prediction</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Uncertainty for new points</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Wide</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Where will new data fall?</p></td>
 </tr>
 </tbody>
 </table>
@@ -258,7 +258,8 @@
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.IntervalsOptions;
+import fastlowess.Lowess;
 import fastlowess.Options;
 import fastlowess.Result;
 
@@ -274,7 +275,7 @@ public class Example {
 
         Options options = Options.builder()
                 .fraction(0.5)
-                .confidenceIntervals(0.95) // 95% CI
+                .intervals(IntervalsOptions.builder().confidence(0.95).build()) // 95% CI
                 .build();
 
         try (Lowess model = new Lowess(options)) {
@@ -309,7 +310,8 @@ x=0.13: y=0.39 [0.35, 0.43]</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.IntervalsOptions;
+import fastlowess.Lowess;
 import fastlowess.Options;
 import fastlowess.Result;
 
@@ -325,7 +327,7 @@ public class Example {
 
         Options options = Options.builder()
                 .fraction(0.5)
-                .predictionIntervals(0.95) // 95% PI
+                .intervals(IntervalsOptions.builder().prediction(0.95).build()) // 95% PI
                 .build();
 
         try (Lowess model = new Lowess(options)) {
@@ -353,7 +355,8 @@ public class Example {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.IntervalsOptions;
+import fastlowess.Lowess;
 import fastlowess.Options;
 import fastlowess.Result;
 
@@ -369,8 +372,7 @@ public class Example {
 
         Options options = Options.builder()
                 .fraction(0.5)
-                .confidenceIntervals(0.95)
-                .predictionIntervals(0.95)
+                .intervals(IntervalsOptions.builder().confidence(0.95).prediction(0.95).build())
                 .build();
 
         try (Lowess model = new Lowess(options)) {
@@ -429,7 +431,8 @@ public class Example {
 </table>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.IntervalsOptions;
+import fastlowess.Lowess;
 import fastlowess.Options;
 import fastlowess.Result;
 
@@ -444,7 +447,9 @@ public class Example {
         }
 
         // 99% confidence interval
-        Options options = Options.builder().confidenceIntervals(0.99).build();
+        Options options = Options.builder()
+                .intervals(IntervalsOptions.builder().confidence(0.99).build())
+                .build();
 
         try (Lowess model = new Lowess(options)) {
             Result result = model.fit(x, y);
@@ -457,6 +462,68 @@ public class Example {
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First lower CI bound (99%): 0.31746448671917393</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="residual-bootstrap"><a class="anchor" href="#residual-bootstrap"></a>Residual Bootstrap</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Set <code>bootstrap(n)</code> to at least <code>2</code> to replace analytic uncertainty with residual-bootstrap refits. Batch shares its outer <code>seed</code> with CV; Streaming restarts the seed per combined chunk, and Online per full-update window. Online bootstrap requires <code>updateMode("full")</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.IntervalsOptions;
+import fastlowess.Lowess;
+import fastlowess.OnlineLowess;
+import fastlowess.OnlineOptions;
+import fastlowess.Options;
+import fastlowess.PointResult;
+import fastlowess.Result;
+import fastlowess.StreamingLowess;
+import fastlowess.StreamingOptions;
+
+public class Example {
+    public static void main(String[] args) {
+        double[] x = new double[30];
+        double[] y = new double[30];
+        for (int i = 0; i &lt; x.length; i++) {
+            x[i] = i * 0.1;
+            y[i] = Math.sin(x[i]) + 0.1 * Math.cos(7 * x[i]);
+        }
+        IntervalsOptions intervals = IntervalsOptions.builder()
+                .confidence(0.95).prediction(0.95).bootstrap(20).build();
+
+        try (Lowess batch = new Lowess(Options.builder().intervals(intervals).seed(42L).build())) {
+            Result fitted = batch.fit(x, y);
+            System.out.println("Batch SEs: " + fitted.standardErrors().orElseThrow().length);
+        }
+
+        try (StreamingLowess stream = new StreamingLowess(StreamingOptions.builder()
+                .chunkSize(x.length).intervals(intervals).seed(42L).build())) {
+            Result chunk = stream.processChunk(x, y);
+            System.out.println("Streaming CI present: " + chunk.confidenceLower().isPresent());
+        }
+
+        try (OnlineLowess online = new OnlineLowess(OnlineOptions.builder()
+                .minPoints(5).updateMode("full").intervals(intervals).seed(42L).build())) {
+            PointResult last = null;
+            for (int i = 0; i &lt; 12; i++) {
+                last = online.addPoint(x[i], y[i]).orElse(last);
+            }
+            System.out.println("Online PI present: " + last.predictionLower().isPresent());
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">Batch SEs: 30
+Streaming CI present: true
+Online PI present: true</code></pre>
 </div>
 </div>
 <hr>
@@ -518,7 +585,7 @@ Point 2: SE = 0.0258</code></pre>
 </td>
 <td class="content">
 <div class="paragraph">
-<p><strong>Batch Mode Only:</strong> Confidence and prediction intervals are only available in <strong>Batch</strong> mode. Streaming and Online modes do not support intervals.</p>
+<p>Streaming computes intervals per combined chunk and blends them across overlaps. Online requires <code>updateMode("full")</code> and reports intervals for the latest point of each window.</p>
 </div>
 </td>
 </tr>
@@ -543,20 +610,26 @@ Point 2: SE = 0.0258</code></pre>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Confidence intervals</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓ (full mode)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Prediction intervals</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓ (full mode)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Standard errors</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">✗</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓ (full mode)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Residual bootstrap</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✓ (full mode)</p></td>
 </tr>
 </tbody>
 </table>

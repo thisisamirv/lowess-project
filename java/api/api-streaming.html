@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>StreamingLowess API :: fastlowess (Java)</title>
     <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/api/api-streaming.html">
-    <meta name="generator" content="Antora 3.2.0">
+    <meta name="generator" content="Antora 3.2.1">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
   <body class="article">
@@ -318,12 +318,6 @@ try (StreamingLowess model = new StreamingLowess(options)) {
 <td class="tableblock halign-left valign-top"><p class="tableblock">Number of robustifying iterations</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>delta</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Interpolation distance (<code>NaN</code> auto-sets it to 0.0 in Streaming, i.e. interpolation disabled)</p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>weightFunction</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>"tricube"</code></p></td>
@@ -336,16 +330,10 @@ try (StreamingLowess model = new StreamingLowess(options)) {
 <td class="tableblock halign-left valign-top"><p class="tableblock">Robustness method name</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>scalingMethod</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"mad"</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Residual scaling method</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boundaryPolicy</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"extend"</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Boundary handling policy</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>delta</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Interpolation distance (<code>NaN</code> auto-sets it to 0.0 in Streaming, i.e. interpolation disabled)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>zeroWeightFallback</code></p></td>
@@ -354,10 +342,16 @@ try (StreamingLowess model = new StreamingLowess(options)) {
 <td class="tableblock halign-left valign-top"><p class="tableblock">Zero-weight handling</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>missing</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boundaryPolicy</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"error"</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Policy for non-finite (NaN/Infinity) values in each chunk</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"extend"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Boundary handling policy</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>scalingMethod</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"mad"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Residual scaling method</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>autoConverge</code></p></td>
@@ -366,28 +360,10 @@ try (StreamingLowess model = new StreamingLowess(options)) {
 <td class="tableblock halign-left valign-top"><p class="tableblock">Auto-convergence tolerance</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDiagnostics</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Include diagnostics in result</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnResiduals</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Include residuals in result</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnRobustnessWeights</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Include weights in result</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>parallel</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Enable parallel execution</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>missing</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"error"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Policy for non-finite (NaN/Infinity) values in each chunk</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>chunkSize</code></p></td>
@@ -408,6 +384,48 @@ try (StreamingLowess model = new StreamingLowess(options)) {
 <td class="tableblock halign-left valign-top"><p class="tableblock">Strategy for blending overlap regions</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>parallel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enable parallel execution</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>outputs(String&#8230;&#8203;)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String&#8230;&#8203;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">empty</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Select <code>se</code>, <code>diagnostics</code>, <code>residuals</code>, <code>weights</code>, and/or <code>derivative</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intervals(IntervalsOptions)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IntervalsOptions</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">disabled</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Confidence/prediction levels and per-chunk bootstrap refits</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>seed(long)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>long</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">unset</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Reproducible bootstrap draws for each combined chunk</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDiagnostics</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Include diagnostics in result</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnResiduals</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Include residuals in result</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnRobustnessWeights</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Include weights in result</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDerivative</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
@@ -416,7 +434,7 @@ try (StreamingLowess model = new StreamingLowess(options)) {
 </tbody>
 </table>
 <div class="paragraph">
-<p>Confidence/prediction intervals, standard errors, cross-validation, GPU <code>backend</code>, <code>customWeights</code>, and <code>returnSorted</code> are Batch-only and not available here; see <a href="api.html" class="xref page">API</a> for those.</p>
+<p>Cross-validation, GPU <code>backend</code>, <code>customWeights</code>, and <code>returnSorted</code> are Batch-only and not available here; see <a href="api.html" class="xref page">API</a> for those. Standard errors and intervals are computed per combined chunk (including the previous overlap) and blended across overlaps via <code>mergeStrategy</code>; they are local chunk intervals, not whole-stream intervals.</p>
 </div>
 </div>
 </div>
@@ -509,12 +527,6 @@ try (StreamingLowess model = new StreamingLowess(options)) {
 </table>
 </div>
 <div class="sect2">
-<h3 id="delta"><a class="anchor" href="#delta"></a>delta</h3>
-<div class="paragraph">
-<p>Points within <code>delta</code> of each other on the x-axis share the same local fit instead of each computing its own regression&#8201;&#8212;&#8201;an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. <code>NaN</code> (default) auto-sets it to <code>0</code> in Streaming mode, i.e. interpolation is disabled and every point is fit exactly.</p>
-</div>
-</div>
-<div class="sect2">
 <h3 id="weightfunction"><a class="anchor" href="#weightfunction"></a>weightFunction</h3>
 <div class="paragraph">
 <p><em>See: <a href="../weighting/kernels.html" class="xref page">Weight Functions</a></em></p>
@@ -565,44 +577,9 @@ try (StreamingLowess model = new StreamingLowess(options)) {
 </div>
 </div>
 <div class="sect2">
-<h3 id="scalingmethod"><a class="anchor" href="#scalingmethod"></a>scalingMethod</h3>
+<h3 id="delta"><a class="anchor" href="#delta"></a>delta</h3>
 <div class="paragraph">
-<p><em>See: <a href="../weighting/scaling.html" class="xref page">Scaling Methods</a></em></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>)</p>
-</li>
-<li>
-<p><code>"mar"</code> (alias: <code>"median_absolute_residual"</code>)</p>
-</li>
-<li>
-<p><code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>)</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="boundarypolicy"><a class="anchor" href="#boundarypolicy"></a>boundaryPolicy</h3>
-<div class="paragraph">
-<p><em>See: <a href="../advanced/boundary.html" class="xref page">Boundary Handling</a></em></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>"extend"</code> (default; alias: <code>"pad"</code>)</p>
-</li>
-<li>
-<p><code>"reflect"</code> (alias: <code>"mirror"</code>)</p>
-</li>
-<li>
-<p><code>"zero"</code></p>
-</li>
-<li>
-<p><code>"noboundary"</code> (alias: <code>"none"</code>)</p>
-</li>
-</ul>
+<p>Points within <code>delta</code> of each other on the x-axis share the same local fit instead of each computing its own regression&#8201;&#8212;&#8201;an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. <code>NaN</code> (default) auto-sets it to <code>0</code> in Streaming mode, i.e. interpolation is disabled and every point is fit exactly.</p>
 </div>
 </div>
 <div class="sect2">
@@ -636,6 +613,56 @@ try (StreamingLowess model = new StreamingLowess(options)) {
 </tr>
 </tbody>
 </table>
+</div>
+<div class="sect2">
+<h3 id="boundarypolicy"><a class="anchor" href="#boundarypolicy"></a>boundaryPolicy</h3>
+<div class="paragraph">
+<p><em>See: <a href="../advanced/boundary.html" class="xref page">Boundary Handling</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>"extend"</code> (default; alias: <code>"pad"</code>)</p>
+</li>
+<li>
+<p><code>"reflect"</code> (alias: <code>"mirror"</code>)</p>
+</li>
+<li>
+<p><code>"zero"</code></p>
+</li>
+<li>
+<p><code>"noboundary"</code> (alias: <code>"none"</code>)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="scalingmethod"><a class="anchor" href="#scalingmethod"></a>scalingMethod</h3>
+<div class="paragraph">
+<p><em>See: <a href="../weighting/scaling.html" class="xref page">Scaling Methods</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>)</p>
+</li>
+<li>
+<p><code>"mar"</code> (alias: <code>"median_absolute_residual"</code>)</p>
+</li>
+<li>
+<p><code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="autoconverge"><a class="anchor" href="#autoconverge"></a>autoConverge</h3>
+<div class="paragraph">
+<p><em>See: <a href="../weighting/robustness.html#_auto_convergence" class="xref page">Robustness</a></em></p>
+</div>
+<div class="paragraph">
+<p>Convergence tolerance for early stopping of robustness iterations. <code>NaN</code> (default) disables early stopping.</p>
+</div>
 </div>
 <div class="sect2">
 <h3 id="missing"><a class="anchor" href="#missing"></a>missing</h3>
@@ -675,79 +702,6 @@ A length mismatch between <code>x</code> and <code>y</code> always throws, even 
 </td>
 </tr>
 </table>
-</div>
-</div>
-<div class="sect2">
-<h3 id="autoconverge"><a class="anchor" href="#autoconverge"></a>autoConverge</h3>
-<div class="paragraph">
-<p><em>See: <a href="../weighting/robustness.html#_auto_convergence" class="xref page">Robustness</a></em></p>
-</div>
-<div class="paragraph">
-<p>Convergence tolerance for early stopping of robustness iterations. <code>NaN</code> (default) disables early stopping.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="returndiagnostics"><a class="anchor" href="#returndiagnostics"></a>returnDiagnostics</h3>
-<div class="paragraph">
-<p>Include a <code>Diagnostics</code> object (RMSE, MAE, R², residual_sd) in the result. <code>effectiveDf</code>/<code>aic</code>/<code>aicc</code> require standard errors, which are Batch-only, so they&#8217;re always empty here.</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>false</code> (default) — leaves <code>Result.diagnostics()</code> empty</p>
-</li>
-<li>
-<p><code>true</code> — populates <code>Result.diagnostics()</code></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="returnresiduals"><a class="anchor" href="#returnresiduals"></a>returnResiduals</h3>
-<div class="paragraph">
-<p>Include per-point residuals (<code>y - fitted</code>) in the result.</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>false</code> (default) — leaves <code>Result.residuals()</code> empty</p>
-</li>
-<li>
-<p><code>true</code> — populates <code>Result.residuals()</code></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="returnrobustnessweights"><a class="anchor" href="#returnrobustnessweights"></a>returnRobustnessWeights</h3>
-<div class="paragraph">
-<p>Include the final per-point robustness weights (from the last robustness iteration) in the result.</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>false</code> (default) — leaves <code>Result.robustnessWeights()</code> empty</p>
-</li>
-<li>
-<p><code>true</code> — populates <code>Result.robustnessWeights()</code></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="parallel"><a class="anchor" href="#parallel"></a>parallel</h3>
-<div class="paragraph">
-<p>Enable multi-threaded execution via Rayon.</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>true</code> (default) — parallelizes the local regression fits across CPU cores</p>
-</li>
-<li>
-<p><code>false</code> — forces single-threaded execution</p>
-</li>
-</ul>
 </div>
 </div>
 <div class="sect2">
@@ -809,6 +763,85 @@ A length mismatch between <code>x</code> and <code>y</code> always throws, even 
 </table>
 </div>
 <div class="sect2">
+<h3 id="parallel"><a class="anchor" href="#parallel"></a>parallel</h3>
+<div class="paragraph">
+<p>Enable multi-threaded execution via Rayon.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>true</code> (default) — parallelizes the local regression fits across CPU cores</p>
+</li>
+<li>
+<p><code>false</code> — forces single-threaded execution</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="intervals"><a class="anchor" href="#intervals"></a>intervals</h3>
+<div class="paragraph">
+<p><em>See: <a href="../guide/intervals.html" class="xref page">Intervals</a></em></p>
+</div>
+<div class="paragraph">
+<p>Build with <code>IntervalsOptions.builder()</code>. <code>confidence(level)</code> and <code>prediction(level)</code> add bounds; <code>bootstrap(n)</code> (at least <code>2</code>) replaces analytic intervals with residual-bootstrap refits of each combined chunk. With <code>parallel(true)</code>, refits run concurrently.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="seed"><a class="anchor" href="#seed"></a>seed</h3>
+<div class="paragraph">
+<p>Seeds bootstrap draws. Each combined chunk restarts from the same seed. It does not enable bootstrap by itself; <code>0</code> is valid.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="returndiagnostics"><a class="anchor" href="#returndiagnostics"></a>returnDiagnostics</h3>
+<div class="paragraph">
+<p>Include a <code>Diagnostics</code> object (RMSE, MAE, R², residual_sd) in the result. <code>effectiveDf</code>/<code>aic</code>/<code>aicc</code> require standard errors, which are Batch-only, so they&#8217;re always empty here.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>false</code> (default) — leaves <code>Result.diagnostics()</code> empty</p>
+</li>
+<li>
+<p><code>true</code> — populates <code>Result.diagnostics()</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="returnresiduals"><a class="anchor" href="#returnresiduals"></a>returnResiduals</h3>
+<div class="paragraph">
+<p>Include per-point residuals (<code>y - fitted</code>) in the result.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>false</code> (default) — leaves <code>Result.residuals()</code> empty</p>
+</li>
+<li>
+<p><code>true</code> — populates <code>Result.residuals()</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="returnrobustnessweights"><a class="anchor" href="#returnrobustnessweights"></a>returnRobustnessWeights</h3>
+<div class="paragraph">
+<p>Include the final per-point robustness weights (from the last robustness iteration) in the result.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>false</code> (default) — leaves <code>Result.robustnessWeights()</code> empty</p>
+</li>
+<li>
+<p><code>true</code> — populates <code>Result.robustnessWeights()</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
 <h3 id="returnderivative"><a class="anchor" href="#returnderivative"></a>returnDerivative</h3>
 <div class="paragraph">
 <p>Each point&#8217;s local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) via <code>Result.derivative()</code> at effectively no extra computation cost. Derivative values in the overlap region are merged across chunk boundaries the same way <code>y()</code> is, via <code>mergeStrategy</code>.</p>
@@ -856,17 +889,17 @@ A length mismatch between <code>x</code> and <code>y</code> always throws, even 
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>standardErrors()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Always empty (Batch only)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"se"</code> output or any interval</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>confidenceLower()</code>, <code>confidenceUpper()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Always empty (Batch only)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intervals</code> confidence set</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>predictionLower()</code>, <code>predictionUpper()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Always empty (Batch only)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intervals</code> prediction set</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>residuals()</code></p></td>

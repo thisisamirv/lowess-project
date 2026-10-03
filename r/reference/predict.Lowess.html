@@ -46,8 +46,8 @@
 <span>    <span class="va">object</span>,</span>
 <span>    <span class="va">new_x</span>,</span>
 <span>    outputs <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>    confidence_level <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>    prediction_level <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>    intervals <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>    seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    extrapolation <span class="op">=</span> <span class="st">"clamp"</span>,</span>
 <span>    max_extrapolation_distance <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    max_neighbor_distance <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -74,14 +74,18 @@
 returns only predicted values.</p></dd>
 
 
-<dt id="arg-confidence-level">confidence_level<a class="anchor" aria-label="anchor" href="#arg-confidence-level"></a></dt>
-<dd><p>Confidence interval coverage level (e.g. 0.95).
-<code>NULL</code> (default) disables it.</p></dd>
+<dt id="arg-intervals">intervals<a class="anchor" aria-label="anchor" href="#arg-intervals"></a></dt>
+<dd><p>Interval options, created with
+<code><a href="intervals_opts.html">intervals_opts</a></code> (or a named list with any of
+<code>confidence</code>, <code>prediction</code>, <code>bootstrap</code>). Confidence and
+prediction coverage levels are independent; for example,
+<code>intervals_opts(confidence = 0.90, prediction = 0.99)</code>. <code>NULL</code>
+(default) disables intervals.</p></dd>
 
 
-<dt id="arg-prediction-level">prediction_level<a class="anchor" aria-label="anchor" href="#arg-prediction-level"></a></dt>
-<dd><p>Prediction interval coverage level (e.g. 0.95).
-<code>NULL</code> (default) disables it.</p></dd>
+<dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
+<dd><p>Non-negative whole-number seed for bootstrap resampling.
+<code>NULL</code> (default) uses a random seed.</p></dd>
 
 
 <dt id="arg-extrapolation">extrapolation<a class="anchor" aria-label="anchor" href="#arg-extrapolation"></a></dt>

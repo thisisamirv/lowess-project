@@ -73,11 +73,12 @@ same numbers out of <code>rfastlowess</code>, and if not, why
 not?</em></p>
 <p>In short:</p>
 <ul>
-<li>With three options set (<code>boundary_policy = "noboundary"</code>,
-<code>scaling_method = "mar"</code>, and
-<code>zero_weight_fallback = "return_original"</code>),
-<code>rfastlowess</code> reproduces <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code> to
-within floating-point tolerance (~1e-10) — see <a href="#reproducing-statslowess">Reproducing
+<li>With three options set
+(<code>zero_weight_fallback = "return_original"</code>,
+<code>boundary_policy = "noboundary"</code>, and
+<code>scaling_method = "mar"</code>), <code>rfastlowess</code>
+reproduces <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code> to within floating-point
+tolerance (~1e-10) — see <a href="#reproducing-statslowess">Reproducing
 <code>stats::lowess()</code></a> below.</li>
 <li>Outside of those three options, <code>rfastlowess</code>’s
 <em>defaults</em> intentionally differ from <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code>
@@ -108,6 +109,26 @@ several defaults differ:</p>
 </tr></thead>
 <tbody>
 <tr class="odd">
+<td><code>fraction</code></td>
+<td><code>f = 2/3</code></td>
+<td><code>0.67</code></td>
+</tr>
+<tr class="even">
+<td><code>iterations</code></td>
+<td><code>iter = 3</code></td>
+<td><code>3</code></td>
+</tr>
+<tr class="odd">
+<td><code>delta</code></td>
+<td><code>0.01 * diff(range(x))</code></td>
+<td>same (<code>NULL</code> -&gt; auto)</td>
+</tr>
+<tr class="even">
+<td>Zero-weight fallback</td>
+<td><code>"return_original"</code></td>
+<td><code>"use_local_mean"</code></td>
+</tr>
+<tr class="odd">
 <td>Boundary padding</td>
 <td>None (<code>"noboundary"</code>)</td>
 <td><code>"extend"</code></td>
@@ -119,26 +140,6 @@ several defaults differ:</p>
 <td>
 <code>"mad"</code>: <code>median(\|r - median(r)\|)</code>
 </td>
-</tr>
-<tr class="odd">
-<td>Zero-weight fallback</td>
-<td><code>"return_original"</code></td>
-<td><code>"use_local_mean"</code></td>
-</tr>
-<tr class="even">
-<td><code>fraction</code></td>
-<td><code>f = 2/3</code></td>
-<td><code>0.67</code></td>
-</tr>
-<tr class="odd">
-<td><code>iterations</code></td>
-<td><code>iter = 3</code></td>
-<td><code>3</code></td>
-</tr>
-<tr class="even">
-<td><code>delta</code></td>
-<td><code>0.01 * diff(range(x))</code></td>
-<td>same (<code>NULL</code> -&gt; auto)</td>
 </tr>
 </tbody>
 </table>
@@ -160,9 +161,9 @@ exactly (up to floating-point rounding):</p>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span></span>
 <span>    fraction <span class="op">=</span> <span class="fl">2</span> <span class="op">/</span> <span class="fl">3</span>,</span>
 <span>    iterations <span class="op">=</span> <span class="fl">3L</span>,</span>
+<span>    zero_weight_fallback <span class="op">=</span> <span class="st">"return_original"</span>,</span>
 <span>    boundary_policy <span class="op">=</span> <span class="st">"noboundary"</span>,</span>
-<span>    scaling_method <span class="op">=</span> <span class="st">"mar"</span>,</span>
-<span>    zero_weight_fallback <span class="op">=</span> <span class="st">"return_original"</span></span>
+<span>    scaling_method <span class="op">=</span> <span class="st">"mar"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span></span>
@@ -183,9 +184,9 @@ exactly (up to floating-point rounding):</p>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Lowess.html">Lowess</a></span><span class="op">(</span></span>
 <span>    fraction <span class="op">=</span> <span class="fl">2</span> <span class="op">/</span> <span class="fl">3</span>,</span>
 <span>    iterations <span class="op">=</span> <span class="fl">3L</span>,</span>
+<span>    zero_weight_fallback <span class="op">=</span> <span class="st">"return_original"</span>,</span>
 <span>    boundary_policy <span class="op">=</span> <span class="st">"noboundary"</span>,</span>
 <span>    scaling_method <span class="op">=</span> <span class="st">"mar"</span>,</span>
-<span>    zero_weight_fallback <span class="op">=</span> <span class="st">"return_original"</span>,</span>
 <span>    outputs <span class="op">=</span> <span class="st">"sorted"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x_unsorted</span>, <span class="va">y_unsorted</span><span class="op">)</span></span>
@@ -208,7 +209,13 @@ value-by-value comparison against <code><a href="https://rdrr.io/r/stats/lowess.
 </h2>
 <p><code>rfastlowess</code>’s <em>defaults</em> (as opposed to what it’s
 capable of reproducing) deliberately depart from
-<code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code> in two places:</p>
+<code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code> in these places:</p>
+<p><strong>Zero-weight fallback</strong> (default
+<code>zero_weight_fallback = "use_local_mean"</code> vs. R’s
+<code>"return_original"</code>). This package keeps the Rust/default
+behavior unchanged for end users; exact <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code>
+comparisons should set
+<code>zero_weight_fallback = "return_original"</code> explicitly.</p>
 <p><strong>Boundary padding</strong> (default
 <code>boundary_policy = "extend"</code> vs. no padding). Without
 padding, the local neighbourhood at the first and last few points is
@@ -226,12 +233,6 @@ breakdown-point-optimal scale estimator; MAR (<code>median(|r|)</code>,
 what R uses) does not center first, so it can be biased when residuals
 are systematically skewed. See <code><a href="../articles/scaling.html">vignette("scaling")</a></code> for the
 full comparison, including <code>"mean"</code>.</p>
-<p><strong>Zero-weight fallback</strong> (default
-<code>zero_weight_fallback = "use_local_mean"</code> vs. R’s
-<code>"return_original"</code>). This package keeps the Rust/default
-behavior unchanged for end users; exact <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code>
-comparisons should set
-<code>zero_weight_fallback = "return_original"</code> explicitly.</p>
 <hr>
 </div>
 <div class="section level2">
@@ -256,29 +257,29 @@ comparisons should set
 <td align="center">Bisquare only</td>
 </tr>
 <tr class="odd">
-<td>Scale estimation</td>
-<td align="center">MAD, MAR, mean</td>
-<td align="center">MAR only</td>
-</tr>
-<tr class="even">
 <td>Boundary padding</td>
 <td align="center">4 policies</td>
 <td align="center">none</td>
 </tr>
+<tr class="even">
+<td>Scale estimation</td>
+<td align="center">MAD, MAR, mean</td>
+<td align="center">MAR only</td>
+</tr>
 <tr class="odd">
-<td>Confidence / prediction intervals</td>
+<td>Parallel / GPU execution</td>
 <td align="center">yes</td>
 <td align="center">no</td>
 </tr>
 <tr class="even">
-<td>Cross-validation for <code>fraction</code>
-</td>
-<td align="center">K-fold, LOOCV</td>
+<td>Confidence / prediction intervals</td>
+<td align="center">yes</td>
 <td align="center">no</td>
 </tr>
 <tr class="odd">
-<td>Streaming / online modes</td>
-<td align="center">yes</td>
+<td>Cross-validation for <code>fraction</code>
+</td>
+<td align="center">K-fold, LOOCV</td>
 <td align="center">no</td>
 </tr>
 <tr class="even">
@@ -287,7 +288,7 @@ comparisons should set
 <td align="center">no</td>
 </tr>
 <tr class="odd">
-<td>Parallel / GPU execution</td>
+<td>Streaming / online modes</td>
 <td align="center">yes</td>
 <td align="center">no</td>
 </tr>

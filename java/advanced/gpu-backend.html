@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>GPU Backend :: fastlowess (Java)</title>
     <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/advanced/gpu-backend.html">
-    <meta name="generator" content="Antora 3.2.0">
+    <meta name="generator" content="Antora 3.2.1">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
   <body class="article">
@@ -191,7 +191,7 @@
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Run the batch LOWESS fit on the GPU via <code>wgpu</code> (Vulkan/Metal/DX12) instead of the CPU.</p>
+<p>Run the batch LOWESS fit on the GPU via <code>wgpu</code> (Vulkan/Metal/DX12, GLES on Android) instead of the CPU.</p>
 </div>
 </div>
 </div>
@@ -304,13 +304,22 @@
 <td class="tableblock halign-left valign-top"></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unsorted inputs and sorted-output option</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GPU results preserve Batch output ordering</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Custom per-observation weights</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">✅</p></td>
-<td class="tableblock halign-left valign-top"></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Applied in GPU fit and CV candidate kernels</p></td>
 </tr>
 </tbody>
 </table>
+<div class="paragraph">
+<p>Each compute pipeline now binds only its own resources, so adapter limits are based on the largest individual GPU pass rather than the union of all shader bindings.</p>
+</div>
 <hr>
 </div>
 </div>
@@ -372,7 +381,7 @@
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Options options = Options.builder()
         .backend("gpu")
-        .confidenceIntervals(0.95)
+        .intervals(IntervalsOptions.builder().confidence(0.95).build())
         .build();
 
 try (Lowess model = new Lowess(options)) {
@@ -401,6 +410,9 @@ try (Lowess model = new Lowess(options)) {
 </li>
 <li>
 <p><strong>DirectX 12</strong> (Windows)</p>
+</li>
+<li>
+<p><strong>GLES</strong> (Android)</p>
 </li>
 </ul>
 </div>

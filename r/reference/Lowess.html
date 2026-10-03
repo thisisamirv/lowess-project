@@ -51,21 +51,21 @@ mode: it processes the entire dataset at once and supports every feature
 <span>    fraction <span class="op">=</span> <span class="fl">0.67</span>,</span>
 <span>    <span class="va">...</span>,</span>
 <span>    iterations <span class="op">=</span> <span class="fl">3L</span>,</span>
-<span>    delta <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    weight_function <span class="op">=</span> <span class="st">"tricube"</span>,</span>
 <span>    robustness_method <span class="op">=</span> <span class="st">"bisquare"</span>,</span>
-<span>    scaling_method <span class="op">=</span> <span class="st">"mad"</span>,</span>
-<span>    boundary_policy <span class="op">=</span> <span class="st">"extend"</span>,</span>
-<span>    confidence_intervals <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>    prediction_intervals <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>    delta <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    zero_weight_fallback <span class="op">=</span> <span class="st">"use_local_mean"</span>,</span>
+<span>    boundary_policy <span class="op">=</span> <span class="st">"extend"</span>,</span>
+<span>    scaling_method <span class="op">=</span> <span class="st">"mad"</span>,</span>
 <span>    auto_converge <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>    missing <span class="op">=</span> <span class="st">"error"</span>,</span>
 <span>    parallel <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    backend <span class="op">=</span> <span class="st">"cpu"</span>,</span>
-<span>    missing <span class="op">=</span> <span class="st">"error"</span>,</span>
-<span>    retain_model <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>    outputs <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>    cv <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>    intervals <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>    cv <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>    seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>    retain_model <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -75,7 +75,7 @@ mode: it processes the entire dataset at once and supports every feature
 
 <dl><dt id="arg-fraction">fraction<a class="anchor" aria-label="anchor" href="#arg-fraction"></a></dt>
 <dd><p>Smoothing fraction, greater than 0 and up to 1. Default:
-0.67. See Details for guidance on choosing a value.</p></dd>
+0.67.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -85,13 +85,6 @@ mode: it processes the entire dataset at once and supports every feature
 <dt id="arg-iterations">iterations<a class="anchor" aria-label="anchor" href="#arg-iterations"></a></dt>
 <dd><p>Number of robustness iterations, between 0 and 1000
 (inclusive). Default: 3.</p></dd>
-
-
-<dt id="arg-delta">delta<a class="anchor" aria-label="anchor" href="#arg-delta"></a></dt>
-<dd><p>Interpolation distance threshold, as a non-negative fraction
-of the x range; points within <code>delta</code> of each other on x share the
-same local fit. <code>NULL</code> (default) sets it automatically to 1/100th
-of the x range.</p></dd>
 
 
 <dt id="arg-weight-function">weight_function<a class="anchor" aria-label="anchor" href="#arg-weight-function"></a></dt>
@@ -107,30 +100,11 @@ of the x range.</p></dd>
 (default; alias: <code>"biweight"</code>), <code>"huber"</code>, or <code>"talwar"</code>.</p></dd>
 
 
-<dt id="arg-scaling-method">scaling_method<a class="anchor" aria-label="anchor" href="#arg-scaling-method"></a></dt>
-<dd><p>Residual scale estimation for robustness weights:
-<code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>),
-<code>"mar"</code> (alias: <code>"median_absolute_residual"</code>), or
-<code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>).</p></dd>
-
-
-<dt id="arg-boundary-policy">boundary_policy<a class="anchor" aria-label="anchor" href="#arg-boundary-policy"></a></dt>
-<dd><p>Boundary handling strategy: <code>"extend"</code>
-(default; alias: <code>"pad"</code>), <code>"reflect"</code> (alias:
-<code>"mirror"</code>), <code>"zero"</code>, or
-<code>"noboundary"</code> (alias: <code>"none"</code>).</p></dd>
-
-
-<dt id="arg-confidence-intervals">confidence_intervals<a class="anchor" aria-label="anchor" href="#arg-confidence-intervals"></a></dt>
-<dd><p>Confidence level for confidence intervals,
-greater than 0 and less than 1 (e.g., 0.95). <code>NULL</code> (default)
-disables confidence intervals.</p></dd>
-
-
-<dt id="arg-prediction-intervals">prediction_intervals<a class="anchor" aria-label="anchor" href="#arg-prediction-intervals"></a></dt>
-<dd><p>Confidence level for prediction intervals,
-greater than 0 and less than 1 (e.g., 0.95). <code>NULL</code> (default)
-disables prediction intervals.</p></dd>
+<dt id="arg-delta">delta<a class="anchor" aria-label="anchor" href="#arg-delta"></a></dt>
+<dd><p>Interpolation distance threshold, as a non-negative fraction
+of the x range; points within <code>delta</code> of each other on x share the
+same local fit. <code>NULL</code> (default) sets it automatically to 1/100th
+of the x range.</p></dd>
 
 
 <dt id="arg-zero-weight-fallback">zero_weight_fallback<a class="anchor" aria-label="anchor" href="#arg-zero-weight-fallback"></a></dt>
@@ -140,9 +114,29 @@ to zero: <code>"use_local_mean"</code> (default; aliases: <code>"local_mean"</co
 <code>"return_none"</code> (alias: <code>"none"</code>).</p></dd>
 
 
+<dt id="arg-boundary-policy">boundary_policy<a class="anchor" aria-label="anchor" href="#arg-boundary-policy"></a></dt>
+<dd><p>Boundary handling strategy: <code>"extend"</code>
+(default; alias: <code>"pad"</code>), <code>"reflect"</code> (alias:
+<code>"mirror"</code>), <code>"zero"</code>, or
+<code>"noboundary"</code> (alias: <code>"none"</code>).</p></dd>
+
+
+<dt id="arg-scaling-method">scaling_method<a class="anchor" aria-label="anchor" href="#arg-scaling-method"></a></dt>
+<dd><p>Residual scale estimation for robustness weights:
+<code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>),
+<code>"mar"</code> (alias: <code>"median_absolute_residual"</code>), or
+<code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>).</p></dd>
+
+
 <dt id="arg-auto-converge">auto_converge<a class="anchor" aria-label="anchor" href="#arg-auto-converge"></a></dt>
 <dd><p>Convergence tolerance for early stopping of robustness
 iterations. <code>NULL</code> (default) disables early stopping.</p></dd>
+
+
+<dt id="arg-missing">missing<a class="anchor" aria-label="anchor" href="#arg-missing"></a></dt>
+<dd><p>Policy for non-finite (NaN/Infinity) values in input data:
+<code>"error"</code> (default) raises an error, <code>"drop"</code> silently removes
+affected observations before fitting.</p></dd>
 
 
 <dt id="arg-parallel">parallel<a class="anchor" aria-label="anchor" href="#arg-parallel"></a></dt>
@@ -157,30 +151,42 @@ Vulkan/Metal/DX12-capable GPU driver; not available in released
 CRAN/Bioconductor binaries.</p></dd>
 
 
-<dt id="arg-missing">missing<a class="anchor" aria-label="anchor" href="#arg-missing"></a></dt>
-<dd><p>Policy for non-finite (NaN/Infinity) values in input data:
-<code>"error"</code> (default) raises an error, <code>"drop"</code> silently removes
-affected observations before fitting.</p></dd>
+<dt id="arg-outputs">outputs<a class="anchor" aria-label="anchor" href="#arg-outputs"></a></dt>
+<dd><p>Character vector selecting optional output components:
+<code>"se"</code> (standard errors), <code>"diagnostics"</code>,
+<code>"residuals"</code>, <code>"weights"</code> (robustness weights),
+<code>"derivative"</code>, and/or <code>"sorted"</code>. <code>NULL</code> (default)
+returns only the core result (<code>x</code>, <code>y</code>, and fit metadata).</p></dd>
+
+
+<dt id="arg-intervals">intervals<a class="anchor" aria-label="anchor" href="#arg-intervals"></a></dt>
+<dd><p>Interval options, created with
+<code><a href="intervals_opts.html">intervals_opts</a></code> (or a named list with any of
+<code>confidence</code>, <code>prediction</code>, <code>bootstrap</code>): e.g.
+<code>intervals = intervals_opts(confidence = 0.90, prediction = 0.99,
+bootstrap = 200)</code>. Confidence and prediction coverage levels are
+independent and may differ.
+<code>NULL</code> (default) disables intervals.</p></dd>
+
+
+<dt id="arg-cv">cv<a class="anchor" aria-label="anchor" href="#arg-cv"></a></dt>
+<dd><p>Cross-validation options, created with <code><a href="cv_opts.html">cv_opts</a></code>:
+e.g. <code>cv = cv_opts(method = "kfold", k = 5,
+fractions = c(0.2, 0.3, 0.5))</code>.
+<code>NULL</code> (default) disables cross-validation.</p></dd>
+
+
+<dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
+<dd><p>Non-negative whole-number seed shared by cross-validation and
+bootstrap resampling for reproducible results. When cross-validation is
+unavailable, it controls bootstrap resampling only.
+<code>NULL</code> (default) uses a random seed.</p></dd>
 
 
 <dt id="arg-retain-model">retain_model<a class="anchor" aria-label="anchor" href="#arg-retain-model"></a></dt>
 <dd><p>Logical; if <code>TRUE</code>, retain the fitted model's
 training data, enabling <code><a href="predict.Lowess.html">predict.Lowess</a></code> for out-of-sample
 prediction. Default: <code>FALSE</code>.</p></dd>
-
-
-<dt id="arg-outputs">outputs<a class="anchor" aria-label="anchor" href="#arg-outputs"></a></dt>
-<dd><p>Character vector selecting optional output components:
-<code>"diagnostics"</code>, <code>"residuals"</code>, <code>"weights"</code> (robustness
-weights), <code>"derivative"</code>, <code>"se"</code> (standard errors), and/or
-<code>"sorted"</code>. <code>NULL</code> (default) returns only the core result
-(<code>x</code>, <code>y</code>, and fit metadata).</p></dd>
-
-
-<dt id="arg-cv">cv<a class="anchor" aria-label="anchor" href="#arg-cv"></a></dt>
-<dd><p>Cross-validation options, created with <code><a href="cv_opts.html">cv_opts</a></code>:
-e.g. <code>cv = cv_opts(fractions = c(0.2, 0.3, 0.5))</code>. <code>NULL</code>
-(default) disables cross-validation.</p></dd>
 
 </dl></div>
     <div class="section level2">

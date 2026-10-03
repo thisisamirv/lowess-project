@@ -10,8 +10,8 @@ predict(
     object,
     new_x,
     outputs = NULL,
-    confidence_level = NULL,
-    prediction_level = NULL,
+    intervals = NULL,
+    seed = NULL,
     extrapolation = "clamp",
     max_extrapolation_distance = NULL,
     max_neighbor_distance = NULL,
@@ -37,15 +37,19 @@ predict(
   Character vector selecting optional prediction components: `"se"`
   and/or `"derivative"`. `NULL` (default) returns only predicted values.
 
-- confidence_level:
+- intervals:
 
-  Confidence interval coverage level (e.g. 0.95). `NULL` (default)
-  disables it.
+  Interval options, created with
+  [`intervals_opts`](https://thisisamirv.github.io/lowess-project/r/reference/intervals_opts.md)
+  (or a named list with any of `confidence`, `prediction`, `bootstrap`).
+  Confidence and prediction coverage levels are independent; for
+  example, `intervals_opts(confidence = 0.90, prediction = 0.99)`.
+  `NULL` (default) disables intervals.
 
-- prediction_level:
+- seed:
 
-  Prediction interval coverage level (e.g. 0.95). `NULL` (default)
-  disables it.
+  Non-negative whole-number seed for bootstrap resampling. `NULL`
+  (default) uses a random seed.
 
 - extrapolation:
 

@@ -12,9 +12,9 @@ not, why not?*
 
 In short:
 
-- With three options set (`boundary_policy = "noboundary"`,
-  `scaling_method = "mar"`, and
-  `zero_weight_fallback = "return_original"`), `rfastlowess` reproduces
+- With three options set (`zero_weight_fallback = "return_original"`,
+  `boundary_policy = "noboundary"`, and `scaling_method = "mar"`),
+  `rfastlowess` reproduces
   [`stats::lowess()`](https://rdrr.io/r/stats/lowess.html) to within
   floating-point tolerance (~1e-10) — see [Reproducing
   `stats::lowess()`](#reproducing-statslowess) below.
@@ -36,12 +36,12 @@ implement the same underlying algorithm, but several defaults differ:
 
 | Option | [`stats::lowess()`](https://rdrr.io/r/stats/lowess.html) | [`Lowess()`](https://thisisamirv.github.io/lowess-project/r/reference/Lowess.md) default |
 |----|----|----|
-| Boundary padding | None (`"noboundary"`) | `"extend"` |
-| Residual scaling | MAR: `median(\|r\|)` | `"mad"`: `median(\|r - median(r)\|)` |
-| Zero-weight fallback | `"return_original"` | `"use_local_mean"` |
 | `fraction` | `f = 2/3` | `0.67` |
 | `iterations` | `iter = 3` | `3` |
 | `delta` | `0.01 * diff(range(x))` | same (`NULL` -\> auto) |
+| Zero-weight fallback | `"return_original"` | `"use_local_mean"` |
+| Boundary padding | None (`"noboundary"`) | `"extend"` |
+| Residual scaling | MAR: `median(\|r\|)` | `"mad"`: `median(\|r - median(r)\|)` |
 
 `rfastlowess` intentionally keeps its default zero-weight fallback
 aligned with Rust and the historical package behavior; when comparing to
@@ -64,9 +64,9 @@ reference <- stats::lowess(x, y, f = 2 / 3, iter = 3)
 model <- Lowess(
     fraction = 2 / 3,
     iterations = 3L,
+    zero_weight_fallback = "return_original",
     boundary_policy = "noboundary",
-    scaling_method = "mar",
-    zero_weight_fallback = "return_original"
+    scaling_method = "mar"
 )
 result <- fit(model, x, y)
 
@@ -91,9 +91,9 @@ reference <- stats::lowess(x_unsorted, y_unsorted, f = 2 / 3, iter = 3)
 model <- Lowess(
     fraction = 2 / 3,
     iterations = 3L,
+    zero_weight_fallback = "return_original",
     boundary_policy = "noboundary",
     scaling_method = "mar",
-    zero_weight_fallback = "return_original",
     outputs = "sorted"
 )
 result <- fit(model, x_unsorted, y_unsorted)
@@ -120,7 +120,15 @@ sorted) output.
 
 `rfastlowess`’s *defaults* (as opposed to what it’s capable of
 reproducing) deliberately depart from
-[`stats::lowess()`](https://rdrr.io/r/stats/lowess.html) in two places:
+[`stats::lowess()`](https://rdrr.io/r/stats/lowess.html) in these
+places:
+
+**Zero-weight fallback** (default
+`zero_weight_fallback = "use_local_mean"` vs. R’s `"return_original"`).
+This package keeps the Rust/default behavior unchanged for end users;
+exact [`stats::lowess()`](https://rdrr.io/r/stats/lowess.html)
+comparisons should set `zero_weight_fallback = "return_original"`
+explicitly.
 
 **Boundary padding** (default `boundary_policy = "extend"` vs. no
 padding). Without padding, the local neighbourhood at the first and last
@@ -140,13 +148,6 @@ so it can be biased when residuals are systematically skewed. See
 [`vignette("scaling")`](https://thisisamirv.github.io/lowess-project/r/articles/scaling.md)
 for the full comparison, including `"mean"`.
 
-**Zero-weight fallback** (default
-`zero_weight_fallback = "use_local_mean"` vs. R’s `"return_original"`).
-This package keeps the Rust/default behavior unchanged for end users;
-exact [`stats::lowess()`](https://rdrr.io/r/stats/lowess.html)
-comparisons should set `zero_weight_fallback = "return_original"`
-explicitly.
-
 ------------------------------------------------------------------------
 
 ## What this package adds
@@ -158,13 +159,13 @@ support:
 |----|:--:|:--:|
 | Kernel functions | 7 options | Tricube only |
 | Robustness weighting | 3 options | Bisquare only |
-| Scale estimation | MAD, MAR, mean | MAR only |
 | Boundary padding | 4 policies | none |
+| Scale estimation | MAD, MAR, mean | MAR only |
+| Parallel / GPU execution | yes | no |
 | Confidence / prediction intervals | yes | no |
 | Cross-validation for `fraction` | K-fold, LOOCV | no |
-| Streaming / online modes | yes | no |
 | Custom per-observation weights | yes | no |
-| Parallel / GPU execution | yes | no |
+| Streaming / online modes | yes | no |
 
 See
 [`vignette("concepts")`](https://thisisamirv.github.io/lowess-project/r/articles/concepts.md)

@@ -65,9 +65,9 @@
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
 <p>The batch <code>Lowess</code> type can execute on a GPU-accelerated
-backend powered by <code>wgpu</code> (Vulkan / Metal / DX12). The GPU
-backend reimplements almost the entire LOWESS pipeline — local
-regression fitting, robustness iterations, interval bounds, and
+backend powered by <code>wgpu</code> (Vulkan / Metal / DX12 / GLES on
+Android). The GPU backend reimplements almost the entire LOWESS pipeline
+— local regression fitting, robustness iterations, interval bounds, and
 cross-validation — as compute shaders, so all anchor points are fitted
 in parallel.</p>
 <blockquote>
@@ -117,12 +117,24 @@ overhead is accounted for.</p>
 <td>✅</td>
 </tr>
 <tr class="even">
+<td>Unsorted inputs and <code>return_sorted</code>
+</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr class="odd">
 <td>Custom per-observation weights</td>
 <td>✅</td>
 <td>✅</td>
 </tr>
 </tbody>
 </table>
+<p>GPU fits preserve Batch output ordering for unsorted input and
+<code>return_sorted</code>. Custom per-observation weights are applied
+in GPU fit and cross-validation candidate kernels. Each compute pipeline
+binds only its own resources, so compatible adapter limits depend on the
+largest individual GPU pass rather than all shader bindings
+combined.</p>
 <hr>
 </div>
 <div class="section level2">
@@ -152,6 +164,27 @@ from the <a href="https://github.com/thisisamirv/lowess-project/releases/tag/gpu
 release</a> — a single perpetual release holding GPU artifacts for every
 version, so individual version release pages stay uncluttered — and
 copies it into the installed package’s <code>libs/</code> directory.</p>
+<p>Prebuilt R GPU libraries are built for Linux x86_64/ARM64 with glibc
+or musl (Alpine), macOS x86_64/ARM64, and Windows x86_64/ARM64. The
+installer selects a matching R architecture and the libc linked by R,
+and verifies GPU support in the candidate library after confirmation. On
+Windows, the library is installed in a versioned sidecar directory,
+leaving the loaded CPU DLL untouched; after restarting R, the package
+activates the matching sidecar’s native routines. Other platforms
+require atomic replacement of the installed library. Local candidates
+use the platform’s canonical library filename, regardless of their
+original filename extension.</p>
+<p>Downloads must match the SHA-256 digest published in GitHub release
+metadata before any native code is executed. Missing digests cause
+installation to fail closed. Candidate probes have a 30-second timeout
+and require a matching package version, native ABI contract, and
+registered argument counts. GPU artifacts built before this contract was
+introduced must be rebuilt.</p>
+<p>On Windows, a broken newest sidecar is skipped in favor of an older
+compatible one. Activated sidecars remain mapped until R exits, so
+unloading the namespace cannot invalidate finalizers belonging to live
+models. Probing isolates crashes but is not a security sandbox: install
+only trusted local native libraries.</p>
 <p><strong>Restart R after installation.</strong></p>
 <p>Alternatively, build from source with GPU support:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">make</span> <span class="at">-f</span> bindings/r/Makefile WITH_GPU=1</span></code></pre></div>

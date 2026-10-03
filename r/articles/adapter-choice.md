@@ -46,15 +46,14 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 model <- Lowess(
     fraction = 0.5,
     iterations = 3,
-    confidence_intervals = 0.95,
-    prediction_intervals = 0.95,
+    parallel = TRUE,
     outputs = "diagnostics",
-    parallel = TRUE
+    intervals = intervals_opts(confidence = 0.90, prediction = 0.99)
 )
 result <- fit(model, x, y)
 cat("95% CI at midpoint: [", result$confidence_lower[50], ", ",
     result$confidence_upper[50], "]\n")
-#> 95% CI at midpoint: [ -0.04412499 ,  0.1214997 ]
+#> 95% CI at midpoint: [ -0.03081586 ,  0.1081906 ]
 ```
 
 ------------------------------------------------------------------------
@@ -177,13 +176,13 @@ for (i in seq_along(x)) {
 
 | Feature              | Batch | Streaming | Online |
 |----------------------|-------|-----------|--------|
-| Confidence intervals | ✓     | ✗         | ✗      |
-| Prediction intervals | ✓     | ✗         | ✗      |
-| Cross-validation     | ✓     | ✗         | ✗      |
+| Parallel execution   | ✓     | ✓         | ✗      |
 | Diagnostics          | ✓     | ✓         | ✗      |
 | Residuals            | ✓     | ✓         | ✓      |
 | Robustness weights   | ✓     | ✓         | ✓      |
-| Parallel execution   | ✓     | ✓         | ✗      |
+| Confidence intervals | ✓     | ✗         | ✗      |
+| Prediction intervals | ✓     | ✗         | ✗      |
+| Cross-validation     | ✓     | ✗         | ✗      |
 
 ``` r
 

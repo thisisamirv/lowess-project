@@ -103,7 +103,7 @@ $(document).ready(function(){initNavTree('gpu_backend.html',''); initResizable()
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><h1>GPU Backend</h1>
-<p>Run the batch LOWESS fit on the GPU via <code>wgpu</code> (Vulkan/Metal/DX12) instead of the CPU.</p>
+<p>Run the batch LOWESS fit on the GPU via <code>wgpu</code> (Vulkan/Metal/DX12, GLES on Android) instead of the CPU.</p>
 <h2>Overview</h2>
 <p>The batch <code>Lowess</code> type can execute on a GPU-accelerated backend powered by <code>wgpu</code>. It reimplements almost the entire LOWESS pipeline — local regression fitting, robustness iterations, interval bounds, and cross-validation — as WGSL compute shaders, so all anchor points are fit in parallel instead of one at a time on CPU cores.</p>
 <p>This is worth enabling for high-throughput processing of large datasets (roughly 10k+ points); for smaller inputs the CPU backend (optionally with <code>parallel = true</code>) is typically faster once you account for GPU dispatch overhead. See <a href="https://github.com/thisisamirv/lowess-project/blob/main/BENCHMARKS.md">BENCHMARKS.md</a> for crossover points measured on real hardware.</p>
@@ -140,8 +140,11 @@ $(document).ready(function(){initNavTree('gpu_backend.html',''); initResizable()
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone">Cross-validation (k-fold, LOOCV)   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone"></td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">Custom per-observation weights   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone"></td></tr>
+<td class="markdownTableBodyNone">Unsorted inputs and sorted-output option   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">GPU results preserve Batch output ordering.    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">Custom per-observation weights   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">✅   </td><td class="markdownTableBodyNone">Applied in GPU fit and CV candidate kernels.   </td></tr>
 </table>
+<p>Each compute pipeline now binds only its own resources, so adapter limits are based on the largest individual GPU pass rather than the union of all shader bindings.</p>
 <hr  />
 <h2>Checking Availability</h2>
 <p>Before requesting <code>backend = "gpu"</code>, check whether the currently loaded library was built with GPU support. Requesting the GPU backend when it isn't available raises a clear error pointing at <code>fastlowess::gpu::install()</code>, rather than a raw panic.</p>
@@ -167,14 +170,15 @@ $(document).ready(function(){initNavTree('gpu_backend.html',''); initResizable()
 <div class="line"><a class="code hl_struct" href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a> opts;</div>
 <div class="line">opts.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fraction</a> = 0.5;</div>
 <div class="line">opts.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a7df2673737a72e038efa19cca56c2942">backend</a> = <span class="stringliteral">&quot;gpu&quot;</span>;</div>
-<div class="line">opts.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a1d07294a88a01279d0d3668a8a70e23f">confidence_intervals</a> = 0.95;</div>
+<div class="line">opts.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a1756ec432dde53ce3f10059e91726d4d">intervals</a>.<a class="code hl_variable" href="structfastlowess_1_1IntervalsOptions.html#a4d5cff09006469752a2b99839de13cbc">confidence</a> = 0.95;</div>
 <div class="line"><a class="code hl_class" href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a> model(opts);</div>
 <div class="line"><span class="keyword">auto</span> result = model.fit(x, y);</div>
-<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:700</div></div>
-<div class="ttc" id="astructfastlowess_1_1LowessOptions_html"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a></div><div class="ttdoc">Options for configuring LOWESS smoothing.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:134</div></div>
-<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_a1d07294a88a01279d0d3668a8a70e23f"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#a1d07294a88a01279d0d3668a8a70e23f">fastlowess::LowessOptions::confidence_intervals</a></div><div class="ttdeci">double confidence_intervals</div><div class="ttdoc">Confidence level (NaN = disabled)</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:145</div></div>
-<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_a7df2673737a72e038efa19cca56c2942"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#a7df2673737a72e038efa19cca56c2942">fastlowess::LowessOptions::backend</a></div><div class="ttdeci">std::string backend</div><div class="ttdoc">Execution backend: &quot;cpu&quot; (default) or &quot;gpu&quot; (requires the library to be built with the gpu Cargo feat...</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:155</div></div>
-<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ac4c7e581cd561fc11a928f9901bb5ec6"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fastlowess::LowessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:135</div></div>
+<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:766</div></div>
+<div class="ttc" id="astructfastlowess_1_1IntervalsOptions_html_a4d5cff09006469752a2b99839de13cbc"><div class="ttname"><a href="structfastlowess_1_1IntervalsOptions.html#a4d5cff09006469752a2b99839de13cbc">fastlowess::IntervalsOptions::confidence</a></div><div class="ttdeci">double confidence</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:92</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a></div><div class="ttdoc">Options for configuring LOWESS smoothing.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:195</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_a1756ec432dde53ce3f10059e91726d4d"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#a1756ec432dde53ce3f10059e91726d4d">fastlowess::LowessOptions::intervals</a></div><div class="ttdeci">IntervalsOptions intervals</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:206</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_a7df2673737a72e038efa19cca56c2942"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#a7df2673737a72e038efa19cca56c2942">fastlowess::LowessOptions::backend</a></div><div class="ttdeci">std::string backend</div><div class="ttdoc">Execution backend: &quot;cpu&quot; (default) or &quot;gpu&quot; (requires the library to be built with the gpu Cargo feat...</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:216</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ac4c7e581cd561fc11a928f9901bb5ec6"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fastlowess::LowessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:196</div></div>
 </div><!-- fragment --><p>If GPU support isn't available, requesting <code>backend = "gpu"</code> raises a runtime error pointing at <code>fastlowess::gpu::install()</code> rather than a raw Rust panic.</p>
 <h2>Hardware Requirements</h2>
 <p>The GPU backend leverages <code>wgpu</code> and supports:</p>
@@ -182,6 +186,7 @@ $(document).ready(function(){initNavTree('gpu_backend.html',''); initResizable()
 <li><b>Vulkan</b> (Linux/Windows)</li>
 <li><b>Metal</b> (macOS/iOS)</li>
 <li><b>DirectX 12</b> (Windows)</li>
+<li><b>GLES</b> (Android)</li>
 </ul>
 <p>It requires a device supporting compute shaders. If no compatible GPU is found at runtime, model construction raises an error.</p>
 <h2>Performance Considerations</h2>

@@ -142,7 +142,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Emilio Cobos Álvarez <emilio@crisal.io>, Jeff Muizelaar <jmuizelaar@mozilla.com>, Kartikaya Gupta <kats@mozilla.com>, Ryan Hunt <rhunt@eqrion.net>
     License: MPL-2.0
     ----------------------------------------
-    Package: cc (1.5.1)
+    Package: cc (1.6.0)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -209,6 +209,10 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Package: dispatch2 (0.3.1)
     Authors: Mads Marquart <mads@marquart.dk>, Mary <mary@mary.zone>
     License: Zlib OR Apache-2.0 OR MIT
+    ----------------------------------------
+    Package: dlib (0.5.3)
+    Authors: Elinor Berger <elinor@safaradeg.net>
+    License: MIT
     ----------------------------------------
     Package: document-features (0.2.12)
     Authors: Slint Developers <info@slint.dev>
@@ -282,6 +286,18 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: The Rand Project Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
+    Package: gl_generator (0.14.0)
+    Authors: Brendan Zabarauskas <bjzaba@yahoo.com.au>, Corey Richardson, Arseny Kapoulkine
+    License: Apache-2.0
+    ----------------------------------------
+    Package: glow (0.17.0)
+    Authors: Joshua Groves <josh@joshgroves.com>, Dzmitry Malyshau <kvarkus@gmail.com>
+    License: MIT OR Apache-2.0 OR Zlib
+    ----------------------------------------
+    Package: glutin_wgl_sys (0.6.1)
+    Authors: Kirill Chibisov <contact@kchibisov.com>
+    License: Apache-2.0
+    ----------------------------------------
     Package: gpu-allocator (0.28.0)
     Authors: Traverse Research <opensource@traverseresearch.nl>
     License: MIT OR Apache-2.0
@@ -318,8 +334,8 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: jni-sys (0.4.1)
-    Authors: Steven Fackler <sfackler@gmail.com>, Robert Bragg <robert@sixbynine.org>
+    Package: jni-sys (0.3.1)
+    Authors: Steven Fackler <sfackler@gmail.com>
     License: MIT OR Apache-2.0
     ----------------------------------------
     Package: jni-sys-macros (0.4.1)
@@ -330,7 +346,15 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: libc (0.2.189)
+    Package: khronos-egl (6.0.0)
+    Authors: Timothée Haudebourg <author@haudebourg.net>, Sean Kerr <sean@metatomic.io>
+    License: MIT/Apache-2.0
+    ----------------------------------------
+    Package: khronos_api (3.1.0)
+    Authors: Brendan Zabarauskas <bjzaba@yahoo.com.au>, Corey Richardson, Arseny Kapoulkine, Pierre Krieger <pierre.krieger1708@gmail.com>
+    License: Apache-2.0
+    ----------------------------------------
+    Package: libc (0.2.190)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -378,15 +402,15 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: gfx-rs developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: napi (3.13.0)
+    Package: napi (3.14.0)
     Authors: Nathan Sobo <nathan@github.com>, Yinan Long <lynweklm@gmail.com>
     License: MIT
     ----------------------------------------
-    Package: napi-build (2.5.0)
+    Package: napi-build (2.6.0)
     Authors: LongYinan <lynweklm@gmail.com>
     License: MIT
     ----------------------------------------
-    Package: napi-derive (3.6.9)
+    Package: napi-derive (3.6.10)
     Authors: LongYinan <lynweklm@gmail.com>, Forehalo <forehalo@gmail.com>
     License: MIT
     ----------------------------------------
@@ -394,12 +418,16 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors:
     License: MIT
     ----------------------------------------
-    Package: napi-sys (3.3.2)
+    Package: napi-sys (3.4.0)
     Authors: LongYinan <lynweklm@gmail.com>
     License: MIT
     ----------------------------------------
     Package: ndarray (0.17.2)
     Authors: Ulrik Sverdrup "bluss", Jim Turner
+    License: MIT OR Apache-2.0
+    ----------------------------------------
+    Package: ndk-sys (0.6.0+11769913)
+    Authors: The Rust Windowing contributors
     License: MIT OR Apache-2.0
     ----------------------------------------
     Package: nohash-hasher (0.2.0)
@@ -486,6 +514,10 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors:
     License: Apache-2.0 OR MIT
     ----------------------------------------
+    Package: pkg-config (0.3.34)
+    Authors: Alex Crichton <alex@alexcrichton.com>
+    License: MIT OR Apache-2.0
+    ----------------------------------------
     Package: pollster (1.0.1)
     Authors: Joshua Barretto <joshua@jsbarretto.com>
     License: Apache-2.0/MIT
@@ -537,6 +569,10 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Package: r-efi (6.0.0)
     Authors:
     License: MIT OR Apache-2.0 OR LGPL-2.1-or-later
+    ----------------------------------------
+    Package: range-alloc (0.1.5)
+    Authors: the gfx-rs Developers
+    License: MIT OR Apache-2.0
     ----------------------------------------
     Package: raw-window-handle (0.6.2)
     Authors: Osspial <osspial@gmail.com>
@@ -634,6 +670,10 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Carl Lerche <me@carllerche.com>
     License: MIT
     ----------------------------------------
+    Package: slotmap (1.1.1)
+    Authors: Orson Peters <orsonpeters@gmail.com>
+    License: Zlib
+    ----------------------------------------
     Package: smallvec (1.16.2)
     Authors: The Servo Project Developers
     License: MIT OR Apache-2.0
@@ -674,7 +714,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: David Tolnay <dtolnay@gmail.com>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: tokio (1.53.1)
+    Package: tokio (1.53.2)
     Authors: Tokio Contributors <team@tokio.rs>
     License: MIT
     ----------------------------------------
@@ -709,6 +749,10 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Package: utf8parse (0.2.2)
     Authors: Joe Wilm <joe@jwilm.com>, Christian Duerr <contact@christianduerr.com>
     License: Apache-2.0 OR MIT
+    ----------------------------------------
+    Package: version_check (0.9.5)
+    Authors: Sergio Benitez <sb@sergio.bz>
+    License: MIT/Apache-2.0
     ----------------------------------------
     Package: walkdir (2.5.0)
     Authors: Andrew Gallant <jamslam@gmail.com>
@@ -746,6 +790,10 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
+    Package: wayland-sys (0.31.11)
+    Authors: Elinor Berger <elinor@safaradeg.net>
+    License: MIT
+    ----------------------------------------
     Package: web-sys (0.3.106)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
@@ -759,6 +807,10 @@ Scatterplots.” *Journal of the American Statistical Association*,
     License: MIT OR Apache-2.0
     ----------------------------------------
     Package: wgpu-core-deps-apple (30.0.1)
+    Authors: gfx-rs developers
+    License: MIT OR Apache-2.0
+    ----------------------------------------
+    Package: wgpu-core-deps-emscripten (30.0.1)
     Authors: gfx-rs developers
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -832,6 +884,10 @@ Scatterplots.” *Journal of the American Statistical Association*,
     ----------------------------------------
     Package: winnow (0.7.15)
     Authors:
+    License: MIT
+    ----------------------------------------
+    Package: xml-rs (0.8.29)
+    Authors: Vladimir Matveev <vmatveev@citrine.cc>
     License: MIT
     ----------------------------------------
     Package: zerocopy (0.8.59)

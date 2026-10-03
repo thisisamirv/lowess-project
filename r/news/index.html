@@ -38,17 +38,44 @@
 <h2 class="pkg-version" data-toc-text="development version" id="rfastlowess-development-version">rfastlowess (development version)<a class="anchor" aria-label="anchor" href="#rfastlowess-development-version"></a></h2>
 <div class="section level3">
 <h3 id="added-development-version">Added<a class="anchor" aria-label="anchor" href="#added-development-version"></a></h3>
-<ul><li>Added <code><a href="../reference/cv_opts.html">cv_opts()</a></code> to configure grouped cross-validation options for <code>Lowess(cv = ...)</code>.</li>
+<ul><li>Added prebuilt GPU library release jobs and installer selection for Linux ARM64, musl/Alpine x86_64 and ARM64, and Windows ARM64.</li>
+<li>Enabled the optional wgpu DirectX 12 backend for GPU-enabled Windows builds. DXC is loaded dynamically with an FXC fallback, avoiding eager imports of <code>dxcompiler.dll</code> and <code>dxil.dll</code>.</li>
+<li>Added GLES for Android GPU builds with a target-scoped <code>wgpu</code> feature; Windows continues to omit the GLES-only loader imports.</li>
+<li>Added <code><a href="../reference/cv_opts.html">cv_opts()</a></code> to configure grouped cross-validation options for <code>Lowess(cv = ...)</code>.</li>
+<li>Added <code><a href="../reference/intervals_opts.html">intervals_opts()</a></code> and an <code>intervals</code> argument to <code><a href="../reference/Lowess.html">Lowess()</a></code>, <code><a href="../reference/StreamingLowess.html">StreamingLowess()</a></code>, <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code>, and <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code>, including bootstrap intervals via <code>bootstrap</code>.</li>
+<li>Added a <code>seed</code> argument to <code><a href="../reference/Lowess.html">Lowess()</a></code>, <code><a href="../reference/StreamingLowess.html">StreamingLowess()</a></code>, <code><a href="../reference/OnlineLowess.html">OnlineLowess()</a></code>, and <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> for reproducible cross-validation and bootstrap resampling.</li>
 <li>Added an “Alternative Software” vignette comparing <code>rfastlowess</code> with <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code>.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="changed-development-version">Changed<a class="anchor" aria-label="anchor" href="#changed-development-version"></a></h3>
 <ul><li>Breaking change: replaced individual <code>return_*</code> arguments with grouped <code>outputs</code>, and replaced <code><a href="../reference/Lowess.html">Lowess()</a></code>’s four <code>cv_*</code> arguments with <code>cv = cv_opts(...)</code>.</li>
+<li>Breaking change: replaced <code>confidence_intervals</code>/<code>prediction_intervals</code> (and <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code>’s <code>confidence_level</code>/<code>prediction_level</code>) with <code>intervals = intervals_opts(confidence, prediction, bootstrap)</code>, and moved the cross-validation seed from <code>cv_opts(seed = ...)</code> to a shared <code>seed</code> argument.</li>
 <li>Represent unavailable diagnostic metrics as R <code>NA</code> rather than generic <code>NaN</code> values.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="fixed-development-version">Fixed<a class="anchor" aria-label="anchor" href="#fixed-development-version"></a></h3>
-<ul><li>Fixed the default <code>boundary_policy</code> (<code>"extend"</code>) letting synthetic boundary points bias the shared robustness scale estimate used to reweight every point, compounding across robustness iterations.</li>
+<ul><li>Reject unused constructor options, factors/multidimensional inputs, and malformed grouped options. Keep GPU sidecars mapped for live model finalizers, try older valid sidecars, verify native ABI/version and argument counts, bound candidate probes, and check download SHA-256 digests before execution.</li>
+<li>Validate Streaming/Online iterations and plain-list CV fold counts before coercion, and accept integer custom weights.</li>
+<li>Detect R’s linked libc, confirm local GPU installs before probing candidates, use canonical library filenames, and activate versioned Windows GPU sidecars on restart without replacing loaded DLLs.</li>
+<li>Fixed global OLS fits treating predictor values with a large offset as degenerate; translated inputs now retain their fitted slope.</li>
+<li>Fixed fraction-1 global fits ignoring custom weights, including when Batch sorts observations by x.</li>
+<li>Fixed Batch <code>missing = "drop"</code> accepting custom weights with a length different from the original input; weights are validated before rows are dropped.</li>
+<li>Fixed standard errors for global weighted fits to account for observation weights and weighted prediction leverage.</li>
+<li>Fixed local Batch and retained-model prediction standard errors ignoring <code>custom_weights</code>; local SE moments now include the per-observation case weights.</li>
+<li>Fixed global fits with all-zero custom weights to honor the configured zero-weight fallback policy.</li>
+<li>Fixed fraction-1 global fits ignoring configured robustness iterations; they now reweight observations and report iterations used.</li>
+<li>Fixed Batch cross-validation candidate fits ignoring <code>custom_weights</code>; K-fold CV now rejects more folds than observations instead of returning zero scores.</li>
+<li>Fixed Streaming and Online accepting invalid <code>auto_converge</code> tolerances; Online also rejects invalid explicit <code>delta</code> values while retaining NaN as its default sentinel.</li>
+<li>Fixed GPU Batch fits misaligning fitted values with unsorted inputs; results now preserve input and requested sorted order.</li>
+<li>Fixed GPU Batch silently ignoring <code>custom_weights</code>; GPU fit and CV candidate kernels now apply them directly.</li>
+<li>Reduced GPU adapter buffer requirements from 30 storage/32 total buffer bindings to 7 storage/8 total per shader stage by using per-compute-pipeline resource layouts.</li>
+<li>Fixed Online incremental mode accepting positive <code>delta</code> and <code>auto_converge</code> settings it cannot use; unsupported combinations now error.</li>
+<li>Fixed grouped intervals discarding distinct confidence and prediction levels; each requested coverage is now applied independently.</li>
+<li>Fixed the default <code>boundary_policy</code> (<code>"extend"</code>) letting synthetic boundary points bias the shared robustness scale estimate used to reweight every point, compounding across robustness iterations.</li>
+<li>Improved agreement with R/Cleveland on sparse, asymmetric, and high-iteration fits by aligning robustness stopping, local-linear degeneracy handling, neighborhood traversal, delta interpolation, and weighted accumulation.</li>
+<li>Fixed zero-radius neighborhoods dropping tied observations or accumulating normalized weights in a different order under robust fits.</li>
+<li>Fixed Gaussian fits clipping the unbounded kernel to the neighbor window and flooring far-tail weights; all observations now contribute under the standard Gaussian formula.</li>
+<li>Reject fractional integer/count options and validate GPU candidate libraries and supported prebuilt targets; refuse in-place overwrite when atomic replacement fails.</li>
 </ul></div>
 </div>
     <div class="section level2">

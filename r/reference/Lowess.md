@@ -11,21 +11,21 @@ Lowess(
     fraction = 0.67,
     ...,
     iterations = 3L,
-    delta = NULL,
     weight_function = "tricube",
     robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
+    delta = NULL,
     zero_weight_fallback = "use_local_mean",
+    boundary_policy = "extend",
+    scaling_method = "mad",
     auto_converge = NULL,
+    missing = "error",
     parallel = TRUE,
     backend = "cpu",
-    missing = "error",
-    retain_model = FALSE,
     outputs = NULL,
-    cv = NULL
+    intervals = NULL,
+    cv = NULL,
+    seed = NULL,
+    retain_model = FALSE
 )
 ```
 
@@ -33,8 +33,7 @@ Lowess(
 
 - fraction:
 
-  Smoothing fraction, greater than 0 and up to 1. Default: 0.67. See
-  Details for guidance on choosing a value.
+  Smoothing fraction, greater than 0 and up to 1. Default: 0.67.
 
 - ...:
 
@@ -44,12 +43,6 @@ Lowess(
 
   Number of robustness iterations, between 0 and 1000 (inclusive).
   Default: 3.
-
-- delta:
-
-  Interpolation distance threshold, as a non-negative fraction of the x
-  range; points within `delta` of each other on x share the same local
-  fit. `NULL` (default) sets it automatically to 1/100th of the x range.
 
 - weight_function:
 
@@ -63,28 +56,11 @@ Lowess(
   Outlier downweighting method: `"bisquare"` (default; alias:
   `"biweight"`), `"huber"`, or `"talwar"`.
 
-- scaling_method:
+- delta:
 
-  Residual scale estimation for robustness weights: `"mad"` (default;
-  alias: `"median_absolute_deviation"`), `"mar"` (alias:
-  `"median_absolute_residual"`), or `"mean"` (alias:
-  `"mean_absolute_residual"`).
-
-- boundary_policy:
-
-  Boundary handling strategy: `"extend"` (default; alias: `"pad"`),
-  `"reflect"` (alias: `"mirror"`), `"zero"`, or `"noboundary"` (alias:
-  `"none"`).
-
-- confidence_intervals:
-
-  Confidence level for confidence intervals, greater than 0 and less
-  than 1 (e.g., 0.95). `NULL` (default) disables confidence intervals.
-
-- prediction_intervals:
-
-  Confidence level for prediction intervals, greater than 0 and less
-  than 1 (e.g., 0.95). `NULL` (default) disables prediction intervals.
+  Interpolation distance threshold, as a non-negative fraction of the x
+  range; points within `delta` of each other on x share the same local
+  fit. `NULL` (default) sets it automatically to 1/100th of the x range.
 
 - zero_weight_fallback:
 
@@ -93,10 +69,29 @@ Lowess(
   `"return_original"` (alias: `"original"`), or `"return_none"` (alias:
   `"none"`).
 
+- boundary_policy:
+
+  Boundary handling strategy: `"extend"` (default; alias: `"pad"`),
+  `"reflect"` (alias: `"mirror"`), `"zero"`, or `"noboundary"` (alias:
+  `"none"`).
+
+- scaling_method:
+
+  Residual scale estimation for robustness weights: `"mad"` (default;
+  alias: `"median_absolute_deviation"`), `"mar"` (alias:
+  `"median_absolute_residual"`), or `"mean"` (alias:
+  `"mean_absolute_residual"`).
+
 - auto_converge:
 
   Convergence tolerance for early stopping of robustness iterations.
   `NULL` (default) disables early stopping.
+
+- missing:
+
+  Policy for non-finite (NaN/Infinity) values in input data: `"error"`
+  (default) raises an error, `"drop"` silently removes affected
+  observations before fitting.
 
 - parallel:
 
@@ -109,31 +104,43 @@ Lowess(
   `bindings/r/Makefile`) and a Vulkan/Metal/DX12-capable GPU driver; not
   available in released CRAN/Bioconductor binaries.
 
-- missing:
+- outputs:
 
-  Policy for non-finite (NaN/Infinity) values in input data: `"error"`
-  (default) raises an error, `"drop"` silently removes affected
-  observations before fitting.
+  Character vector selecting optional output components: `"se"`
+  (standard errors), `"diagnostics"`, `"residuals"`, `"weights"`
+  (robustness weights), `"derivative"`, and/or `"sorted"`. `NULL`
+  (default) returns only the core result (`x`, `y`, and fit metadata).
+
+- intervals:
+
+  Interval options, created with
+  [`intervals_opts`](https://thisisamirv.github.io/lowess-project/r/reference/intervals_opts.md)
+  (or a named list with any of `confidence`, `prediction`, `bootstrap`):
+  e.g.
+  `intervals = intervals_opts(confidence = 0.90, prediction = 0.99, bootstrap = 200)`.
+  Confidence and prediction coverage levels are independent and may
+  differ. `NULL` (default) disables intervals.
+
+- cv:
+
+  Cross-validation options, created with
+  [`cv_opts`](https://thisisamirv.github.io/lowess-project/r/reference/cv_opts.md):
+  e.g.
+  `cv = cv_opts(method = "kfold", k = 5, fractions = c(0.2, 0.3, 0.5))`.
+  `NULL` (default) disables cross-validation.
+
+- seed:
+
+  Non-negative whole-number seed shared by cross-validation and
+  bootstrap resampling for reproducible results. When cross-validation
+  is unavailable, it controls bootstrap resampling only. `NULL`
+  (default) uses a random seed.
 
 - retain_model:
 
   Logical; if `TRUE`, retain the fitted model's training data, enabling
   [`predict.Lowess`](https://thisisamirv.github.io/lowess-project/r/reference/predict.Lowess.md)
   for out-of-sample prediction. Default: `FALSE`.
-
-- outputs:
-
-  Character vector selecting optional output components:
-  `"diagnostics"`, `"residuals"`, `"weights"` (robustness weights),
-  `"derivative"`, `"se"` (standard errors), and/or `"sorted"`. `NULL`
-  (default) returns only the core result (`x`, `y`, and fit metadata).
-
-- cv:
-
-  Cross-validation options, created with
-  [`cv_opts`](https://thisisamirv.github.io/lowess-project/r/reference/cv_opts.md):
-  e.g. `cv = cv_opts(fractions = c(0.2, 0.3, 0.5))`. `NULL` (default)
-  disables cross-validation.
 
 ## Value
 

@@ -71,7 +71,7 @@
 <div class="section level3">
 <h3 id="gpu-backend">GPU Backend<a class="anchor" aria-label="anchor" href="#gpu-backend"></a>
 </h3>
-<p>GPU acceleration (<code>wgpu</code>: Vulkan/Metal/DX12) is also supported for high-throughput batch smoothing. See the <a href="https://thisisamirv.github.io/lowess-project/r/articles/gpu-backend.html">GPU Backend guide</a> for details.</p>
+<p>GPU acceleration (<code>wgpu</code>: Vulkan, Metal, DirectX 12, and GLES on Android) is also supported for high-throughput batch smoothing. See the <a href="https://thisisamirv.github.io/lowess-project/r/articles/gpu-backend.html">GPU Backend guide</a> for details.</p>
 <hr>
 </div>
 </div>
@@ -184,10 +184,10 @@
 <td align="center">only Huber</td>
 </tr>
 <tr>
-<td>Scale Estimation</td>
-<td align="center">2 options</td>
-<td align="center">only MAR</td>
-<td align="center">only MAR</td>
+<td>Zero Weight Fallback</td>
+<td align="center">3 options</td>
+<td align="center">no</td>
+<td align="center">no</td>
 </tr>
 <tr>
 <td>Boundary Padding</td>
@@ -196,10 +196,10 @@
 <td align="center">no padding</td>
 </tr>
 <tr>
-<td>Zero Weight Fallback</td>
-<td align="center">3 options</td>
-<td align="center">no</td>
-<td align="center">no</td>
+<td>Scale Estimation</td>
+<td align="center">2 options</td>
+<td align="center">only MAR</td>
+<td align="center">only MAR</td>
 </tr>
 <tr>
 <td>Auto Convergence</td>
@@ -208,13 +208,13 @@
 <td align="center">no</td>
 </tr>
 <tr>
-<td>Online Mode</td>
+<td>Parallel Execution</td>
 <td align="center">yes</td>
 <td align="center">no</td>
 <td align="center">no</td>
 </tr>
 <tr>
-<td>Streaming Mode</td>
+<td>GPU Acceleration</td>
 <td align="center">yes</td>
 <td align="center">no</td>
 <td align="center">no</td>
@@ -238,13 +238,13 @@
 <td align="center">no</td>
 </tr>
 <tr>
-<td>Parallel Execution</td>
+<td>Streaming Mode</td>
 <td align="center">yes</td>
 <td align="center">no</td>
 <td align="center">no</td>
 </tr>
 <tr>
-<td>GPU Acceleration</td>
+<td>Online Mode</td>
 <td align="center">yes</td>
 <td align="center">no</td>
 <td align="center">no</td>

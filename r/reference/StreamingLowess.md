@@ -13,23 +13,23 @@ flushes any remaining buffered points after the last chunk.
 ``` r
 StreamingLowess(
     fraction = 0.67,
-    chunk_size = 5000L,
     ...,
-    overlap = NULL,
     iterations = 3L,
-    delta = NULL,
     weight_function = "tricube",
     robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
+    delta = NULL,
     zero_weight_fallback = "use_local_mean",
+    boundary_policy = "extend",
+    scaling_method = "mad",
     auto_converge = NULL,
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
+    missing = "error",
+    chunk_size = 5000L,
+    overlap = NULL,
     merge_strategy = "weighted_average",
     parallel = TRUE,
-    missing = "error",
-    outputs = NULL
+    outputs = NULL,
+    intervals = NULL,
+    seed = NULL
 )
 ```
 
@@ -37,34 +37,16 @@ StreamingLowess(
 
 - fraction:
 
-  Smoothing fraction, greater than 0 and up to 1. Default: 0.67. See
-  Details for guidance on choosing a value.
-
-- chunk_size:
-
-  Number of data points per processing chunk, at least 10. Default:
-  5000.
+  Smoothing fraction, greater than 0 and up to 1. Default: 0.67.
 
 - ...:
 
   Not used; forces all subsequent arguments to be named.
 
-- overlap:
-
-  Number of overlapping points between consecutive chunks, less than
-  `chunk_size`. `NULL` (default) computes `chunk_size / 10`, clamped to
-  at least 1 and less than `chunk_size`.
-
 - iterations:
 
   Number of robustness iterations, between 0 and 1000 (inclusive).
   Default: 3.
-
-- delta:
-
-  Interpolation distance threshold, as a non-negative fraction of the x
-  range; points within `delta` of each other on x share the same local
-  fit. `NULL` (default) sets it automatically to 1/100th of the x range.
 
 - weight_function:
 
@@ -78,18 +60,11 @@ StreamingLowess(
   Outlier downweighting method: `"bisquare"` (default; alias:
   `"biweight"`), `"huber"`, or `"talwar"`.
 
-- scaling_method:
+- delta:
 
-  Residual scale estimation for robustness weights: `"mad"` (default;
-  alias: `"median_absolute_deviation"`), `"mar"` (alias:
-  `"median_absolute_residual"`), or `"mean"` (alias:
-  `"mean_absolute_residual"`).
-
-- boundary_policy:
-
-  Boundary handling strategy: `"extend"` (default; alias: `"pad"`),
-  `"reflect"` (alias: `"mirror"`), `"zero"`, or `"noboundary"` (alias:
-  `"none"`).
+  Interpolation distance threshold, as a non-negative fraction of the x
+  range; points within `delta` of each other on x share the same local
+  fit. `NULL` (default) sets it automatically to 1/100th of the x range.
 
 - zero_weight_fallback:
 
@@ -98,20 +73,40 @@ StreamingLowess(
   `"return_original"` (alias: `"original"`), or `"return_none"` (alias:
   `"none"`).
 
+- boundary_policy:
+
+  Boundary handling strategy: `"extend"` (default; alias: `"pad"`),
+  `"reflect"` (alias: `"mirror"`), `"zero"`, or `"noboundary"` (alias:
+  `"none"`).
+
+- scaling_method:
+
+  Residual scale estimation for robustness weights: `"mad"` (default;
+  alias: `"median_absolute_deviation"`), `"mar"` (alias:
+  `"median_absolute_residual"`), or `"mean"` (alias:
+  `"mean_absolute_residual"`).
+
 - auto_converge:
 
   Convergence tolerance for early stopping of robustness iterations.
   `NULL` (default) disables early stopping.
 
-- confidence_intervals:
+- missing:
 
-  Confidence level for confidence intervals (e.g. 0.95), or `NULL`
-  (default) to disable.
+  Policy for non-finite (NaN/Infinity) values in input data: `"error"`
+  (default) raises an error, `"drop"` silently removes affected
+  observations before fitting.
 
-- prediction_intervals:
+- chunk_size:
 
-  Confidence level for prediction intervals (e.g. 0.95), or `NULL`
-  (default) to disable.
+  Number of data points per processing chunk, at least 10. Default:
+  5000.
+
+- overlap:
+
+  Number of overlapping points between consecutive chunks, less than
+  `chunk_size`. `NULL` (default) computes `chunk_size / 10`, clamped to
+  at least 1 and less than `chunk_size`.
 
 - merge_strategy:
 
@@ -124,18 +119,28 @@ StreamingLowess(
 
   Logical; enable parallel processing. Default: `TRUE`.
 
-- missing:
-
-  Policy for non-finite (NaN/Infinity) values in input data: `"error"`
-  (default) raises an error, `"drop"` silently removes affected
-  observations before fitting.
-
 - outputs:
 
-  Character vector selecting optional output components:
-  `"diagnostics"`, `"residuals"`, `"weights"` (robustness weights),
-  `"derivative"`, and/or `"se"` (standard errors). `NULL` (default)
-  returns only the core result.
+  Streaming output choices: `"se"` (standard errors), `"diagnostics"`,
+  `"residuals"`, `"weights"` (robustness weights), and/or
+  `"derivative"`. `NULL` (default) returns only the core result.
+
+- intervals:
+
+  Interval options, created with
+  [`intervals_opts`](https://thisisamirv.github.io/lowess-project/r/reference/intervals_opts.md)
+  (or a named list with any of `confidence`, `prediction`, `bootstrap`):
+  e.g.
+  `intervals = intervals_opts(confidence = 0.90, prediction = 0.99, bootstrap = 200)`.
+  Confidence and prediction coverage levels are independent and may
+  differ. `NULL` (default) disables intervals.
+
+- seed:
+
+  Non-negative whole-number seed shared by cross-validation and
+  bootstrap resampling for reproducible results. When cross-validation
+  is unavailable, it controls bootstrap resampling only. `NULL`
+  (default) uses a random seed.
 
 ## Value
 
@@ -150,15 +155,17 @@ fit in memory, see
 for point-by-point real-time data, see
 [`OnlineLowess`](https://thisisamirv.github.io/lowess-project/r/reference/OnlineLowess.md).
 
+Confidence and prediction interval coverage levels are independent.
+
 Overlapping regions between chunks are reconciled via `merge_strategy`:
 
-|                                |              |                            |
-|--------------------------------|--------------|----------------------------|
-| Strategy                       | Alias        | Behavior                   |
-| `"weighted_average"` (default) | `"weighted"` | Distance-weighted blend    |
-| `"average"`                    | `"mean"`     | Average overlapping values |
-| `"take_first"`                 | `"first"`    | Keep left chunk values     |
-| `"take_last"`                  | `"last"`     | Keep right chunk values    |
+|                              |            |                            |
+|------------------------------|------------|----------------------------|
+| Strategy                     | Alias      | Behavior                   |
+| "weighted_average" (default) | "weighted" | Distance-weighted blend    |
+| "average"                    | "mean"     | Average overlapping values |
+| "take_first"                 | "first"    | Keep left chunk values     |
+| "take_last"                  | "last"     | Keep right chunk values    |
 
 ## Examples
 

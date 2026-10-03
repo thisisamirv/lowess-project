@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Time Series Analysis :: fastlowess (Java)</title>
     <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/use-case/use-case-time-series.html">
-    <meta name="generator" content="Antora 3.2.0">
+    <meta name="generator" content="Antora 3.2.1">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
   <body class="article">
@@ -300,7 +300,8 @@ public class Example {
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.Lowess;
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.IntervalsOptions;
+import fastlowess.Lowess;
 import fastlowess.Options;
 import fastlowess.Result;
 
@@ -317,8 +318,7 @@ public class Example {
         Options options = Options.builder()
                 .fraction(0.2)
                 .iterations(3)
-                .confidenceIntervals(0.95)
-                .predictionIntervals(0.95)
+                .intervals(IntervalsOptions.builder().confidence(0.95).prediction(0.95).build())
                 .build();
 
         try (Lowess model = new Lowess(options)) {

@@ -124,6 +124,8 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastlowess_1_1Expected.html">Expected</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">A result type that holds either a value or an error.  <a href="classfastlowess_1_1Expected.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1IntervalsOptions.html">IntervalsOptions</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastlowess_1_1Lowess.html">Lowess</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Batch LOWESS model.  <a href="classfastlowess_1_1Lowess.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -165,6 +167,10 @@ Classes</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:abaf563498cf7cfe83bce50a7c3c10518" id="r_abaf563498cf7cfe83bce50a7c3c10518"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacefastlowess.html#abaf563498cf7cfe83bce50a7c3c10518">hasOutput</a> (<a class="el" href="classfastlowess_1_1Expected.html">const</a> std::vector&lt; std::string &gt; &amp;outputs, <a class="el" href="classfastlowess_1_1Expected.html">const</a> <a class="el" href="classfastlowess_1_1Expected.html">char</a> *<a class="el" href="classfastlowess_1_1Expected.html">name</a>)</td></tr>
 <tr class="separator:abaf563498cf7cfe83bce50a7c3c10518"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad6e51b52db8b075297d783ae2670f721" id="r_ad6e51b52db8b075297d783ae2670f721"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacefastlowess.html#ad6e51b52db8b075297d783ae2670f721">validateOutputs</a> (<a class="el" href="classfastlowess_1_1Expected.html">const</a> std::vector&lt; std::string &gt; &amp;outputs, std::initializer_list&lt; <a class="el" href="classfastlowess_1_1Expected.html">const</a> <a class="el" href="classfastlowess_1_1Expected.html">char</a> * &gt; <a class="el" href="classfastlowess_1_1Expected.html">supported</a>, <a class="el" href="classfastlowess_1_1Expected.html">const</a> <a class="el" href="classfastlowess_1_1Expected.html">char</a> *<a class="el" href="classfastlowess_1_1Expected.html">adapter</a>)</td></tr>
+<tr class="separator:ad6e51b52db8b075297d783ae2670f721"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a117df3e30f2597719a19fbabde4b247b" id="r_a117df3e30f2597719a19fbabde4b247b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacefastlowess.html#a117df3e30f2597719a19fbabde4b247b">throwInitializationError</a> (<a class="el" href="classfastlowess_1_1Expected.html">const</a> <a class="el" href="classfastlowess_1_1Expected.html">char</a> *<a class="el" href="classfastlowess_1_1Expected.html">fallback</a>)</td></tr>
+<tr class="separator:a117df3e30f2597719a19fbabde4b247b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="abaf563498cf7cfe83bce50a7c3c10518" name="abaf563498cf7cfe83bce50a7c3c10518"></a>
@@ -187,6 +193,74 @@ Functions</h2></td></tr>
           <td></td>
           <td class="paramtype"><a class="el" href="classfastlowess_1_1Expected.html">const</a> <a class="el" href="classfastlowess_1_1Expected.html">char</a> *&#160;</td>
           <td class="paramname"><em>name</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a117df3e30f2597719a19fbabde4b247b" name="a117df3e30f2597719a19fbabde4b247b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a117df3e30f2597719a19fbabde4b247b">&#9670;&#160;</a></span>throwInitializationError()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">void</a> fastlowess::throwInitializationError </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classfastlowess_1_1Expected.html">const</a> <a class="el" href="classfastlowess_1_1Expected.html">char</a> *&#160;</td>
+          <td class="paramname"><em>fallback</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ad6e51b52db8b075297d783ae2670f721" name="ad6e51b52db8b075297d783ae2670f721"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad6e51b52db8b075297d783ae2670f721">&#9670;&#160;</a></span>validateOutputs()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">void</a> fastlowess::validateOutputs </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classfastlowess_1_1Expected.html">const</a> std::vector&lt; std::string &gt; &amp;&#160;</td>
+          <td class="paramname"><em>outputs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::initializer_list&lt; <a class="el" href="classfastlowess_1_1Expected.html">const</a> <a class="el" href="classfastlowess_1_1Expected.html">char</a> * &gt;&#160;</td>
+          <td class="paramname"><em>supported</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classfastlowess_1_1Expected.html">const</a> <a class="el" href="classfastlowess_1_1Expected.html">char</a> *&#160;</td>
+          <td class="paramname"><em>adapter</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

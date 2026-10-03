@@ -49,22 +49,22 @@ sliding window and processes each incoming point immediately via
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">OnlineLowess</span><span class="op">(</span></span>
 <span>    fraction <span class="op">=</span> <span class="fl">0.67</span>,</span>
-<span>    window_capacity <span class="op">=</span> <span class="fl">1000L</span>,</span>
-<span>    min_points <span class="op">=</span> <span class="fl">2L</span>,</span>
 <span>    <span class="va">...</span>,</span>
 <span>    iterations <span class="op">=</span> <span class="fl">0L</span>,</span>
-<span>    delta <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    weight_function <span class="op">=</span> <span class="st">"tricube"</span>,</span>
 <span>    robustness_method <span class="op">=</span> <span class="st">"bisquare"</span>,</span>
-<span>    scaling_method <span class="op">=</span> <span class="st">"mad"</span>,</span>
-<span>    boundary_policy <span class="op">=</span> <span class="st">"extend"</span>,</span>
+<span>    delta <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    zero_weight_fallback <span class="op">=</span> <span class="st">"use_local_mean"</span>,</span>
-<span>    update_mode <span class="op">=</span> <span class="st">"incremental"</span>,</span>
+<span>    boundary_policy <span class="op">=</span> <span class="st">"extend"</span>,</span>
+<span>    scaling_method <span class="op">=</span> <span class="st">"mad"</span>,</span>
 <span>    auto_converge <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>    confidence_intervals <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>    prediction_intervals <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    missing <span class="op">=</span> <span class="st">"error"</span>,</span>
-<span>    outputs <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>    window_capacity <span class="op">=</span> <span class="fl">1000L</span>,</span>
+<span>    min_points <span class="op">=</span> <span class="fl">2L</span>,</span>
+<span>    update_mode <span class="op">=</span> <span class="st">"incremental"</span>,</span>
+<span>    outputs <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>    intervals <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>    seed <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -74,17 +74,7 @@ sliding window and processes each incoming point immediately via
 
 <dl><dt id="arg-fraction">fraction<a class="anchor" aria-label="anchor" href="#arg-fraction"></a></dt>
 <dd><p>Smoothing fraction, greater than 0 and up to 1. Default:
-0.67. See Details for guidance on choosing a value.</p></dd>
-
-
-<dt id="arg-window-capacity">window_capacity<a class="anchor" aria-label="anchor" href="#arg-window-capacity"></a></dt>
-<dd><p>Maximum number of points kept in the sliding
-window, at least 3. Default: 1000.</p></dd>
-
-
-<dt id="arg-min-points">min_points<a class="anchor" aria-label="anchor" href="#arg-min-points"></a></dt>
-<dd><p>Minimum number of points required before smoothing
-begins, between 2 and <code>window_capacity</code>. Default: 2.</p></dd>
+0.67.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -95,13 +85,6 @@ begins, between 2 and <code>window_capacity</code>. Default: 2.</p></dd>
 <dd><p>Number of robustness iterations. Requires
 <code>update_mode = "full"</code>; the default <code>"incremental"</code> mode is a
 non-robust single-point fit that ignores robustness iterations. Default: 0.</p></dd>
-
-
-<dt id="arg-delta">delta<a class="anchor" aria-label="anchor" href="#arg-delta"></a></dt>
-<dd><p>Interpolation distance threshold, as a non-negative fraction
-of the x range; points within <code>delta</code> of each other on x share the
-same local fit. <code>NULL</code> (default) sets it automatically to 1/100th
-of the x range.</p></dd>
 
 
 <dt id="arg-weight-function">weight_function<a class="anchor" aria-label="anchor" href="#arg-weight-function"></a></dt>
@@ -117,18 +100,10 @@ of the x range.</p></dd>
 (default; alias: <code>"biweight"</code>), <code>"huber"</code>, or <code>"talwar"</code>.</p></dd>
 
 
-<dt id="arg-scaling-method">scaling_method<a class="anchor" aria-label="anchor" href="#arg-scaling-method"></a></dt>
-<dd><p>Residual scale estimation for robustness weights:
-<code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>),
-<code>"mar"</code> (alias: <code>"median_absolute_residual"</code>), or
-<code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>).</p></dd>
-
-
-<dt id="arg-boundary-policy">boundary_policy<a class="anchor" aria-label="anchor" href="#arg-boundary-policy"></a></dt>
-<dd><p>Boundary handling strategy: <code>"extend"</code>
-(default; alias: <code>"pad"</code>), <code>"reflect"</code> (alias:
-<code>"mirror"</code>), <code>"zero"</code>, or
-<code>"noboundary"</code> (alias: <code>"none"</code>).</p></dd>
+<dt id="arg-delta">delta<a class="anchor" aria-label="anchor" href="#arg-delta"></a></dt>
+<dd><p>Interpolation distance as a non-negative fraction of the x
+range. In Online mode, <code>NULL</code> (default) disables interpolation;
+positive values require <code>update_mode = "full"</code>.</p></dd>
 
 
 <dt id="arg-zero-weight-fallback">zero_weight_fallback<a class="anchor" aria-label="anchor" href="#arg-zero-weight-fallback"></a></dt>
@@ -138,28 +113,24 @@ to zero: <code>"use_local_mean"</code> (default; aliases: <code>"local_mean"</co
 <code>"return_none"</code> (alias: <code>"none"</code>).</p></dd>
 
 
-<dt id="arg-update-mode">update_mode<a class="anchor" aria-label="anchor" href="#arg-update-mode"></a></dt>
-<dd><p>Window update strategy: <code>"incremental"</code> (default;
-alias: <code>"single"</code>) updates only the newest point and does not run
-robustness iterations; <code>"full"</code> (alias: <code>"resmooth"</code>) re-smooths
-all window points after each addition and supports robustness iterations.</p></dd>
+<dt id="arg-boundary-policy">boundary_policy<a class="anchor" aria-label="anchor" href="#arg-boundary-policy"></a></dt>
+<dd><p>Boundary handling strategy: <code>"extend"</code>
+(default; alias: <code>"pad"</code>), <code>"reflect"</code> (alias:
+<code>"mirror"</code>), <code>"zero"</code>, or
+<code>"noboundary"</code> (alias: <code>"none"</code>).</p></dd>
+
+
+<dt id="arg-scaling-method">scaling_method<a class="anchor" aria-label="anchor" href="#arg-scaling-method"></a></dt>
+<dd><p>Residual scale estimation for robustness weights:
+<code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>),
+<code>"mar"</code> (alias: <code>"median_absolute_residual"</code>), or
+<code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>).</p></dd>
 
 
 <dt id="arg-auto-converge">auto_converge<a class="anchor" aria-label="anchor" href="#arg-auto-converge"></a></dt>
-<dd><p>Convergence tolerance for early stopping of robustness
-iterations. <code>NULL</code> (default) disables early stopping.</p></dd>
-
-
-<dt id="arg-confidence-intervals">confidence_intervals<a class="anchor" aria-label="anchor" href="#arg-confidence-intervals"></a></dt>
-<dd><p>Confidence level for confidence intervals
-(e.g. 0.95), or <code>NULL</code> (default) to disable. Requires
-<code>update_mode = "full"</code>.</p></dd>
-
-
-<dt id="arg-prediction-intervals">prediction_intervals<a class="anchor" aria-label="anchor" href="#arg-prediction-intervals"></a></dt>
-<dd><p>Confidence level for prediction intervals
-(e.g. 0.95), or <code>NULL</code> (default) to disable. Requires
-<code>update_mode = "full"</code>.</p></dd>
+<dd><p>Convergence tolerance for early stopping. Requires
+<code>update_mode = "full"</code> and <code>iterations &gt; 0</code>; <code>NULL</code>
+(default) disables early stopping.</p></dd>
 
 
 <dt id="arg-missing">missing<a class="anchor" aria-label="anchor" href="#arg-missing"></a></dt>
@@ -168,11 +139,46 @@ iterations. <code>NULL</code> (default) disables early stopping.</p></dd>
 affected observations before fitting.</p></dd>
 
 
+<dt id="arg-window-capacity">window_capacity<a class="anchor" aria-label="anchor" href="#arg-window-capacity"></a></dt>
+<dd><p>Maximum number of points kept in the sliding
+window, at least 3. Default: 1000.</p></dd>
+
+
+<dt id="arg-min-points">min_points<a class="anchor" aria-label="anchor" href="#arg-min-points"></a></dt>
+<dd><p>Minimum number of points required before smoothing
+begins, between 2 and <code>window_capacity</code>. Default: 2.</p></dd>
+
+
+<dt id="arg-update-mode">update_mode<a class="anchor" aria-label="anchor" href="#arg-update-mode"></a></dt>
+<dd><p>Window update strategy: <code>"incremental"</code> (default;
+alias: <code>"single"</code>) updates only the newest point and does not run
+robustness iterations; <code>"full"</code> (alias: <code>"resmooth"</code>) re-smooths
+all window points after each addition and supports robustness iterations,
+positive <code>delta</code>, and <code>auto_converge</code>.</p></dd>
+
+
 <dt id="arg-outputs">outputs<a class="anchor" aria-label="anchor" href="#arg-outputs"></a></dt>
-<dd><p>Character vector selecting optional output components:
-<code>"weights"</code> (robustness weights), <code>"derivative"</code>, and/or
-<code>"se"</code> (standard errors). <code>NULL</code> (default) returns only the
-core result.</p></dd>
+<dd><p>Character vector selecting optional Online output components:
+<code>"se"</code> (standard errors), <code>"weights"</code> (robustness weights),
+and/or <code>"derivative"</code>. <code>NULL</code> (default) returns only the core
+result.</p></dd>
+
+
+<dt id="arg-intervals">intervals<a class="anchor" aria-label="anchor" href="#arg-intervals"></a></dt>
+<dd><p>Interval options, created with
+<code><a href="intervals_opts.html">intervals_opts</a></code> (or a named list with any of
+<code>confidence</code>, <code>prediction</code>, <code>bootstrap</code>): e.g.
+<code>intervals = intervals_opts(confidence = 0.90, prediction = 0.99,
+bootstrap = 200)</code>. Confidence and prediction coverage levels are
+independent and may differ.
+<code>NULL</code> (default) disables intervals.</p></dd>
+
+
+<dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
+<dd><p>Non-negative whole-number seed shared by cross-validation and
+bootstrap resampling for reproducible results. When cross-validation is
+unavailable, it controls bootstrap resampling only.
+<code>NULL</code> (default) uses a random seed.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -185,6 +191,11 @@ core result.</p></dd>
 real-time smoothed values are needed, or memory is fixed. For datasets
 that fit in memory, see <code><a href="Lowess.html">Lowess</a></code>; for large batches processed
 in chunks, see <code><a href="StreamingLowess.html">StreamingLowess</a></code>.</p>
+<p>Confidence and prediction interval coverage levels are independent; both
+interval types require <code>update_mode = "full"</code>.
+Positive <code>delta</code> values also require <code>update_mode = "full"</code>.
+A non-<code>NULL</code> <code>auto_converge</code> requires full mode and at least one
+robustness iteration; unsupported combinations are rejected.</p>
     </div>
 
     <div class="section level2">

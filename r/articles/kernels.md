@@ -88,7 +88,7 @@ w(u) = \exp(-u^2/2)
 model <- Lowess(weight_function = "gaussian")
 result <- fit(model, x, y)
 cat("Smoothed y[0]:", result$y[1], "\n")
-#> Smoothed y[0]: 0.5459516
+#> Smoothed y[0]: 0.4790245
 ```
 
 ------------------------------------------------------------------------

@@ -23,7 +23,7 @@ x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(
-    cv = cv_opts(fractions = c(0.2, 0.3, 0.5, 0.7), method = "kfold", k = 5)
+    cv = cv_opts(method = "kfold", k = 5, fractions = c(0.2, 0.3, 0.5, 0.7))
 )
 result <- fit(model, x, y)
 
@@ -47,7 +47,7 @@ x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(
-    cv = cv_opts(fractions = c(0.2, 0.3, 0.5, 0.7), method = "loocv")
+    cv = cv_opts(method = "loocv", fractions = c(0.2, 0.3, 0.5, 0.7))
 )
 result <- fit(model, x, y)
 
@@ -59,7 +59,10 @@ cat("Selected fraction (CV):", result$fraction_used, "\n")
 
 ## Seeded Randomization
 
-Set a seed for reproducible fold assignments:
+Set `seed` on
+[`Lowess()`](https://thisisamirv.github.io/lowess-project/r/reference/Lowess.md)
+for reproducible fold assignments (the same seed is also used for
+bootstrap intervals):
 
 ``` r
 
@@ -70,11 +73,11 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(
     cv = cv_opts(
-        fractions = c(0.3, 0.5, 0.7),
         method = "kfold",
         k = 5,
-        seed = 42L
-    )
+        fractions = c(0.3, 0.5, 0.7)
+    ),
+    seed = 42
 )
 result <- fit(model, x, y)
 cat("Selected fraction (CV):", result$fraction_used, "\n")
@@ -122,7 +125,7 @@ x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
 fractions <- c(0.1, 0.3, 0.5, 0.7)
-model <- Lowess(cv = cv_opts(fractions = fractions, method = "kfold", k = 5))
+model <- Lowess(cv = cv_opts(method = "kfold", k = 5, fractions = fractions))
 result <- fit(model, x, y)
 
 plot(fractions, result$cv_scores, type = "b",

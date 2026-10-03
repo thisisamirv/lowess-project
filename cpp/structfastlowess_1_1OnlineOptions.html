@@ -138,12 +138,10 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a30b598e6e445ada09a699cb5d55b0817" id="r_a30b598e6e445ada09a699cb5d55b0817"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1OnlineOptions.html#a30b598e6e445ada09a699cb5d55b0817">outputs</a></td></tr>
 <tr class="memdesc:a30b598e6e445ada09a699cb5d55b0817"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optional result components: "weights", "derivative", and/or "se".  <br /></td></tr>
 <tr class="separator:a30b598e6e445ada09a699cb5d55b0817"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a43c217d2eb8782d3dd1965c2298f348c" id="r_a43c217d2eb8782d3dd1965c2298f348c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1OnlineOptions.html#a43c217d2eb8782d3dd1965c2298f348c">confidence_intervals</a> = <a class="el" href="classfastlowess_1_1Expected.html">NAN</a></td></tr>
-<tr class="memdesc:a43c217d2eb8782d3dd1965c2298f348c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confidence level (NaN = disabled).  <br /></td></tr>
-<tr class="separator:a43c217d2eb8782d3dd1965c2298f348c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa1e4b6076f7ce0b2835aa1fa57040426" id="r_aa1e4b6076f7ce0b2835aa1fa57040426"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1OnlineOptions.html#aa1e4b6076f7ce0b2835aa1fa57040426">prediction_intervals</a> = <a class="el" href="classfastlowess_1_1Expected.html">NAN</a></td></tr>
-<tr class="memdesc:aa1e4b6076f7ce0b2835aa1fa57040426"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prediction level (NaN = disabled).  <br /></td></tr>
-<tr class="separator:aa1e4b6076f7ce0b2835aa1fa57040426"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae754695db7b7cd120fcf35d8cfd0a8d5" id="r_ae754695db7b7cd120fcf35d8cfd0a8d5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structfastlowess_1_1IntervalsOptions.html">IntervalsOptions</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1OnlineOptions.html#ae754695db7b7cd120fcf35d8cfd0a8d5">intervals</a></td></tr>
+<tr class="separator:ae754695db7b7cd120fcf35d8cfd0a8d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a58b40aedf0dbae3672c43e0849624804" id="r_a58b40aedf0dbae3672c43e0849624804"><td class="memItemLeft" align="right" valign="top">std::optional&lt; <a class="el" href="classfastlowess_1_1Expected.html">uint64_t</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1OnlineOptions.html#a58b40aedf0dbae3672c43e0849624804">seed</a></td></tr>
+<tr class="separator:a58b40aedf0dbae3672c43e0849624804"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa0d36b5f54febd5315b162d7fabe1b2b" id="r_aa0d36b5f54febd5315b162d7fabe1b2b"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastlowess_1_1OnlineOptions.html#aa0d36b5f54febd5315b162d7fabe1b2b">missing</a> = &quot;error&quot;</td></tr>
 <tr class="memdesc:aa0d36b5f54febd5315b162d7fabe1b2b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Policy for non-finite (NaN/Inf) <code>x</code>/<code>y</code> values passed to add_point(): "error" (default) or "drop".  <br /></td></tr>
 <tr class="separator:aa0d36b5f54febd5315b162d7fabe1b2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -156,7 +154,7 @@ Public Attributes</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Options for online LOWESS. </p>
-<p>Online LOWESS processes one point at a time, so it has no <code>parallel</code> or <code>backend</code> option, and diagnostics/residuals are always computed for free. <code>return_se</code>/<code>confidence_intervals</code>/<code>prediction_intervals</code> require <code>update_mode = "full"</code>. </p>
+<p>Online LOWESS processes one point at a time, so it has no <code>parallel</code> or <code>backend</code> option, and diagnostics/residuals are always computed for free. <code>outputs = {"se"}</code> or <code>intervals.confidence</code>/<code>intervals.prediction</code> require <code>update_mode = "full"</code>. </p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
 <a id="a6950c44ed0571eed6219ecd34e78b0bd" name="a6950c44ed0571eed6219ecd34e78b0bd"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a6950c44ed0571eed6219ecd34e78b0bd">&#9670;&#160;</a></span>auto_converge</h2>
@@ -185,23 +183,6 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-
-</div>
-</div>
-<a id="a43c217d2eb8782d3dd1965c2298f348c" name="a43c217d2eb8782d3dd1965c2298f348c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a43c217d2eb8782d3dd1965c2298f348c">&#9670;&#160;</a></span>confidence_intervals</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">double</a> fastlowess::OnlineOptions::confidence_intervals = <a class="el" href="classfastlowess_1_1Expected.html">NAN</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Confidence level (NaN = disabled). </p>
-<p>Requires <code>update_mode = "full"</code>. </p>
 
 </div>
 </div>
@@ -234,6 +215,20 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Smoothing fraction (0, 1]. </p>
+
+</div>
+</div>
+<a id="ae754695db7b7cd120fcf35d8cfd0a8d5" name="ae754695db7b7cd120fcf35d8cfd0a8d5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae754695db7b7cd120fcf35d8cfd0a8d5">&#9670;&#160;</a></span>intervals</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structfastlowess_1_1IntervalsOptions.html">IntervalsOptions</a> fastlowess::OnlineOptions::intervals</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>
@@ -300,23 +295,6 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="aa1e4b6076f7ce0b2835aa1fa57040426" name="aa1e4b6076f7ce0b2835aa1fa57040426"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa1e4b6076f7ce0b2835aa1fa57040426">&#9670;&#160;</a></span>prediction_intervals</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">double</a> fastlowess::OnlineOptions::prediction_intervals = <a class="el" href="classfastlowess_1_1Expected.html">NAN</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Prediction level (NaN = disabled). </p>
-<p>Requires <code>update_mode = "full"</code>. </p>
-
-</div>
-</div>
 <a id="a9a7d45c8ecd00f75d3240bb8548be754" name="a9a7d45c8ecd00f75d3240bb8548be754"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a9a7d45c8ecd00f75d3240bb8548be754">&#9670;&#160;</a></span>robustness_method</h2>
 
@@ -339,6 +317,20 @@ Public Attributes</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">std::string fastlowess::OnlineOptions::scaling_method = &quot;mad&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a58b40aedf0dbae3672c43e0849624804" name="a58b40aedf0dbae3672c43e0849624804"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a58b40aedf0dbae3672c43e0849624804">&#9670;&#160;</a></span>seed</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::optional&lt;<a class="el" href="classfastlowess_1_1Expected.html">uint64_t</a>&gt; fastlowess::OnlineOptions::seed</td>
         </tr>
       </table>
 </div><div class="memdoc">

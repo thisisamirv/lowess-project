@@ -9,22 +9,22 @@ sliding window and processes each incoming point immediately via
 ``` r
 OnlineLowess(
     fraction = 0.67,
-    window_capacity = 1000L,
-    min_points = 2L,
     ...,
     iterations = 0L,
-    delta = NULL,
     weight_function = "tricube",
     robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
+    delta = NULL,
     zero_weight_fallback = "use_local_mean",
-    update_mode = "incremental",
+    boundary_policy = "extend",
+    scaling_method = "mad",
     auto_converge = NULL,
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
     missing = "error",
-    outputs = NULL
+    window_capacity = 1000L,
+    min_points = 2L,
+    update_mode = "incremental",
+    outputs = NULL,
+    intervals = NULL,
+    seed = NULL
 )
 ```
 
@@ -32,18 +32,7 @@ OnlineLowess(
 
 - fraction:
 
-  Smoothing fraction, greater than 0 and up to 1. Default: 0.67. See
-  Details for guidance on choosing a value.
-
-- window_capacity:
-
-  Maximum number of points kept in the sliding window, at least 3.
-  Default: 1000.
-
-- min_points:
-
-  Minimum number of points required before smoothing begins, between 2
-  and `window_capacity`. Default: 2.
+  Smoothing fraction, greater than 0 and up to 1. Default: 0.67.
 
 - ...:
 
@@ -54,12 +43,6 @@ OnlineLowess(
   Number of robustness iterations. Requires `update_mode = "full"`; the
   default `"incremental"` mode is a non-robust single-point fit that
   ignores robustness iterations. Default: 0.
-
-- delta:
-
-  Interpolation distance threshold, as a non-negative fraction of the x
-  range; points within `delta` of each other on x share the same local
-  fit. `NULL` (default) sets it automatically to 1/100th of the x range.
 
 - weight_function:
 
@@ -73,18 +56,11 @@ OnlineLowess(
   Outlier downweighting method: `"bisquare"` (default; alias:
   `"biweight"`), `"huber"`, or `"talwar"`.
 
-- scaling_method:
+- delta:
 
-  Residual scale estimation for robustness weights: `"mad"` (default;
-  alias: `"median_absolute_deviation"`), `"mar"` (alias:
-  `"median_absolute_residual"`), or `"mean"` (alias:
-  `"mean_absolute_residual"`).
-
-- boundary_policy:
-
-  Boundary handling strategy: `"extend"` (default; alias: `"pad"`),
-  `"reflect"` (alias: `"mirror"`), `"zero"`, or `"noboundary"` (alias:
-  `"none"`).
+  Interpolation distance as a non-negative fraction of the x range. In
+  Online mode, `NULL` (default) disables interpolation; positive values
+  require `update_mode = "full"`.
 
 - zero_weight_fallback:
 
@@ -93,27 +69,24 @@ OnlineLowess(
   `"return_original"` (alias: `"original"`), or `"return_none"` (alias:
   `"none"`).
 
-- update_mode:
+- boundary_policy:
 
-  Window update strategy: `"incremental"` (default; alias: `"single"`)
-  updates only the newest point and does not run robustness iterations;
-  `"full"` (alias: `"resmooth"`) re-smooths all window points after each
-  addition and supports robustness iterations.
+  Boundary handling strategy: `"extend"` (default; alias: `"pad"`),
+  `"reflect"` (alias: `"mirror"`), `"zero"`, or `"noboundary"` (alias:
+  `"none"`).
+
+- scaling_method:
+
+  Residual scale estimation for robustness weights: `"mad"` (default;
+  alias: `"median_absolute_deviation"`), `"mar"` (alias:
+  `"median_absolute_residual"`), or `"mean"` (alias:
+  `"mean_absolute_residual"`).
 
 - auto_converge:
 
-  Convergence tolerance for early stopping of robustness iterations.
-  `NULL` (default) disables early stopping.
-
-- confidence_intervals:
-
-  Confidence level for confidence intervals (e.g. 0.95), or `NULL`
-  (default) to disable. Requires `update_mode = "full"`.
-
-- prediction_intervals:
-
-  Confidence level for prediction intervals (e.g. 0.95), or `NULL`
-  (default) to disable. Requires `update_mode = "full"`.
+  Convergence tolerance for early stopping. Requires
+  `update_mode = "full"` and `iterations > 0`; `NULL` (default) disables
+  early stopping.
 
 - missing:
 
@@ -121,11 +94,46 @@ OnlineLowess(
   (default) raises an error, `"drop"` silently removes affected
   observations before fitting.
 
+- window_capacity:
+
+  Maximum number of points kept in the sliding window, at least 3.
+  Default: 1000.
+
+- min_points:
+
+  Minimum number of points required before smoothing begins, between 2
+  and `window_capacity`. Default: 2.
+
+- update_mode:
+
+  Window update strategy: `"incremental"` (default; alias: `"single"`)
+  updates only the newest point and does not run robustness iterations;
+  `"full"` (alias: `"resmooth"`) re-smooths all window points after each
+  addition and supports robustness iterations, positive `delta`, and
+  `auto_converge`.
+
 - outputs:
 
-  Character vector selecting optional output components: `"weights"`
-  (robustness weights), `"derivative"`, and/or `"se"` (standard errors).
-  `NULL` (default) returns only the core result.
+  Character vector selecting optional Online output components: `"se"`
+  (standard errors), `"weights"` (robustness weights), and/or
+  `"derivative"`. `NULL` (default) returns only the core result.
+
+- intervals:
+
+  Interval options, created with
+  [`intervals_opts`](https://thisisamirv.github.io/lowess-project/r/reference/intervals_opts.md)
+  (or a named list with any of `confidence`, `prediction`, `bootstrap`):
+  e.g.
+  `intervals = intervals_opts(confidence = 0.90, prediction = 0.99, bootstrap = 200)`.
+  Confidence and prediction coverage levels are independent and may
+  differ. `NULL` (default) disables intervals.
+
+- seed:
+
+  Non-negative whole-number seed shared by cross-validation and
+  bootstrap resampling for reproducible results. When cross-validation
+  is unavailable, it controls bootstrap resampling only. `NULL`
+  (default) uses a random seed.
 
 ## Value
 
@@ -139,6 +147,12 @@ that fit in memory, see
 [`Lowess`](https://thisisamirv.github.io/lowess-project/r/reference/Lowess.md);
 for large batches processed in chunks, see
 [`StreamingLowess`](https://thisisamirv.github.io/lowess-project/r/reference/StreamingLowess.md).
+
+Confidence and prediction interval coverage levels are independent; both
+interval types require `update_mode = "full"`. Positive `delta` values
+also require `update_mode = "full"`. A non-`NULL` `auto_converge`
+requires full mode and at least one robustness iteration; unsupported
+combinations are rejected.
 
 ## Examples
 

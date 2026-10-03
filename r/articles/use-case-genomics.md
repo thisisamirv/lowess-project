@@ -22,9 +22,10 @@ position-dependent patterns that can be obscured by measurement noise.
 
 A small `fraction = 0.1` lets LOWESS follow fine-scale spatial structure
 without smearing the transitions between methylated and unmethylated
-regions. `confidence_intervals = 0.95` produces uncertainty bands that
-naturally widen at positions with sparser CpG coverage, making
-low-confidence segments immediately apparent in the plot.
+regions. `intervals = intervals_opts(confidence = 0.95)` produces
+uncertainty bands that naturally widen at positions with sparser CpG
+coverage, making low-confidence segments immediately apparent in the
+plot.
 
 ``` r
 
@@ -37,7 +38,7 @@ observed <- 50 + sin(positions / 1000) * 20 + 5
 model <- Lowess(
     fraction = 0.1,
     iterations = 3,
-    confidence_intervals = 0.95
+    intervals = intervals_opts(confidence = 0.95)
 )
 result <- fit(model, positions, observed)
 

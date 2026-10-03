@@ -13,6 +13,9 @@ Confidence and prediction intervals
 > `y`/`derivative`), and **Online** mode when `update_mode = "full"` is
 > set (errors if combined with the default `"incremental"` mode).
 
+Confidence and prediction coverage levels are independent; for example,
+a 90% confidence interval can be paired with a 99% prediction interval.
+
 | Type           | Represents                 | Width  | Use               |
 |----------------|----------------------------|--------|-------------------|
 | **Confidence** | Uncertainty in mean curve  | Narrow | Trend location    |
@@ -31,7 +34,7 @@ set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
-model <- Lowess(fraction = 0.5, confidence_intervals = 0.95)
+model <- Lowess(fraction = 0.5, intervals = intervals_opts(confidence = 0.95))
 result <- fit(model, x, y)
 
 # Plot with bands
@@ -65,7 +68,7 @@ set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
-model <- Lowess(fraction = 0.5, prediction_intervals = 0.95)
+model <- Lowess(fraction = 0.5, intervals = intervals_opts(prediction = 0.95))
 result <- fit(model, x, y)
 
 plot(x, y, pch = 16, col = "gray",
@@ -100,8 +103,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Lowess(
     fraction = 0.5,
-    confidence_intervals = 0.95,
-    prediction_intervals = 0.95
+    intervals = intervals_opts(confidence = 0.90, prediction = 0.99)
 )
 result <- fit(model, x, y)
 
@@ -130,7 +132,7 @@ legend("topright",
 
 cat("95% CI at midpoint: [", result$confidence_lower[50], ", ",
     result$confidence_upper[50], "]\n")
-#> 95% CI at midpoint: [ -0.04412499 ,  0.1214997 ]
+#> 95% CI at midpoint: [ -0.03081586 ,  0.1081906 ]
 ```
 
 ------------------------------------------------------------------------
@@ -148,12 +150,41 @@ Common levels and their z-values:
 ``` r
 
 # 99% confidence interval
-model <- Lowess(fraction = 0.5, confidence_intervals = 0.99)
+model <- Lowess(fraction = 0.5, intervals = intervals_opts(confidence = 0.99))
 result <- fit(model, x, y)
 cat("99% CI at midpoint: [", result$confidence_lower[50], ", ",
     result$confidence_upper[50], "]\n")
 #> 99% CI at midpoint: [ -0.07015174 ,  0.1475265 ]
 ```
+
+------------------------------------------------------------------------
+
+## Bootstrap Intervals
+
+Set `bootstrap` to compute intervals from resampled fits instead of the
+analytic formula. Pass `seed` for reproducible resampling:
+
+``` r
+
+model <- Lowess(
+    fraction = 0.5,
+    intervals = intervals_opts(
+        confidence = 0.95,
+        prediction = 0.95,
+        bootstrap = 200
+    ),
+    seed = 42
+)
+result <- fit(model, x, y)
+cat("Bootstrap 95% CI at midpoint: [", result$confidence_lower[50], ", ",
+    result$confidence_upper[50], "]\n")
+#> Bootstrap 95% CI at midpoint: [ -0.07091939 ,  0.1507282 ]
+```
+
+The same `intervals` and `seed` arguments are accepted by
+[`StreamingLowess()`](https://thisisamirv.github.io/lowess-project/r/reference/StreamingLowess.md),
+[`OnlineLowess()`](https://thisisamirv.github.io/lowess-project/r/reference/OnlineLowess.md),
+and [`predict()`](https://rdrr.io/r/stats/predict.html).
 
 ------------------------------------------------------------------------
 
@@ -179,9 +210,9 @@ cat("Standard errors (first 5):", head(result$standard_errors, 5), "\n")
 
 | Feature              | Batch | Streaming | Online                          |
 |----------------------|-------|-----------|---------------------------------|
+| Standard errors      | ✓     | ✓         | ✓ (`update_mode = "full"` only) |
 | Confidence intervals | ✓     | ✓         | ✓ (`update_mode = "full"` only) |
 | Prediction intervals | ✓     | ✓         | ✓ (`update_mode = "full"` only) |
-| Standard errors      | ✓     | ✓         | ✓ (`update_mode = "full"` only) |
 
 ``` r
 

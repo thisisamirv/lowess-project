@@ -4,9 +4,30 @@
 
 ### Added
 
+- Added prebuilt GPU library release jobs and installer selection for
+  Linux ARM64, musl/Alpine x86_64 and ARM64, and Windows ARM64.
+- Enabled the optional wgpu DirectX 12 backend for GPU-enabled Windows
+  builds. DXC is loaded dynamically with an FXC fallback, avoiding eager
+  imports of `dxcompiler.dll` and `dxil.dll`.
+- Added GLES for Android GPU builds with a target-scoped `wgpu` feature;
+  Windows continues to omit the GLES-only loader imports.
 - Added
   [`cv_opts()`](https://thisisamirv.github.io/lowess-project/r/reference/cv_opts.md)
   to configure grouped cross-validation options for `Lowess(cv = ...)`.
+- Added
+  [`intervals_opts()`](https://thisisamirv.github.io/lowess-project/r/reference/intervals_opts.md)
+  and an `intervals` argument to
+  [`Lowess()`](https://thisisamirv.github.io/lowess-project/r/reference/Lowess.md),
+  [`StreamingLowess()`](https://thisisamirv.github.io/lowess-project/r/reference/StreamingLowess.md),
+  [`OnlineLowess()`](https://thisisamirv.github.io/lowess-project/r/reference/OnlineLowess.md),
+  and [`predict()`](https://rdrr.io/r/stats/predict.html), including
+  bootstrap intervals via `bootstrap`.
+- Added a `seed` argument to
+  [`Lowess()`](https://thisisamirv.github.io/lowess-project/r/reference/Lowess.md),
+  [`StreamingLowess()`](https://thisisamirv.github.io/lowess-project/r/reference/StreamingLowess.md),
+  [`OnlineLowess()`](https://thisisamirv.github.io/lowess-project/r/reference/OnlineLowess.md),
+  and [`predict()`](https://rdrr.io/r/stats/predict.html) for
+  reproducible cross-validation and bootstrap resampling.
 - Added an “Alternative Software” vignette comparing `rfastlowess` with
   [`stats::lowess()`](https://rdrr.io/r/stats/lowess.html).
 
@@ -16,14 +37,78 @@
   `outputs`, and replaced
   [`Lowess()`](https://thisisamirv.github.io/lowess-project/r/reference/Lowess.md)’s
   four `cv_*` arguments with `cv = cv_opts(...)`.
+- Breaking change: replaced
+  `confidence_intervals`/`prediction_intervals` (and
+  [`predict()`](https://rdrr.io/r/stats/predict.html)’s
+  `confidence_level`/`prediction_level`) with
+  `intervals = intervals_opts(confidence, prediction, bootstrap)`, and
+  moved the cross-validation seed from `cv_opts(seed = ...)` to a shared
+  `seed` argument.
 - Represent unavailable diagnostic metrics as R `NA` rather than generic
   `NaN` values.
 
 ### Fixed
 
+- Reject unused constructor options, factors/multidimensional inputs,
+  and malformed grouped options. Keep GPU sidecars mapped for live model
+  finalizers, try older valid sidecars, verify native ABI/version and
+  argument counts, bound candidate probes, and check download SHA-256
+  digests before execution.
+- Validate Streaming/Online iterations and plain-list CV fold counts
+  before coercion, and accept integer custom weights.
+- Detect R’s linked libc, confirm local GPU installs before probing
+  candidates, use canonical library filenames, and activate versioned
+  Windows GPU sidecars on restart without replacing loaded DLLs.
+- Fixed global OLS fits treating predictor values with a large offset as
+  degenerate; translated inputs now retain their fitted slope.
+- Fixed fraction-1 global fits ignoring custom weights, including when
+  Batch sorts observations by x.
+- Fixed Batch `missing = "drop"` accepting custom weights with a length
+  different from the original input; weights are validated before rows
+  are dropped.
+- Fixed standard errors for global weighted fits to account for
+  observation weights and weighted prediction leverage.
+- Fixed local Batch and retained-model prediction standard errors
+  ignoring `custom_weights`; local SE moments now include the
+  per-observation case weights.
+- Fixed global fits with all-zero custom weights to honor the configured
+  zero-weight fallback policy.
+- Fixed fraction-1 global fits ignoring configured robustness
+  iterations; they now reweight observations and report iterations used.
+- Fixed Batch cross-validation candidate fits ignoring `custom_weights`;
+  K-fold CV now rejects more folds than observations instead of
+  returning zero scores.
+- Fixed Streaming and Online accepting invalid `auto_converge`
+  tolerances; Online also rejects invalid explicit `delta` values while
+  retaining NaN as its default sentinel.
+- Fixed GPU Batch fits misaligning fitted values with unsorted inputs;
+  results now preserve input and requested sorted order.
+- Fixed GPU Batch silently ignoring `custom_weights`; GPU fit and CV
+  candidate kernels now apply them directly.
+- Reduced GPU adapter buffer requirements from 30 storage/32 total
+  buffer bindings to 7 storage/8 total per shader stage by using
+  per-compute-pipeline resource layouts.
+- Fixed Online incremental mode accepting positive `delta` and
+  `auto_converge` settings it cannot use; unsupported combinations now
+  error.
+- Fixed grouped intervals discarding distinct confidence and prediction
+  levels; each requested coverage is now applied independently.
 - Fixed the default `boundary_policy` (`"extend"`) letting synthetic
   boundary points bias the shared robustness scale estimate used to
   reweight every point, compounding across robustness iterations.
+- Improved agreement with R/Cleveland on sparse, asymmetric, and
+  high-iteration fits by aligning robustness stopping, local-linear
+  degeneracy handling, neighborhood traversal, delta interpolation, and
+  weighted accumulation.
+- Fixed zero-radius neighborhoods dropping tied observations or
+  accumulating normalized weights in a different order under robust
+  fits.
+- Fixed Gaussian fits clipping the unbounded kernel to the neighbor
+  window and flooring far-tail weights; all observations now contribute
+  under the standard Gaussian formula.
+- Reject fractional integer/count options and validate GPU candidate
+  libraries and supported prebuilt targets; refuse in-place overwrite
+  when atomic replacement fails.
 
 ## rfastlowess 4.1.0
 

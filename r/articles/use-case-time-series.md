@@ -94,8 +94,7 @@ y <- sin(t) + 0.1
 model <- Lowess(
     fraction = 0.2,
     iterations = 3,
-    confidence_intervals = 0.95,
-    prediction_intervals = 0.95
+    intervals = intervals_opts(confidence = 0.90, prediction = 0.99)
 )
 result <- fit(model, t, y)
 
@@ -103,7 +102,7 @@ cat(sprintf(
     "95%% PI: [%.4f, %.4f]\n",
     result$prediction_lower[1], result$prediction_upper[1]
 ))
-#> 95% PI: [0.1561, 0.2989]
+#> 95% PI: [0.1337, 0.3213]
 ```
 
 ------------------------------------------------------------------------
@@ -169,8 +168,8 @@ expression <- 100 * (1 + 0.5 * sin(hours * pi / 12)) +
 model <- Lowess(
     fraction = 0.3,
     iterations = 3,
-    confidence_intervals = 0.95,
-    outputs = "diagnostics"
+    outputs = "diagnostics",
+    intervals = intervals_opts(confidence = 0.95)
 )
 result <- fit(model, hours, expression)
 cat(sprintf("R2: %.3f\n", result$diagnostics$r_squared))

@@ -112,6 +112,7 @@ Confidence and Prediction Intervals</div></div>
     <blockquote class="doxtable">
 <p>&zwj;<b>Adapter support:</b> Confidence and prediction intervals are available in <b>Batch</b> mode, <b>Streaming</b> mode (computed per chunk and merged across overlap boundaries via <code>merge_strategy</code>, like <code>y_vector()</code>/<code>derivative()</code>), and <b>Online</b> mode when <code>update_mode = "full"</code> is set (construction fails if combined with the default <code>"incremental"</code> mode). </p>
 </blockquote>
+<p>Confidence and prediction coverage levels are independent; for example, a 90% confidence interval can be paired with a 99% prediction interval.</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Type   </th><th class="markdownTableHeadNone">Represents   </th><th class="markdownTableHeadNone">Width   </th><th class="markdownTableHeadNone">Use    </th></tr>
@@ -137,11 +138,11 @@ Confidence and Prediction Intervals</div></div>
 <div class="line">    }</div>
 <div class="line"> </div>
 <div class="line"> </div>
-<div class="line">    <a class="code hl_class" href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a> model({</div>
-<div class="line">        .fraction = 0.5,</div>
-<div class="line">        .confidence_intervals = 0.95</div>
-<div class="line">    });</div>
-<div class="line">    <span class="keyword">auto</span> result = model.<a class="code hl_function" href="classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e">fit</a>(x, y).<a class="code hl_function" href="classfastlowess_1_1Expected.html#aeb88e40ff81b811771e6e2013fad7a6c">value</a>();</div>
+<div class="line">    <a class="code hl_struct" href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a> options;</div>
+<div class="line">    options.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fraction</a> = 0.5;</div>
+<div class="line">    options.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a1756ec432dde53ce3f10059e91726d4d">intervals</a>.<a class="code hl_variable" href="structfastlowess_1_1IntervalsOptions.html#a4d5cff09006469752a2b99839de13cbc">confidence</a> = 0.95;</div>
+<div class="line">    <a class="code hl_class" href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a> model(options);</div>
+<div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
 <div class="line">    <span class="keyword">auto</span> ci_lower = result.confidence_lower();</div>
 <div class="line">    <span class="keyword">auto</span> ci_upper = result.confidence_upper();</div>
@@ -149,10 +150,12 @@ Confidence and Prediction Intervals</div></div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastlowess_1_1Expected_html_aeb88e40ff81b811771e6e2013fad7a6c"><div class="ttname"><a href="classfastlowess_1_1Expected.html#aeb88e40ff81b811771e6e2013fad7a6c">fastlowess::Expected::value</a></div><div class="ttdeci">T &amp; value() &amp;</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:90</div></div>
-<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:700</div></div>
-<div class="ttc" id="aclassfastlowess_1_1Lowess_html_a504a722970109b32ab8318352d224a2e"><div class="ttname"><a href="classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e">fastlowess::Lowess::fit</a></div><div class="ttdeci">Expected&lt; LowessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:748</div></div>
+<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:766</div></div>
 <div class="ttc" id="afastlowess_8hpp_html"><div class="ttname"><a href="fastlowess_8hpp.html">fastlowess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLowess library.</div></div>
+<div class="ttc" id="astructfastlowess_1_1IntervalsOptions_html_a4d5cff09006469752a2b99839de13cbc"><div class="ttname"><a href="structfastlowess_1_1IntervalsOptions.html#a4d5cff09006469752a2b99839de13cbc">fastlowess::IntervalsOptions::confidence</a></div><div class="ttdeci">double confidence</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:92</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a></div><div class="ttdoc">Options for configuring LOWESS smoothing.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:195</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_a1756ec432dde53ce3f10059e91726d4d"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#a1756ec432dde53ce3f10059e91726d4d">fastlowess::LowessOptions::intervals</a></div><div class="ttdeci">IntervalsOptions intervals</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:206</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ac4c7e581cd561fc11a928f9901bb5ec6"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fastlowess::LowessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:196</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.292929, 0.372154]</div>
 </div><!-- fragment --><hr  />
 <h2>Prediction Intervals</h2>
@@ -170,12 +173,16 @@ Confidence and Prediction Intervals</div></div>
 <div class="line">        y[i] = std::sin(x[i]) + 0.1;</div>
 <div class="line">    }</div>
 <div class="line"> </div>
-<div class="line">    <a class="code hl_class" href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a> model({ .fraction = 0.5, .prediction_intervals = 0.95});</div>
-<div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).<a class="code hl_function" href="classfastlowess_1_1Expected.html#aeb88e40ff81b811771e6e2013fad7a6c">value</a>();</div>
+<div class="line">    <a class="code hl_struct" href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a> options;</div>
+<div class="line">    options.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fraction</a> = 0.5;</div>
+<div class="line">    options.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a1756ec432dde53ce3f10059e91726d4d">intervals</a>.<a class="code hl_variable" href="structfastlowess_1_1IntervalsOptions.html#aac9373f31a7aa99ed6a045824c424d1b">prediction</a> = 0.95;</div>
+<div class="line">    <a class="code hl_class" href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a> model(options);</div>
+<div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% PI: [&quot;</span> &lt;&lt; result.prediction_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.prediction_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+<div class="ttc" id="astructfastlowess_1_1IntervalsOptions_html_aac9373f31a7aa99ed6a045824c424d1b"><div class="ttname"><a href="structfastlowess_1_1IntervalsOptions.html#aac9373f31a7aa99ed6a045824c424d1b">fastlowess::IntervalsOptions::prediction</a></div><div class="ttdeci">double prediction</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:93</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% PI: [-0.040546, 0.705629]</div>
 </div><!-- fragment --><hr  />
 <h2>Both Intervals</h2>
@@ -193,8 +200,12 @@ Confidence and Prediction Intervals</div></div>
 <div class="line">        y[i] = std::sin(x[i]) + 0.1;</div>
 <div class="line">    }</div>
 <div class="line"> </div>
-<div class="line">    <a class="code hl_class" href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a> model({ .fraction = 0.5, .confidence_intervals = 0.95, .prediction_intervals = 0.95});</div>
-<div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).<a class="code hl_function" href="classfastlowess_1_1Expected.html#aeb88e40ff81b811771e6e2013fad7a6c">value</a>();</div>
+<div class="line">    <a class="code hl_struct" href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a> options;</div>
+<div class="line">    options.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fraction</a> = 0.5;</div>
+<div class="line">    options.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a1756ec432dde53ce3f10059e91726d4d">intervals</a>.<a class="code hl_variable" href="structfastlowess_1_1IntervalsOptions.html#a4d5cff09006469752a2b99839de13cbc">confidence</a> = 0.95;</div>
+<div class="line">    options.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a1756ec432dde53ce3f10059e91726d4d">intervals</a>.<a class="code hl_variable" href="structfastlowess_1_1IntervalsOptions.html#aac9373f31a7aa99ed6a045824c424d1b">prediction</a> = 0.95;</div>
+<div class="line">    <a class="code hl_class" href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a> model(options);</div>
+<div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
@@ -226,13 +237,72 @@ Confidence and Prediction Intervals</div></div>
 <div class="line">        y[i] = std::sin(x[i]) + 0.1;</div>
 <div class="line">    }</div>
 <div class="line"> </div>
-<div class="line">    <a class="code hl_class" href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a> model({ .confidence_intervals = 0.99});</div>
-<div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).<a class="code hl_function" href="classfastlowess_1_1Expected.html#aeb88e40ff81b811771e6e2013fad7a6c">value</a>();</div>
+<div class="line">    <a class="code hl_struct" href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a> options;</div>
+<div class="line">    options.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a1756ec432dde53ce3f10059e91726d4d">intervals</a>.<a class="code hl_variable" href="structfastlowess_1_1IntervalsOptions.html#a4d5cff09006469752a2b99839de13cbc">confidence</a> = 0.99;</div>
+<div class="line">    <a class="code hl_class" href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a> model(options);</div>
+<div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;99% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">99% CI: [0.317464, 0.444303]</div>
+</div><!-- fragment --><hr  />
+<h2>Residual Bootstrap</h2>
+<p>Set <code>intervals.bootstrap</code> to at least 2 to replace analytic intervals with residual-bootstrap refits. <code>seed</code> is an optional outer setting shared with CV for Batch; on Streaming and Online it seeds each chunk or full-update window. Online bootstrap requires <code>update_mode = "full"</code>.</p>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastlowess_8hpp.html">fastlowess.hpp</a>&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"> </div>
+<div class="line"><span class="keywordtype">int</span> main() {</div>
+<div class="line">    std::vector&lt;double&gt; x(30), y(30);</div>
+<div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 30; ++i) {</div>
+<div class="line">        x[i] = i * 0.1;</div>
+<div class="line">        y[i] = std::sin(x[i]) + 0.1 * std::cos(7.0 * x[i]);</div>
+<div class="line">    }</div>
+<div class="line"> </div>
+<div class="line">    <a class="code hl_struct" href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a> batch_options;</div>
+<div class="line">    batch_options.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a1756ec432dde53ce3f10059e91726d4d">intervals</a>.<a class="code hl_variable" href="structfastlowess_1_1IntervalsOptions.html#a4d5cff09006469752a2b99839de13cbc">confidence</a> = 0.95;</div>
+<div class="line">    batch_options.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a1756ec432dde53ce3f10059e91726d4d">intervals</a>.<a class="code hl_variable" href="structfastlowess_1_1IntervalsOptions.html#aac9373f31a7aa99ed6a045824c424d1b">prediction</a> = 0.95;</div>
+<div class="line">    batch_options.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a1756ec432dde53ce3f10059e91726d4d">intervals</a>.<a class="code hl_variable" href="structfastlowess_1_1IntervalsOptions.html#a30615fef5267758e73e587e8e804c869">bootstrap</a> = 20;</div>
+<div class="line">    batch_options.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#aa6feff20dd8cd73366bd0763340fbf3f">seed</a> = 42;</div>
+<div class="line">    <a class="code hl_class" href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a> batch(batch_options);</div>
+<div class="line">    <span class="keyword">auto</span> fitted = batch.fit(x, y).value();</div>
+<div class="line">    <span class="keywordflow">if</span> (fitted.standard_errors().size() != x.size()) <span class="keywordflow">return</span> 1;</div>
+<div class="line"> </div>
+<div class="line">    <a class="code hl_struct" href="structfastlowess_1_1StreamingOptions.html">fastlowess::StreamingOptions</a> streaming_options;</div>
+<div class="line">    streaming_options.<a class="code hl_variable" href="structfastlowess_1_1StreamingOptions.html#aef557d1b8515c43f5027f0afea85018a">chunk_size</a> = 30;</div>
+<div class="line">    streaming_options.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a1756ec432dde53ce3f10059e91726d4d">intervals</a>.<a class="code hl_variable" href="structfastlowess_1_1IntervalsOptions.html#a4d5cff09006469752a2b99839de13cbc">confidence</a> = 0.95;</div>
+<div class="line">    streaming_options.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#a1756ec432dde53ce3f10059e91726d4d">intervals</a>.<a class="code hl_variable" href="structfastlowess_1_1IntervalsOptions.html#a30615fef5267758e73e587e8e804c869">bootstrap</a> = 20;</div>
+<div class="line">    streaming_options.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#aa6feff20dd8cd73366bd0763340fbf3f">seed</a> = 42;</div>
+<div class="line">    <a class="code hl_class" href="classfastlowess_1_1StreamingLowess.html">fastlowess::StreamingLowess</a> streaming(streaming_options);</div>
+<div class="line">    <span class="keyword">auto</span> chunk = streaming.process_chunk(x, y).value();</div>
+<div class="line">    <span class="keywordflow">if</span> (chunk.confidence_lower().empty()) <span class="keywordflow">return</span> 1;</div>
+<div class="line"> </div>
+<div class="line">    <a class="code hl_struct" href="structfastlowess_1_1OnlineOptions.html">fastlowess::OnlineOptions</a> online_options;</div>
+<div class="line">    online_options.<a class="code hl_variable" href="structfastlowess_1_1OnlineOptions.html#a749706bb2b58779a0ef79c22d0683d32">min_points</a> = 5;</div>
+<div class="line">    online_options.<a class="code hl_variable" href="structfastlowess_1_1OnlineOptions.html#a7080c8dae563a963909e271a74d9cbab">update_mode</a> = <span class="stringliteral">&quot;full&quot;</span>;</div>
+<div class="line">    online_options.<a class="code hl_variable" href="structfastlowess_1_1OnlineOptions.html#ae754695db7b7cd120fcf35d8cfd0a8d5">intervals</a>.<a class="code hl_variable" href="structfastlowess_1_1IntervalsOptions.html#aac9373f31a7aa99ed6a045824c424d1b">prediction</a> = 0.95;</div>
+<div class="line">    online_options.<a class="code hl_variable" href="structfastlowess_1_1OnlineOptions.html#ae754695db7b7cd120fcf35d8cfd0a8d5">intervals</a>.<a class="code hl_variable" href="structfastlowess_1_1IntervalsOptions.html#a30615fef5267758e73e587e8e804c869">bootstrap</a> = 20;</div>
+<div class="line">    online_options.<a class="code hl_variable" href="structfastlowess_1_1OnlineOptions.html#a58b40aedf0dbae3672c43e0849624804">seed</a> = 42;</div>
+<div class="line">    <a class="code hl_class" href="classfastlowess_1_1OnlineLowess.html">fastlowess::OnlineLowess</a> online(online_options);</div>
+<div class="line">    <span class="keywordtype">bool</span> has_bounds = <span class="keyword">false</span>;</div>
+<div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 30; ++i) {</div>
+<div class="line">        <span class="keyword">auto</span> output = online.add_point(x[i], y[i]).value();</div>
+<div class="line">        <span class="keywordflow">if</span> (output.has_value()) has_bounds = std::isfinite(output.prediction_lower());</div>
+<div class="line">    }</div>
+<div class="line">    <span class="keywordflow">return</span> has_bounds ? 0 : 1;</div>
+<div class="line">}</div>
+<div class="ttc" id="aclassfastlowess_1_1OnlineLowess_html"><div class="ttname"><a href="classfastlowess_1_1OnlineLowess.html">fastlowess::OnlineLowess</a></div><div class="ttdoc">Online LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:959</div></div>
+<div class="ttc" id="aclassfastlowess_1_1StreamingLowess_html"><div class="ttname"><a href="classfastlowess_1_1StreamingLowess.html">fastlowess::StreamingLowess</a></div><div class="ttdoc">Streaming LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:858</div></div>
+<div class="ttc" id="astructfastlowess_1_1IntervalsOptions_html_a30615fef5267758e73e587e8e804c869"><div class="ttname"><a href="structfastlowess_1_1IntervalsOptions.html#a30615fef5267758e73e587e8e804c869">fastlowess::IntervalsOptions::bootstrap</a></div><div class="ttdeci">size_t bootstrap</div><div class="ttdoc">Zero disables bootstrap refits.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:95</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_aa6feff20dd8cd73366bd0763340fbf3f"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#aa6feff20dd8cd73366bd0763340fbf3f">fastlowess::LowessOptions::seed</a></div><div class="ttdeci">std::optional&lt; uint64_t &gt; seed</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:207</div></div>
+<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html">fastlowess::OnlineOptions</a></div><div class="ttdoc">Options for online LOWESS.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:253</div></div>
+<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html_a58b40aedf0dbae3672c43e0849624804"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html#a58b40aedf0dbae3672c43e0849624804">fastlowess::OnlineOptions::seed</a></div><div class="ttdeci">std::optional&lt; uint64_t &gt; seed</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:270</div></div>
+<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html_a7080c8dae563a963909e271a74d9cbab"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html#a7080c8dae563a963909e271a74d9cbab">fastlowess::OnlineOptions::update_mode</a></div><div class="ttdeci">std::string update_mode</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:278</div></div>
+<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html_a749706bb2b58779a0ef79c22d0683d32"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html#a749706bb2b58779a0ef79c22d0683d32">fastlowess::OnlineOptions::min_points</a></div><div class="ttdeci">int min_points</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:277</div></div>
+<div class="ttc" id="astructfastlowess_1_1OnlineOptions_html_ae754695db7b7cd120fcf35d8cfd0a8d5"><div class="ttname"><a href="structfastlowess_1_1OnlineOptions.html#ae754695db7b7cd120fcf35d8cfd0a8d5">fastlowess::OnlineOptions::intervals</a></div><div class="ttdeci">IntervalsOptions intervals</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:269</div></div>
+<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html">fastlowess::StreamingOptions</a></div><div class="ttdoc">Options for streaming LOWESS.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:236</div></div>
+<div class="ttc" id="astructfastlowess_1_1StreamingOptions_html_aef557d1b8515c43f5027f0afea85018a"><div class="ttname"><a href="structfastlowess_1_1StreamingOptions.html#aef557d1b8515c43f5027f0afea85018a">fastlowess::StreamingOptions::chunk_size</a></div><div class="ttdeci">int chunk_size</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:237</div></div>
 </div><!-- fragment --><hr  />
 <h2>Standard Errors</h2>
 <p>Access standard errors directly (available when intervals are computed):</p>
@@ -253,7 +323,7 @@ Confidence and Prediction Intervals</div></div>
 <div class="line">    <a class="code hl_struct" href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a> opts;</div>
 <div class="line">    opts.<a class="code hl_variable" href="structfastlowess_1_1LowessOptions.html#ad06f7bb7d7036fb0417334bd71fbbeda">outputs</a> = {<span class="stringliteral">&quot;se&quot;</span>};</div>
 <div class="line">    <a class="code hl_class" href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a> model(opts);</div>
-<div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).<a class="code hl_function" href="classfastlowess_1_1Expected.html#aeb88e40ff81b811771e6e2013fad7a6c">value</a>();</div>
+<div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
 <div class="line">    <span class="keyword">auto</span> se = result.standard_errors();</div>
 <div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 3; ++i) {</div>
@@ -261,8 +331,7 @@ Confidence and Prediction Intervals</div></div>
 <div class="line">    }</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="astructfastlowess_1_1LowessOptions_html"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a></div><div class="ttdoc">Options for configuring LOWESS smoothing.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:134</div></div>
-<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ad06f7bb7d7036fb0417334bd71fbbeda"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ad06f7bb7d7036fb0417334bd71fbbeda">fastlowess::LowessOptions::outputs</a></div><div class="ttdeci">std::vector&lt; std::string &gt; outputs</div><div class="ttdoc">Optional result components: diagnostics, residuals, weights, derivative, se, and sorted.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:151</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ad06f7bb7d7036fb0417334bd71fbbeda"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ad06f7bb7d7036fb0417334bd71fbbeda">fastlowess::LowessOptions::outputs</a></div><div class="ttdeci">std::vector&lt; std::string &gt; outputs</div><div class="ttdoc">Optional result components: diagnostics, residuals, weights, derivative, se, and sorted.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:212</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">Point 0: SE = 0.0246</div>
 <div class="line">Point 1: SE = 0.0252</div>
 <div class="line">Point 2: SE = 0.0258</div>
