@@ -14,6 +14,12 @@
 #define NOMINMAX
 #endif
 #include <windows.h> // NOLINT(misc-include-cleaner)
+
+#include <errhandlingapi.h>
+#include <libloaderapi.h>
+#include <minwindef.h>
+#include <processthreadsapi.h>
+#include <winbase.h>
 #endif
 
 #include <algorithm>
@@ -39,7 +45,7 @@
 #include <features.h>
 #endif
 
-#if defined(__APPLE__)
+#ifdef __APPLE__
 #include <TargetConditionals.h>
 #endif
 

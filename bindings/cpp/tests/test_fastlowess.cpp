@@ -7,8 +7,11 @@
 #include <cstdlib>
 #include <exception>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
+#include <iterator>
 #include <string>
+#include <system_error>
 #include <vector>
 
 static_assert(FASTLOWESS_CPP_VERSION_MAJOR >= 0,
@@ -589,8 +592,13 @@ void testGpuCopySupportsShellCharactersInPaths() {
   assertTrue(
       fastlowess::gpu::detail::copyFile(source.string(), destination.string()),
       "GPU installer copy should handle shell characters in paths");
-  assertTrue(std::filesystem::file_size(destination) == 4,
-             "GPU installer copy should preserve the file");
+  {
+    std::ifstream input(destination, std::ios::binary);
+    const std::string contents(std::istreambuf_iterator<char>{input},
+                               std::istreambuf_iterator<char>{});
+    assertTrue(contents == "test",
+               "GPU installer copy should preserve the file contents");
+  }
   std::filesystem::remove_all(directory);
 }
 

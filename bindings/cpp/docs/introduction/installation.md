@@ -163,3 +163,8 @@ int main() {
  std::cout << "Loaded library version: " << cpp_version() << '\n';
 }
 ```
+
+```output
+Header version: 4.1.0
+Loaded library version: 4.1.0
+```
