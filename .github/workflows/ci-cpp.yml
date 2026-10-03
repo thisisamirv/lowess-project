@@ -70,6 +70,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y cppcheck valgrind
 
+      - name: Build current Valgrind (Linux ARM64)
+        if: runner.os == 'Linux' && runner.arch == 'ARM64'
+        shell: bash
+        run: |
+          version=3.27.1
+          prefix="$RUNNER_TEMP/valgrind-$version-install"
+          curl -fLsS "https://sourceware.org/pub/valgrind/valgrind-$version.tar.bz2" -o "$RUNNER_TEMP/valgrind.tar.bz2"
+          tar -xjf "$RUNNER_TEMP/valgrind.tar.bz2" -C "$RUNNER_TEMP"
+          cd "$RUNNER_TEMP/valgrind-$version"
+          ./configure --prefix="$prefix"
+          make -j"$(nproc)"
+          make install
+          "$prefix/bin/valgrind" --version
+          echo "$prefix/bin" >> "$GITHUB_PATH"
+
       - name: Install clang-tidy and cppcheck (macOS)
         if: runner.os == 'macOS'
         run: |

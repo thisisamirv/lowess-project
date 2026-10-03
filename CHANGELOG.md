@@ -169,6 +169,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Monorepo:**
 
+- Build pinned Valgrind 3.27.1 for ARM64 C++ CI instead of Ubuntu 24.04's 3.22, keeping optimized-build memory checking and strict undefined-value errors enabled.
 - Skip comparison snippets when the optional `statsmodels` dependency is unavailable instead of failing verification.
 - Fixed C++ release CI staging the tracked Spack recipe despite the repository's broad `spack/` ignore rule.
 
