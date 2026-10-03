@@ -13,10 +13,11 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
+  R_LIBS_USER: ${{ github.workspace }}/bindings/r/.r-lib
 
 jobs:
   validate:
-    name: fastLowess vs R
+    name: make validate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -33,23 +34,18 @@ jobs:
 
       - name: Install R dependencies
         shell: Rscript {0}
-        run: install.packages("jsonlite")
+        run: |
+          dir.create(Sys.getenv("R_LIBS_USER"), recursive = TRUE, showWarnings = FALSE)
+          .libPaths(c(Sys.getenv("R_LIBS_USER"), .libPaths()))
+          options(repos = c(CRAN = "https://cloud.r-project.org"))
+          install.packages(c("digest", "jsonlite", "testthat", "lintr"))
+
+      - name: Install R binding
+        run: make r
 
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
-      - name: Install Python dependencies
-        run: pip install numpy
-
-      - name: Generate R reference outputs
-        working-directory: validation
-        run: make r-validate
-
-      - name: Run fastLowess validation
-        working-directory: validation
-        run: make fastlowess-validate
-
-      - name: Compare outputs
-        working-directory: validation
-        run: make compare
+      - name: Run repository validation
+        run: make validate
