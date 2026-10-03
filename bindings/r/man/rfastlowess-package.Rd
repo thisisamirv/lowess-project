@@ -32,25 +32,27 @@ lines(result$x, result$y, col = "red", lwd = 2)
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/thisisamirv/lowess-project}
-  \item \url{https://thisisamirv.github.io/lowess-project/r/}
-  \item Report bugs at \url{https://github.com/thisisamirv/lowess-project/issues}
+    \item \url{https://github.com/thisisamirv/lowess-project}
+    \item \url{https://thisisamirv.github.io/lowess-project/r/}
+\item Report bugs at \url{https://github.com/thisisamirv/lowess-project/issues}
 }
 
 }
 \author{
-\strong{Maintainer}: Amir Valizadeh \email{thisisamirv@gmail.com} (\href{https://orcid.org/0000-0001-5983-8527}{ORCID})
+\strong{Maintainer}: Amir Valizadeh \email{thisisamirv@gmail.com}
+    (\href{https://orcid.org/0000-0001-5983-8527}{ORCID})
 
 Authors:
 \itemize{
-  \item Amir Valizadeh \email{thisisamirv@gmail.com} (\href{https://orcid.org/0000-0001-5983-8527}{ORCID})
+\item Amir Valizadeh \email{thisisamirv@gmail.com}
+    (\href{https://orcid.org/0000-0001-5983-8527}{ORCID})
 }
 
 Other contributors:
 \itemize{
-  \item Aleksei Chirkunov (Reviewed the package for rOpenSci (GitHub: @alexzerg), see <https://github.com/ropensci/software-review/issues/769>) [reviewer]
-  \item Josiah Parry (\href{https://orcid.org/0000-0001-9910-865X}{ORCID}) (Reviewed the package for rOpenSci (GitHub: @JosiahParry), see <https://github.com/ropensci/software-review/issues/769>) [reviewer]
-  \item Etienne Bacher (Edited the package for rOpenSci (GitHub: @etiennebacher), see <https://github.com/ropensci/software-review/issues/769>) [editor]
+    \item Aleksei Chirkunov (Reviewed the package for rOpenSci (GitHub: @alexzerg), see <https://github.com/ropensci/software-review/issues/769>) [reviewer]
+    \item Josiah Parry (\href{https://orcid.org/0000-0001-9910-865X}{ORCID}) (Reviewed the package for rOpenSci (GitHub: @JosiahParry), see <https://github.com/ropensci/software-review/issues/769>) [reviewer]
+    \item Etienne Bacher (Edited the package for rOpenSci (GitHub: @etiennebacher), see <https://github.com/ropensci/software-review/issues/769>) [editor]
 }
 
 }

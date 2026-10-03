@@ -5,24 +5,24 @@
 \title{LOWESS Streaming Smoothing}
 \usage{
 StreamingLowess(
-  fraction = 0.67,
-  ...,
-  iterations = 3L,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  delta = NULL,
-  zero_weight_fallback = "use_local_mean",
-  boundary_policy = "extend",
-  scaling_method = "mad",
-  auto_converge = NULL,
-  missing = "error",
-  chunk_size = 5000L,
-  overlap = NULL,
-  merge_strategy = "weighted_average",
-  parallel = TRUE,
-  outputs = NULL,
-  intervals = NULL,
-  seed = NULL
+    fraction = 0.67,
+    ...,
+    iterations = 3L,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    delta = NULL,
+    zero_weight_fallback = "use_local_mean",
+    boundary_policy = "extend",
+    scaling_method = "mad",
+    auto_converge = NULL,
+    missing = "error",
+    chunk_size = 5000L,
+    overlap = NULL,
+    merge_strategy = "weighted_average",
+    parallel = TRUE,
+    outputs = NULL,
+    intervals = NULL,
+    seed = NULL
 )
 }
 \arguments{
@@ -122,11 +122,11 @@ see \code{\link{OnlineLowess}}.
 Confidence and prediction interval coverage levels are independent.
 
 Overlapping regions between chunks are reconciled via \code{merge_strategy}:\tabular{lll}{
-   Strategy \tab Alias \tab Behavior \cr
-   "weighted_average" (default) \tab "weighted" \tab Distance-weighted blend \cr
-   "average" \tab "mean" \tab Average overlapping values \cr
-   "take_first" \tab "first" \tab Keep left chunk values \cr
-   "take_last" \tab "last" \tab Keep right chunk values \cr
+    Strategy \tab Alias \tab Behavior \cr
+    "weighted_average" (default) \tab "weighted" \tab Distance-weighted blend \cr
+    "average" \tab "mean" \tab Average overlapping values \cr
+    "take_first" \tab "first" \tab Keep left chunk values \cr
+    "take_last" \tab "last" \tab Keep right chunk values \cr
 }
 }
 \examples{

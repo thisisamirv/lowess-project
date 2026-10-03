@@ -77,6 +77,11 @@ test_that("common validation rejects fractional iteration counts", {
         validate_common_args(1:5, 1:5, fraction = 0.5, iterations = 1.5),
         "iterations must be a non-negative integer"
     )
+    expect_error(
+        validate_common_args(1:5, 1:5, fraction = 0.5, iterations = NULL),
+        "iterations must be a non-negative integer"
+    )
+    expect_error(Lowess(cv = 1), "must be a named list")
 })
 
 test_that("all constructors validate iteration counts before coercion", {
@@ -98,7 +103,7 @@ test_that("integer custom weights match double custom weights", {
     model <- Lowess(fraction = 0.5, iterations = 0L)
     integer_result <- fit(model, 1:10, sin(1:10), custom_weights = rep(1L, 10))
     double_result <- fit(model, 1:10, sin(1:10), custom_weights = rep(1, 10))
-    expect_equal(integer_result$y, double_result$y)
+    expect_identical(integer_result$y, double_result$y)
     expect_error(fit(model, 1:10, sin(1:10), custom_weights = -1L))
 })
 
@@ -126,12 +131,20 @@ test_that("grouped options reject missing, unknown and duplicate keys", {
     expect_error(Lowess(cv = list(k = 3)), "fractions.*required")
     expect_error(Lowess(cv = list(fractions = numeric())), "non-empty")
     expect_error(cv_opts(fractions = matrix(c(0.2, 0.5))), "fractions must be")
+    duplicate_cv <- setNames(
+        list(c(0.2, 0.5), 2, 3),
+        c("fractions", "k", "k")
+    )
+    duplicate_intervals <- setNames(
+        list(0.8, 0.99),
+        c("confidence", "confidence")
+    )
     expect_error(
-        Lowess(cv = list(fractions = c(0.2, 0.5), k = 2, k = 3)),
+        Lowess(cv = duplicate_cv),
         "Duplicate `cv` keys"
     )
     expect_error(
-        expand_intervals(list(confidence = 0.8, confidence = 0.99)),
+        expand_intervals(duplicate_intervals),
         "Duplicate `intervals` keys"
     )
 })

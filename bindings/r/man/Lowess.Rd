@@ -5,24 +5,24 @@
 \title{LOWESS Batch Smoothing}
 \usage{
 Lowess(
-  fraction = 0.67,
-  ...,
-  iterations = 3L,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  delta = NULL,
-  zero_weight_fallback = "use_local_mean",
-  boundary_policy = "extend",
-  scaling_method = "mad",
-  auto_converge = NULL,
-  missing = "error",
-  parallel = TRUE,
-  backend = "cpu",
-  outputs = NULL,
-  intervals = NULL,
-  cv = NULL,
-  seed = NULL,
-  retain_model = FALSE
+    fraction = 0.67,
+    ...,
+    iterations = 3L,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    delta = NULL,
+    zero_weight_fallback = "use_local_mean",
+    boundary_policy = "extend",
+    scaling_method = "mad",
+    auto_converge = NULL,
+    missing = "error",
+    parallel = TRUE,
+    backend = "cpu",
+    outputs = NULL,
+    intervals = NULL,
+    cv = NULL,
+    seed = NULL,
+    retain_model = FALSE
 )
 }
 \arguments{
@@ -122,11 +122,11 @@ real-time data, see \code{\link{OnlineLowess}}.
 
 \code{fraction} is the most important parameter: it controls the size of the
 local neighbourhood used at each point.\tabular{lll}{
-   Range \tab Effect \tab Use case \cr
-   0.1-0.3 \tab Fine detail \tab Rapidly changing signals \cr
-   0.3-0.5 \tab Balanced \tab General purpose \cr
-   0.5-0.7 \tab Heavy smoothing \tab Noisy data \cr
-   0.7-1.0 \tab Very smooth \tab Trend extraction \cr
+    Range \tab Effect \tab Use case \cr
+    0.1-0.3 \tab Fine detail \tab Rapidly changing signals \cr
+    0.3-0.5 \tab Balanced \tab General purpose \cr
+    0.5-0.7 \tab Heavy smoothing \tab Noisy data \cr
+    0.7-1.0 \tab Very smooth \tab Trend extraction \cr
 }
 }
 \examples{

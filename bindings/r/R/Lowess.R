@@ -131,44 +131,8 @@ Lowess <- function(
     check_gpu_backend(backend)
     validate_params(fraction = fraction, iterations = iterations)
 
-    # Expand `return` into the flat boolean flags the Rust FFI expects.
-    flags <- parse_outputs_flags(
-        outputs,
-        c("se", "diagnostics", "residuals", "weights", "derivative", "sorted")
-    )
-    return_diagnostics <- flags[["diagnostics"]]
-    return_residuals <- flags[["residuals"]]
-    return_robustness_weights <- flags[["weights"]]
-    return_derivative <- flags[["derivative"]]
-    return_se <- flags[["se"]]
-    return_sorted <- flags[["sorted"]]
-
-    iv <- expand_intervals(intervals)
-    confidence_intervals <- iv$confidence
-    prediction_intervals <- iv$prediction
-    bootstrap <- iv$bootstrap
-
-    # Expand `cv` into the flat FFI args.
-    if (is.null(cv)) {
-        cv_fractions <- NULL
-        cv_method <- "kfold"
-        cv_k <- 5L
-    } else {
-        validate_named_options(cv, c("method", "k", "fractions"), "cv")
-        if (is.null(cv[["fractions", exact = TRUE]])) {
-            stop("`cv$fractions` is required", call. = FALSE)
-        }
-        validate_numeric_vector(cv$fractions, "cv$fractions")
-        if (!length(cv$fractions)) {
-            stop("`cv$fractions` must be non-empty", call. = FALSE)
-        }
-        cv_fractions <- cv$fractions
-        cv_method <- if (is.null(cv$method)) "kfold" else cv$method
-        cv_k <- if (is.null(cv$k)) 5L else cv$k
-    }
-    validate_optional_count(cv_k, "cv.k", allow_zero = FALSE)
-
-    handle <- do.call(RLowess$new, env_args(lowess_params))
+    grouped <- lowess_grouped_args(outputs, intervals, cv)
+    handle <- do.call(RLowess$new, env_args(lowess_params, grouped))
 
     structure(
         list(

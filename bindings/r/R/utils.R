@@ -25,30 +25,9 @@
 #' @srrstats {G2.16} Inf/NaN validation in input vectors.
 #' @srrstats {G3.0} Tolerance-based comparisons used in robustness weights.
 validate_common_args <- function(x, y, fraction, iterations, min_points = 2L) {
-    validate_numeric_vector(x, "x")
-    validate_numeric_vector(y, "y")
-    if (length(x) != length(y)) {
-        stop("x and y must have the same length")
-    }
-    if (length(x) < min_points) {
-        stop(sprintf("At least %d data points are required", min_points))
-    }
-    if (!is.numeric(fraction) || length(fraction) != 1) {
-        stop("fraction must be a single numeric value")
-    }
-    if (fraction <= 0 || fraction > 1) {
-        stop("fraction must be between 0 and 1")
-    }
-    if (
-        !is.numeric(iterations) ||
-            length(iterations) != 1 ||
-            !is.finite(iterations) ||
-            iterations < 0 ||
-            iterations != floor(iterations) ||
-            iterations > .Machine$integer.max
-    ) {
-        stop("iterations must be a non-negative integer")
-    }
+    validate_data_pair(x, y, min_points)
+    validate_fit_fraction(fraction)
+    validate_fit_iterations(iterations)
 
     list(
         x = as.double(x),
@@ -58,10 +37,43 @@ validate_common_args <- function(x, y, fraction, iterations, min_points = 2L) {
     )
 }
 
+validate_data_pair <- function(x, y, min_points) {
+    validate_numeric_vector(x, "x")
+    validate_numeric_vector(y, "y")
+    if (length(x) != length(y)) {
+        stop("x and y must have the same length")
+    }
+    if (length(x) < min_points) {
+        stop(sprintf("At least %d data points are required", min_points))
+    }
+}
+
+validate_fit_fraction <- function(fraction) {
+    if (!is.numeric(fraction) || length(fraction) != 1) {
+        stop("fraction must be a single numeric value")
+    }
+    if (fraction <= 0 || fraction > 1) {
+        stop("fraction must be between 0 and 1")
+    }
+}
+
+validate_fit_iterations <- function(iterations) {
+    if (is.null(iterations)) {
+        stop("iterations must be a non-negative integer")
+    }
+    tryCatch(
+        validate_optional_count(iterations, "iterations"),
+        error = function(e) stop("iterations must be a non-negative integer")
+    )
+}
+
 
 validate_numeric_vector <- function(value, name) {
     if (!is.numeric(value) || is.complex(value) || !is.null(dim(value))) {
-        stop(sprintf("%s must be an integer or double vector", name), call. = FALSE)
+        stop(
+            sprintf("%s must be an integer or double vector", name),
+            call. = FALSE
+        )
     }
 }
 
@@ -74,7 +86,10 @@ validate_named_options <- function(options, valid, name) {
         stop(sprintf("`%s` must be a named list", name), call. = FALSE)
     }
     if (anyDuplicated(keys)) {
-        stop(sprintf("Duplicate `%s` keys are not allowed", name), call. = FALSE)
+        stop(
+            sprintf("Duplicate `%s` keys are not allowed", name),
+            call. = FALSE
+        )
     }
     unknown <- setdiff(keys, valid)
     if (length(unknown)) {
@@ -243,6 +258,52 @@ expand_intervals <- function(intervals) {
     )
 }
 
+expand_cv <- function(cv) {
+    if (is.null(cv)) {
+        return(list(cv_fractions = NULL, cv_method = "kfold", cv_k = 5L))
+    }
+    validate_named_options(cv, c("method", "k", "fractions"), "cv")
+    if (is.null(cv[["fractions", exact = TRUE]])) {
+        stop("`cv$fractions` is required", call. = FALSE)
+    }
+    validate_numeric_vector(cv$fractions, "cv$fractions")
+    if (!length(cv$fractions)) {
+        stop("`cv$fractions` must be non-empty", call. = FALSE)
+    }
+    folds <- if (is.null(cv$k)) 5L else cv$k
+    validate_optional_count(folds, "cv.k", allow_zero = FALSE)
+    list(
+        cv_fractions = cv$fractions,
+        cv_method = if (is.null(cv$method)) "kfold" else cv$method,
+        cv_k = folds
+    )
+}
+
+lowess_grouped_args <- function(outputs, intervals, cv) {
+    flags <- parse_outputs_flags(
+        outputs,
+        c("se", "diagnostics", "residuals", "weights", "derivative", "sorted")
+    )
+    names(flags) <- c(
+        "return_se",
+        "return_diagnostics",
+        "return_residuals",
+        "return_robustness_weights",
+        "return_derivative",
+        "return_sorted"
+    )
+    levels <- expand_intervals(intervals)
+    c(
+        as.list(flags),
+        list(
+            confidence_intervals = levels$confidence,
+            prediction_intervals = levels$prediction,
+            bootstrap = levels$bootstrap
+        ),
+        expand_cv(cv)
+    )
+}
+
 #' Coerce optional values to Nullable
 #' @noRd
 #' @srrstats {RE1.2} Numeric vector inputs documented and validated.
@@ -292,17 +353,23 @@ param_types <- list(
 #'
 #' Captures all known parameters from the calling function's environment.
 #' @param param_names Character vector of parameter names to extract.
+#' @param overrides Named list of expanded grouped options.
 #' @return Coerced list ready for do.call.
 #' @noRd
-env_args <- function(param_names) {
+env_args <- function(param_names, overrides = list()) {
     env <- parent.frame()
     result <- lapply(param_names, function(name) {
-        val <- get(name, envir = env)
+        val <- if (name %in% names(overrides)) {
+            overrides[[name]]
+        } else {
+            get(name, envir = env)
+        }
         type <- param_types[[name]]
         if (is.null(type)) {
             return(val)
         }
-        switch(type,
+        switch(
+            type,
             double = as.double(val),
             integer = as.integer(val),
             character = as.character(val),

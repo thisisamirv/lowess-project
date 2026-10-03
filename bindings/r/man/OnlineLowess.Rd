@@ -5,23 +5,23 @@
 \title{LOWESS Online Smoothing}
 \usage{
 OnlineLowess(
-  fraction = 0.67,
-  ...,
-  iterations = 0L,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  delta = NULL,
-  zero_weight_fallback = "use_local_mean",
-  boundary_policy = "extend",
-  scaling_method = "mad",
-  auto_converge = NULL,
-  missing = "error",
-  window_capacity = 1000L,
-  min_points = 2L,
-  update_mode = "incremental",
-  outputs = NULL,
-  intervals = NULL,
-  seed = NULL
+    fraction = 0.67,
+    ...,
+    iterations = 0L,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    delta = NULL,
+    zero_weight_fallback = "use_local_mean",
+    boundary_policy = "extend",
+    scaling_method = "mad",
+    auto_converge = NULL,
+    missing = "error",
+    window_capacity = 1000L,
+    min_points = 2L,
+    update_mode = "incremental",
+    outputs = NULL,
+    intervals = NULL,
+    seed = NULL
 )
 }
 \arguments{
