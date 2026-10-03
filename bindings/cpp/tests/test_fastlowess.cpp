@@ -1079,6 +1079,8 @@ void testOnlineBootstrapIntervals() {
 } // namespace
 
 int main() {
+  std::fputs("Starting C++ test suite...\n", stderr);
+  std::fflush(stderr);
   std::cout << std::unitbuf;
   try {
     assertTrue(std::string(cpp_version()) == FASTLOWESS_CPP_VERSION_STRING,
