@@ -211,7 +211,8 @@ gpu_is_musl <- function(
 #' Determine the GPU Release Asset Name and Download URL
 #' @noRd
 gpu_platform_info <- function(sys_name) {
-    platform <- switch(sys_name,
+    platform <- switch(
+        sys_name,
         Windows = list(tag = "windows", ext = ".dll", label = "Windows"),
         Darwin = list(tag = "macos", ext = ".so", label = "macOS"),
         Linux = list(tag = "linux", ext = ".so", label = "Linux")
@@ -365,7 +366,8 @@ gpu_release_digest <- function(url) {
     }
     asset <- assets[
         assets$name == substring(url, nchar(prefix) + 1L) &
-            assets$browser_download_url == url, ,
+            assets$browser_download_url == url,
+        ,
         drop = FALSE
     ]
     if (

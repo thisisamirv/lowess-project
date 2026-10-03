@@ -481,7 +481,11 @@ test_that("sidecar activation rebinds version-matched native routines", {
     loaded <- loader(lib_dir, namespace, "1.2.3", "windows")
     expect_identical(normalizePath(loaded), normalizePath(path))
     injected <- loader(
-        lib_dir, namespace, "1.2.3", "windows", try_candidate = try_candidate
+        lib_dir,
+        namespace,
+        "1.2.3",
+        "windows",
+        try_candidate = try_candidate
     )
     expect_identical(normalizePath(injected), normalizePath(path))
 })

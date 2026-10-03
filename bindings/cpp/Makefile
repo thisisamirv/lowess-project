@@ -67,7 +67,7 @@ ifeq ($(HOST_PLATFORM),windows)
 		CPP_TEST_LIB        :=
 		CPP_CMAKE_GENERATOR := -G "MinGW Makefiles"
 		CPP_TEST_BUILD      := cmake --build .
-		CPP_TEST_RUN        := cmake -E copy_if_different "$(abspath $(CPP_SHARED_LIB))" . && ctest --output-on-failure -C Release
+		CPP_TEST_RUN        := cmake -E copy_if_different "$(abspath $(CPP_SHARED_LIB))" . && ctest --verbose --output-on-failure --timeout 120 -C Release
 	else
 		CPP_TEST_LIB        := $(CPP_LIBRARY_DIR)/fastlowess_cpp.lib
 		CPP_CMAKE_GENERATOR := $(CPP_CMAKE_TOOLSET)

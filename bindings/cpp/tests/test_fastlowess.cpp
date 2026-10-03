@@ -8,6 +8,7 @@
 #include <exception>
 #include <filesystem>
 #include <fstream>
+#include <ios>
 #include <iostream>
 #include <iterator>
 #include <string>
@@ -362,6 +363,8 @@ void testLowessWithPredictionIntervals() {
 }
 
 void testGroupedCvBootstrapAndPredict() {
+  std::cout << "Running testGroupedCvBootstrapAndPredict...\n";
+
   const auto data = makeLinearData({k_interval_point_count, k_interval_max_x,
                                     k_linear_slope, k_zero_intercept});
   fastlowess::LowessOptions options;
@@ -424,6 +427,8 @@ void testGroupedCvBootstrapAndPredict() {
 }
 
 void testEmptyResultAccessors() {
+  std::cout << "Running testEmptyResultAccessors...\n";
+
   fastlowess::StreamingLowess streaming;
   const auto empty = streaming.finalize().value();
   assertTrue(empty.size() == 0, "empty streaming result should have size zero");
@@ -438,6 +443,8 @@ void testEmptyResultAccessors() {
 }
 
 void testStreamingRejectsBatchOnlyOptions() {
+  std::cout << "Running testStreamingRejectsBatchOnlyOptions...\n";
+
   fastlowess::StreamingOptions options;
   options.retain_model = true;
   bool rejected = false;
@@ -450,6 +457,8 @@ void testStreamingRejectsBatchOnlyOptions() {
 }
 
 void testUnknownOutputNamesAreRejected() {
+  std::cout << "Running testUnknownOutputNamesAreRejected...\n";
+
   fastlowess::LowessOptions batch_options;
   batch_options.outputs = {"standard_errors"};
   bool batch_rejected = false;
@@ -483,6 +492,8 @@ void testUnknownOutputNamesAreRejected() {
 }
 
 void testNegativeAdapterIterationsAreRejectedClearly() {
+  std::cout << "Running testNegativeAdapterIterationsAreRejectedClearly...\n";
+
   fastlowess::LowessOptions batch_options;
   batch_options.iterations = -1;
   bool batch_rejected = false;
@@ -524,6 +535,8 @@ void testNegativeAdapterIterationsAreRejectedClearly() {
 }
 
 void testKfoldRejectsFewerThanTwoFolds() {
+  std::cout << "Running testKfoldRejectsFewerThanTwoFolds...\n";
+
   fastlowess::LowessOptions options;
   options.cv.fractions = {k_basic_fraction};
   options.cv.k = 1;
@@ -559,6 +572,8 @@ void testKfoldRejectsFewerThanTwoFolds() {
 }
 
 void testGpuCopySupportsShellCharactersInPaths() {
+  std::cout << "Running testGpuCopySupportsShellCharactersInPaths...\n";
+
   const auto base =
       std::filesystem::temp_directory_path() / "fastlowess-cpp-copy-test";
   std::filesystem::path directory;
@@ -947,6 +962,8 @@ void testStreamingReturnSeAndIntervals() {
 }
 
 void testStreamingBootstrapIntervals() {
+  std::cout << "Running testStreamingBootstrapIntervals...\n";
+
   std::vector<double> x_values(k_interval_point_count);
   std::vector<double> y_values(k_interval_point_count);
   for (std::size_t i = 0; i < x_values.size(); ++i) {
@@ -1030,6 +1047,8 @@ void testOnlineReturnSeAndIntervals() {
 }
 
 void testOnlineBootstrapIntervals() {
+  std::cout << "Running testOnlineBootstrapIntervals...\n";
+
   fastlowess::OnlineOptions options;
   options.update_mode = "full";
   options.min_points = k_bootstrap_online_min_points;
@@ -1060,6 +1079,7 @@ void testOnlineBootstrapIntervals() {
 } // namespace
 
 int main() {
+  std::cout << std::unitbuf;
   try {
     assertTrue(std::string(cpp_version()) == FASTLOWESS_CPP_VERSION_STRING,
                "Test library version should match its generated headers");
