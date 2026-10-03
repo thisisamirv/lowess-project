@@ -37,9 +37,9 @@
     "optionalDependencies": {
         "fastlowess-darwin-arm64": "^4.1.0",
         "fastlowess-darwin-x64": "^4.1.0",
+        "fastlowess-linux-arm-gnueabihf": "^4.1.0",
         "fastlowess-linux-arm64-gnu": "^4.1.0",
         "fastlowess-linux-arm64-musl": "^4.1.0",
-        "fastlowess-linux-arm-gnueabihf": "^4.1.0",
         "fastlowess-linux-x64-gnu": "^4.1.0",
         "fastlowess-linux-x64-musl": "^4.1.0",
         "fastlowess-win32-arm64-msvc": "^4.1.0",

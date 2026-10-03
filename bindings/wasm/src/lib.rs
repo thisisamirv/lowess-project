@@ -322,13 +322,13 @@ fn validate_option_keys(value: &JsValue, name: &str, allowed: &[&str]) -> Result
 
     let object: &Object = value.unchecked_ref();
     for key in Object::keys(object).iter() {
-        if let Some(key) = key.as_string() {
-            if !allowed.contains(&key.as_str()) {
-                return Err(JsValue::from_str(&format!(
-                    "unknown {name} option '{key}'. Valid options: {}",
-                    allowed.join(", ")
-                )));
-            }
+        if let Some(key) = key.as_string()
+            && !allowed.contains(&key.as_str())
+        {
+            return Err(JsValue::from_str(&format!(
+                "unknown {name} option '{key}'. Valid options: {}",
+                allowed.join(", ")
+            )));
         }
     }
     Ok(())

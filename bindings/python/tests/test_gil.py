@@ -3,6 +3,7 @@
 import sys
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 from fastlowess import Lowess, OnlineLowess
@@ -84,28 +85,21 @@ def test_online_add_point_releases_gil():
         online.add_point(float(index), float(index))
 
     started = threading.Event()
-    finished = threading.Event()
-    failures = []
 
     def update():
         started.set()
-        try:
-            online.add_point(1999.0, 1999.0)
-        except Exception as error:
-            failures.append(error)
-        finally:
-            finished.set()
+        online.add_point(1999.0, 1999.0)
 
-    worker = threading.Thread(target=update)
-    worker.start()
-    assert started.wait(timeout=2.0)
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(update)
+        assert started.wait(timeout=2.0)
 
-    ticks = 0
-    while not finished.wait(timeout=0.01):
-        ticks += 1
+        ticks = 0
+        while not future.done():
+            ticks += 1
+            time.sleep(0.01)
 
-    worker.join()
-    assert not failures
+        future.result()
     assert ticks > 0
 
 
