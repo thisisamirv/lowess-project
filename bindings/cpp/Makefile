@@ -198,6 +198,7 @@ dev:
 		echo "Valgrind not found. Skipping memory check."; \
 	else \
 		valgrind --leak-check=full --track-origins=yes --error-limit=no \
+		--expensive-definedness-checks=yes \
 		--num-callers=40 --error-exitcode=1 \
 		--suppressions=$(CPP_DIR)/valgrind.supp \
 		$(CPP_DIR)/tests/build/test_fastlowess_suite 2>&1 || \
