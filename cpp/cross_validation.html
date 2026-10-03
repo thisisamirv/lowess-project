@@ -139,13 +139,13 @@ Cross-Validation</div></div>
 <div class="line"> </div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:766</div></div>
+<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:762</div></div>
 <div class="ttc" id="afastlowess_8hpp_html"><div class="ttname"><a href="fastlowess_8hpp.html">fastlowess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLowess library.</div></div>
-<div class="ttc" id="astructfastlowess_1_1CVOptions_html_a5e0c4b5aceed42128f8a867b344b8ef4"><div class="ttname"><a href="structfastlowess_1_1CVOptions.html#a5e0c4b5aceed42128f8a867b344b8ef4">fastlowess::CVOptions::method</a></div><div class="ttdeci">std::string method</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:87</div></div>
-<div class="ttc" id="astructfastlowess_1_1CVOptions_html_a9f5c89e67569bad596285ff1759e43f7"><div class="ttname"><a href="structfastlowess_1_1CVOptions.html#a9f5c89e67569bad596285ff1759e43f7">fastlowess::CVOptions::k</a></div><div class="ttdeci">int k</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:88</div></div>
-<div class="ttc" id="astructfastlowess_1_1CVOptions_html_aaf2092553ba939b353fb8b23b5287871"><div class="ttname"><a href="structfastlowess_1_1CVOptions.html#aaf2092553ba939b353fb8b23b5287871">fastlowess::CVOptions::fractions</a></div><div class="ttdeci">std::vector&lt; double &gt; fractions</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:86</div></div>
-<div class="ttc" id="astructfastlowess_1_1LowessOptions_html"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a></div><div class="ttdoc">Options for configuring LOWESS smoothing.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:195</div></div>
-<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ab791ed274faf0ca6a35bc26406cc3227"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ab791ed274faf0ca6a35bc26406cc3227">fastlowess::LowessOptions::cv</a></div><div class="ttdeci">CVOptions cv</div><div class="ttdoc">Cross-validation configuration. Empty fractions disable CV.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:222</div></div>
+<div class="ttc" id="astructfastlowess_1_1CVOptions_html_a5e0c4b5aceed42128f8a867b344b8ef4"><div class="ttname"><a href="structfastlowess_1_1CVOptions.html#a5e0c4b5aceed42128f8a867b344b8ef4">fastlowess::CVOptions::method</a></div><div class="ttdeci">std::string method</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:83</div></div>
+<div class="ttc" id="astructfastlowess_1_1CVOptions_html_a9f5c89e67569bad596285ff1759e43f7"><div class="ttname"><a href="structfastlowess_1_1CVOptions.html#a9f5c89e67569bad596285ff1759e43f7">fastlowess::CVOptions::k</a></div><div class="ttdeci">int k</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:84</div></div>
+<div class="ttc" id="astructfastlowess_1_1CVOptions_html_aaf2092553ba939b353fb8b23b5287871"><div class="ttname"><a href="structfastlowess_1_1CVOptions.html#aaf2092553ba939b353fb8b23b5287871">fastlowess::CVOptions::fractions</a></div><div class="ttdeci">std::vector&lt; double &gt; fractions</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:82</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a></div><div class="ttdoc">Options for configuring LOWESS smoothing.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:191</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ab791ed274faf0ca6a35bc26406cc3227"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ab791ed274faf0ca6a35bc26406cc3227">fastlowess::LowessOptions::cv</a></div><div class="ttdeci">CVOptions cv</div><div class="ttdoc">Cross-validation configuration. Empty fractions disable CV.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:218</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">Selected fraction: 0.3</div>
 </div><!-- fragment --><hr  />
 <h2>Leave-One-Out (LOOCV)</h2>
@@ -202,7 +202,7 @@ Cross-Validation</div></div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Fraction used: &quot;</span> &lt;&lt; result.fraction_used() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_aa6feff20dd8cd73366bd0763340fbf3f"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#aa6feff20dd8cd73366bd0763340fbf3f">fastlowess::LowessOptions::seed</a></div><div class="ttdeci">std::optional&lt; uint64_t &gt; seed</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:207</div></div>
+<div class="ttc" id="astructfastlowess_1_1LowessOptions_html_aa6feff20dd8cd73366bd0763340fbf3f"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#aa6feff20dd8cd73366bd0763340fbf3f">fastlowess::LowessOptions::seed</a></div><div class="ttdeci">std::optional&lt; uint64_t &gt; seed</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:203</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">Fraction used: 0.3</div>
 </div><!-- fragment --><hr  />
 <h2>Comparison</h2>

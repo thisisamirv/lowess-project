@@ -20,7 +20,6 @@ var fastlowess_8hpp =
     [ "hasOutput", "fastlowess_8hpp.html#abaf563498cf7cfe83bce50a7c3c10518", null ],
     [ "throwInitializationError", "fastlowess_8hpp.html#a117df3e30f2597719a19fbabde4b247b", null ],
     [ "validateOutputs", "fastlowess_8hpp.html#ad6e51b52db8b075297d783ae2670f721", null ],
-    [ "environ", "fastlowess_8hpp.html#aa006daaf11f1e2e45a6ababaf463212b", null ],
     [ "k_default_chunk_size", "fastlowess_8hpp.html#a59395fbc126884e972f950ea475927f8", null ],
     [ "k_default_cv_k", "fastlowess_8hpp.html#a5eb3a6d91be5b909dd7c62048d9b8495", null ],
     [ "k_default_fraction", "fastlowess_8hpp.html#a5fc83238a1904dec0d45c19ead8497f2", null ],
