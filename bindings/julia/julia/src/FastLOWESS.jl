@@ -24,10 +24,12 @@ println("Smoothed values: ", result.y)
 """
 module FastLOWESS
 
+using TOML
+
 export Lowess, StreamingLowess, OnlineLowess
 export fit, process_chunk, finalize, add_point, predict
 export LowessResult, OnlineOutput, Diagnostics, PredictModel, PredictResult
-export gpu_available, install_gpu
+export gpu_available, install_gpu, version
 
 function _output_flags(outputs)
 	allowed = ("diagnostics", "residuals", "weights", "derivative", "se", "sorted")
@@ -179,9 +181,16 @@ const _GPU_RELEASE_TAG = "gpu-builds"
 # `pkgversion` (Julia 1.9+) given this package supports Julia 1.6+.
 function _package_version()
 	project_file = joinpath(dirname(@__DIR__), "Project.toml")
-	m = match(r"^version\s*=\s*\"([^\"]+)\""m, read(project_file, String))
-	return m === nothing ? "unknown" : m.captures[1]
+	return get(TOML.parsefile(project_file), "version", "unknown")
 end
+
+"""
+	version() -> String
+
+Return the installed FastLOWESS Julia package version from `Project.toml`.
+This is the Julia binding version, not the native Rust library version.
+"""
+version() = _package_version()
 
 function _validate_gpu_platform(platform::String, machine::String)
 	platform in ("windows", "macos", "linux") ||

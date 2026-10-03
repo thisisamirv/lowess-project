@@ -9,6 +9,8 @@ Install the LOWESS library for your preferred language.
 ```bash
 wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-x64.so
 wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp
+wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.h
+wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess_version.h
 g++ -o myapp myapp.cpp -L. -lfastlowess-linux-x64
 ```
 
@@ -17,6 +19,8 @@ g++ -o myapp myapp.cpp -L. -lfastlowess-linux-x64
 ```bash
 wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-arm64.so
 wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp
+wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.h
+wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess_version.h
 g++ -o myapp myapp.cpp -L. -lfastlowess-linux-arm64
 ```
 
@@ -25,6 +29,8 @@ g++ -o myapp myapp.cpp -L. -lfastlowess-linux-arm64
 ```bash
 wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-x64-musl.so
 wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp
+wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.h
+wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess_version.h
 g++ -o myapp myapp.cpp -L. -lfastlowess-linux-x64-musl
 ```
 
@@ -33,6 +39,8 @@ g++ -o myapp myapp.cpp -L. -lfastlowess-linux-x64-musl
 ```bash
 wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-arm64-musl.so
 wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp
+wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.h
+wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess_version.h
 g++ -o myapp myapp.cpp -L. -lfastlowess-linux-arm64-musl
 ```
 
@@ -41,6 +49,8 @@ g++ -o myapp myapp.cpp -L. -lfastlowess-linux-arm64-musl
 ```bash
 curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-macos-x64.dylib
 curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp
+curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.h
+curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess_version.h
 clang++ -o myapp myapp.cpp -L. -lfastlowess-macos-x64
 ```
 
@@ -49,6 +59,8 @@ clang++ -o myapp myapp.cpp -L. -lfastlowess-macos-x64
 ```bash
 curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-macos-arm64.dylib
 curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp
+curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.h
+curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess_version.h
 clang++ -o myapp myapp.cpp -L. -lfastlowess-macos-arm64
 ```
 
@@ -57,6 +69,8 @@ clang++ -o myapp myapp.cpp -L. -lfastlowess-macos-arm64
 ```powershell
 wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess-win32-x64.dll
 wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp
+wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.h
+wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess_version.h
 cl myapp.cpp /link fastlowess-win32-x64.lib
 ```
 
@@ -65,6 +79,8 @@ cl myapp.cpp /link fastlowess-win32-x64.lib
 ```powershell
 wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess-win32-arm64.dll
 wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp
+wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.h
+wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess_version.h
 cl myapp.cpp /link fastlowess-win32-arm64.lib
 ```
 
@@ -119,4 +135,32 @@ return 0;
 
 ```output
 Installed successfully!
+```
+
+## Check the Header and Library Versions
+
+Cargo and CMake generate `fastlowess_version.h` from package metadata.
+Download it and `fastlowess.h` alongside `fastlowess.hpp` when using prebuilt binaries. The version header can be included on its own for compile-time checks, without linking the native library:
+
+```cpp
+#include <fastlowess_version.h>
+
+static_assert(FASTLOWESS_CPP_VERSION_MAJOR >= 4,
+     "This application requires fastlowess-cpp 4 or later");
+
+int main() {}
+```
+
+The macros `FASTLOWESS_CPP_VERSION_MAJOR`, `FASTLOWESS_CPP_VERSION_MINOR`, `FASTLOWESS_CPP_VERSION_PATCH`, and `FASTLOWESS_CPP_VERSION_STRING` describe the headers used to compile your application. `fastlowess.hpp` includes this header automatically.
+
+Use `cpp_version()` to identify the native library loaded at runtime:
+
+```cpp
+#include <fastlowess.hpp>
+#include <iostream>
+
+int main() {
+ std::cout << "Header version: " << FASTLOWESS_CPP_VERSION_STRING << '\n';
+ std::cout << "Loaded library version: " << cpp_version() << '\n';
+}
 ```

@@ -4,6 +4,10 @@ const assert = require('node:assert');
 // Import WASM bindings using require (works in Node with generated pkg)
 const fastlowess = require('../pkg/fastlowess_wasm.js');
 
+test('WASM version matches the generated package metadata', () => {
+    assert.strictEqual(fastlowess.version(), require('../pkg/package.json').version);
+});
+
 test('WASM unknown outputs are rejected for each API mode', () => {
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([2, 4, 6, 8, 10]);

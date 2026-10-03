@@ -13,7 +13,7 @@
         "build:debug": "napi build --platform",
         "postbuild:debug": "node scripts/patch-index.js",
         "test": "node --test tests/test_fastlowess.js",
-        "lint": "oxlint index.js tests/test_fastlowess.js",
+        "lint": "oxlint index.js version.js tests/test_fastlowess.js",
         "universal": "napi universal",
         "snippets": "python3 ../../dev/verify_snippets.py --lang nodejs --timeout 120 --update-outputs",
         "readme": "python3 ../../dev/add-readme-to-docs.py",

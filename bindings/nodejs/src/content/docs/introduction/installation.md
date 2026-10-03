@@ -37,3 +37,16 @@ console.log("Installed successfully!");
 ```output
 Installed successfully!
 ```
+
+## Check the Package Version
+
+Read the Node.js package version without loading the native addon:
+
+```javascript
+const { version } = require('fastlowess/version');
+console.log(version);
+```
+
+```output
+4.1.0
+```

@@ -29,3 +29,14 @@ model = Lowess()
 result = fit(model, x, y)
 println("Installed successfully!")
 ```
+
+## Check the Package Version
+
+Read the Julia binding version from its installed package metadata:
+
+```@example package_version
+using FastLOWESS
+println(FastLOWESS.version())
+```
+
+This reports the Julia package version, not the underlying Rust library version.

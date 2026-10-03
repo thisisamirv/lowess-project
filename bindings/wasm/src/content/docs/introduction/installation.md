@@ -50,3 +50,27 @@ console.log("Installed successfully!");
 }
 verify();
 ```
+
+## Check the Package Version
+
+For a Node.js build (`wasm-pack build --target nodejs`):
+
+```javascript
+const { version } = require('fastlowess-wasm');
+console.log(version());
+```
+
+```output
+4.1.0
+```
+
+For a browser build (`--target web`), initialize WebAssembly first:
+
+```javascript
+import init, { version } from 'fastlowess-wasm';
+
+await init();
+console.log(version());
+```
+
+This reports the WASM binding package version.

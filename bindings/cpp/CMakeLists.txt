@@ -5,6 +5,16 @@ include(FetchContent)
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
+set(FASTLOWESS_CPP_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
+set(FASTLOWESS_CPP_VERSION_MINOR "${PROJECT_VERSION_MINOR}")
+set(FASTLOWESS_CPP_VERSION_PATCH "${PROJECT_VERSION_PATCH}")
+set(FASTLOWESS_CPP_VERSION_STRING "${PROJECT_VERSION}")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/fastlowess_version.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/include/fastlowess_version.h"
+    @ONLY
+)
+
 # Import Corrosion for Rust integration
 FetchContent_Declare(
     Corrosion
@@ -28,6 +38,7 @@ target_compile_features(fastlowess_cpp INTERFACE cxx_std_17)
 target_include_directories(
     fastlowess_cpp
     INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
 )
@@ -59,6 +70,10 @@ install(
 )
 
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/include/fastlowess_version.h"
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
 
 export(
     EXPORT fastlowessTargets

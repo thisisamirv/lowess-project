@@ -11,6 +11,15 @@
 #include <string>
 #include <vector>
 
+static_assert(FASTLOWESS_CPP_VERSION_MAJOR >= 0,
+              "Header major version must be non-negative");
+static_assert(FASTLOWESS_CPP_VERSION_MINOR >= 0,
+              "Header minor version must be non-negative");
+static_assert(FASTLOWESS_CPP_VERSION_PATCH >= 0,
+              "Header patch version must be non-negative");
+static_assert(sizeof(FASTLOWESS_CPP_VERSION_STRING) > 1,
+              "Header version string must not be empty");
+
 namespace {
 
 constexpr double k_default_epsilon = 1e-10;
@@ -1046,6 +1055,8 @@ void testOnlineBootstrapIntervals() {
 
 int main() {
   try {
+    assertTrue(std::string(cpp_version()) == FASTLOWESS_CPP_VERSION_STRING,
+               "Test library version should match its generated headers");
     testBasicSmooth();
     testBasicSmoothSerial();
     testLowessWithDiagnostics();

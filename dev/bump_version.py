@@ -5,7 +5,8 @@ Covers: Cargo.toml package versions (Rust crates + all bindings), the internal
 fastLowess/lowess path-dependency version requirements (major.minor), each
 binding's own version file (package.json, pyproject-adjacent __version__.py,
 pom.xml, DESCRIPTION, Project.toml (incl. the fastlowess_jll compat floor),
-version.go, CMakeLists.txt, FastLowess.java), CITATION.cff, and the Spack
+version.go, CMakeLists.txt, FastLowess.java), the generated C++ version header,
+CITATION.cff, and the Spack
 recipe's example `url`. Also updates the Go module's `/vN` major-version
 suffix (go.mod files, doc snippets, README/docs badges, the doc-snippet
 runner) whenever a major version bump changes it -- see
@@ -422,6 +423,36 @@ def build_targets(
     return targets
 
 
+def update_cpp_version_header(new_version: str, dry_run: bool) -> bool:
+    template_rel = "bindings/cpp/cmake/fastlowess_version.h.in"
+    output_rel = "bindings/cpp/include/fastlowess_version.h"
+    template_path = REPO_ROOT / template_rel
+    if not template_path.is_file():
+        print(f"  SKIP (missing): {template_rel}")
+        return False
+
+    header = template_path.read_text(encoding="utf-8")
+    major, minor, patch = new_version.split(".")
+    values = {
+        "MAJOR": major,
+        "MINOR": minor,
+        "PATCH": patch,
+        "STRING": new_version,
+    }
+    for suffix, value in values.items():
+        placeholder = f"@FASTLOWESS_CPP_VERSION_{suffix}@"
+        if placeholder not in header:
+            print(f"  WARNING: missing {placeholder} in {template_rel}")
+            return False
+        header = header.replace(placeholder, value)
+
+    if not dry_run:
+        (REPO_ROOT / output_rel).write_text(header, encoding="utf-8")
+    verb = "Would regenerate" if dry_run else "Regenerated"
+    print(f"  {verb}: {output_rel}")
+    return True
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -450,6 +481,8 @@ def main() -> int:
     for rel, pattern, replacement, count in build_targets(new_version, new_major_minor):
         ok = _replace(REPO_ROOT / rel, pattern, replacement, args.dry_run, count=count)
         all_ok = all_ok and ok
+
+    all_ok = update_cpp_version_header(new_version, args.dry_run) and all_ok
 
     print()
     all_ok = apply_go_module_suffix(major, args.dry_run) and all_ok

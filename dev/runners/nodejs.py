@@ -38,15 +38,27 @@ def _ensure_nodejs_selflink(nodejs_dir: Path) -> None:
     """Create node_modules/fastlowess shim so require('fastlowess') resolves locally."""
     nm_fastlowess = nodejs_dir / "node_modules" / "fastlowess"
     if nm_fastlowess.exists():
-        return
-    nm_fastlowess.mkdir(parents=True, exist_ok=True)
-    (nm_fastlowess / "index.js").write_text(
-        "module.exports = require('../../');\n", encoding="utf-8"
-    )
-    (nm_fastlowess / "package.json").write_text(
-        '{"name":"fastlowess","main":"index.js","version":"0.0.0"}\n',
-        encoding="utf-8",
-    )
+        index = nm_fastlowess / "index.js"
+        if (
+            not index.is_file()
+            or index.read_text(encoding="utf-8").strip()
+            != "module.exports = require('../../');"
+        ):
+            return
+    else:
+        nm_fastlowess.mkdir(parents=True, exist_ok=True)
+        (nm_fastlowess / "index.js").write_text(
+            "module.exports = require('../../');\n", encoding="utf-8"
+        )
+        (nm_fastlowess / "package.json").write_text(
+            '{"name":"fastlowess","main":"index.js","version":"0.0.0"}\n',
+            encoding="utf-8",
+        )
+    version = nm_fastlowess / "version.js"
+    if not version.exists():
+        version.write_text(
+            "module.exports = require('../../version');\n", encoding="utf-8"
+        )
 
 
 def run_nodejs(snippet: Snippet, timeout: int) -> RunResult:

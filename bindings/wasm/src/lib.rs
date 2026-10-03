@@ -9,6 +9,12 @@ pub fn init_panic_hook() {
     console_error_panic_hook::set_once();
 }
 
+/// Returns the version of this WebAssembly binding package.
+#[wasm_bindgen]
+pub fn version() -> String {
+    env!("CARGO_PKG_VERSION").to_owned()
+}
+
 // ============================================================================
 // TypeScript interface declarations injected into the generated .d.ts
 // ============================================================================

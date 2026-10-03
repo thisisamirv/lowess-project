@@ -61,6 +61,7 @@ extern "C" char **environ;
 
 // Include the C header
 #include "fastlowess.h"
+#include "fastlowess_version.h" // IWYU pragma: export
 
 namespace fastlowess {
 

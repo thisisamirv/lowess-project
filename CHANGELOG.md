@@ -38,6 +38,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Extended the existing Go fit and prediction APIs with grouped `Outputs []string`, `CV *CVOptions`, and `Intervals *IntervalsOptions`, including residual-bootstrap intervals across Batch, Streaming, Online, and Predict.
 
+**C++:**
+
+- Added a generated `fastlowess_version.h` with compile-time major/minor/patch and full-version macros, integrated Cargo/CMake generation and header packaging, and retained `cpp_version()` for loaded-library identification.
+
 **Java:**
 
 - Extended the existing Java fit and prediction APIs with grouped `outputs(...)`, `cv(CVOptions...)`, and `IntervalsOptions`, preserving native option mapping and adding residual-bootstrap intervals across Batch, Streaming, full-update Online, and `PredictModel.predict`.
@@ -49,10 +53,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Extended the existing Julia fit and retained-model prediction APIs with grouped `outputs`, `cv`, and `intervals` keywords, including residual-bootstrap intervals across `Lowess`, `StreamingLowess`, full-update `OnlineLowess`, and `predict`.
 - Added an "Alternative Software" guide comparing LOWESS in `FastLOWESS.jl` with the more general LOESS implementation in `Loess.jl`.
 - Added optional `Loess.jl` handling to the Julia snippet runner; comparison snippets are skipped when unavailable.
+- Added public Julia `version()` access backed by `Project.toml`, using the standard TOML parser without a duplicate version constant.
 
 **Node.js:**
 
 - Extended the existing Node.js fit and prediction APIs with grouped `outputs`, `cv`, and `intervals` options while preserving legacy fields and adding residual-bootstrap intervals to `LowessResult.predict()`.
+- Added the native-independent `fastlowess/version` entry point with TypeScript declarations, reading the version from package metadata.
 
 **Python:**
 
@@ -76,6 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **WASM:**
 
 - Extended the existing WASM fit and prediction APIs with grouped `outputs`, `cv`, and `intervals` options while preserving legacy fields, adding residual-bootstrap intervals to `LowessResult.predict()` and TypeScript declarations for `IntervalsOptions`, `CVOptions`, and `LowessResult.predict()`.
+- Added a WASM `version()` export generated from the binding's Cargo package version.
 
 ### Changed
 
