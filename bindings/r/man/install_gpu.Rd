@@ -31,6 +31,14 @@ in CRAN/Bioconductor releases.
 
 A running R session cannot swap an already-loaded shared library, so
 \strong{restart R} after installing for the change to take effect.
+
+Downloads are checked against GitHub's published SHA-256 digest before
+execution. Native probes have a 30-second timeout and require matching
+package-version/ABI contracts and registered argument counts. Older GPU
+artifacts without this contract must be rebuilt. On Windows, invalid
+sidecars are skipped and activated DLLs remain mapped until R exits to
+protect live model finalizers. Probing is not a security sandbox; local
+native libraries must be trusted.
 }
 \examples{
 # Check whether the GPU backend is already active before installing it

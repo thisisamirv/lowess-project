@@ -125,6 +125,9 @@ Lowess <- function(
     retain_model = FALSE
 ) {
     reject_extra_positional_args(sys.call(), "fraction")
+    if (...length() > 0L) {
+        stop("unused arguments (...)", call. = FALSE)
+    }
     check_gpu_backend(backend)
     validate_params(fraction = fraction, iterations = iterations)
 
@@ -151,6 +154,14 @@ Lowess <- function(
         cv_method <- "kfold"
         cv_k <- 5L
     } else {
+        validate_named_options(cv, c("method", "k", "fractions"), "cv")
+        if (is.null(cv[["fractions", exact = TRUE]])) {
+            stop("`cv$fractions` is required", call. = FALSE)
+        }
+        validate_numeric_vector(cv$fractions, "cv$fractions")
+        if (!length(cv$fractions)) {
+            stop("`cv$fractions` must be non-empty", call. = FALSE)
+        }
         cv_fractions <- cv$fractions
         cv_method <- if (is.null(cv$method)) "kfold" else cv$method
         cv_k <- if (is.null(cv$k)) 5L else cv$k
@@ -207,6 +218,7 @@ cv_opts <- function(method = "kfold", k = 5L, fractions) {
     if (!is.numeric(fractions) || length(fractions) == 0L) {
         stop("`fractions` must be a non-empty numeric vector", call. = FALSE)
     }
+    validate_numeric_vector(fractions, "fractions")
     validate_optional_count(k, "cv.k", allow_zero = FALSE)
     structure(
         list(

@@ -251,8 +251,147 @@ test_that("incompatible sidecars leave existing native routines unchanged", {
         gpu_library_enabled = function(...) TRUE,
         .package = "rfastlowess"
     )
-    expect_error(loader(lib_dir, namespace, "1.2.3", "windows"), "incompatible")
+    expect_warning(
+        expect_null(loader(lib_dir, namespace, "1.2.3", "windows")),
+        "incompatible"
+    )
     expect_identical(namespace$wrap__missing_api, "original")
+})
+
+test_that("native compatibility checks enforce contract and argument counts", {
+    api <- getFromNamespace("gpu_native_api", "rfastlowess")()
+    compatible <- getFromNamespace("gpu_compatible_routines", "rfastlowess")
+    native <- getFromNamespace("wrap__gpu_enabled", "rfastlowess")
+    routines <- getDLLRegisteredRoutines(native$dll)[[".Call"]]
+    expect_true(compatible(routines, api))
+    wrong_arity <- api
+    wrong_arity$signatures[1L] <- wrong_arity$signatures[1L] + 1L
+    expect_false(compatible(routines, wrong_arity))
+    wrong_contract <- api
+    wrong_contract$contract <- "rfastlowess/0.0.0/abi-999"
+    expect_false(compatible(routines, wrong_contract))
+    expect_false(compatible(routines[-1L], api))
+})
+
+test_that("candidate subprocesses have an enforced timeout", {
+    probe <- getFromNamespace("gpu_library_enabled", "rfastlowess")
+    native <- getFromNamespace("wrap__gpu_enabled", "rfastlowess")
+    captured <- new.env()
+    testthat::local_mocked_bindings(
+        system2 = function(command, args, stdout, stderr, timeout) {
+            captured$timeout <- timeout
+            structure(character(), status = 124L)
+        },
+        .package = "base"
+    )
+    expect_false(probe(native$dll[["path"]], timeout = 2L))
+    expect_identical(captured$timeout, 2L)
+})
+
+test_that("sidecar activation falls back from a broken newest candidate", {
+    loader <- getFromNamespace("gpu_load_sidecar", "rfastlowess")
+    destination <- getFromNamespace("gpu_install_destination", "rfastlowess")
+    lib_dir <- tempfile()
+    dir.create(lib_dir)
+    on.exit(unlink(lib_dir, recursive = TRUE), add = TRUE)
+    native <- getFromNamespace("wrap__gpu_enabled", "rfastlowess")
+    older <- destination(lib_dir, "windows", "1.2.3")
+    file.copy(native$dll[["path"]], older)
+    Sys.setFileTime(older, Sys.time() - 60)
+    newer <- destination(lib_dir, "windows", "1.2.3")
+    writeLines("broken", newer)
+    namespace <- new.env(parent = emptyenv())
+    namespace$wrap__gpu_enabled <- native
+    testthat::local_mocked_bindings(
+        gpu_library_enabled = function(path) {
+            identical(normalizePath(path), normalizePath(older))
+        },
+        .package = "rfastlowess"
+    )
+    expect_warning(
+        loaded <- loader(lib_dir, namespace, "1.2.3", "windows"),
+        "Skipping incompatible"
+    )
+    on.exit(dyn.unload(loaded), add = TRUE)
+    expect_identical(normalizePath(loaded), normalizePath(older))
+})
+
+test_that("release metadata must supply an exact matching SHA-256 digest", {
+    release_digest <- getFromNamespace("gpu_release_digest", "rfastlowess")
+    url <- paste0(
+        "https://github.com/thisisamirv/lowess-project/",
+        "releases/download/gpu-builds/library.so"
+    )
+    checksum <- paste(rep("a", 64), collapse = "")
+    testthat::local_mocked_bindings(
+        fromJSON = function(...) {
+            list(assets = data.frame(
+                name = "library.so", browser_download_url = url,
+                digest = paste0("sha256:", checksum)
+            ))
+        },
+        .package = "jsonlite"
+    )
+    expect_identical(release_digest(url), checksum)
+    expect_error(release_digest("https://example.com/library.so"), "must come from")
+    expect_error(release_digest(paste0(url, ".missing")), "No trusted SHA-256")
+})
+
+test_that("digest verification precedes downloaded native execution", {
+    dest <- tempfile()
+    on.exit(unlink(dest), add = TRUE)
+    testthat::local_mocked_bindings(
+        download.file = function(url, destfile, ...) {
+            writeLines("tampered", destfile)
+            0L
+        },
+        .package = "utils"
+    )
+    testthat::local_mocked_bindings(
+        gpu_release_digest = function(...) paste(rep("0", 64), collapse = ""),
+        gpu_library_enabled = function(...) stop("Must not execute candidate"),
+        .package = "rfastlowess"
+    )
+    expect_error(gpu_download_to("https://example.com/lib.so", ".so", dest), "SHA-256 verification")
+    expect_false(file.exists(dest))
+})
+
+test_that("namespace unload keeps live model finalizers mapped", {
+    script <- tempfile(fileext = ".R")
+    on.exit(unlink(script), add = TRUE)
+    writeLines(c(
+        "pkgload::load_all(commandArgs(TRUE)[1L], quiet = TRUE)",
+        "ns <- asNamespace('rfastlowess')",
+        "path <- file.path(tempdir(), paste0('rfastlowess', .Platform$dynlib.ext))",
+        "file.copy(ns$wrap__gpu_enabled$dll[['path']], path)",
+        "dll <- dyn.load(path)",
+        "scope <- new.env(parent = ns)",
+        "scope$RLowess <- new.env()",
+        "factory <- ns$RLowess$new",
+        "environment(factory) <- scope",
+        "scope$RLowess$new <- factory",
+        "scope$wrap__RLowess__new <- getDLLRegisteredRoutines(dll)[['.Call']][['wrap__RLowess__new']]",
+        "constructor <- ns$Lowess",
+        "environment(constructor) <- scope",
+        "model <- constructor()",
+        "state <- ns$gpu_state",
+        "state$dll_path <- dll[['path']]",
+        "ns$.onUnload('unused')",
+        "rm(model)",
+        "gc()",
+        "stopifnot(dll[['path']] %in% vapply(getLoadedDLLs(), function(info) info[['path']], ''))",
+        "cat('FINALIZERS_SAFE')"
+    ), script)
+    rscript <- file.path(R.home("bin"), if (.Platform$OS.type == "windows") "Rscript.exe" else "Rscript")
+    output <- system2(
+        rscript,
+        c("--vanilla", shQuote(script), shQuote(getNamespaceInfo("rfastlowess", "path"))),
+        stdout = TRUE,
+        stderr = TRUE,
+        timeout = 60L
+    )
+    expect_null(attr(output, "status"))
+    expect_true(any(grepl("FINALIZERS_SAFE", output, fixed = TRUE)))
 })
 
 # ── gpu_confirm_download ─────────────────────────────────────────────────────
@@ -300,6 +439,12 @@ test_that("gpu_download_to copies the downloaded file to its destination", {
     )
     testthat::local_mocked_bindings(
         gpu_library_enabled = function(path) TRUE,
+        gpu_release_digest = function(url) {
+            fixture <- tempfile()
+            writeLines("dummy", fixture)
+            on.exit(unlink(fixture), add = TRUE)
+            digest::digest(file = fixture, algo = "sha256", serialize = FALSE)
+        },
         .package = "rfastlowess"
     )
     gpu_download_to("https://example.com/lib.so", ".so", dest)
@@ -317,9 +462,18 @@ test_that("gpu_download_to rejects a library without the GPU feature", {
         },
         .package = "utils"
     )
+    testthat::local_mocked_bindings(
+        gpu_release_digest = function(url) {
+            fixture <- tempfile()
+            writeLines("not a shared library", fixture)
+            on.exit(unlink(fixture), add = TRUE)
+            digest::digest(file = fixture, algo = "sha256", serialize = FALSE)
+        },
+        .package = "rfastlowess"
+    )
     expect_error(
         gpu_download_to("https://example.com/lib.so", ".so", dest),
-        "does not report GPU support"
+        "does not report compatible GPU support"
     )
     expect_false(file.exists(dest))
 })
@@ -523,7 +677,7 @@ test_that("install_gpu_local rejects non-GPU files", {
 
     expect_error(
         install_gpu_local(src, TRUE, lib_dir),
-        "does not report GPU support"
+        "does not report compatible GPU support"
     )
     expect_false(file.exists(file.path(lib_dir, "rfastlowess.so")))
 })

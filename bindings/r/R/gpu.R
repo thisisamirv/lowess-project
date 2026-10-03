@@ -15,7 +15,31 @@ gpu_available <- function() {
 
 #' Probe a Candidate R Shared Library for the GPU Feature
 #' @noRd
-gpu_library_enabled <- function(path) {
+gpu_native_api <- function(namespace = asNamespace("rfastlowess")) {
+    symbols <- ls(namespace, pattern = "^wrap__", all.names = TRUE)
+    signatures <- vapply(symbols, function(name) {
+        get(name, envir = namespace, inherits = FALSE)$numParameters
+    }, integer(1))
+    list(
+        contract = paste0("rfastlowess/", getNamespaceVersion("rfastlowess"), "/abi-1"),
+        signatures = signatures
+    )
+}
+
+gpu_compatible_routines <- function(routines, expected) {
+    required <- names(expected$signatures)
+    if (!length(required) || !all(required %in% names(routines))) {
+        return(FALSE)
+    }
+    counts <- vapply(routines[required], function(routine) routine$numParameters, integer(1))
+    if (!identical(unname(counts), unname(expected$signatures))) {
+        return(FALSE)
+    }
+    contract <- routines[["wrap__binding_contract"]]
+    !is.null(contract) && identical(.Call(contract), expected$contract)
+}
+
+gpu_library_enabled <- function(path, timeout = 30L) {
     if (!file.exists(path)) {
         return(FALSE)
     }
@@ -36,28 +60,41 @@ gpu_library_enabled <- function(path) {
     if (!file.copy(path, probe_path, overwrite = TRUE)) {
         return(FALSE)
     }
+    expected_path <- file.path(probe_dir, "api.rds")
+    saveRDS(gpu_native_api(), expected_path)
 
     rscript <- file.path(
         R.home("bin"),
         if (identical(.Platform$OS.type, "windows")) "Rscript.exe" else "Rscript"
     )
     script <- paste(
-        "probe <- function(path) {",
+        "probe <- function(path, expected) {",
         "dll <- dyn.load(path)",
         "on.exit(dyn.unload(dll[['path']]), add = TRUE)",
-        "routine <- getDLLRegisteredRoutines(dll)[['.Call']][['wrap__gpu_enabled']]",
-        "if (is.null(routine)) return(FALSE)",
-        "isTRUE(.Call(routine))",
+        "routines <- getDLLRegisteredRoutines(dll)[['.Call']]",
+        "required <- names(expected$signatures)",
+        "if (!all(required %in% names(routines))) return(FALSE)",
+        "counts <- vapply(routines[required], function(routine) routine$numParameters, integer(1))",
+        "if (!identical(unname(counts), unname(expected$signatures))) return(FALSE)",
+        "contract <- routines[['wrap__binding_contract']]",
+        "if (is.null(contract)) return(FALSE)",
+        "if (!identical(.Call(contract), expected$contract)) return(FALSE)",
+        "routine <- routines[['wrap__gpu_enabled']]",
+        "!is.null(routine) && isTRUE(.Call(routine))",
         "}",
-        "cat(probe(commandArgs(TRUE)[[1L]]))",
+        "args <- commandArgs(TRUE)",
+        "cat(probe(args[[1L]], readRDS(args[[2L]])))",
         sep = "\n"
     )
+    script_path <- file.path(probe_dir, "probe.R")
+    writeLines(script, script_path)
     output <- tryCatch(
         suppressWarnings(system2(
             rscript,
-            args = c("--vanilla", "-e", shQuote(script), shQuote(probe_path)),
+            args = c("--vanilla", shQuote(script_path), shQuote(probe_path), shQuote(expected_path)),
             stdout = TRUE,
-            stderr = FALSE
+            stderr = FALSE,
+            timeout = timeout
         )),
         error = function(e) character()
     )
@@ -98,7 +135,8 @@ gpu_is_musl <- function(
                 ldd,
                 shQuote(file.path(R.home("bin"), "exec", "R")),
                 stdout = TRUE,
-                stderr = TRUE
+                stderr = TRUE,
+                timeout = 10L
             )),
             error = function(e) character()
         )
@@ -231,6 +269,34 @@ gpu_replace_file <- function(src, dest) {
     invisible(TRUE)
 }
 
+gpu_release_digest <- function(url) {
+    prefix <- paste0(
+        "https://github.com/thisisamirv/lowess-project/",
+        "releases/download/gpu-builds/"
+    )
+    if (!startsWith(url, prefix)) {
+        stop("GPU downloads must come from the project's gpu-builds release.", call. = FALSE)
+    }
+    release <- jsonlite::fromJSON(paste0(
+        "https://api.github.com/repos/thisisamirv/lowess-project/",
+        "releases/tags/gpu-builds"
+    ))
+    assets <- release$assets
+    if (!is.data.frame(assets) || !all(c("name", "browser_download_url", "digest") %in% names(assets))) {
+        stop("GPU release does not provide SHA-256 asset digests.", call. = FALSE)
+    }
+    asset <- assets[
+        assets$name == substring(url, nchar(prefix) + 1L) &
+            assets$browser_download_url == url, ,
+        drop = FALSE
+    ]
+    if (nrow(asset) != 1L || is.na(asset$digest) ||
+        !grepl("^sha256:[[:xdigit:]]{64}$", asset$digest)) {
+        stop("No trusted SHA-256 digest is available for this GPU asset.", call. = FALSE)
+    }
+    tolower(substring(asset$digest, 8L))
+}
+
 #' Download the GPU Library to its Destination Path
 #' @noRd
 gpu_download_to <- function(url, ext, dest) {
@@ -253,8 +319,13 @@ gpu_download_to <- function(url, ext, dest) {
             call. = FALSE
         )
     }
+    expected_digest <- gpu_release_digest(url)
+    actual_digest <- digest::digest(file = tmp, algo = "sha256", serialize = FALSE)
+    if (!identical(actual_digest, expected_digest)) {
+        stop("Downloaded GPU library failed SHA-256 verification.", call. = FALSE)
+    }
     if (!gpu_library_enabled(tmp)) {
-        stop("Downloaded library does not report GPU support.", call. = FALSE)
+        stop("Downloaded library does not report compatible GPU support.", call. = FALSE)
     }
     gpu_replace_file(tmp, dest)
 }
@@ -305,26 +376,40 @@ gpu_load_sidecar <- function(
     if (!length(paths)) {
         return(NULL)
     }
-    path <- paths[order(file.info(paths)$mtime, decreasing = TRUE)][1L]
-    if (!gpu_library_enabled(path)) {
-        stop("Installed GPU sidecar does not report GPU support.", call. = FALSE)
-    }
-    dll <- dyn.load(path)
-    activated <- FALSE
-    on.exit(if (!activated) dyn.unload(dll[["path"]]), add = TRUE)
-    routines <- getDLLRegisteredRoutines(dll)[[".Call"]]
     required <- ls(namespace, pattern = "^wrap__", all.names = TRUE)
-    if (!length(required) || !all(required %in% names(routines))) {
-        stop(
-            "Installed GPU sidecar is incompatible with this package's native API.",
-            call. = FALSE
+    expected <- gpu_native_api()
+    paths <- paths[order(file.info(paths)$mtime, decreasing = TRUE)]
+    for (path in paths) {
+        if (!gpu_library_enabled(path)) {
+            warning("Skipping incompatible GPU sidecar: ", path, call. = FALSE)
+            next
+        }
+        dll <- tryCatch(dyn.load(path), error = function(e) NULL)
+        if (is.null(dll)) {
+            warning("Skipping unloadable GPU sidecar: ", path, call. = FALSE)
+            next
+        }
+        routines <- getDLLRegisteredRoutines(dll)[[".Call"]]
+        compatible <- tryCatch(
+            length(required) > 0L && all(required %in% names(routines)) &&
+                gpu_compatible_routines(routines, expected),
+            error = function(e) FALSE
         )
+        if (!compatible) {
+            dyn.unload(dll[["path"]])
+            warning("Skipping incompatible GPU sidecar: ", path, call. = FALSE)
+            next
+        }
+        if (any(vapply(required, bindingIsLocked, logical(1), env = namespace))) {
+            dyn.unload(dll[["path"]])
+            stop("GPU routines must be activated during namespace startup.", call. = FALSE)
+        }
+        for (name in required) {
+            assign(name, routines[[name]], envir = namespace)
+        }
+        return(dll[["path"]])
     }
-    for (name in required) {
-        assign(name, routines[[name]], envir = namespace)
-    }
-    activated <- TRUE
-    dll[["path"]]
+    NULL
 }
 
 gpu_state <- new.env(parent = emptyenv())
@@ -344,10 +429,7 @@ gpu_state <- new.env(parent = emptyenv())
 }
 
 .onUnload <- function(libpath) {
-    if (!is.null(gpu_state$dll_path)) {
-        dyn.unload(gpu_state$dll_path)
-        gpu_state$dll_path <- NULL
-    }
+    invisible(NULL)
 }
 
 #' Ask the User to Confirm a Local-Path Install, Unless Skipped
@@ -381,7 +463,7 @@ install_gpu_local <- function(local_path, yes, lib_dir) {
         return(invisible(FALSE))
     }
     if (!gpu_library_enabled(local_path)) {
-        stop("The library at ", local_path, " does not report GPU support.", call. = FALSE)
+        stop("The library at ", local_path, " does not report compatible GPU support.", call. = FALSE)
     }
 
     dest <- gpu_install_destination(lib_dir)
@@ -422,6 +504,14 @@ install_gpu_download <- function(yes, lib_dir) {
 #'
 #' A running R session cannot swap an already-loaded shared library, so
 #' \strong{restart R} after installing for the change to take effect.
+#'
+#' Downloads are checked against GitHub's published SHA-256 digest before
+#' execution. Native probes have a 30-second timeout and require matching
+#' package-version/ABI contracts and registered argument counts. Older GPU
+#' artifacts without this contract must be rebuilt. On Windows, invalid
+#' sidecars are skipped and activated DLLs remain mapped until R exits to
+#' protect live model finalizers. Probing is not a security sandbox; local
+#' native libraries must be trusted.
 #'
 #' @param yes Logical; skip the interactive \verb{y/N} confirmation prompt.
 #'   Must be \code{TRUE} when the session is not interactive.

@@ -102,6 +102,40 @@ test_that("integer custom weights match double custom weights", {
     expect_error(fit(model, 1:10, sin(1:10), custom_weights = -1L))
 })
 
+test_that("constructors reject named options in dots", {
+    expect_error(Lowess(output = "se"), "unused arguments")
+    expect_error(StreamingLowess(unknown = TRUE), "unused arguments")
+    expect_error(OnlineLowess(output = "se"), "unused arguments")
+})
+
+test_that("numeric inputs are validated before coercion", {
+    model <- Lowess(retain_model = TRUE)
+    expect_error(fit(model, factor(1:10), sin(1:10)), "x must be")
+    expect_error(fit(model, 1:10, factor(1:10)), "y must be")
+    expect_error(fit(model, matrix(1:10, nrow = 2), sin(1:10)), "x must be")
+    expect_error(
+        fit(model, 1:10, sin(1:10), custom_weights = factor(rep("-1", 10))),
+        "custom_weights must be"
+    )
+    expect_error(predict(model, factor(1:2)), "new_x must be")
+    expect_error(add_point(OnlineLowess(), factor(1), 2), "x must be")
+})
+
+test_that("grouped options reject missing, unknown and duplicate keys", {
+    expect_error(Lowess(cv = list(fraction = c(0.2, 0.5))), "Invalid `cv` key")
+    expect_error(Lowess(cv = list(k = 3)), "fractions.*required")
+    expect_error(Lowess(cv = list(fractions = numeric())), "non-empty")
+    expect_error(cv_opts(fractions = matrix(c(0.2, 0.5))), "fractions must be")
+    expect_error(
+        Lowess(cv = list(fractions = c(0.2, 0.5), k = 2, k = 3)),
+        "Duplicate `cv` keys"
+    )
+    expect_error(
+        expand_intervals(list(confidence = 0.8, confidence = 0.99)),
+        "Duplicate `intervals` keys"
+    )
+})
+
 test_that("parse_outputs_flags handles NULL and valid output names", {
     valid <- c("diagnostics", "residuals", "weights")
 
@@ -264,8 +298,7 @@ test_that("OnlineLowess constructor coerces all param types via env_args", {
         fraction = 0.2,
         window_capacity = 20L,
         min_points = 3L,
-        update_mode = "incremental",
-        parallel = FALSE
+        update_mode = "incremental"
     )
     expect_s3_class(model, "OnlineLowess")
 })

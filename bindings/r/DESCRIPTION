@@ -15,6 +15,7 @@ License: MIT + file LICENSE | Apache License (== 2.0)
 SystemRequirements: 'Rust' programming language (via 'rustup' or system tools)
 Encoding: UTF-8
 Depends: R (>= 4.4.0)
+Imports: digest, jsonlite
 Roxygen: list(markdown = TRUE, roclets = c("namespace", "rd", "srr::srr_stats_roclet"))
 Suggests: knitr, rmarkdown, testthat (>= 3.0.0)
 Config/testthat/edition: 3

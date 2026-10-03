@@ -146,6 +146,9 @@ fit.Lowess <- function(model, x, y, custom_weights = NULL, ...) {
         model$params$fraction,
         model$params$iterations
     )
+    if (!is.null(custom_weights)) {
+        validate_numeric_vector(custom_weights, "custom_weights")
+    }
     weights <- if (is.null(custom_weights)) NULL else as.double(custom_weights)
     model$handle$fit(validated_args$x, validated_args$y, weights)
 }
@@ -201,6 +204,7 @@ predict.Lowess <- function(
         stop("unused arguments (...)")
     }
     flags <- parse_outputs_flags(outputs, c("se", "derivative"))
+    validate_numeric_vector(new_x, "new_x")
     iv <- expand_intervals(intervals)
     object$handle$predict(
         as.double(new_x),
@@ -289,5 +293,7 @@ add_point.OnlineLowess <- function(model, x, y, ...) {
     if (...length() > 0L) {
         stop("unused arguments (...)")
     }
+    validate_numeric_vector(x, "x")
+    validate_numeric_vector(y, "y")
     model$handle$add_point(as.double(x), as.double(y))
 }

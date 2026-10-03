@@ -25,6 +25,8 @@
 #' @srrstats {G2.16} Inf/NaN validation in input vectors.
 #' @srrstats {G3.0} Tolerance-based comparisons used in robustness weights.
 validate_common_args <- function(x, y, fraction, iterations, min_points = 2L) {
+    validate_numeric_vector(x, "x")
+    validate_numeric_vector(y, "y")
     if (length(x) != length(y)) {
         stop("x and y must have the same length")
     }
@@ -56,6 +58,32 @@ validate_common_args <- function(x, y, fraction, iterations, min_points = 2L) {
     )
 }
 
+
+validate_numeric_vector <- function(value, name) {
+    if (!is.numeric(value) || is.complex(value) || !is.null(dim(value))) {
+        stop(sprintf("%s must be an integer or double vector", name), call. = FALSE)
+    }
+}
+
+validate_named_options <- function(options, valid, name) {
+    if (!is.list(options)) {
+        stop(sprintf("`%s` must be a named list", name), call. = FALSE)
+    }
+    keys <- names(options)
+    if (length(options) && (is.null(keys) || anyNA(keys) || any(keys == ""))) {
+        stop(sprintf("`%s` must be a named list", name), call. = FALSE)
+    }
+    if (anyDuplicated(keys)) {
+        stop(sprintf("Duplicate `%s` keys are not allowed", name), call. = FALSE)
+    }
+    unknown <- setdiff(keys, valid)
+    if (length(unknown)) {
+        stop(
+            sprintf("Invalid `%s` key(s): %s", name, toString(unknown)),
+            call. = FALSE
+        )
+    }
+}
 
 validate_scalar_numeric <- function(value, name) {
     if (!is.numeric(value) || length(value) != 1L || !is.finite(value)) {
@@ -201,21 +229,7 @@ expand_intervals <- function(intervals) {
         )
     }
     valid <- c("confidence", "prediction", "bootstrap")
-    keys <- names(intervals)
-    if (length(intervals) > 0L && (is.null(keys) || any(keys == ""))) {
-        stop("`intervals` must be a named list", call. = FALSE)
-    }
-    unknown <- setdiff(keys, valid)
-    if (length(unknown) > 0L) {
-        stop(
-            sprintf(
-                "Invalid `intervals` key(s): %s. Allowed: %s",
-                toString(sprintf("'%s'", unknown)),
-                toString(sprintf("'%s'", valid))
-            ),
-            call. = FALSE
-        )
-    }
+    validate_named_options(intervals, valid, "intervals")
     bootstrap <- intervals$bootstrap
     if (is.null(bootstrap)) {
         bootstrap <- 0L
@@ -288,8 +302,7 @@ env_args <- function(param_names) {
         if (is.null(type)) {
             return(val)
         }
-        switch(
-            type,
+        switch(type,
             double = as.double(val),
             integer = as.integer(val),
             character = as.character(val),

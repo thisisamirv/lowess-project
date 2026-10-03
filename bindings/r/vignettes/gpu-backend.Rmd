@@ -90,6 +90,17 @@ native routines. Other platforms require atomic replacement of the installed
 library. Local candidates use the platform's canonical library filename,
 regardless of their original filename extension.
 
+Downloads must match the SHA-256 digest published in GitHub release metadata
+before any native code is executed. Missing digests cause installation to
+fail closed. Candidate probes have a 30-second timeout and require a matching
+package version, native ABI contract, and registered argument counts. GPU
+artifacts built before this contract was introduced must be rebuilt.
+
+On Windows, a broken newest sidecar is skipped in favor of an older compatible
+one. Activated sidecars remain mapped until R exits, so unloading the namespace
+cannot invalidate finalizers belonging to live models. Probing isolates crashes
+but is not a security sandbox: install only trusted local native libraries.
+
 **Restart R after installation.**
 
 Alternatively, build from source with GPU support:

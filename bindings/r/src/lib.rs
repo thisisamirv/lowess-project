@@ -583,10 +583,16 @@ fn gpu_enabled() -> bool {
     cfg!(feature = "gpu")
 }
 
+#[extendr]
+fn binding_contract() -> &'static str {
+    concat!("rfastlowess/", env!("CARGO_PKG_VERSION"), "/abi-1")
+}
+
 extendr_module! {
     mod rfastlowess;
     impl RLowess;
     impl RStreamingLowess;
     impl ROnlineLowess;
     fn gpu_enabled;
+    fn binding_contract;
 }

@@ -73,6 +73,9 @@ StreamingLowess <- function(
     seed = NULL
 ) {
     reject_extra_positional_args(sys.call(), "fraction")
+    if (...length() > 0L) {
+        stop("unused arguments (...)", call. = FALSE)
+    }
     validate_params(
         fraction = fraction,
         iterations = iterations,

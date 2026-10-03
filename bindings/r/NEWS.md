@@ -21,6 +21,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Reject unused constructor options, factors/multidimensional inputs, and malformed grouped options. Keep GPU sidecars mapped for live model finalizers, try older valid sidecars, verify native ABI/version and argument counts, bound candidate probes, and check download SHA-256 digests before execution.
 * Validate Streaming/Online iterations and plain-list CV fold counts before coercion, and accept integer custom weights.
 * Detect R's linked libc, confirm local GPU installs before probing candidates, use canonical library filenames, and activate versioned Windows GPU sidecars on restart without replacing loaded DLLs.
 * Fixed global OLS fits treating predictor values with a large offset as degenerate; translated inputs now retain their fitted slope.

@@ -974,7 +974,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
 
       - name: Install R dependencies
-        run: Rscript -e 'options(repos = c(CRAN = "https://cloud.r-project.org")); if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager"); BiocManager::install("BiocGenerics", ask = FALSE, update = FALSE)'
+        run: Rscript -e 'options(repos = c(CRAN = "https://cloud.r-project.org")); install.packages(c("digest", "jsonlite")); if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager"); BiocManager::install("BiocGenerics", ask = FALSE, update = FALSE)'
 
       - name: Build and install with GPU feature
         working-directory: benchmarks
@@ -984,6 +984,7 @@ jobs:
         run: |
           Rscript -e 'stopifnot(rfastlowess::gpu_available())'
           LIBDIR=$(Rscript -e 'cat(system.file("libs", package="rfastlowess"))')
+          Rscript -e 'stopifnot(getFromNamespace("gpu_library_enabled", "rfastlowess")(file.path(system.file("libs", package="rfastlowess"), "rfastlowess.so")))'
           mkdir -p dist
           VERSION=$(grep "^Version:" bindings/r/DESCRIPTION | sed 's/Version: //')
           cp "$LIBDIR/rfastlowess.so" "dist/librfastlowess-gpu-v$VERSION-linux-${{ matrix.arch }}.so"
@@ -1016,9 +1017,11 @@ jobs:
             -e ASSET_ARCH=${{ matrix.arch }} rust:alpine sh -ec '
               apk add --no-cache R R-dev build-base gfortran linux-headers bash git curl python3 tar xz pkgconf perl
               Rscript -e "stopifnot(getRversion() >= \"4.4.0\")"
+              Rscript -e "install.packages(c(\"digest\", \"jsonlite\"), repos=\"https://cloud.r-project.org\")"
               (cd bindings/r/src && sh vendor-update.sh)
               R CMD INSTALL --no-docs --no-html bindings/r
               Rscript -e "stopifnot(rfastlowess::gpu_available())"
+              Rscript -e "stopifnot(getFromNamespace(\"gpu_library_enabled\", \"rfastlowess\")(file.path(system.file(\"libs\", package=\"rfastlowess\"), \"rfastlowess.so\")))"
               LIBDIR=$(Rscript -e "cat(system.file(\"libs\", package=\"rfastlowess\"))")
               VERSION=$(sed -n "s/^Version: //p" bindings/r/DESCRIPTION)
               mkdir -p dist
@@ -1046,7 +1049,7 @@ jobs:
       - uses: r-lib/actions/setup-r@v2
 
       - name: Install R dependencies
-        run: Rscript -e 'options(repos = c(CRAN = "https://cloud.r-project.org")); if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager"); BiocManager::install("BiocGenerics", ask = FALSE, update = FALSE)'
+        run: Rscript -e 'options(repos = c(CRAN = "https://cloud.r-project.org")); install.packages(c("digest", "jsonlite")); if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager"); BiocManager::install("BiocGenerics", ask = FALSE, update = FALSE)'
 
       - name: Build and install with GPU feature
         working-directory: benchmarks
@@ -1055,6 +1058,7 @@ jobs:
       - name: Locate and rename shared library
         run: |
           LIBDIR=$(Rscript -e 'cat(system.file("libs", package="rfastlowess"))')
+          Rscript -e 'stopifnot(getFromNamespace("gpu_library_enabled", "rfastlowess")(file.path(system.file("libs", package="rfastlowess"), "rfastlowess.so")))'
           mkdir -p dist
           VERSION=$(grep "^Version:" bindings/r/DESCRIPTION | sed 's/Version: //')
           cp "$LIBDIR/rfastlowess.so" "dist/librfastlowess-gpu-v$VERSION-macos-x86_64.so"
@@ -1079,7 +1083,7 @@ jobs:
       - uses: r-lib/actions/setup-r@v2
 
       - name: Install R dependencies
-        run: Rscript -e 'options(repos = c(CRAN = "https://cloud.r-project.org")); if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager"); BiocManager::install("BiocGenerics", ask = FALSE, update = FALSE)'
+        run: Rscript -e 'options(repos = c(CRAN = "https://cloud.r-project.org")); install.packages(c("digest", "jsonlite")); if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager"); BiocManager::install("BiocGenerics", ask = FALSE, update = FALSE)'
 
       - name: Build and install with GPU feature
         working-directory: benchmarks
@@ -1088,6 +1092,7 @@ jobs:
       - name: Locate and rename shared library
         run: |
           LIBDIR=$(Rscript -e 'cat(system.file("libs", package="rfastlowess"))')
+          Rscript -e 'stopifnot(getFromNamespace("gpu_library_enabled", "rfastlowess")(file.path(system.file("libs", package="rfastlowess"), "rfastlowess.so")))'
           mkdir -p dist
           VERSION=$(grep "^Version:" bindings/r/DESCRIPTION | sed 's/Version: //')
           cp "$LIBDIR/rfastlowess.so" "dist/librfastlowess-gpu-v$VERSION-macos-aarch64.so"
@@ -1114,7 +1119,7 @@ jobs:
           rtools-version: "45"
 
       - name: Install R dependencies
-        run: Rscript -e 'options(repos = c(CRAN = "https://cloud.r-project.org")); if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager"); BiocManager::install("BiocGenerics", ask = FALSE, update = FALSE)'
+        run: Rscript -e 'options(repos = c(CRAN = "https://cloud.r-project.org")); install.packages(c("digest", "jsonlite")); if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager"); BiocManager::install("BiocGenerics", ask = FALSE, update = FALSE)'
 
       - name: Build and install with GPU feature
         shell: bash
@@ -1125,6 +1130,8 @@ jobs:
         shell: pwsh
         run: |
           $libDir = Rscript -e "cat(system.file('libs', package='rfastlowess'))"
+          Rscript -e 'stopifnot(getFromNamespace("gpu_library_enabled", "rfastlowess")(file.path(system.file("libs", package="rfastlowess"), "x64", "rfastlowess.dll")))'
+          if ($LASTEXITCODE -ne 0) { throw "GPU native compatibility validation failed" }
           New-Item -ItemType Directory -Force -Path dist | Out-Null
           $version = (Select-String -Path bindings/r/DESCRIPTION -Pattern '^Version: (.*)').Matches[0].Groups[1].Value
           Copy-Item "$libDir/x64/rfastlowess.dll" "dist/librfastlowess-gpu-v$version-windows-x86_64.dll"
@@ -1165,6 +1172,9 @@ jobs:
         with:
           python-version: "3.x"
 
+      - name: Install R dependencies
+        run: Rscript -e 'install.packages(c("digest", "jsonlite"), repos="https://cloud.r-project.org")'
+
       - name: Build and install with GPU feature
         shell: bash
         run: |
@@ -1179,6 +1189,9 @@ jobs:
           $libDir = Rscript -e "cat(system.file('libs', package='rfastlowess'))"
           $dlls = @(Get-ChildItem -Path $libDir -Filter rfastlowess.dll -Recurse)
           if ($dlls.Count -ne 1) { throw "Expected one R GPU DLL" }
+          $env:R_GPU_DLL = $dlls[0].FullName
+          Rscript -e 'stopifnot(getFromNamespace("gpu_library_enabled", "rfastlowess")(Sys.getenv("R_GPU_DLL")))'
+          if ($LASTEXITCODE -ne 0) { throw "GPU native compatibility validation failed" }
           New-Item -ItemType Directory -Force -Path dist | Out-Null
           $version = (Select-String -Path bindings/r/DESCRIPTION -Pattern '^Version: (.*)').Matches[0].Groups[1].Value
           Copy-Item $dlls[0].FullName "dist/librfastlowess-gpu-v$version-windows-aarch64.dll"
