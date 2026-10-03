@@ -44,6 +44,7 @@ test_that("native probe helpers validate files and process results", {
     expect_false(succeeded(structure("TRUE", status = 1L)))
     native <- getFromNamespace("wrap__gpu_enabled", "rfastlowess")
     probe <- getFromNamespace("gpu_library_enabled", "rfastlowess")
+    expect_false(probe(paste0(src, ".missing")))
     expect_identical(probe(native$dll[["path"]]), gpu_available())
 })
 
@@ -131,6 +132,26 @@ test_that("locked namespaces are not partially rebound", {
     expect_identical(unloaded$path, "candidate.dll")
 })
 
+test_that("incompatible sidecars are rejected before loading", {
+    try_sidecar <- getFromNamespace("gpu_try_sidecar", "rfastlowess")
+    namespace <- new.env(parent = emptyenv())
+    namespace$wrap__gpu_enabled <- "original"
+    testthat::local_mocked_bindings(
+        gpu_library_enabled = function(...) FALSE,
+        .package = "rfastlowess"
+    )
+    expect_warning(
+        expect_null(try_sidecar(
+            "candidate.dll",
+            namespace,
+            list(),
+            load_library = function(...) stop("Candidate must not load")
+        )),
+        "Skipping incompatible GPU sidecar"
+    )
+    expect_identical(namespace$wrap__gpu_enabled, "original")
+})
+
 test_that("unloadable sidecars are skipped", {
     try_sidecar <- getFromNamespace("gpu_try_sidecar", "rfastlowess")
     testthat::local_mocked_bindings(
@@ -166,6 +187,16 @@ test_that("startup errors warn and retain CPU fallback", {
         "GPU sidecar was not activated"
     )
     expect_null(state$dll_path)
+})
+
+test_that("unloading does not clear the retained GPU library path", {
+    hook <- getFromNamespace(".onUnload", "rfastlowess")
+    state <- getFromNamespace("gpu_state", "rfastlowess")
+    previous <- state$dll_path
+    on.exit(state$dll_path <- previous, add = TRUE)
+    state$dll_path <- "candidate.dll"
+    expect_null(hook(tempdir()))
+    expect_identical(state$dll_path, "candidate.dll")
 })
 
 test_that("read_line delegates to readline", {
@@ -449,6 +480,10 @@ test_that("sidecar activation rebinds version-matched native routines", {
     expect_null(loader(lib_dir, namespace, "1.2.3", "unix"))
     loaded <- loader(lib_dir, namespace, "1.2.3", "windows")
     expect_identical(normalizePath(loaded), normalizePath(path))
+    injected <- loader(
+        lib_dir, namespace, "1.2.3", "windows", try_candidate = try_candidate
+    )
+    expect_identical(normalizePath(injected), normalizePath(path))
 })
 
 test_that("incompatible sidecars leave existing native routines unchanged", {

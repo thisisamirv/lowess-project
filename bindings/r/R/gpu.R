@@ -524,7 +524,7 @@ gpu_load_sidecar <- function(
     namespace,
     version,
     os_type = .Platform$OS.type,
-    try_candidate = gpu_try_sidecar
+    try_candidate = NULL
 ) {
     if (!identical(os_type, "windows")) {
         return(NULL)
@@ -535,7 +535,11 @@ gpu_load_sidecar <- function(
     }
     expected <- gpu_native_api()
     for (path in paths) {
-        activated <- try_candidate(path, namespace, expected)
+        activated <- if (is.null(try_candidate)) {
+            gpu_try_sidecar(path, namespace, expected)
+        } else {
+            try_candidate(path, namespace, expected)
+        }
         if (!is.null(activated)) {
             return(activated)
         }

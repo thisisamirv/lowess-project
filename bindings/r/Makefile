@@ -106,7 +106,7 @@ dev:
 	  -e "# Bootstrap pak; it handles RSPM binary vs source selection automatically" \
 	  -e "if (!requireNamespace('pak', quietly = TRUE, lib.loc = lib)) { options(install.lock = FALSE); install.packages('pak', lib = lib, repos = 'https://r-lib.github.io/p/pak/stable/') }" \
 	  -e "# Required packages (CRAN)" \
-	  -e "required <- c('styler', 'testthat', 'rmarkdown', 'knitr', 'lintr', 'roxygen2', 'pkgdown', 'remotes', 'digest', 'jsonlite')" \
+	  -e "required <- c('styler', 'testthat', 'rmarkdown', 'knitr', 'lintr', 'roxygen2', 'pkgdown', 'remotes')" \
 	  -e "tryCatch(pak::pkg_install(required, lib = lib, ask = FALSE), error = function(err) { message('pak install failed; clearing partial local cache and retrying once: ', conditionMessage(err)); unlink(c(Sys.glob(file.path(lib, '00LOCK*')), file.path(lib, '_cache'), file.path(lib, 'data.table')), recursive = TRUE, force = TRUE); Sys.setenv(PKG_NUM_WORKERS = '1'); pak::pkg_install(required, lib = lib, ask = FALSE) })" \
 	  -e "# commonmark's r-universe macOS ARM64 binary has had a checksum mismatch; install it from CRAN first" \
 	  -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); pak::pkg_install('commonmark', lib = lib, ask = FALSE)" \

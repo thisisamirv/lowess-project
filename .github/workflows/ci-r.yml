@@ -263,6 +263,11 @@ jobs:
 
       - uses: ./.github/actions/setup-lavapipe
 
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          working-directory: bindings/r
+          dependencies: '"hard"'
+
       - name: Build and install CPU package
         working-directory: benchmarks
         run: make install
