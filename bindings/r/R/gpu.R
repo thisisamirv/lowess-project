@@ -211,8 +211,7 @@ gpu_is_musl <- function(
 #' Determine the GPU Release Asset Name and Download URL
 #' @noRd
 gpu_platform_info <- function(sys_name) {
-    platform <- switch(
-        sys_name,
+    platform <- switch(sys_name,
         Windows = list(tag = "windows", ext = ".dll", label = "Windows"),
         Darwin = list(tag = "macos", ext = ".so", label = "macOS"),
         Linux = list(tag = "linux", ext = ".so", label = "Linux")
@@ -366,8 +365,7 @@ gpu_release_digest <- function(url) {
     }
     asset <- assets[
         assets$name == substring(url, nchar(prefix) + 1L) &
-            assets$browser_download_url == url,
-        ,
+            assets$browser_download_url == url, ,
         drop = FALSE
     ]
     if (
@@ -468,10 +466,15 @@ gpu_sidecar_paths <- function(lib_dir, version) {
     paths[order(file.info(paths)$mtime, decreasing = TRUE)]
 }
 
-gpu_bind_sidecar <- function(namespace, routines, dll) {
+gpu_bind_sidecar <- function(
+    namespace,
+    routines,
+    dll,
+    unload_library = dyn.unload
+) {
     required <- ls(namespace, pattern = "^wrap__", all.names = TRUE)
     if (any(vapply(required, bindingIsLocked, logical(1), env = namespace))) {
-        dyn.unload(dll[["path"]])
+        unload_library(dll[["path"]])
         stop(
             "GPU routines must be activated during namespace startup.",
             call. = FALSE
@@ -483,17 +486,24 @@ gpu_bind_sidecar <- function(namespace, routines, dll) {
     dll[["path"]]
 }
 
-gpu_try_sidecar <- function(path, namespace, expected) {
+gpu_try_sidecar <- function(
+    path,
+    namespace,
+    expected,
+    load_library = dyn.load,
+    registered_routines = getDLLRegisteredRoutines,
+    unload_library = dyn.unload
+) {
     if (!gpu_library_enabled(path)) {
         warning("Skipping incompatible GPU sidecar: ", path, call. = FALSE)
         return(NULL)
     }
-    dll <- tryCatch(dyn.load(path), error = function(e) NULL)
+    dll <- tryCatch(load_library(path), error = function(e) NULL)
     if (is.null(dll)) {
         warning("Skipping unloadable GPU sidecar: ", path, call. = FALSE)
         return(NULL)
     }
-    routines <- getDLLRegisteredRoutines(dll)[[".Call"]]
+    routines <- registered_routines(dll)[[".Call"]]
     required <- ls(namespace, pattern = "^wrap__", all.names = TRUE)
     compatible <- tryCatch(
         length(required) > 0L &&
@@ -502,18 +512,19 @@ gpu_try_sidecar <- function(path, namespace, expected) {
         error = function(e) FALSE
     )
     if (!compatible) {
-        dyn.unload(dll[["path"]])
+        unload_library(dll[["path"]])
         warning("Skipping incompatible GPU sidecar: ", path, call. = FALSE)
         return(NULL)
     }
-    gpu_bind_sidecar(namespace, routines, dll)
+    gpu_bind_sidecar(namespace, routines, dll, unload_library)
 }
 
 gpu_load_sidecar <- function(
     lib_dir,
     namespace,
     version,
-    os_type = .Platform$OS.type
+    os_type = .Platform$OS.type,
+    try_candidate = gpu_try_sidecar
 ) {
     if (!identical(os_type, "windows")) {
         return(NULL)
@@ -524,7 +535,7 @@ gpu_load_sidecar <- function(
     }
     expected <- gpu_native_api()
     for (path in paths) {
-        activated <- gpu_try_sidecar(path, namespace, expected)
+        activated <- try_candidate(path, namespace, expected)
         if (!is.null(activated)) {
             return(activated)
         }

@@ -396,6 +396,8 @@ test_that("Windows installation preserves a loaded primary DLL", {
 
 test_that("sidecar activation rebinds version-matched native routines", {
     loader <- getFromNamespace("gpu_load_sidecar", "rfastlowess")
+    try_sidecar <- getFromNamespace("gpu_try_sidecar", "rfastlowess")
+    native_api <- getFromNamespace("gpu_native_api", "rfastlowess")
     destination <- getFromNamespace("gpu_install_destination", "rfastlowess")
     lib_dir <- tempfile()
     dir.create(lib_dir)
@@ -403,18 +405,50 @@ test_that("sidecar activation rebinds version-matched native routines", {
     native <- getFromNamespace("wrap__gpu_enabled", "rfastlowess")
     path <- destination(lib_dir, "windows", "1.2.3")
     file.copy(native$dll[["path"]], path)
+    original_namespace <- asNamespace("rfastlowess")
     namespace <- new.env(parent = emptyenv())
-    namespace$wrap__gpu_enabled <- native
+    required <- ls(original_namespace, pattern = "^wrap__", all.names = TRUE)
+    for (name in required) {
+        assign(name, get(name, envir = original_namespace), envir = namespace)
+    }
+    routines <- getDLLRegisteredRoutines(native$dll)[[".Call"]]
     testthat::local_mocked_bindings(
         gpu_library_enabled = function(...) TRUE,
+        .package = "rfastlowess"
+    )
+    load_library <- function(candidate) list(path = candidate)
+    registered_routines <- function(...) list(.Call = routines)
+    unload_library <- function(...) invisible(NULL)
+    activated <- try_sidecar(
+        path,
+        namespace,
+        native_api(),
+        load_library,
+        registered_routines,
+        unload_library
+    )
+    expect_identical(activated, path)
+    expect_identical(
+        namespace$wrap__gpu_enabled,
+        routines[["wrap__gpu_enabled"]]
+    )
+    expect_identical(.Call(namespace$wrap__gpu_enabled), .Call(native))
+
+    try_candidate <- function(candidate, ...) {
+        if (identical(normalizePath(candidate), normalizePath(path))) {
+            candidate
+        } else {
+            NULL
+        }
+    }
+    testthat::local_mocked_bindings(
+        gpu_try_sidecar = try_candidate,
         .package = "rfastlowess"
     )
     expect_null(loader(lib_dir, namespace, "9.9.9", "windows"))
     expect_null(loader(lib_dir, namespace, "1.2.3", "unix"))
     loaded <- loader(lib_dir, namespace, "1.2.3", "windows")
-    on.exit(dyn.unload(loaded), add = TRUE)
-    expect_identical(namespace$wrap__gpu_enabled$dll[["path"]], loaded)
-    expect_identical(.Call(namespace$wrap__gpu_enabled), .Call(native))
+    expect_identical(normalizePath(loaded), normalizePath(path))
 })
 
 test_that("incompatible sidecars leave existing native routines unchanged", {
@@ -485,19 +519,20 @@ test_that("sidecar activation falls back from a broken newest candidate", {
     Sys.setFileTime(older, Sys.time() - 60)
     newer <- destination(lib_dir, "windows", "1.2.3")
     writeLines("broken", newer)
-    namespace <- new.env(parent = emptyenv())
-    namespace$wrap__gpu_enabled <- native
     testthat::local_mocked_bindings(
-        gpu_library_enabled = function(path) {
-            identical(normalizePath(path), normalizePath(older))
+        gpu_try_sidecar = function(path, ...) {
+            if (identical(normalizePath(path), normalizePath(older))) {
+                return(path)
+            }
+            warning("Skipping incompatible GPU sidecar: ", path, call. = FALSE)
+            NULL
         },
         .package = "rfastlowess"
     )
     expect_warning(
-        loaded <- loader(lib_dir, namespace, "1.2.3", "windows"),
+        loaded <- loader(lib_dir, new.env(), "1.2.3", "windows"),
         "Skipping incompatible"
     )
-    on.exit(dyn.unload(loaded), add = TRUE)
     expect_identical(normalizePath(loaded), normalizePath(older))
 })
 
