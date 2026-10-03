@@ -197,7 +197,8 @@ dev:
 	elif ! command -v valgrind >/dev/null 2>&1; then \
 		echo "Valgrind not found. Skipping memory check."; \
 	else \
-		valgrind --leak-check=full --track-origins=yes --error-exitcode=1 --quiet \
+		valgrind --leak-check=full --track-origins=yes --error-limit=no \
+		--num-callers=40 --error-exitcode=1 \
 		--suppressions=$(CPP_DIR)/valgrind.supp \
 		$(CPP_DIR)/tests/build/test_fastlowess_suite 2>&1 || \
 		(echo "Error: Valgrind detected memory errors"; exit 1); \

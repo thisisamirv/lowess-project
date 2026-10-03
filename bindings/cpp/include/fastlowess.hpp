@@ -46,7 +46,7 @@
 #endif
 
 #ifdef __APPLE__
-#include <TargetConditionals.h>
+#include <TargetConditionals.h> // IWYU pragma: keep
 #endif
 
 #ifdef _WIN32
@@ -56,9 +56,12 @@
 #include <cerrno>
 #include <dlfcn.h>
 #include <spawn.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h> // isatty
+#endif
+
+#ifdef __APPLE__
+extern "C" char **environ;
 #endif
 
 // Include the C header
@@ -1191,13 +1194,13 @@ inline bool runProcess(const std::vector<std::string> &arguments) {
   }
   argv.push_back(nullptr);
 
-  pid_t child = 0;
+  auto child = decltype(waitpid(0, nullptr, 0)){};
   if (posix_spawnp(&child, argv.front(), nullptr, nullptr, argv.data(),
                    environ) != 0) {
     return false;
   }
   int status = 0;
-  pid_t waited;
+  decltype(child) waited;
   do {
     waited = waitpid(child, &status, 0);
   } while (waited < 0 && errno == EINTR);

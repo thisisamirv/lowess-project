@@ -96,6 +96,8 @@ jobs:
         run: |
           if [ "${{ matrix.os }}" = "windows-11-arm" ]; then
             make cpp-dev CPP_CARGO_TARGET="--target aarch64-pc-windows-msvc" CPP_LIBRARY_DIR="target/aarch64-pc-windows-msvc/release-c" CPP_EXPORT_SCAN="llvm-objdump -p target/aarch64-pc-windows-msvc/release-c/fastlowess_cpp.dll"
+          elif [ "${{ matrix.os }}" = "ubuntu-24.04-arm" ]; then
+            CARGO_PROFILE_RELEASE_C_DEBUG=1 make cpp-dev
           else
             make cpp-dev
           fi

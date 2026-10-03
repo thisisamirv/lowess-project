@@ -387,7 +387,7 @@ void testGroupedCvBootstrapAndPredict() {
   assertTrue(result.prediction_upper().size() == data.x_values.size(),
              "batch bootstrap should return prediction bounds");
 
-  auto model = result.predict_model();
+  const auto model = result.predict_model();
   assertTrue(model.valid(), "retained model should be available");
   fastlowess::PredictOptions predict_options;
   predict_options.outputs = {"se", "derivative"};
