@@ -22,9 +22,7 @@ The C++ binding generates and installs a standard CMake package config, so downs
 
 ## Windows Quick Start
 
-The installed headers include generated `fastlowess_version.h` macros for
-compile-time version checks. They describe the C++ binding's header version;
-`cpp_version()` continues to report the loaded native library's version.
+The installed headers include generated `fastlowess_version.h` macros for compile-time version checks. They describe the C++ binding's header version; `cpp_version()` continues to report the loaded native library's version.
 
 Build and install the package:
 

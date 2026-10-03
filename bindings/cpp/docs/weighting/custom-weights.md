@@ -6,16 +6,13 @@ Per-observation weights that encode data quality directly into the LOWESS fit.
 
 ## How Custom Weights Work
 
-Standard LOWESS assigns equal prior trust to all observations. Custom weights
-let you override this assumption point by point — before any distance or
-robustness weighting is applied.
+Standard LOWESS assigns equal prior trust to all observations. Custom weights let you override this assumption point by point — before any distance or robustness weighting is applied.
 
 The effective weight of observation \f$j\f$ in a local fit centred at \f$x_i\f$ is:
 
 \f[w_{ij} = \text{custom\_weights}[j] \times K\!\left(\frac{d_{ij}}{h_i}\right) \times r_j\f]
 
-where \f$K\f$ is the distance kernel, \f$h_i\f$ is the local bandwidth, and \f$r_j\f$ is
-the robustness weight from the current iteration.
+where \f$K\f$ is the distance kernel, \f$h_i\f$ is the local bandwidth, and \f$r_j\f$ is the robustness weight from the current iteration.
 
 > **Batch adapter only:** `custom_weights` applies in **Batch** mode. It is silently ignored in
 > Streaming and Online adapters.
@@ -43,9 +40,7 @@ Both mechanisms handle unreliable data, but they serve different purposes:
 | **Effect** | Fixed throughout fit | Adapts each iteration |
 | **Use case** | Known bad sensors, calibration | Unknown outlier contamination |
 
-They compose: you can use both simultaneously. Custom weights suppress
-*a priori* bad points; robustness iterations then handle any *residual*
-outliers that remain.
+They compose: you can use both simultaneously. Custom weights suppress *a priori* bad points; robustness iterations then handle any *residual* outliers that remain.
 
 ---
 
@@ -53,8 +48,7 @@ outliers that remain.
 
 ### Suppress a Known Outlier
 
-Set the weight to `0` at the bad point — it is excluded from every local fit
-that would otherwise include it.
+Set the weight to `0` at the bad point — it is excluded from every local fit that would otherwise include it.
 
 ```cpp
 #include <fastlowess.hpp>
@@ -92,8 +86,7 @@ y[0]: 0.572621
 
 ### Emphasize Important Points
 
-Assign high weights to measurements you trust most — calibration standards,
-reference instruments, or low-noise observations.
+Assign high weights to measurements you trust most — calibration standards, reference instruments, or low-noise observations.
 
 ```cpp
 #include <fastlowess.hpp>
@@ -130,9 +123,7 @@ y[0]: 0.322981
 
 ### Propagate Measurement Uncertainty
 
-If each observation has a known standard deviation \f$\sigma_i\f$, set
-\f$w_i = 1 / \sigma_i^2\f$ to give the fit information-theoretically optimal
-weighting.
+If each observation has a known standard deviation \f$\sigma_i\f$, set \f$w_i = 1 / \sigma_i^2\f$ to give the fit information-theoretically optimal weighting.
 
 ```cpp
 #include <fastlowess.hpp>
@@ -170,8 +161,7 @@ y[0]: 0.142507
 
 ## Combined with Robustness Iterations
 
-Custom weights and robustness iterations compose naturally: use custom weights
-for *known* bad points and robustness for *unknown* contamination.
+Custom weights and robustness iterations compose naturally: use custom weights for *known* bad points and robustness for *unknown* contamination.
 
 ```cpp
 #include <fastlowess.hpp>

@@ -213,8 +213,7 @@ Set `intervals.confidence` and/or `intervals.prediction` independently; for exam
 
 Request any of `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"`, `"se"`, or `"sorted"`. The `"se"` output computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) as well as standard errors. AIC/AICc/effective degrees of freedom also require `"se"` or intervals to be populated.
 
-`"sorted"` reorders every result field (residuals, intervals, etc.) by `x` in ascending order instead of original input order.
-To get both orderings, sort the default result client-side (e.g. via `std::sort` over an index vector) instead of calling `fit()` twice.
+`"sorted"` reorders every result field (residuals, intervals, etc.) by `x` in ascending order instead of original input order. To get both orderings, sort the default result client-side (e.g. via `std::sort` over an index vector) instead of calling `fit()` twice.
 
 ### parallel
 

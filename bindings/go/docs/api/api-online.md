@@ -79,10 +79,7 @@ if ok {
 | `Intervals` | `*IntervalsOptions` | `nil` | Confidence/prediction levels and per-window bootstrap refits (`UpdateMode = "full"` only) |
 | `Seed` | `*uint64` | `nil` | Reproducible bootstrap draws for each full-update window |
 
-Incremental mode fits only the newest point. Positive `Delta` is rejected there, and `AutoConverge` requires full mode with at least one robustness iteration.
-| `ReturnSE` | `bool` | `false` | Populate `StandardError` in the result (requires `UpdateMode = "full"`; errors if combined with `"incremental"`) |
-| `ReturnRobustnessWeights` | `bool` | `false` | Include `RobustnessWeight` in result |
-| `ReturnDerivative` | `bool` | `false` | Include the latest point's local fit derivative (slope) in the result |
+Incremental mode fits only the newest point. Positive `Delta` is rejected there, and `AutoConverge` requires full mode with at least one robustness iteration. | `ReturnSE` | `bool` | `false` | Populate `StandardError` in the result (requires `UpdateMode = "full"`; errors if combined with `"incremental"`) | | `ReturnRobustnessWeights` | `bool` | `false` | Include `RobustnessWeight` in result | | `ReturnDerivative` | `bool` | `false` | Include the latest point's local fit derivative (slope) in the result |
 
 Cross-validation, GPU `Backend`, `CustomWeights`, `ReturnSorted`, `ReturnDiagnostics`, `ReturnResiduals`, and `Parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [API](api.md) for those.
 

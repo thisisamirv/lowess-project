@@ -23,20 +23,16 @@ Speedup relative to R's `stats::lowess` (higher is better):
 | **Scale** (1K–10K) | 1.36 ms | 1.0× | **1.4×** |
 | **Scientific** (500–5K) | 0.87 ms | 1.3× | **1.4×** |
 
-*The R column shows average time across scenarios in multi-scenario categories.
-Speedups are averages across the same range.*
+*The R column shows average time across scenarios in multi-scenario categories. Speedups are averages across the same range.*
 
 ---
 
 ## GPU Backend
 
-For large batch datasets the GPU backend outperforms CPU-parallel execution.
-The crossover depends on `fraction × n`:
+For large batch datasets the GPU backend outperforms CPU-parallel execution. The crossover depends on `fraction × n`:
 
 | Scenario | CPU-Parallel | GPU | Speedup |
 | --- | --- | --- | --- |
 | n = 1M, fraction = 0.5 | 1.24 s | 187 ms | **6.6×** |
 
-At `fraction = 0.5`, GPU overtakes CPU around n ≥ 50K; at smaller fractions,
-around n ≥ 100K–250K. See the benchmarks README in the source repository for
-the full sweep and transfer-overhead breakdown.
+At `fraction = 0.5`, GPU overtakes CPU around n ≥ 50K; at smaller fractions, around n ≥ 100K–250K. See the benchmarks README in the source repository for the full sweep and transfer-overhead breakdown.

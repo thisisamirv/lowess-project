@@ -247,8 +247,7 @@ Each point's local WLS fit already computes a slope internally; this exposes tha
 
 ### return_sorted
 
-When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
-To get both orderings, sort the default result client-side (e.g. `sortperm(result.x)`) instead of calling `fit` twice.
+When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order. To get both orderings, sort the default result client-side (e.g. `sortperm(result.x)`) instead of calling `fit` twice.
 
 ## Result Structure
 

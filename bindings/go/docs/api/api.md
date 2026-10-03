@@ -274,8 +274,7 @@ Each point's local WLS fit already computes a slope internally; this exposes tha
 
 ### ReturnSorted
 
-When set to `true`, it reorders every result field (residuals, intervals, etc.) by `X` in an ascending manner, instead of in original input order.
-To get both orderings, sort the default result client-side (e.g. via `sort.Slice`) instead of calling `Fit` twice.
+When set to `true`, it reorders every result field (residuals, intervals, etc.) by `X` in an ascending manner, instead of in original input order. To get both orderings, sort the default result client-side (e.g. via `sort.Slice`) instead of calling `Fit` twice.
 
 ## Result Structure
 

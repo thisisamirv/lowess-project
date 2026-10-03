@@ -139,8 +139,7 @@ Installed successfully!
 
 ## Check the Header and Library Versions
 
-Cargo and CMake generate `fastlowess_version.h` from package metadata.
-Download it and `fastlowess.h` alongside `fastlowess.hpp` when using prebuilt binaries. The version header can be included on its own for compile-time checks, without linking the native library:
+Cargo and CMake generate `fastlowess_version.h` from package metadata. Download it and `fastlowess.h` alongside `fastlowess.hpp` when using prebuilt binaries. The version header can be included on its own for compile-time checks, without linking the native library:
 
 ```cpp
 #include <fastlowess_version.h>

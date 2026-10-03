@@ -5,16 +5,13 @@ Per-observation weights that encode data quality directly into the LOWESS fit.
 
 ## How Custom Weights Work
 
-Standard LOWESS assigns equal prior trust to all observations. Custom weights
-let you override this assumption point by point — before any distance or
-robustness weighting is applied.
+Standard LOWESS assigns equal prior trust to all observations. Custom weights let you override this assumption point by point — before any distance or robustness weighting is applied.
 
 The effective weight of observation $j$ in a local fit centred at $x_i$ is:
 
 $$w_{ij} = \text{custom\_weights}_j \times K\!\left(\frac{d_{ij}}{h_i}\right) \times r_j$$
 
-where $K$ is the distance kernel, $h_i$ is the local bandwidth, and $r_j$ is
-the robustness weight from the current iteration.
+where $K$ is the distance kernel, $h_i$ is the local bandwidth, and $r_j$ is the robustness weight from the current iteration.
 
 !!! note "Batch adapter only"
     `custom_weights` applies in **Batch** mode. It is silently ignored in
@@ -43,9 +40,7 @@ Both mechanisms handle unreliable data, but they serve different purposes:
 | **Effect** | Fixed throughout fit | Adapts each iteration |
 | **Use case** | Known bad sensors, calibration | Unknown outlier contamination |
 
-They compose: you can use both simultaneously. Custom weights suppress
-*a priori* bad points; robustness iterations then handle any *residual*
-outliers that remain.
+They compose: you can use both simultaneously. Custom weights suppress *a priori* bad points; robustness iterations then handle any *residual* outliers that remain.
 
 ---
 
@@ -53,8 +48,7 @@ outliers that remain.
 
 ### Suppress a Known Outlier
 
-Set the weight to `0` at the bad point — it is excluded from every local fit
-that would otherwise include it.
+Set the weight to `0` at the bad point — it is excluded from every local fit that would otherwise include it.
 
 ```rust
 use fastLowess::prelude::*;
@@ -93,8 +87,7 @@ First smoothed value (custom weights): 0.5726210350584308
 
 ### Emphasize Important Points
 
-Assign high weights to measurements you trust most — calibration standards,
-reference instruments, or low-noise observations.
+Assign high weights to measurements you trust most — calibration standards, reference instruments, or low-noise observations.
 
 ```rust
 use fastLowess::prelude::*;
@@ -130,9 +123,7 @@ First smoothed value (custom weights): 0.3229810947626744
 
 ### Propagate Measurement Uncertainty
 
-If each observation has a known standard deviation $\sigma_i$, set
-$w_i = 1 / \sigma_i^2$ to give the fit information-theoretically optimal
-weighting.
+If each observation has a known standard deviation $\sigma_i$, set $w_i = 1 / \sigma_i^2$ to give the fit information-theoretically optimal weighting.
 
 ```rust
 use fastLowess::prelude::*;
@@ -165,8 +156,7 @@ First smoothed value (custom weights): 0.14250745917115992
 
 ## Combined with Robustness Iterations
 
-Custom weights and robustness iterations compose naturally: use custom weights
-for *known* bad points and robustness for *unknown* contamination.
+Custom weights and robustness iterations compose naturally: use custom weights for *known* bad points and robustness for *unknown* contamination.
 
 ```rust
 use fastLowess::prelude::*;

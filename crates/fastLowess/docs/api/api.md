@@ -220,8 +220,7 @@ Each point's local WLS fit already computes a slope internally; this exposes tha
 
 The `"sorted"` name reorders every result field by ascending `x`.
 
-When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
-To get both orderings, sort the default result client-side instead of calling `fit()` twice.
+When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order. To get both orderings, sort the default result client-side instead of calling `fit()` twice.
 
 ### parallel
 

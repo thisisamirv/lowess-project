@@ -37,9 +37,7 @@ GPU support is **opt-in** and not included in the default published PyPI wheels 
 | Unsorted inputs and sorted-output option | ✅ | ✅ | GPU results preserve Batch output ordering. |
 | Custom per-observation weights | ✅ | ✅ | Applied in GPU fit and CV candidate kernels. |
 
-Each compute pipeline now binds only its own resources, so adapter limits are
-based on the largest individual GPU pass rather than the union of all shader
-bindings.
+Each compute pipeline now binds only its own resources, so adapter limits are based on the largest individual GPU pass rather than the union of all shader bindings.
 
 ---
 
@@ -78,10 +76,7 @@ python -c "import fastlowess; fastlowess.install_gpu(yes=True)"
 fastlowess-install-gpu
 ```
 
-On Windows, the installer keeps the currently loaded CPU extension intact and
-places the verified GPU extension in a versioned sidecar. The package loader
-selects it after Python restarts. Prebuilt Linux GPU wheels currently target
-glibc/manylinux; musl/Alpine systems must build from source.
+On Windows, the installer keeps the currently loaded CPU extension intact and places the verified GPU extension in a versioned sidecar. The package loader selects it after Python restarts. Prebuilt Linux GPU wheels currently target glibc/manylinux; musl/Alpine systems must build from source.
 
 Build from source instead:
 

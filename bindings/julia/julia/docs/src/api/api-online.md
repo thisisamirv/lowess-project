@@ -76,10 +76,7 @@ end
 | `intervals` | `NamedTuple` | `nothing` | Grouped `confidence`, `prediction`, and per-window `bootstrap` options (requires `update_mode="full"`) |
 | `seed` | `Union{Integer, Nothing}` | `nothing` | Reproducible bootstrap draws for each full-update window |
 
-Incremental mode fits only the newest point. Positive `delta` is rejected there, and `auto_converge` requires full mode with at least one robustness iteration.
-| `return_se` | `Bool` | `false` | Populate `standard_error` in the result (requires `update_mode="full"`; errors if combined with `"incremental"`) |
-| `return_robustness_weights` | `Bool` | `false` | Include `robustness_weight` in result |
-| `return_derivative` | `Bool` | `false` | Include the latest point's local fit derivative (slope) in result |
+Incremental mode fits only the newest point. Positive `delta` is rejected there, and `auto_converge` requires full mode with at least one robustness iteration. | `return_se` | `Bool` | `false` | Populate `standard_error` in the result (requires `update_mode="full"`; errors if combined with `"incremental"`) | | `return_robustness_weights` | `Bool` | `false` | Include `robustness_weight` in result | | `return_derivative` | `Bool` | `false` | Include the latest point's local fit derivative (slope) in result |
 
 Cross-validation, GPU `backend`, `custom_weights`, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [Batch Adapter](api.md) for those.
 

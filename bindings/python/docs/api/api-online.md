@@ -67,8 +67,7 @@ print(result)
 | `intervals` | `dict` | `None` | Grouped `confidence`, `prediction`, and per-window `bootstrap` options (requires `update_mode="full"`) |
 | `seed` | `int` | `None` | Reproducible bootstrap draws for each full-update window |
 
-Incremental mode fits only the newest point. Positive `delta` is rejected there, and `auto_converge` requires full mode with at least one robustness iteration.
-| `return_derivative` | `bool` | `False` | Include the latest point's local fit derivative (slope) in result |
+Incremental mode fits only the newest point. Positive `delta` is rejected there, and `auto_converge` requires full mode with at least one robustness iteration. | `return_derivative` | `bool` | `False` | Include the latest point's local fit derivative (slope) in result |
 
 Cross-validation, GPU `backend`, `custom_weights`, `"sorted"`, `"diagnostics"`, `"residuals"`, and `parallel` are Batch-only and not available here; see [fastLowess](api.md) for those.
 

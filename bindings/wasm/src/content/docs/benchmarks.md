@@ -24,8 +24,7 @@ Speedup relative to R's `stats::lowess` (higher is better):
 | **Scale** (1K–10K) | 1.36 ms | 1.0× | **1.4×** |
 | **Scientific** (500–5K) | 0.87 ms | 1.3× | **1.4×** |
 
-*The R column shows average time across scenarios in multi-scenario categories.
-Speedups are averages across the same range.*
+*The R column shows average time across scenarios in multi-scenario categories. Speedups are averages across the same range.*
 
 :::note
 The WebAssembly build runs single-threaded (no `parallel` option). The figures

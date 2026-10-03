@@ -38,9 +38,7 @@ GPU support is **opt-in** and not included in prebuilt C++ releases — download
 | Unsorted inputs and sorted-output option | ✅ | ✅ | GPU results preserve Batch output ordering. |
 | Custom per-observation weights | ✅ | ✅ | Applied in GPU fit and CV candidate kernels. |
 
-Each compute pipeline now binds only its own resources, so adapter limits are
-based on the largest individual GPU pass rather than the union of all shader
-bindings.
+Each compute pipeline now binds only its own resources, so adapter limits are based on the largest individual GPU pass rather than the union of all shader bindings.
 
 ---
 
