@@ -54,16 +54,6 @@ type StreamingOptions struct {
 	// Seed makes bootstrap draws reproducible for each chunk; nil uses the default.
 	Seed *uint64
 
-	// ReturnDiagnostics requests fit-quality metrics (RMSE, MAE, R-squared, AIC, etc.).
-	ReturnDiagnostics bool
-	// ReturnResiduals requests residuals in the result.
-	ReturnResiduals bool
-	// ReturnRobustnessWeights requests per-point robustness weights in the result.
-	ReturnRobustnessWeights bool
-	// ReturnDerivative requests the per-point local fit derivative (slope) in the result.
-	ReturnDerivative bool
-	// ReturnSE requests standard errors in the result.
-	ReturnSE bool
 	// Parallel enables parallel processing. Default: true.
 	Parallel bool
 
@@ -162,9 +152,9 @@ func NewStreamingLowess(opts StreamingOptions) (*StreamingLowess, error) {
 			C.int(opts.Iterations),
 			optFloat(delta, deltaSet),
 			wf, rm, sm, bp,
-			boolToCInt(opts.ReturnDiagnostics || hasOutput(opts.Outputs, "diagnostics")),
-			boolToCInt(opts.ReturnResiduals || hasOutput(opts.Outputs, "residuals")),
-			boolToCInt(opts.ReturnRobustnessWeights || hasOutput(opts.Outputs, "weights")),
+			boolToCInt(hasOutput(opts.Outputs, "diagnostics")),
+			boolToCInt(hasOutput(opts.Outputs, "residuals")),
+			boolToCInt(hasOutput(opts.Outputs, "weights")),
 			zwf,
 			optFloat(autoConverge, autoConvergeSet),
 			boolToCInt(opts.Parallel),
@@ -172,8 +162,8 @@ func NewStreamingLowess(opts StreamingOptions) (*StreamingLowess, error) {
 			C.int(opts.Overlap),
 			ms,
 			missing,
-			boolToCInt(opts.ReturnDerivative || hasOutput(opts.Outputs, "derivative")),
-			boolToCInt(opts.ReturnSE || hasOutput(opts.Outputs, "se")),
+			boolToCInt(hasOutput(opts.Outputs, "derivative")),
+			boolToCInt(hasOutput(opts.Outputs, "se")),
 			optFloat(ciValue, ciSet),
 			optFloat(piValue, piSet),
 			C.size_t(bootstrap), C.ulonglong(seed), boolToCInt(opts.Seed != nil),

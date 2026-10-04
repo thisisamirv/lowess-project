@@ -174,45 +174,6 @@ public final class OnlineOptions {
         }
 
         /**
-         * Whether {@link Result#robustnessWeights()} should be populated.
-         *
-         * @param returnRobustnessWeights whether to include robustness weights
-         * in the result
-         * @return this builder, for chaining
-         * @see Options.Builder#returnRobustnessWeights(boolean)
-         */
-        public Builder returnRobustnessWeights(boolean returnRobustnessWeights) {
-            common.returnRobustnessWeights(returnRobustnessWeights);
-            return this;
-        }
-
-        /**
-         * Whether {@link Result#derivative()} should be populated.
-         *
-         * @param returnDerivative whether to include the local fit's derivative
-         * (slope) in the result
-         * @return this builder, for chaining
-         * @see Options.Builder#returnDerivative(boolean)
-         */
-        public Builder returnDerivative(boolean returnDerivative) {
-            common.returnDerivative(returnDerivative);
-            return this;
-        }
-
-        /**
-         * Include standard errors in the result. Requires
-         * {@code updateMode("full")}.
-         *
-         * @param returnSe whether to include standard errors in the result
-         * @return this builder, for chaining
-         * @see Options.Builder#returnSe(boolean)
-         */
-        public Builder returnSe(boolean returnSe) {
-            common.returnSe(returnSe);
-            return this;
-        }
-
-        /**
          * Confidence/prediction intervals and optional residual-bootstrap
          * refits for each sliding window. Requires {@code updateMode("full")}.
          *

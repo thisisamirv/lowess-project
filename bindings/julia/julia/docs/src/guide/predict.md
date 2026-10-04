@@ -8,7 +8,7 @@ Out-of-sample prediction is available in **Batch** mode only. Streaming and Onli
 
 `predict(model::PredictModel, new_x; kwargs...)` evaluates the fit at arbitrary query points, like R's `predict(model, newdata)`.
 
-It reuses `fit`'s own (possibly `delta`-interpolated) smoothed curve for its `y` output — so predicting at a training `x` always exactly reproduces that point's `fit` output, regardless of `delta`. A fresh local fit is only run when `return_derivative`, `return_se` (or an interval level), or `max_neighbor_distance` needs the actual regression slope or standard error.
+It reuses `fit`'s own (possibly `delta`-interpolated) smoothed curve for its `y` output — so predicting at a training `x` always exactly reproduces that point's `fit` output, regardless of `delta`. A fresh local fit is only run when `outputs` includes `"derivative"` or `"se"` (or an interval level), or when `max_neighbor_distance` needs the actual regression slope or standard error.
 
 `model` comes from `result.predict_model`, populated only when `retain_model=true` was passed to `Lowess`.
 

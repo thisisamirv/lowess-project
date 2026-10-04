@@ -57,7 +57,7 @@ class LowessTest {
             y[i] = x[i] * 2.0;
         }
 
-        try (Lowess model = new Lowess(Options.builder().returnDerivative(true).build())) {
+        try (Lowess model = new Lowess(Options.builder().outputs("derivative").build())) {
             Result result = model.fit(x, y);
             assertEquals(x.length, result.derivative().orElseThrow().length);
         }
@@ -125,9 +125,7 @@ class LowessTest {
 
         Options sortedOptions = Options.builder()
                 .fraction(0.7)
-                .returnResiduals(true)
-                .returnRobustnessWeights(true)
-                .returnSorted(true)
+                .outputs("residuals", "weights", "sorted")
                 .build();
 
         try (Lowess sortedModel = new Lowess(sortedOptions)) {
@@ -141,8 +139,7 @@ class LowessTest {
 
             Options unsortedOptions = Options.builder()
                     .fraction(0.7)
-                    .returnResiduals(true)
-                    .returnRobustnessWeights(true)
+                    .outputs("residuals", "weights")
                     .build();
             try (Lowess unsortedModel = new Lowess(unsortedOptions)) {
                 Result unsortedResult = unsortedModel.fit(x, y);

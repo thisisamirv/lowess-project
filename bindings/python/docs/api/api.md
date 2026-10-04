@@ -66,7 +66,6 @@ print(result)
 | `seed` | `int` | `None` | Shared CV/bootstrap seed; `0` is a valid seed |
 | `retain_model` | `bool` | `False` | Retain training data, enabling `predict()` on the result |
 | `custom_weights` | `list[float]` | `None` | Per-observation case weights — passed to `fit()`, not the constructor |
-| `return_derivative` | `bool` | `False` | Include the per-point local fit derivative (slope) in result |
 
 ## Options
 
@@ -181,6 +180,7 @@ The batch `Lowess` class can optionally run on a GPU-accelerated backend powered
 *See: [`Diagnostics`](#diagnostics)*
 
 Use `outputs=["diagnostics", "residuals", "weights", "derivative", "se", "sorted"]` to select optional result components. AIC/AICc/`effective_df` additionally require `"se"` (or confidence/prediction intervals) to be populated.
+The `"derivative"` output includes each point's local WLS slope in `LowessResult.derivative` at effectively no extra computation cost.
 
 ### outputs: se
 
@@ -224,13 +224,6 @@ Retains the fitted model's training data, enabling `LowessResult.predict(new_x, 
 
 Per-observation weights, passed to `fit()` rather than the constructor.
 
-### return_derivative
-
-Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `LowessResult.derivative`, enabling turning-point/rate-of-change analysis at effectively no extra computation cost.
-
-- `False` (default) — leaves `result.derivative` as `None`
-- `True` — populates it
-
 ## Result Structure
 
 ### `LowessResult`
@@ -250,7 +243,7 @@ Each point's local WLS fit already computes a slope internally; this exposes tha
 | `robustness_weights` | `ndarray \| None` | Robustness weights (if `"weights"` was requested) |
 | `cv_scores` | `ndarray \| None` | CV score per tested fraction |
 | `diagnostics` | `Diagnostics \| None` | Fit metrics (if `"diagnostics"` was requested) |
-| `derivative` | `ndarray \| None` | Per-point local fit derivative/slope (if `return_derivative`) |
+| `derivative` | `ndarray \| None` | Per-point local fit derivative/slope (if `"derivative"` was requested) |
 
 ### `Diagnostics`
 

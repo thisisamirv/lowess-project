@@ -79,7 +79,6 @@ print(final_result)
 | `outputs` | `Sequence[str]` | `[]` | Select optional output components |
 | `intervals` | `dict` | `None` | Grouped `confidence`, `prediction`, and per-chunk `bootstrap` options |
 | `seed` | `int` | `None` | Reproducible bootstrap draws for each combined chunk |
-| `return_derivative` | `bool` | `False` | Include the per-point local fit derivative (slope) in result |
 
 Cross-validation, GPU `backend`, `custom_weights`, and `"sorted"` are Batch-only and not available here; see [fastLowess](api.md) for those. Standard errors and confidence/prediction intervals are computed per chunk the same way Batch computes them, then blended across overlap regions via `merge_strategy` like `y`/`derivative` are.
 
@@ -208,10 +207,7 @@ Enable multi-threaded execution via Rayon.
 
 *See: [`Diagnostics`](#diagnostics)*
 
-Use `outputs=["diagnostics", "residuals", "weights", "derivative", "se"]` to select optional components. `effective_df`/`aic`/`aicc` remain unavailable per chunk.
-
-- `False` (default) — leaves `result.diagnostics` as `None`
-- `True` — populates `result.diagnostics`
+Use `outputs=["diagnostics", "residuals", "weights", "derivative", "se"]` to select optional components. `"derivative"` includes each point's local WLS slope in `LowessResult.derivative`. `effective_df`/`aic`/`aicc` remain unavailable per chunk.
 
 ### outputs: se
 
@@ -219,22 +215,9 @@ Use `outputs=["diagnostics", "residuals", "weights", "derivative", "se"]` to sel
 
 Computes standard errors per chunk the same way Batch does, then merges the overlap region across chunk boundaries the same way `y`/`derivative` are, via `merge_strategy`.
 
-- `False` (default) — leaves `result.standard_errors` as `None`
-- `True` — populates it
-
 ### outputs: residuals
 
 Include per-point residuals (`y - fitted`) in the result.
-
-- `False` (default) — leaves `result.residuals` as `None`
-- `True` — populates `result.residuals`
-
-### outputs: weights
-
-Include the final per-point robustness weights (from the last robustness iteration) in the result.
-
-- `False` (default) — leaves `result.robustness_weights` as `None`
-- `True` — populates `result.robustness_weights`
 
 ### intervals
 
@@ -246,12 +229,9 @@ A dict such as `{"confidence": 0.95, "prediction": 0.95, "bootstrap": 200}`, pop
 
 Seeds bootstrap draws. Each combined chunk restarts from the same seed. It does not enable bootstrap by itself; `0` is a valid seed.
 
-### return_derivative
+### outputs: weights
 
-Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `LowessResult.derivative` at effectively no extra computation cost. Derivative values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
-
-- `False` (default) — leaves `result.derivative` as `None`
-- `True` — populates it
+Include the final per-point robustness weights (from the last robustness iteration) in the result.
 
 ## Result Structure
 
@@ -274,7 +254,7 @@ Returned by `process_chunk()` and `finalize()`.
 | `robustness_weights` | `ndarray \| None` | Robustness weights (if `"weights"` was requested) |
 | `cv_scores` | `ndarray \| None` | Always `None` (Batch only) |
 | `diagnostics` | `Diagnostics \| None` | Fit metrics (if `"diagnostics"` was requested) |
-| `derivative` | `ndarray \| None` | Per-point local fit derivative/slope (if `return_derivative`) |
+| `derivative` | `ndarray \| None` | Per-point local fit derivative/slope (if `"derivative"` was requested) |
 
 ### `Diagnostics`
 

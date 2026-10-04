@@ -111,7 +111,7 @@ rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-model = Lowess(; iterations=5, return_robustness_weights=true)
+model = Lowess(; iterations=5, outputs=["weights"])
 result = fit(model, x, y)
 
 shown = 0

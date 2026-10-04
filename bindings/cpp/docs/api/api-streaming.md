@@ -131,23 +131,23 @@ int main() {
 | --- | --- | --- | --- |
 | `fraction` | `double` | 0.67 | Smoothing fraction (bandwidth) |
 | `iterations` | `int` | 3 | Number of robustifying iterations |
-| `chunk_size` | `int` | 5000 | Data chunk size |
-| `overlap` | `int` | chunk_size / 10 | Overlap between chunks |
-| `merge_strategy` | `std::string` | "weighted_average" | Strategy for blending overlap regions |
-| `delta` | `double` | NaN | Interpolation distance (`NaN` auto-sets it to 0.0 in Streaming, i.e. interpolation disabled) |
 | `weight_function` | `std::string` | "tricube" | Weight function name |
 | `robustness_method` | `std::string` | "bisquare" | Robustness method name |
+| `delta` | `double` | NaN | Interpolation distance (`NaN` auto-sets it to 0.0 in Streaming, i.e. interpolation disabled) |
 | `zero_weight_fallback` | `std::string` | "use_local_mean" | Zero-weight handling |
 | `boundary_policy` | `std::string` | "extend" | Boundary handling policy |
 | `scaling_method` | `std::string` | "mad" | Residual scaling method |
 | `auto_converge` | `double` | NaN | Auto-convergence tolerance |
 | `missing` | `std::string` | "error" | Policy for non-finite (NaN/Inf) values in each chunk |
+| `chunk_size` | `int` | 5000 | Data chunk size |
+| `overlap` | `int` | chunk_size / 10 | Overlap between chunks |
+| `merge_strategy` | `std::string` | "weighted_average" | Strategy for blending overlap regions |
 | `parallel` | `bool` | true | Enable parallel execution |
 | `outputs` | `std::vector<std::string>` | `{}` | Request `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"`, or `"se"` |
 | `intervals` | `IntervalsOptions` | disabled | Confidence/prediction levels and per-chunk bootstrap refits |
 | `seed` | `std::optional<uint64_t>` | unset | Reproducible bootstrap draws for each chunk |
 
-Cross-validation, GPU `backend`, `custom_weights`, and `return_sorted` are Batch-only and not available here; see [fastLowess](api.md) for those. Standard errors and confidence/prediction intervals are computed per chunk the same way Batch computes them, then blended across overlap regions via `merge_strategy` like `y_vector()`/`derivative()` are.
+Cross-validation, GPU `backend`, `custom_weights`, and the `"sorted"` output are Batch-only and not available here; see [fastLowess](api.md) for those. Standard errors and confidence/prediction intervals are computed per chunk the same way Batch computes them, then blended across overlap regions via `merge_strategy` like `y_vector()`/`derivative()` are.
 
 ## Options
 
@@ -173,10 +173,6 @@ Cross-validation, GPU `backend`, `custom_weights`, and `return_sorted` are Batch
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-### delta
-
-Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to `0` in Streaming mode, i.e. interpolation is disabled and every point is fit exactly.
-
 ### weight_function
 
 *See: [Weight Functions](../weighting/kernels.md)*
@@ -197,22 +193,9 @@ Points within `delta` of each other on the x-axis share the same local fit inste
 - `"huber"`
 - `"talwar"`
 
-### scaling_method
+### delta
 
-*See: [Scaling Methods](../weighting/scaling.md)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### boundary_policy
-
-*See: [Boundary Handling](../advanced/boundary.md)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
+Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to `0` in Streaming mode, i.e. interpolation is disabled and every point is fit exactly.
 
 ### zero_weight_fallback
 
@@ -224,6 +207,29 @@ Behavior when all neighborhood weights are zero:
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
 
+### boundary_policy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
+### scaling_method
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### auto_converge
+
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+
 ### missing
 
 Policy for handling non-finite (NaN/Inf) values within each chunk:
@@ -234,25 +240,6 @@ Policy for handling non-finite (NaN/Inf) values within each chunk:
 | `"drop"` | Silently remove rows where `x` or `y` is non-finite before merging the chunk with the overlap buffer |
 
 **Note:** A length mismatch between `x` and `y` always errors, even under `"drop"`.
-
-### auto_converge
-
-*See: [Robustness](../weighting/robustness.md#auto-convergence)*
-
-Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
-
-### outputs
-
-*See: [`Diagnostics`](#fastlowessdiagnostics)*
-
-Request `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"`, or `"se"`. The `"se"` output computes standard errors per chunk and merges them across overlap boundaries via `merge_strategy`. `"derivative"` similarly merges local slopes. Diagnostics include RMSE, MAE, R², and residual_sd; effective_df/aic/aicc are unavailable across chunk boundaries even when intervals are enabled.
-
-### parallel
-
-Enable multi-threaded execution via Rayon.
-
-- `true` (default) — parallelizes the local regression fits across CPU cores
-- `false` — forces single-threaded execution
 
 ### chunk_size
 
@@ -275,6 +262,19 @@ Number of points retained from the previous chunk as context, so the neighbourho
 | `"average"` | `"mean"` | Average overlapping values |
 | `"take_first"` | `"first"` | Keep left chunk values |
 | `"take_last"` | `"last"` | Keep right chunk values |
+
+### parallel
+
+Enable multi-threaded execution via Rayon.
+
+- `true` (default) — parallelizes the local regression fits across CPU cores
+- `false` — forces single-threaded execution
+
+### outputs
+
+*See: [`Diagnostics`](#fastlowessdiagnostics)*
+
+Request `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"`, or `"se"`. The `"se"` output computes standard errors per chunk and merges them across overlap boundaries via `merge_strategy`. `"derivative"` similarly merges local slopes. Diagnostics include RMSE, MAE, R², and residual_sd; effective_df/aic/aicc are unavailable across chunk boundaries even when intervals are enabled.
 
 ### intervals
 
@@ -299,10 +299,10 @@ Returned (inside `Expected`) by `process_chunk()` and `finalize()`.
 | `confidence_upper()` | `std::vector<double>` | Populated if `intervals.confidence` was set (empty otherwise) |
 | `prediction_lower()` | `std::vector<double>` | Populated if `intervals.prediction` was set (empty otherwise) |
 | `prediction_upper()` | `std::vector<double>` | Populated if `intervals.prediction` was set (empty otherwise) |
-| `residuals()` | `std::vector<double>` | Residuals (if `return_residuals`; empty if not) |
-| `robustness_weights()` | `std::vector<double>` | Robustness weights (if `return_robustness_weights`; empty if not) |
+| `residuals()` | `std::vector<double>` | Residuals (if `outputs` contains `"residuals"`; empty if not) |
+| `robustness_weights()` | `std::vector<double>` | Robustness weights (if `outputs` contains `"weights"`; empty if not) |
 | `cv_scores()` | `std::vector<double>` | Always empty (Batch only) |
-| `diagnostics()` | `Diagnostics` | Fit metrics — check `has_value()` (if `return_diagnostics`) |
+| `diagnostics()` | `Diagnostics` | Fit metrics — check `has_value()` (if `outputs` contains `"diagnostics"`) |
 | `derivative()` | `std::vector<double>` | Per-point local fit derivative/slope if `"derivative"` was requested (empty otherwise) |
 
 ### fastlowess::Diagnostics

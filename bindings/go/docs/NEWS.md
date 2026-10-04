@@ -18,6 +18,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Changed
 
+* Breaking change: replaced individual `Return*` output fields with `Outputs: []string{...}` for Batch, Streaming, Online, and prediction options.
 * Breaking change: replaced flat interval/CV fields and nested CV seed with grouped options and one outer `Seed *uint64` shared by fit-time CV and bootstrap. `PredictOptions` has its own `Seed` for prediction-time bootstrap.
 * Represent unavailable diagnostic metrics as `nil` optional values instead of `NaN` sentinels.
 

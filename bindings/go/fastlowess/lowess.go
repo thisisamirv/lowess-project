@@ -79,23 +79,6 @@ type Options struct {
 	// Seed is shared by CV and fit-time bootstrap; nil uses their defaults.
 	Seed *uint64
 
-	// ReturnDiagnostics requests fit-quality metrics (RMSE, MAE, R-squared, AIC, etc.).
-	ReturnDiagnostics bool
-	// ReturnResiduals requests residuals in the result.
-	ReturnResiduals bool
-	// ReturnRobustnessWeights requests per-point robustness weights in the result.
-	ReturnRobustnessWeights bool
-	// ReturnDerivative requests the per-point local fit derivative (slope) in the result.
-	ReturnDerivative bool
-	// ReturnSE requests hat-matrix statistics (effective degrees of freedom,
-	// leverage, standard errors). Batch model only.
-	ReturnSE bool
-	// ReturnSorted requests results sorted ascending by x instead of in the
-	// original input order. Batch model only. To get both orderings without
-	// re-fitting, sort the default (unsorted) result client-side rather than
-	// calling Fit twice.
-	ReturnSorted bool
-
 	// Parallel enables parallel processing. DefaultOptions value: true. The zero-value
 	// Options struct leaves this false.
 	Parallel bool
@@ -261,21 +244,21 @@ func NewLowess(opts Options) (*Lowess, error) {
 			wf, rm, sm, bp,
 			optFloat(ciValue, ciSet),
 			optFloat(piValue, piSet),
-			boolToCInt(opts.ReturnDiagnostics || hasOutput(opts.Outputs, "diagnostics")),
-			boolToCInt(opts.ReturnResiduals || hasOutput(opts.Outputs, "residuals")),
-			boolToCInt(opts.ReturnRobustnessWeights || hasOutput(opts.Outputs, "weights")),
+			boolToCInt(hasOutput(opts.Outputs, "diagnostics")),
+			boolToCInt(hasOutput(opts.Outputs, "residuals")),
+			boolToCInt(hasOutput(opts.Outputs, "weights")),
 			zwf,
 			optFloat(autoConverge, autoConvergeSet),
 			cvFracPtr, cvFracLen,
 			cvMethod,
 			C.int(cvK),
 			boolToCInt(opts.Parallel),
-			boolToCInt(opts.ReturnSE || hasOutput(opts.Outputs, "se")),
-			boolToCInt(opts.ReturnSorted || hasOutput(opts.Outputs, "sorted")),
+			boolToCInt(hasOutput(opts.Outputs, "se")),
+			boolToCInt(hasOutput(opts.Outputs, "sorted")),
 			backend,
 			missing,
 			boolToCInt(opts.RetainModel),
-			boolToCInt(opts.ReturnDerivative || hasOutput(opts.Outputs, "derivative")),
+			boolToCInt(hasOutput(opts.Outputs, "derivative")),
 		)
 		if ptr == nil {
 			errMsg = lastError()

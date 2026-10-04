@@ -73,13 +73,11 @@ result.ifPresent(r -> System.out.println(r.y()));
 |`outputs(String...)` |`String...` |empty |Select `se`, `weights`, and/or `derivative`; `se` requires `updateMode("full")`
 |`intervals(IntervalsOptions)` |`IntervalsOptions` |disabled |Confidence/prediction levels and per-window bootstrap refits (`updateMode("full")` only)
 |`seed(long)` |`long` |unset |Reproducible bootstrap draws for each full-update window
-|`returnRobustnessWeights` |`boolean` |`false` |Include `robustnessWeight()` in result
-|`returnDerivative` |`boolean` |`false` |Include the latest point's local fit derivative (slope) in the result
 |===
 
 Incremental mode fits only the newest point. Positive `delta` is rejected there, and `autoConverge` requires full mode with at least one robustness iteration.
 
-Cross-validation, GPU `backend`, `customWeights`, `returnSorted`, `returnDiagnostics`, `returnResiduals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see xref:./api.adoc[API] for those.
+Cross-validation, GPU `backend`, `customWeights`, the `sorted` output, and `parallel` are Batch-only; the `diagnostics` and `residuals` outputs are unavailable online. See xref:./api.adoc[API] for those options.
 
 == Options
 
@@ -203,6 +201,16 @@ _See: xref:../guide/adapter-choice.adoc[Execution Modes]_
 |`"full"` |`"resmooth"` |Recompute entire window |More accurate
 |===
 
+=== outputs: weights
+
+Select `"weights"` to include the robustness weight for the latest point (from the last robustness iteration) in the result.
+
+
+=== outputs: derivative
+
+Each point's local WLS fit already computes a slope internally; this exposes the latest point's slope (rate of change of the smoothed curve) via `PointResult.derivative()` at effectively no extra computation cost.
+
+
 === intervals
 
 _See: xref:../guide/intervals.adoc[Intervals]_
@@ -212,20 +220,6 @@ Build with `IntervalsOptions.builder()`. Requires `updateMode("full")`; incremen
 === seed
 
 Seeds bootstrap draws. Each full-update window restarts from the same seed. It does not enable bootstrap by itself; `0` is valid.
-
-=== returnRobustnessWeights
-
-Include the robustness weight for the latest point (from the last robustness iteration) in the result.
-
-* `false` (default) — leaves `robustnessWeight()` empty
-* `true` — populates `robustnessWeight()`
-
-=== returnDerivative
-
-Each point's local WLS fit already computes a slope internally; this exposes the latest point's slope (rate of change of the smoothed curve) via `PointResult.derivative()` at effectively no extra computation cost.
-
-* `false` (default) — leaves `derivative()` empty
-* `true` — populates `derivative()`
 
 == Result Structure
 
@@ -241,13 +235,13 @@ Returned by `addPoint` once the window has enough points (`Optional.empty()` unt
 |`standardError()` |`OptionalDouble` |`"se"` output or any interval (requires `updateMode("full")`).
 |`confidenceLower()`, `confidenceUpper()` |`OptionalDouble` |`intervals` confidence set.
 |`predictionLower()`, `predictionUpper()` |`OptionalDouble` |`intervals` prediction set.
-|`residual()` |`OptionalDouble` |Residual y minus smoothed; always populated (there is no `returnResiduals` option for Online).
-|`robustnessWeight()` |`OptionalDouble` |Robustness weight, if `returnRobustnessWeights` was set.
+|`residual()` |`OptionalDouble` |Residual y minus smoothed; always populated (there is no `"residuals"` output for Online).
+|`robustnessWeight()` |`OptionalDouble` |Robustness weight, if `"weights"` was requested.
 |`iterationsUsed()` |`OptionalInt` |Robustness iterations performed.
-|`derivative()` |`OptionalDouble` |Local fit derivative/slope for the latest point, if `returnDerivative` was set.
+|`derivative()` |`OptionalDouble` |Local fit derivative/slope for the latest point, if `"derivative"` was requested.
 |===
 
-There is no diagnostics accessor or `returnDiagnostics` option for `OnlineLowess`: `PointResult` carries no diagnostics field, since diagnostics like RMSE/R^2^ need more than one point's worth of history to be meaningful.
+There is no diagnostics accessor or `"diagnostics"` output for `OnlineLowess`: `PointResult` carries no diagnostics field, since diagnostics like RMSE/R^2^ need more than one point's worth of history to be meaningful.
 
 == Example
 

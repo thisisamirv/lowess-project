@@ -42,7 +42,7 @@ class OnlineLowessTest {
     @Test
     void returnSeAndIntervalsRequiresFullMode() {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> new OnlineLowess(
-                OnlineOptions.builder().fraction(0.5).windowCapacity(10).minPoints(3).returnSe(true).build()));
+                OnlineOptions.builder().fraction(0.5).windowCapacity(10).minPoints(3).outputs("se").build()));
         assertTrue(ex.getMessage() != null && !ex.getMessage().isEmpty());
     }
 
@@ -54,7 +54,7 @@ class OnlineLowessTest {
                         .windowCapacity(10)
                         .minPoints(3)
                         .updateMode("full")
-                        .returnSe(true)
+                        .outputs("se")
                         .intervals(IntervalsOptions.builder().confidence(0.95).prediction(0.95).build())
                         .build())) {
             Optional<PointResult> last = Optional.empty();

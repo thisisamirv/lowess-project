@@ -15,6 +15,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Changed
 
+* Breaking change: replaced individual `return_*` output keywords with `outputs=[...]` for Batch, Streaming, Online, and prediction.
 * Breaking change: replaced flat interval keywords and `predict`'s interval levels with `intervals=(confidence=..., prediction=..., bootstrap=...)`, and replaced flat CV keywords and the nested `cv` seed with `cv=(method=..., k=..., fractions=...)` plus one outer `seed` shared by CV and bootstrap. `predict` has its own `seed`; `seed=0` is a valid seed.
 * Represent unavailable diagnostic metrics as `nothing` instead of `NaN` sentinels.
 

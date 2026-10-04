@@ -133,10 +133,6 @@ int main() {
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-### delta
-
-Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to 1% of the x-range. Set it to `0` explicitly to disable interpolation and fit every point exactly.
-
 ### weight_function
 
 *See: [Weight Functions](../weighting/kernels.md)*
@@ -157,22 +153,9 @@ Points within `delta` of each other on the x-axis share the same local fit inste
 - `"huber"`
 - `"talwar"`
 
-### scaling_method
+### delta
 
-*See: [Scaling Methods](../weighting/scaling.md)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### boundary_policy
-
-*See: [Boundary Handling](../advanced/boundary.md)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
+Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to 1% of the x-range. Set it to `0` explicitly to disable interpolation and fit every point exactly.
 
 ### zero_weight_fallback
 
@@ -183,6 +166,29 @@ Behavior when all neighborhood weights are zero:
 | `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### boundary_policy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
+### scaling_method
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### auto_converge
+
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
 
 ### missing
 
@@ -195,26 +201,6 @@ Policy for handling non-finite (NaN/Inf) values in `x`/`y` (and `custom_weights`
 
 **Note:** A length mismatch between `x` and `y` always errors, even under `"drop"`.
 
-### auto_converge
-
-*See: [Robustness](../weighting/robustness.md#auto-convergence)*
-
-Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
-
-### intervals
-
-*See: [Intervals](../guide/intervals.md)*
-
-Set `intervals.confidence` and/or `intervals.prediction` independently; for example, use `0.90` for confidence coverage and `0.99` for prediction coverage. Both default to `NaN` (disabled). Set `intervals.bootstrap` to at least 2 to replace analytic uncertainty with residual-bootstrap refits. `seed` controls both CV and bootstrap when configured; it does not enable either by itself.
-
-### outputs
-
-*See: [`Diagnostics`](#fastlowessdiagnostics)*
-
-Request any of `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"`, `"se"`, or `"sorted"`. The `"se"` output computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) as well as standard errors. AIC/AICc/effective degrees of freedom also require `"se"` or intervals to be populated.
-
-`"sorted"` reorders every result field (residuals, intervals, etc.) by `x` in ascending order instead of original input order. To get both orderings, sort the default result client-side (e.g. via `std::sort` over an index vector) instead of calling `fit()` twice.
-
 ### parallel
 
 Enable multi-threaded execution via Rayon.
@@ -226,6 +212,20 @@ Enable multi-threaded execution via Rayon.
 
 The batch `fastlowess::Lowess` class can optionally run on a GPU-accelerated backend powered by `wgpu`, for high-throughput processing of large datasets (10k+ points). See the [GPU Backend guide](../advanced/gpu-backend.md) for installation, usage, supported features, and hardware requirements.
 
+### outputs
+
+*See: [`Diagnostics`](#fastlowessdiagnostics)*
+
+Request any of `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"`, `"se"`, or `"sorted"`. The `"se"` output computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) as well as standard errors. AIC/AICc/effective degrees of freedom also require `"se"` or intervals to be populated.
+
+`"sorted"` reorders every result field (residuals, intervals, etc.) by `x` in ascending order instead of original input order. To get both orderings, sort the default result client-side (e.g. via `std::sort` over an index vector) instead of calling `fit()` twice.
+
+### intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Set `intervals.confidence` and/or `intervals.prediction` independently; for example, use `0.90` for confidence coverage and `0.99` for prediction coverage. Both default to `NaN` (disabled). Set `intervals.bootstrap` to at least 2 to replace analytic uncertainty with residual-bootstrap refits. `seed` controls both CV and bootstrap when configured; it does not enable either by itself.
+
 ### CV Options
 
 *See: [Cross-Validation](../guide/cross-validation.md)*
@@ -235,17 +235,17 @@ The batch `fastlowess::Lowess` class can optionally run on a GPU-accelerated bac
 - `cv.fractions`: Candidate fractions to evaluate; empty disables CV.
 - `seed`: Reproducible k-fold shuffling and bootstrap draws; unset uses each feature's default, while zero is a valid seed.
 
-### custom_weights
-
-*See: [Custom Weights](../weighting/custom-weights.md)*
-
-Per-observation weights, passed to `fit()` rather than the constructor.
-
 ### retain_model
 
 *See: [Predict](../guide/predict.md)*
 
 Retains the fitted model's training data, enabling `LowessResult::predict_model()` to obtain a `PredictModel` for out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
+
+### custom_weights
+
+*See: [Custom Weights](../weighting/custom-weights.md)*
+
+Per-observation weights, passed to `fit()` rather than the constructor.
 
 ## Result Structure
 
@@ -264,10 +264,10 @@ A RAII wrapper around the C result struct `fastlowess_CppLowessResult`.
 | `confidence_upper()` | `std::vector<double>` | Upper confidence bounds (empty if not computed) |
 | `prediction_lower()` | `std::vector<double>` | Lower prediction bounds (empty if not computed) |
 | `prediction_upper()` | `std::vector<double>` | Upper prediction bounds (empty if not computed) |
-| `residuals()` | `std::vector<double>` | Residuals (if `return_residuals`; empty if not computed) |
-| `robustness_weights()` | `std::vector<double>` | Robustness weights (if `return_robustness_weights`; empty if not computed) |
+| `residuals()` | `std::vector<double>` | Residuals (if `outputs` contains `"residuals"`; empty if not computed) |
+| `robustness_weights()` | `std::vector<double>` | Robustness weights (if `outputs` contains `"weights"`; empty if not computed) |
 | `cv_scores()` | `std::vector<double>` | CV score per tested fraction (empty if CV not run) |
-| `diagnostics()` | `Diagnostics` | Fit metrics — check `diagnostics().has_value()` before use (if `return_diagnostics`) |
+| `diagnostics()` | `Diagnostics` | Fit metrics — check `diagnostics().has_value()` before use (if `outputs` contains `"diagnostics"`) |
 | `derivative()` | `std::vector<double>` | Per-point local fit derivative/slope if `"derivative"` was requested (empty otherwise) |
 
 ### fastlowess::Diagnostics

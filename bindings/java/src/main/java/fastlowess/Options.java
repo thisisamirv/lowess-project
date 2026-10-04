@@ -224,52 +224,6 @@ public final class Options {
         }
 
         /**
-         * Whether {@link Result#diagnostics()} should be populated.
-         *
-         * @param returnDiagnostics whether to compute diagnostics
-         * @return this builder, for chaining
-         */
-        public Builder returnDiagnostics(boolean returnDiagnostics) {
-            this.returnDiagnostics = returnDiagnostics;
-            return this;
-        }
-
-        /**
-         * Whether {@link Result#residuals()} should be populated.
-         *
-         * @param returnResiduals whether to include residuals in the result
-         * @return this builder, for chaining
-         */
-        public Builder returnResiduals(boolean returnResiduals) {
-            this.returnResiduals = returnResiduals;
-            return this;
-        }
-
-        /**
-         * Whether {@link Result#robustnessWeights()} should be populated.
-         *
-         * @param returnRobustnessWeights whether to include robustness weights
-         * in the result
-         * @return this builder, for chaining
-         */
-        public Builder returnRobustnessWeights(boolean returnRobustnessWeights) {
-            this.returnRobustnessWeights = returnRobustnessWeights;
-            return this;
-        }
-
-        /**
-         * Whether {@link Result#derivative()} should be populated.
-         *
-         * @param returnDerivative whether to include the per-point local fit
-         * derivative (slope) in the result
-         * @return this builder, for chaining
-         */
-        public Builder returnDerivative(boolean returnDerivative) {
-            this.returnDerivative = returnDerivative;
-            return this;
-        }
-
-        /**
          * Whether to use the multi-threaded execution path (default
          * {@code true}).
          *
@@ -278,31 +232,6 @@ public final class Options {
          */
         public Builder parallel(boolean parallel) {
             this.parallel = parallel;
-            return this;
-        }
-
-        /**
-         * Whether {@link Result#standardErrors()} should be populated.
-         *
-         * @param returnSe whether to return standard errors
-         * @return this builder, for chaining
-         */
-        public Builder returnSe(boolean returnSe) {
-            this.returnSe = returnSe;
-            return this;
-        }
-
-        /**
-         * Whether to return results sorted ascending by x instead of in the
-         * original input order (Batch only). To get both orderings without
-         * re-fitting, sort the default (unsorted) result client-side rather
-         * than calling {@link Lowess#fit} twice.
-         *
-         * @param returnSorted whether to return results sorted ascending by x
-         * @return this builder, for chaining
-         */
-        public Builder returnSorted(boolean returnSorted) {
-            this.returnSorted = returnSorted;
             return this;
         }
 

@@ -63,7 +63,7 @@ test('WASM batch smoothing', () => {
 
     const result = new fastlowess.Lowess({
         fraction: 0.3,
-        return_diagnostics: true
+        outputs: ["diagnostics"]
     }).fit(x, y);
 
     assert.strictEqual(result.x.length, 5);
@@ -87,9 +87,7 @@ test('WASM return_sorted = true returns results sorted ascending by x', () => {
 
     const result = new fastlowess.Lowess({
         fraction: 0.7,
-        return_residuals: true,
-        return_robustness_weights: true,
-        return_sorted: true
+        outputs: ["residuals", "weights", "sorted"]
     }).fit(x, y);
 
     for (let i = 1; i < result.x.length; i++) {
@@ -99,8 +97,7 @@ test('WASM return_sorted = true returns results sorted ascending by x', () => {
 
     const unsortedResult = new fastlowess.Lowess({
         fraction: 0.7,
-        return_residuals: true,
-        return_robustness_weights: true
+        outputs: ["residuals", "weights"]
     }).fit(x, y);
 
     const sortedPairs = Array.from(result.x).map((xv, i) => [xv, result.y[i]]).sort();
@@ -279,7 +276,7 @@ test('WASM online missing: "drop" ignores non-finite point', () => {
 test('WASM streaming: return_se and grouped intervals', () => {
     const streamer = new fastlowess.StreamingLowess({
         fraction: 0.2,
-        return_se: true,
+        outputs: ["se"],
         intervals: { confidence: 0.95, prediction: 0.95 }
     }, {
         chunk_size: 50
@@ -304,7 +301,7 @@ test('WASM online: return_se and intervals require update_mode "full"', () => {
     assert.throws(() => {
         new fastlowess.OnlineLowess({
             fraction: 0.5,
-            return_se: true
+            outputs: ["se"]
         }, {
             window_capacity: 10,
             min_points: 3
@@ -315,7 +312,7 @@ test('WASM online: return_se and intervals require update_mode "full"', () => {
 test('WASM online: return_se and grouped intervals', () => {
     const online = new fastlowess.OnlineLowess({
         fraction: 0.5,
-        return_se: true,
+        outputs: ["se"],
         intervals: { confidence: 0.95, prediction: 0.95 }
     }, {
         window_capacity: 10,

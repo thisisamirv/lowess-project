@@ -10,11 +10,12 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Added
 
-* Added grouped `outputs` arrays and nested `cv` options for batch, streaming, online, and prediction configuration while preserving legacy fields.
+* Added grouped `outputs` arrays and nested `cv` options for batch, streaming, online, and prediction configuration.
 * Added a grouped `intervals` option with residual-bootstrap intervals for `Lowess`, `StreamingLowess`, full-update `OnlineLowess`, and `LowessResult.predict()`.
 
 ### Changed
 
+* Breaking change: replaced individual `return_*` output booleans with `outputs: [...]` for Batch, Streaming, Online, and prediction options.
 * Breaking change: replaced flat interval options and `predict()`'s interval levels with `intervals: { confidence, prediction, bootstrap }`, and replaced flat CV options and `cv.seed` with `cv: { method, k, fractions }` plus one outer `seed` shared by CV and bootstrap. `predict()` has its own `seed`.
 
 ### Fixed

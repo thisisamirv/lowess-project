@@ -21,9 +21,9 @@ Requires `.retain_model(true)` on the builder before `fit()`, otherwise `.call(.
 | Method | Argument Type | Default | Description |
 | --- | --- | --- | --- |
 | `outputs([&str])` | `&[&str]` | `[]` | Select `"se"` and/or `"derivative"` |
+| `return_derivative()` | `bool` | `false` | Include the local fit's derivative (slope) at each query point |
 | `intervals(IntervalsBuilder)` | grouped options | disabled | Confidence and prediction coverage levels; optional residual bootstrap refits |
 | `seed(u64)` | `u64` | fixed default for bootstrap | Reproducible bootstrap draws (does not enable bootstrap by itself) |
-| `return_derivative()` | `bool` | `false` | Include the local fit's derivative (slope) at each query point |
 | `extrapolation(...)` | `&str` | `"clamp"` | Behavior for query points outside the training `x`-range |
 | `max_extrapolation_distance(T)` | `T: Float` | disabled | Under `"linear"` extrapolation, the max allowed distance beyond the training boundary before erroring |
 | `max_neighbor_distance(T)` | `T: Float` | disabled | Max allowed distance to the farthest training point in a query's local window before erroring |

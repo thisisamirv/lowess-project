@@ -125,12 +125,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Go:**
 
+- Breaking change: removed standalone output booleans from fit and prediction options; use `Outputs` for optional components.
 - Breaking change: moved the CV/bootstrap seed to one optional outer `Seed` on fit options, with a separate prediction-time `Seed` on `PredictOptions`; removed the older flat interval and CV fields.
 - Represent unavailable diagnostic metrics as `nil` optional values instead of `NaN` sentinels.
 - Bumped the pinned `golangci-lint` install-script version from `v2.13.2` to `v2.14.0`.
 
 **Java:**
 
+- Breaking change: removed standalone output builder methods and prediction flags; use `outputs(...)` for optional components.
 - Breaking change: replaced flat `confidenceIntervals`/`predictionIntervals` setters (and `PredictOptions` `confidenceLevel`/`predictionLevel`) with `intervals(IntervalsOptions)`; removed flat `cvFractions`/`cvMethod`/`cvK`/`cvSeed` setters and `CVOptions.seed` in favor of `cv(CVOptions)` plus one outer `seed(long)` shared by CV and fit-time bootstrap. `PredictOptions` has its own `seed`. Seeds are now interpreted as unsigned 64-bit values instead of rejecting negatives.
 - Bumped the pinned Checkstyle standalone jar version from `14.1.0` to `14.3.0`.
 - Fixed retained-model handles leaking when JNI result construction fails, silent empty CV/weight arrays, invalid k-fold and iteration coercion, JNI array error swallowing, and unsupported GPU installer targets/local archives.
@@ -138,15 +140,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Julia:**
 
+- Breaking change: removed standalone output keywords from fit and prediction; use `outputs` for optional components.
 - Breaking change: replaced `confidence_intervals`/`prediction_intervals` (and `predict`'s `confidence_level`/`prediction_level`) with `intervals`; removed `cv_fractions`/`cv_method`/`cv_k`/`cv_seed` and the nested `cv` seed in favor of `cv=(method, k, fractions)` plus one outer `seed` shared by CV and fit-time bootstrap. `predict` has its own `seed`, and `seed=0` is now a real seed instead of meaning "unset". Unknown `cv`/`intervals` keys raise `ArgumentError`.
 - Represent unavailable diagnostic metrics as `nothing` instead of `NaN` sentinels.
 
 **Node.js:**
 
+- Breaking change: removed standalone output booleans from fit and prediction options; use `outputs` for optional components.
 - Breaking change: replaced `confidence_intervals`/`prediction_intervals` (and `predict()`'s `confidence_level`/`prediction_level`) with `intervals`; removed `cv_fractions`/`cv_method`/`cv_k`/`cv_seed` and `cv.seed` in favor of `cv: { method, k, fractions }` plus one outer `seed` shared by CV and fit-time bootstrap. `predict()` has its own `seed`. Negative seeds throw.
 
 **Python:**
 
+- Breaking change: removed standalone fit-output keywords, including `return_derivative`; select optional components through `outputs`.
 - Breaking change: replaced `confidence_intervals`/`prediction_intervals` (and `predict()`'s `confidence_level`/`prediction_level`/`return_se`/`return_derivative`) with `intervals` and `outputs`; removed `cv_fractions`/`cv_method`/`cv_k`/`cv_seed` and the `cv` dict's `seed` in favor of `cv={"method", "k", "fractions"}` plus one outer `seed` shared by CV and fit-time bootstrap. `predict()` has its own `seed`. Unknown `cv`/`intervals` keys raise `ValueError`.
 - Refactored the internal `parse_cv_options` helper to return a named `ParsedCvOptions` struct, reducing signature type complexity so strict clippy (`-D warnings`) passes in `python-dev`.
 
@@ -164,6 +169,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **WASM:**
 
+- Breaking change: removed standalone output booleans from fit and prediction options and TypeScript declarations; use `outputs` for optional components.
 - Breaking change: replaced `confidence_intervals`/`prediction_intervals` (and `predict()`'s `confidence_level`/`prediction_level`) with `intervals`; removed `cv_fractions`/`cv_method`/`cv_k`/`cv_seed` and `cv.seed` in favor of `cv: { method, k, fractions }` plus one outer `seed` shared by CV and fit-time bootstrap. `predict()` has its own `seed`.
 
 ### Fixed

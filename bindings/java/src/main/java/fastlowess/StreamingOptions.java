@@ -168,68 +168,6 @@ public final class StreamingOptions {
         }
 
         /**
-         * Whether {@link Result#diagnostics()} should be populated.
-         *
-         * @param returnDiagnostics whether to compute diagnostics
-         * @return this builder, for chaining
-         * @see Options.Builder#returnDiagnostics(boolean)
-         */
-        public Builder returnDiagnostics(boolean returnDiagnostics) {
-            common.returnDiagnostics(returnDiagnostics);
-            return this;
-        }
-
-        /**
-         * Whether {@link Result#residuals()} should be populated.
-         *
-         * @param returnResiduals whether to include residuals in the result
-         * @return this builder, for chaining
-         * @see Options.Builder#returnResiduals(boolean)
-         */
-        public Builder returnResiduals(boolean returnResiduals) {
-            common.returnResiduals(returnResiduals);
-            return this;
-        }
-
-        /**
-         * Whether {@link Result#robustnessWeights()} should be populated.
-         *
-         * @param returnRobustnessWeights whether to include robustness weights
-         * in the result
-         * @return this builder, for chaining
-         * @see Options.Builder#returnRobustnessWeights(boolean)
-         */
-        public Builder returnRobustnessWeights(boolean returnRobustnessWeights) {
-            common.returnRobustnessWeights(returnRobustnessWeights);
-            return this;
-        }
-
-        /**
-         * Whether {@link Result#derivative()} should be populated.
-         *
-         * @param returnDerivative whether to include the per-point local fit
-         * derivative (slope) in the result
-         * @return this builder, for chaining
-         * @see Options.Builder#returnDerivative(boolean)
-         */
-        public Builder returnDerivative(boolean returnDerivative) {
-            common.returnDerivative(returnDerivative);
-            return this;
-        }
-
-        /**
-         * Whether {@link Result#standardErrors()} should be populated.
-         *
-         * @param returnSe whether to include standard errors in the result
-         * @return this builder, for chaining
-         * @see Options.Builder#returnSe(boolean)
-         */
-        public Builder returnSe(boolean returnSe) {
-            common.returnSe(returnSe);
-            return this;
-        }
-
-        /**
          * Confidence/prediction intervals and optional residual-bootstrap
          * refits, computed per combined chunk and blended across overlaps.
          *

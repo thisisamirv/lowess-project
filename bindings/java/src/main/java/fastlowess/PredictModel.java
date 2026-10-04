@@ -44,10 +44,10 @@ public final class PredictModel implements AutoCloseable {
         NativePredictResult r = NativeBridge.predict(
                 handle,
                 newX,
-                options.returnSe(),
+                options.outputs().contains("se"),
                 iv.confidence,
                 iv.prediction,
-                options.returnDerivative(),
+                options.outputs().contains("derivative"),
                 options.extrapolation(),
                 options.maxExtrapolationDistance(),
                 options.maxNeighborDistance(),

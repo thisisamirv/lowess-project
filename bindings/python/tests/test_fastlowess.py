@@ -58,7 +58,7 @@ class TestLowess:
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
 
-        lowess = fastlowess.Lowess(fraction=0.5, return_diagnostics=True)
+        lowess = fastlowess.Lowess(fraction=0.5, outputs=["diagnostics"])
         result = lowess.fit(x, y)
 
         assert result.diagnostics is not None
@@ -74,7 +74,7 @@ class TestLowess:
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
 
-        lowess = fastlowess.Lowess(fraction=0.5, return_residuals=True)
+        lowess = fastlowess.Lowess(fraction=0.5, outputs=["residuals"])
         result = lowess.fit(x, y)
 
         assert result.residuals is not None
@@ -85,9 +85,7 @@ class TestLowess:
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([2.0, 4.1, 100.0, 8.2, 9.8])  # Outlier
 
-        lowess = fastlowess.Lowess(
-            fraction=0.7, iterations=3, return_robustness_weights=True
-        )
+        lowess = fastlowess.Lowess(fraction=0.7, iterations=3, outputs=["weights"])
         result = lowess.fit(x, y)
 
         assert result.robustness_weights is not None
@@ -101,7 +99,7 @@ class TestLowess:
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
 
-        lowess = fastlowess.Lowess(fraction=0.7, return_derivative=True)
+        lowess = fastlowess.Lowess(fraction=0.7, outputs=["derivative"])
         result = lowess.fit(x, y)
 
         assert result.derivative is not None
@@ -220,7 +218,7 @@ class TestLowess:
         x2 = np.array([10.0, 20.0, 30.0, 40.0, 50.0])
         y2 = np.array([20.0, 40.0, 60.0, 80.0, 100.0])
 
-        lowess = fastlowess.Lowess(fraction=0.5, return_diagnostics=True)
+        lowess = fastlowess.Lowess(fraction=0.5, outputs=["diagnostics"])
 
         result1 = lowess.fit(x1, y1)
         result2 = lowess.fit(x2, y2)
@@ -326,7 +324,7 @@ class TestStreamingLowess:
         y = np.sin(x / 10)
 
         streaming = fastlowess.StreamingLowess(
-            fraction=0.1, chunk_size=50, return_residuals=True
+            fraction=0.1, chunk_size=50, outputs=["residuals"]
         )
         chunk_result = streaming.process_chunk(x, y)
         final_result = streaming.finalize()
@@ -371,7 +369,7 @@ class TestStreamingLowess:
         streaming = fastlowess.StreamingLowess(
             fraction=0.2,
             chunk_size=50,
-            return_se=True,
+            outputs=["se"],
             intervals={"confidence": 0.95, "prediction": 0.95},
         )
         chunk_result = streaming.process_chunk(x, y)
@@ -454,7 +452,7 @@ class TestOnlineLowess:
         """Test online return_se/CI/PI require update_mode="full"."""
         with pytest.raises(ValueError):
             fastlowess.OnlineLowess(
-                fraction=0.5, window_capacity=10, min_points=3, return_se=True
+                fraction=0.5, window_capacity=10, min_points=3, outputs=["se"]
             )
 
     def test_online_return_se_and_intervals(self):
@@ -467,7 +465,7 @@ class TestOnlineLowess:
             window_capacity=10,
             min_points=3,
             update_mode="full",
-            return_se=True,
+            outputs=["se"],
             intervals={"confidence": 0.95, "prediction": 0.95},
         )
 
@@ -527,7 +525,7 @@ class TestDiagnostics:
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([2.0, 4.0, 6.0, 8.0, 10.0])
 
-        lowess = fastlowess.Lowess(fraction=0.5, return_diagnostics=True)
+        lowess = fastlowess.Lowess(fraction=0.5, outputs=["diagnostics"])
         result = lowess.fit(x, y)
         assert result.diagnostics is not None
 
@@ -542,7 +540,7 @@ class TestDiagnostics:
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([2.0, 4.0, 6.0, 8.0, 10.0])  # Perfect linear
 
-        lowess = fastlowess.Lowess(fraction=0.5, return_diagnostics=True)
+        lowess = fastlowess.Lowess(fraction=0.5, outputs=["diagnostics"])
         result = lowess.fit(x, y)
 
         diag = result.diagnostics
@@ -804,9 +802,7 @@ class TestEdgeCases:
 
         lowess = fastlowess.Lowess(
             fraction=0.7,
-            return_residuals=True,
-            return_robustness_weights=True,
-            return_sorted=True,
+            outputs=["residuals", "weights", "sorted"],
         )
         result = lowess.fit(x, y)
 
@@ -816,9 +812,7 @@ class TestEdgeCases:
 
         # Same (x, y) pairs as the unsorted-order fit, just reordered.
         unsorted_result = fastlowess.Lowess(
-            fraction=0.7,
-            return_residuals=True,
-            return_robustness_weights=True,
+            fraction=0.7, outputs=["residuals", "weights"]
         ).fit(x, y)
 
         sorted_pairs = sorted(zip(result.x, result.y))
@@ -895,8 +889,7 @@ class TestCrossValidation:
         lowess = fastlowess.Lowess(
             iterations=2,
             cv={"fractions": [0.3, 0.5, 0.7]},
-            return_diagnostics=True,
-            return_residuals=True,
+            outputs=["diagnostics", "residuals"],
         )
         result = lowess.fit(x, y)
 

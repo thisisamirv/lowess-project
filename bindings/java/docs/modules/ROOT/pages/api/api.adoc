@@ -68,10 +68,10 @@ Result result = model.fit(x, y);
 |`parallel` |`boolean` |`true` |Enable parallel processing.
 |`backend` |`String` |`"cpu"` |`cpu` or `gpu` (requires a `gpu`-feature build of the native library).
 |`outputs(String...)` |`String...` |empty |Select `se`, `diagnostics`, `residuals`, `weights`, `derivative`, and/or `sorted`.
+|`retainModel` |`boolean` |`false` |Retain training data, enabling `Result.predictModel()`.
 |`intervals(IntervalsOptions)` |`IntervalsOptions` |disabled |Grouped confidence/prediction levels and optional residual-bootstrap refits.
 |`cv(CVOptions)` |`CVOptions` |`null` (disabled) |Grouped cross-validation configuration.
 |`seed(long)` |`long` |unset |Shared CV/bootstrap seed; `0` is a valid deterministic seed.
-|`retainModel` |`boolean` |`false` |Retain training data, enabling `Result.predictModel()`.
 |===
 
 Use `Options.builder()` (pre-populated with recommended defaults) and override only the settings you need:
@@ -204,6 +204,36 @@ The batch `Lowess` class can optionally run on a GPU-accelerated backend powered
 * `"cpu"` (default)
 * `"gpu"` -- requires a `gpu`-feature build of the native library
 
+=== outputs: se
+
+_See: xref:../guide/intervals.adoc[Intervals]_
+
+Select `"se"` to compute hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) and standard errors.
+
+=== outputs: diagnostics
+
+Select `"diagnostics"` to populate `Result.diagnostics()` (RMSE, MAE, R², AIC/AICc, effective degrees of freedom). AIC/AICc/effective degrees of freedom additionally require `"se"` (or confidence/prediction intervals), since they depend on hat-matrix statistics.
+
+
+=== outputs: residuals
+
+Select `"residuals"` to populate `Result.residuals()` (`y - fitted`).
+
+
+=== outputs: weights
+
+Select `"weights"` to populate `Result.robustnessWeights()` (from the last robustness iteration).
+
+
+=== outputs: derivative
+
+Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) via `Result.derivative()`, enabling turning-point/rate-of-change analysis at effectively no extra computation cost.
+
+
+=== outputs: sorted
+
+When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order. To get both orderings, sort the default result client-side (e.g. via a `Comparator` over the returned `x()` array) instead of calling `fit()` twice.
+
 === intervals
 
 _See: xref:../guide/intervals.adoc[Intervals]_
@@ -223,8 +253,8 @@ _See: xref:../guide/cross-validation.adoc[Cross-Validation]_
 ----
 Options options = Options.builder()
         .cv(CVOptions.builder().method("kfold").k(5)
-            .fractions(0.1, 0.2, 0.3, 0.5).build())
         .seed(42L)
+            .fractions(0.1, 0.2, 0.3, 0.5).build())
         .build();
 
 try (Lowess model = new Lowess(options)) {
@@ -261,44 +291,6 @@ try (Lowess model = new Lowess(Options.builder().build())) {
 }
 ----
 
-=== returnSe
-
-_See: xref:../guide/intervals.adoc[Intervals]_
-
-Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
-
-=== returnDiagnostics
-
-Populate `Result.diagnostics()` (RMSE, MAE, R², AIC/AICc, effective degrees of freedom). AIC/AICc/effective degrees of freedom additionally require `returnSe = true` (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.
-
-* `false` (default) — leaves `Result.diagnostics()` empty
-* `true` — populates `Result.diagnostics()`
-
-=== returnResiduals
-
-Populate `Result.residuals()` (`y - fitted`).
-
-* `false` (default) — leaves `Result.residuals()` empty
-* `true` — populates `Result.residuals()`
-
-=== returnRobustnessWeights
-
-Populate `Result.robustnessWeights()` (from the last robustness iteration).
-
-* `false` (default) — leaves `Result.robustnessWeights()` empty
-* `true` — populates `Result.robustnessWeights()`
-
-=== returnDerivative
-
-Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) via `Result.derivative()`, enabling turning-point/rate-of-change analysis at effectively no extra computation cost.
-
-* `false` (default) — leaves `Result.derivative()` empty
-* `true` — populates `Result.derivative()`
-
-=== returnSorted
-
-When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order. To get both orderings, sort the default result client-side (e.g. via a `Comparator` over the returned `x()` array) instead of calling `fit()` twice.
-
 == Result Structure
 
 === `Result`
@@ -311,13 +303,13 @@ When set to `true`, it reorders every result field (residuals, intervals, etc.) 
 |`standardErrors()` |`Optional<double[]>` |`"se"` output or any interval
 |`confidenceLower()`, `confidenceUpper()` |`Optional<double[]>` |`intervals` confidence set
 |`predictionLower()`, `predictionUpper()` |`Optional<double[]>` |`intervals` prediction set
-|`residuals()` |`Optional<double[]>` |`returnResiduals`
-|`robustnessWeights()` |`Optional<double[]>` |`returnRobustnessWeights`
+|`residuals()` |`Optional<double[]>` |`"residuals"` output
+|`robustnessWeights()` |`Optional<double[]>` |`"weights"` output
 |`cvScores()` |`Optional<double[]>` |`cv` set
 |`fractionUsed()` |`double` |Always.
 |`iterationsUsed()` |`OptionalInt` |Always (empty if not available).
-|`diagnostics()` |`Optional<Diagnostics>` |`returnDiagnostics`
-|`derivative()` |`Optional<double[]>` |`returnDerivative`
+|`diagnostics()` |`Optional<Diagnostics>` |`"diagnostics"` output
+|`derivative()` |`Optional<double[]>` |`"derivative"` output
 |===
 
 === `Diagnostics`

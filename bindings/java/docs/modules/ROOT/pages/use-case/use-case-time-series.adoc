@@ -49,7 +49,7 @@ y[0]: 11.311602696688702
 
 Remove trend to analyze residual patterns.
 
-Setting `returnResiduals = true` stores `observed − smoothed` alongside the smooth. A slightly wider `fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
+Setting `.outputs("residuals")` stores `observed − smoothed` alongside the smooth. A slightly wider `fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
 
 [source,java]
 ----
@@ -70,7 +70,7 @@ public class Example {
         Options options = Options.builder()
                 .fraction(0.3)
                 .iterations(3)
-                .returnResiduals(true)
+                .outputs("residuals")
                 .build();
 
         try (Lowess model = new Lowess(options)) {
@@ -233,7 +233,7 @@ public class Example {
         Options options = Options.builder()
                 .fraction(0.3)
                 .iterations(3)
-                .returnDiagnostics(true)
+                .outputs("diagnostics")
                 .build();
 
         try (Lowess model = new Lowess(options)) {

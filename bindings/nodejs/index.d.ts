@@ -207,24 +207,14 @@ export interface OnlineSmoothOptions {
   intervals?: IntervalsOptions
   /** Bootstrap seed; each full-update window restarts from it. Default: None. */
   seed?: number
-  /** Return robustness weights in result. Default: false. */
-  return_robustness_weights?: boolean
-  /** Return the per-point local fit derivative (slope) in result. Default: false. */
-  return_derivative?: boolean
   /** Policy for non-finite (NaN/Inf) `x`/`y` values passed to `addPoint` ("error", "drop"). Default: "error". */
   missing?: string
-  /** Compute standard errors. Requires `update_mode = "full"`. Default: false. */
-  return_se?: boolean
 }
 
 /** Options for `LowessResult.predict()`. */
 export interface PredictOptions {
   /** Optional output components: se, derivative. */
   outputs?: Array<string>
-  /** Include standard errors in the output. Default: false. */
-  return_se?: boolean
-  /** Include the local fit's derivative (slope) in the output. Default: false. */
-  return_derivative?: boolean
   /** Grouped confidence/prediction levels and optional residual-bootstrap refits. */
   intervals?: IntervalsOptions
   /** Prediction-time bootstrap seed, independent of the fit seed. Default: None. */
@@ -273,21 +263,6 @@ export interface SmoothOptions {
   cv?: CvOptions
   /** Shared seed for k-fold CV and residual bootstrap; 0 is valid. Default: None. */
   seed?: number
-  /** Return residuals in result. Default: false. */
-  return_residuals?: boolean
-  /** Return robustness weights in result. Default: false. */
-  return_robustness_weights?: boolean
-  /** Return the per-point local fit derivative (slope) in result. Default: false. */
-  return_derivative?: boolean
-  /** Return diagnostics (RMSE, etc.). Default: false. */
-  return_diagnostics?: boolean
-  /** Compute standard errors. Default: false. */
-  return_se?: boolean
-  /**
-   * Return results sorted ascending by x instead of in original input order.
-   * Default: false.
-   */
-  return_sorted?: boolean
   /** Enable parallel execution. Default: true. */
   parallel?: boolean
   /**
@@ -346,16 +321,6 @@ export interface StreamingSmoothOptions {
   intervals?: IntervalsOptions
   /** Bootstrap seed; each combined chunk restarts from it. Default: None. */
   seed?: number
-  /** Return residuals in result. Default: false. */
-  return_residuals?: boolean
-  /** Return robustness weights in result. Default: false. */
-  return_robustness_weights?: boolean
-  /** Return the per-point local fit derivative (slope) in result. Default: false. */
-  return_derivative?: boolean
-  /** Return diagnostics (RMSE, etc.). Default: false. */
-  return_diagnostics?: boolean
-  /** Compute standard errors. Default: false. */
-  return_se?: boolean
   /** Enable parallel execution. Default: true. */
   parallel?: boolean
   /** Policy for non-finite (NaN/Inf) values in each chunk ("error", "drop"). Default: "error". */

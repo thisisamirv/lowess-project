@@ -79,13 +79,8 @@ result, err := model.Finalize()
 | `Outputs` | `[]string` | `nil` | Optional components: `se`, `diagnostics`, `residuals`, `weights`, `derivative`. |
 | `Intervals` | `*IntervalsOptions` | `nil` | Confidence/prediction levels and per-chunk bootstrap refits |
 | `Seed` | `*uint64` | `nil` | Reproducible bootstrap draws for each combined chunk |
-| `ReturnSE` | `bool` | `false` | Populate `StandardErrors` in the result |
-| `ReturnDiagnostics` | `bool` | `false` | Include diagnostics in result |
-| `ReturnResiduals` | `bool` | `false` | Include residuals in result |
-| `ReturnRobustnessWeights` | `bool` | `false` | Include weights in result |
-| `ReturnDerivative` | `bool` | `false` | Include the per-point local fit derivative (slope) in the result |
 
-Cross-validation, GPU `Backend`, `CustomWeights`, and `ReturnSorted` are Batch-only and not available here; see [API](api.md) for those. Standard errors and confidence/prediction intervals are computed per chunk the same way Batch computes them, then blended across overlap regions via `MergeStrategy` like `Y`/`Derivative` are.
+Cross-validation, GPU `Backend`, `CustomWeights`, and the `"sorted"` output are Batch-only and not available here; see [API](api.md) for those. Standard errors and confidence/prediction intervals are computed per chunk the same way Batch computes them, then blended across overlap regions via `MergeStrategy` like `Y`/`Derivative` are.
 
 ## Options
 
@@ -208,50 +203,35 @@ Enable multi-threaded execution via Rayon.
 - `true` (default) — parallelizes the local regression fits across CPU cores
 - `false` — forces single-threaded execution
 
+### Outputs: se
+
+*See: [Intervals](../guide/intervals.md)*
+
+Select `"se"` to compute standard errors per chunk the same way Batch does, then merge the overlap region across chunk boundaries via `MergeStrategy`.
+
+### Outputs: diagnostics
+
+*See: [`Diagnostics`](#diagnostics)*
+
+Select `"diagnostics"` to include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `EffectiveDF`/`AIC`/`AICc` require per-chunk hat-matrix leverage to be threaded into the cumulative diagnostics computation across chunk boundaries, which isn't currently done (even with `"se"` or `Intervals` set), so they're always `nil` here.
+
+### Outputs: residuals
+
+Select `"residuals"` to include per-point residuals (`Y - fitted`) in the result.
+
+### Outputs: weights
+
+Select `"weights"` to include the final per-point robustness weights (from the last robustness iteration) in the result.
+
+### Outputs: derivative
+
+Select `"derivative"` to expose each point's local WLS slope in `Result.Derivative` at effectively no extra computation cost. Derivative values in the overlap region are merged via `MergeStrategy`.
+
 ### Intervals
 
 *See: [Intervals](../guide/intervals.md)*
 
 Set `Intervals.Confidence` and/or `Intervals.Prediction` to a level such as `0.95`, or leave either nil to disable it. `Intervals.Bootstrap` (at least 2) refits each combined chunk for percentile bounds and standard errors; overlap values are merged via `MergeStrategy`. Set the outer `Seed` for reproducible draws.
-
-### ReturnSE
-
-*See: [Intervals](../guide/intervals.md)*
-
-Computes standard errors per chunk the same way Batch does, then merges the overlap region across chunk boundaries the same way `Y`/`Derivative` are, via `MergeStrategy`.
-
-- `false` (default) — leaves `Result.StandardErrors` as `nil`
-- `true` — populates it
-
-### ReturnDiagnostics
-
-*See: [`Diagnostics`](#diagnostics)*
-
-Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `EffectiveDF`/`AIC`/`AICc` require per-chunk hat-matrix leverage to be threaded into the cumulative diagnostics computation across chunk boundaries, which isn't currently done (even with `ReturnSE` or `Intervals` set), so they're always `nil` here.
-
-- `false` (default) — leaves `Result.Diagnostics` as `nil`
-- `true` — populates `Result.Diagnostics`
-
-### ReturnResiduals
-
-Include per-point residuals (`Y - fitted`) in the result.
-
-- `false` (default) — leaves `Result.Residuals` as `nil`
-- `true` — populates `Result.Residuals`
-
-### ReturnRobustnessWeights
-
-Include the final per-point robustness weights (from the last robustness iteration) in the result.
-
-- `false` (default) — leaves `Result.RobustnessWeights` as `nil`
-- `true` — populates `Result.RobustnessWeights`
-
-### ReturnDerivative
-
-Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `Result.Derivative` at effectively no extra computation cost. Derivative values in the overlap region are merged across chunk boundaries the same way `Y` is, via `MergeStrategy`.
-
-- `false` (default) — leaves `Result.Derivative` as `nil`
-- `true` — populates it
 
 ## Result Structure
 
@@ -262,16 +242,16 @@ Returned by `ProcessChunk` and `Finalize`.
 | Field | Type | Populated when |
 | --- | --- | --- |
 | `X`, `Y` | `[]float64` | Always. |
-| `StandardErrors` | `[]float64` | `ReturnSE` or `Intervals` |
+| `StandardErrors` | `[]float64` | `"se"` output or `Intervals` |
 | `ConfidenceLower`, `ConfidenceUpper` | `[]float64` | `Intervals.Confidence` |
 | `PredictionLower`, `PredictionUpper` | `[]float64` | `Intervals.Prediction` |
-| `Residuals` | `[]float64` | `ReturnResiduals` |
-| `RobustnessWeights` | `[]float64` | `ReturnRobustnessWeights` |
+| `Residuals` | `[]float64` | `"residuals"` output |
+| `RobustnessWeights` | `[]float64` | `"weights"` output |
 | `CVScores` | `[]float64` | Always empty (Batch only) |
 | `FractionUsed` | `float64` | Always. |
 | `IterationsUsed` | `int` | Always (`-1` if not available). |
-| `Diagnostics` | `*Diagnostics` | `ReturnDiagnostics` |
-| `Derivative` | `[]float64` | `ReturnDerivative` |
+| `Diagnostics` | `*Diagnostics` | `"diagnostics"` output |
+| `Derivative` | `[]float64` | `"derivative"` output |
 
 ### `Diagnostics`
 

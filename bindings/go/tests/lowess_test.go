@@ -129,7 +129,7 @@ func TestLowess(t *testing.T) {
 
 		opts := fastlowess.DefaultOptions()
 		opts.Fraction = 0.5
-		opts.ReturnDiagnostics = true
+		opts.Outputs = []string{"diagnostics"}
 		res := fitOrFatal(t, opts, x, y)
 
 		if res.Diagnostics == nil {
@@ -153,7 +153,7 @@ func TestLowess(t *testing.T) {
 
 		opts := fastlowess.DefaultOptions()
 		opts.Fraction = 0.5
-		opts.ReturnResiduals = true
+		opts.Outputs = []string{"residuals"}
 		res := fitOrFatal(t, opts, x, y)
 
 		if len(res.Residuals) != len(x) {
@@ -168,7 +168,7 @@ func TestLowess(t *testing.T) {
 		opts := fastlowess.DefaultOptions()
 		opts.Fraction = 0.7
 		opts.Iterations = 3
-		opts.ReturnRobustnessWeights = true
+		opts.Outputs = []string{"weights"}
 		res := fitOrFatal(t, opts, x, y)
 
 		if len(res.RobustnessWeights) != len(x) {
@@ -189,7 +189,7 @@ func TestLowess(t *testing.T) {
 		delta := 0.0
 		opts.Delta = &delta
 		opts.BoundaryPolicy = "noboundary"
-		opts.ReturnDerivative = true
+		opts.Outputs = []string{"derivative"}
 		res := fitOrFatal(t, opts, x, y)
 
 		if len(res.Derivative) != len(x) {
@@ -309,7 +309,7 @@ func TestLowess(t *testing.T) {
 
 		opts := fastlowess.DefaultOptions()
 		opts.Fraction = 0.5
-		opts.ReturnDiagnostics = true
+		opts.Outputs = []string{"diagnostics"}
 
 		model, err := fastlowess.NewLowess(opts)
 		if err != nil {
@@ -512,7 +512,7 @@ func TestStreamingLowess(t *testing.T) {
 		opts := fastlowess.DefaultStreamingOptions()
 		opts.Fraction = 0.1
 		opts.ChunkSize = 50
-		opts.ReturnResiduals = true
+		opts.Outputs = []string{"residuals"}
 		model, err := fastlowess.NewStreamingLowess(opts)
 		if err != nil {
 			t.Fatalf("NewStreamingLowess failed: %v", err)
@@ -601,7 +601,7 @@ func TestStreamingLowess(t *testing.T) {
 		opts := fastlowess.DefaultStreamingOptions()
 		opts.Fraction = 0.2
 		opts.ChunkSize = 50
-		opts.ReturnSE = true
+		opts.Outputs = []string{"se"}
 		ci := 0.95
 		opts.Intervals = &fastlowess.IntervalsOptions{Confidence: &ci, Prediction: &ci}
 		model, err := fastlowess.NewStreamingLowess(opts)
@@ -799,7 +799,7 @@ func TestOnlineLowess(t *testing.T) {
 		opts.Fraction = 0.5
 		opts.WindowCapacity = 10
 		opts.MinPoints = 3
-		opts.ReturnSE = true
+		opts.Outputs = []string{"se"}
 		if _, err := fastlowess.NewOnlineLowess(opts); err == nil {
 			t.Fatal("expected an error when combining ReturnSE with the default (incremental) UpdateMode")
 		}
@@ -811,7 +811,7 @@ func TestOnlineLowess(t *testing.T) {
 		opts.WindowCapacity = 10
 		opts.MinPoints = 3
 		opts.UpdateMode = "full"
-		opts.ReturnSE = true
+		opts.Outputs = []string{"se"}
 		ci := 0.95
 		opts.Intervals = &fastlowess.IntervalsOptions{Confidence: &ci, Prediction: &ci}
 		model, err := fastlowess.NewOnlineLowess(opts)
@@ -884,7 +884,7 @@ func TestDiagnosticsValues(t *testing.T) {
 
 	opts := fastlowess.DefaultOptions()
 	opts.Fraction = 0.5
-	opts.ReturnDiagnostics = true
+	opts.Outputs = []string{"diagnostics"}
 	res := fitOrFatal(t, opts, x, y)
 
 	diag := res.Diagnostics
@@ -1094,9 +1094,7 @@ func TestEdgeCases(t *testing.T) {
 
 		opts := fastlowess.DefaultOptions()
 		opts.Fraction = 0.7
-		opts.ReturnResiduals = true
-		opts.ReturnRobustnessWeights = true
-		opts.ReturnSorted = true
+		opts.Outputs = []string{"residuals", "weights", "sorted"}
 		res := fitOrFatal(t, opts, x, y)
 
 		if !sort.Float64sAreSorted(res.X) {
@@ -1115,8 +1113,7 @@ func TestEdgeCases(t *testing.T) {
 
 		unsortedOpts := fastlowess.DefaultOptions()
 		unsortedOpts.Fraction = 0.7
-		unsortedOpts.ReturnResiduals = true
-		unsortedOpts.ReturnRobustnessWeights = true
+		unsortedOpts.Outputs = []string{"residuals", "weights"}
 		unsortedRes := fitOrFatal(t, unsortedOpts, x, y)
 
 		type pair struct{ x, y float64 }
@@ -1250,8 +1247,7 @@ func TestCrossValidation(t *testing.T) {
 		opts := fastlowess.DefaultOptions()
 		opts.CV = &fastlowess.CVOptions{Fractions: []float64{0.3, 0.5, 0.7}}
 		opts.Iterations = 2
-		opts.ReturnDiagnostics = true
-		opts.ReturnResiduals = true
+		opts.Outputs = []string{"diagnostics", "residuals"}
 		res := fitOrFatal(t, opts, x, y)
 
 		if !inSet(res.FractionUsed, opts.CV.Fractions) {

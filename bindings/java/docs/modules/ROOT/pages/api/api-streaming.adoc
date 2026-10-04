@@ -80,13 +80,9 @@ Result result = model.finish();
 |`outputs(String...)` |`String...` |empty |Select `se`, `diagnostics`, `residuals`, `weights`, and/or `derivative`
 |`intervals(IntervalsOptions)` |`IntervalsOptions` |disabled |Confidence/prediction levels and per-chunk bootstrap refits
 |`seed(long)` |`long` |unset |Reproducible bootstrap draws for each combined chunk
-|`returnDiagnostics` |`boolean` |`false` |Include diagnostics in result
-|`returnResiduals` |`boolean` |`false` |Include residuals in result
-|`returnRobustnessWeights` |`boolean` |`false` |Include weights in result
-|`returnDerivative` |`boolean` |`false` |Include the per-point local fit derivative (slope) in the result
 |===
 
-Cross-validation, GPU `backend`, `customWeights`, and `returnSorted` are Batch-only and not available here; see xref:./api.adoc[API] for those. Standard errors and intervals are computed per combined chunk (including the previous overlap) and blended across overlaps via `mergeStrategy`; they are local chunk intervals, not whole-stream intervals.
+Cross-validation, GPU `backend`, `customWeights`, and the `sorted` output are Batch-only and not available here; see xref:./api.adoc[API] for those. Standard errors and intervals are computed per combined chunk (including the previous overlap) and blended across overlaps via `mergeStrategy`; they are local chunk intervals, not whole-stream intervals.
 
 == Options
 
@@ -224,6 +220,26 @@ Enable multi-threaded execution via Rayon.
 * `true` (default) — parallelizes the local regression fits across CPU cores
 * `false` — forces single-threaded execution
 
+=== outputs: diagnostics
+
+Select `"diagnostics"` to include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `effectiveDf`/`aic`/`aicc` require standard errors, which are Batch-only, so they're always empty here.
+
+
+=== outputs: residuals
+
+Select `"residuals"` to include per-point residuals (`y - fitted`) in the result.
+
+
+=== outputs: weights
+
+Select `"weights"` to include the final per-point robustness weights (from the last robustness iteration) in the result.
+
+
+=== outputs: derivative
+
+Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) via `Result.derivative()` at effectively no extra computation cost. Derivative values in the overlap region are merged across chunk boundaries the same way `y()` is, via `mergeStrategy`.
+
+
 === intervals
 
 _See: xref:../guide/intervals.adoc[Intervals]_
@@ -233,34 +249,6 @@ Build with `IntervalsOptions.builder()`. `confidence(level)` and `prediction(lev
 === seed
 
 Seeds bootstrap draws. Each combined chunk restarts from the same seed. It does not enable bootstrap by itself; `0` is valid.
-
-=== returnDiagnostics
-
-Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `effectiveDf`/`aic`/`aicc` require standard errors, which are Batch-only, so they're always empty here.
-
-* `false` (default) — leaves `Result.diagnostics()` empty
-* `true` — populates `Result.diagnostics()`
-
-=== returnResiduals
-
-Include per-point residuals (`y - fitted`) in the result.
-
-* `false` (default) — leaves `Result.residuals()` empty
-* `true` — populates `Result.residuals()`
-
-=== returnRobustnessWeights
-
-Include the final per-point robustness weights (from the last robustness iteration) in the result.
-
-* `false` (default) — leaves `Result.robustnessWeights()` empty
-* `true` — populates `Result.robustnessWeights()`
-
-=== returnDerivative
-
-Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) via `Result.derivative()` at effectively no extra computation cost. Derivative values in the overlap region are merged across chunk boundaries the same way `y()` is, via `mergeStrategy`.
-
-* `false` (default) — leaves `derivative()` empty
-* `true` — populates `derivative()`
 
 == Result Structure
 
@@ -276,13 +264,13 @@ Returned by `processChunk` and `finish`.
 |`standardErrors()` |`Optional<double[]>` |`"se"` output or any interval
 |`confidenceLower()`, `confidenceUpper()` |`Optional<double[]>` |`intervals` confidence set
 |`predictionLower()`, `predictionUpper()` |`Optional<double[]>` |`intervals` prediction set
-|`residuals()` |`Optional<double[]>` |`returnResiduals`
-|`robustnessWeights()` |`Optional<double[]>` |`returnRobustnessWeights`
+|`residuals()` |`Optional<double[]>` |`"residuals"` output
+|`robustnessWeights()` |`Optional<double[]>` |`"weights"` output
 |`cvScores()` |`Optional<double[]>` |Always empty (Batch only)
 |`fractionUsed()` |`double` |Always.
 |`iterationsUsed()` |`OptionalInt` |Always (empty if not available).
-|`diagnostics()` |`Optional<Diagnostics>` |`returnDiagnostics`
-|`derivative()` |`Optional<double[]>` |`returnDerivative`
+|`diagnostics()` |`Optional<Diagnostics>` |`"diagnostics"` output
+|`derivative()` |`Optional<double[]>` |`"derivative"` output
 |===
 
 === `Diagnostics`

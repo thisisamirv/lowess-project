@@ -14,7 +14,7 @@ import (
 // OnlineOptions configures an OnlineLowess model. Start with
 // DefaultOnlineOptions; the zero value is not equivalent to those defaults.
 // Online LOWESS processes one point at a time, so it has no Parallel or Backend
-// option, and ReturnDiagnostics/ReturnResiduals are always computed for free.
+// option; the latest point's residual is always included.
 type OnlineOptions struct {
 	// Fraction is the smoothing fraction, in (0, 1]. Default: 0.67.
 	Fraction float64
@@ -56,14 +56,6 @@ type OnlineOptions struct {
 	Intervals *IntervalsOptions
 	// Seed makes bootstrap draws reproducible for each full-update window.
 	Seed *uint64
-
-	// ReturnRobustnessWeights requests per-point robustness weights in the result.
-	ReturnRobustnessWeights bool
-	// ReturnDerivative requests the local fit's derivative (slope) for the latest point.
-	ReturnDerivative bool
-	// ReturnSE requests the standard error for the latest point. Requires
-	// UpdateMode = "full".
-	ReturnSE bool
 
 	// WindowCapacity is the maximum number of recent points retained.
 	// Default: 1000.
@@ -160,15 +152,15 @@ func NewOnlineLowess(opts OnlineOptions) (*OnlineLowess, error) {
 			C.int(opts.Iterations),
 			optFloat(delta, deltaSet),
 			wf, rm, sm, bp,
-			boolToCInt(opts.ReturnRobustnessWeights || hasOutput(opts.Outputs, "weights")),
+			boolToCInt(hasOutput(opts.Outputs, "weights")),
 			zwf,
 			optFloat(autoConverge, autoConvergeSet),
 			C.int(opts.WindowCapacity),
 			C.int(opts.MinPoints),
 			um,
 			missing,
-			boolToCInt(opts.ReturnDerivative || hasOutput(opts.Outputs, "derivative")),
-			boolToCInt(opts.ReturnSE || hasOutput(opts.Outputs, "se")),
+			boolToCInt(hasOutput(opts.Outputs, "derivative")),
+			boolToCInt(hasOutput(opts.Outputs, "se")),
 			optFloat(ciValue, ciSet),
 			optFloat(piValue, piSet),
 			C.size_t(bootstrap), C.ulonglong(seed), boolToCInt(opts.Seed != nil),

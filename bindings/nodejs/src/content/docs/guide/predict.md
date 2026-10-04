@@ -9,7 +9,7 @@ Evaluate a fitted Batch model at query points that were not in the training set.
 
 `result.predict(newX, options)` evaluates the fit at arbitrary query points, like R's `predict(model, newdata)`.
 
-It reuses `fit()`'s own (possibly `delta`-interpolated) smoothed curve for its `y` output — so predicting at a training `x` always exactly reproduces that point's `fit()` output, regardless of `delta`. A fresh local fit is only run when `return_derivative`, `return_se` (or an interval level), or `max_neighbor_distance` needs the actual regression slope or standard error.
+It reuses `fit()`'s own (possibly `delta`-interpolated) smoothed curve for its `y` output — so predicting at a training `x` always exactly reproduces that point's `fit()` output, regardless of `delta`. A fresh local fit is only run when `outputs` includes `"derivative"` or `"se"` (or an interval level), or when `max_neighbor_distance` needs the actual regression slope or standard error.
 
 Requires `retain_model: true` on the constructor before `fit()`, otherwise `predict()` throws.
 

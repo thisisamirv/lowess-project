@@ -87,7 +87,7 @@ using FastLOWESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
-            model = Lowess(fraction = 0.5, return_diagnostics = true)
+            model = Lowess(fraction = 0.5, outputs = ["diagnostics"])
             result = fit(model, x, y)
 
             @test result.diagnostics !== nothing
@@ -105,7 +105,7 @@ using FastLOWESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
-            model = Lowess(fraction = 0.5, return_residuals = true)
+            model = Lowess(fraction = 0.5, outputs = ["residuals"])
             result = fit(model, x, y)
 
             @test result.residuals !== nothing
@@ -116,7 +116,7 @@ using FastLOWESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.1, 100.0, 8.2, 9.8]  # Outlier
 
-            model = Lowess(fraction = 0.7, iterations = 3, return_robustness_weights = true)
+            model = Lowess(fraction = 0.7, iterations = 3, outputs = ["weights"])
             result = fit(model, x, y)
 
             @test result.robustness_weights !== nothing
@@ -129,7 +129,7 @@ using FastLOWESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
-            model = Lowess(fraction = 0.7, return_derivative = true)
+            model = Lowess(fraction = 0.7, outputs = ["derivative"])
             result = fit(model, x, y)
 
             @test result.derivative !== nothing
@@ -298,7 +298,7 @@ using FastLOWESS
             stream = StreamingLowess(
                 fraction = 0.2,
                 chunk_size = 50,
-                return_se = true,
+                outputs = ["se"],
                 intervals = (confidence = 0.95, prediction = 0.95),
             )
             r1 = process_chunk(stream, x, y)
@@ -388,7 +388,7 @@ using FastLOWESS
                 fraction = 0.5,
                 window_capacity = 10,
                 min_points = 3,
-                return_se = true,
+                outputs = ["se"],
             )
         end
 
@@ -401,7 +401,7 @@ using FastLOWESS
                 window_capacity = 10,
                 min_points = 3,
                 update_mode = "full",
-                return_se = true,
+                outputs = ["se"],
                 intervals = (confidence = 0.95, prediction = 0.95),
             )
             results =
@@ -459,7 +459,7 @@ using FastLOWESS
     @testset "Appending results" begin
         x = collect(1.0:5.0)
         y = 2 .* x
-        first = fit(Lowess(return_residuals = true), x, y)
+        first = fit(Lowess(outputs = ["residuals"]), x, y)
         second = fit(Lowess(), x, y)
         original_x = copy(first.x)
 
@@ -467,7 +467,7 @@ using FastLOWESS
         @test first.x == original_x
         @test length(first.residuals) == length(first.x)
 
-        matching = fit(Lowess(return_residuals = true), x, y)
+        matching = fit(Lowess(outputs = ["residuals"]), x, y)
         append!(first, matching)
         @test length(first.x) == 2length(x)
         @test length(first.residuals) == length(first.x)
@@ -495,7 +495,7 @@ using FastLOWESS
         x = [1.0, 2.0, 3.0, 4.0, 5.0]
         y = [2.0, 4.0, 6.0, 8.0, 10.0]  # Perfect linear
 
-        model = Lowess(fraction = 0.5, return_diagnostics = true)
+        model = Lowess(fraction = 0.5, outputs = ["diagnostics"])
         result = fit(model, x, y)
 
         diag = result.diagnostics
@@ -549,9 +549,7 @@ using FastLOWESS
 
             model = Lowess(
                 fraction = 0.7,
-                return_residuals = true,
-                return_robustness_weights = true,
-                return_sorted = true,
+                outputs = ["residuals", "weights", "sorted"],
             )
             result = fit(model, x, y)
 
@@ -560,8 +558,7 @@ using FastLOWESS
 
             unsorted_model = Lowess(
                 fraction = 0.7,
-                return_residuals = true,
-                return_robustness_weights = true,
+                outputs = ["residuals", "weights"],
             )
             unsorted_result = fit(unsorted_model, x, y)
 

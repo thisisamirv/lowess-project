@@ -175,6 +175,34 @@ The batch `Lowess` type can optionally run on a GPU-accelerated backend powered 
 - `"cpu"` (default)
 - `"gpu"` — requires the library to be built with the `gpu` Cargo feature
 
+### outputs: se
+
+*See: [Intervals](../guide/intervals.md#standard-errors)*
+
+Select `"se"` to compute hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) and standard errors.
+
+### outputs: diagnostics
+
+*See: [`Diagnostics`](#diagnostics)*
+
+Select `"diagnostics"` to include a `Diagnostics` object (RMSE, MAE, R2, AIC/AICc, effective degrees of freedom) in the result. AIC/AICc/`effective_df` additionally require `"se"` (or confidence/prediction intervals) to be selected, since they depend on hat-matrix statistics.
+
+### outputs: residuals
+
+Include per-point residuals (`y - fitted`) in the result.
+
+### outputs: weights
+
+Include the final per-point robustness weights (from the last robustness iteration) in the result.
+
+### outputs: derivative
+
+Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `result.derivative`, enabling turning-point/rate-of-change analysis at effectively no extra computation cost.
+
+### outputs: sorted
+
+When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order. To get both orderings, sort the default result client-side (e.g. `sortperm(result.x)`) instead of calling `fit` twice.
+
 ### intervals
 
 *See: [Intervals](../guide/intervals.md)*
@@ -209,46 +237,6 @@ Retains the fitted model's training data, populating `result.predict_model` with
 
 Per-observation weights, passed to `fit` rather than the constructor.
 
-### return_se
-
-*See: [Intervals](../guide/intervals.md#standard-errors)*
-
-Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
-
-### return_diagnostics
-
-*See: [`Diagnostics`](#diagnostics)*
-
-Include a `Diagnostics` object (RMSE, MAE, R2, AIC/AICc, effective degrees of freedom) in the result. AIC/AICc/`effective_df` additionally require `return_se=true` (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.
-
-- `false` (default) — leaves `result.diagnostics` as `nothing`
-- `true` — populates `result.diagnostics`
-
-### return_residuals
-
-Include per-point residuals (`y - fitted`) in the result.
-
-- `false` (default) — leaves `result.residuals` as `nothing`
-- `true` — populates `result.residuals`
-
-### return_robustness_weights
-
-Include the final per-point robustness weights (from the last robustness iteration) in the result.
-
-- `false` (default) — leaves `result.robustness_weights` as `nothing`
-- `true` — populates `result.robustness_weights`
-
-### return_derivative
-
-Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `result.derivative`, enabling turning-point/rate-of-change analysis at effectively no extra computation cost.
-
-- `false` (default) — leaves `result.derivative` as `nothing`
-- `true` — populates it
-
-### return_sorted
-
-When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order. To get both orderings, sort the default result client-side (e.g. `sortperm(result.x)`) instead of calling `fit` twice.
-
 ## Result Structure
 
 ### `LowessResult`
@@ -264,11 +252,11 @@ When set to `true`, it reorders every result field (residuals, intervals, etc.) 
 | `confidence_upper` | `Union{Vector{Float64}, Nothing}` | Upper confidence bounds |
 | `prediction_lower` | `Union{Vector{Float64}, Nothing}` | Lower prediction bounds |
 | `prediction_upper` | `Union{Vector{Float64}, Nothing}` | Upper prediction bounds |
-| `residuals` | `Union{Vector{Float64}, Nothing}` | Residuals (if `return_residuals`) |
-| `robustness_weights` | `Union{Vector{Float64}, Nothing}` | Robustness weights (if `return_robustness_weights`) |
+| `residuals` | `Union{Vector{Float64}, Nothing}` | Residuals (if `"residuals"` was requested) |
+| `robustness_weights` | `Union{Vector{Float64}, Nothing}` | Robustness weights (if `"weights"` was requested) |
 | `cv_scores` | `Union{Vector{Float64}, Nothing}` | CV score per tested fraction |
-| `diagnostics` | `Union{Diagnostics, Nothing}` | Fit metrics (if `return_diagnostics`) |
-| `derivative` | `Union{Vector{Float64}, Nothing}` | Per-point local fit derivative/slope (if `return_derivative`) |
+| `diagnostics` | `Union{Diagnostics, Nothing}` | Fit metrics (if `"diagnostics"` was requested) |
+| `derivative` | `Union{Vector{Float64}, Nothing}` | Per-point local fit derivative/slope (if `"derivative"` was requested) |
 
 ### `Diagnostics`
 

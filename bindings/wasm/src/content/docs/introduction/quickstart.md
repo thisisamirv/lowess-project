@@ -74,7 +74,7 @@ const model = new Lowess({
     fraction: 0.7,
     iterations: 5,
     robustness_method: "bisquare",
-    return_robustness_weights: true
+    outputs: ["weights"]
 });
 const result = model.fit(x, yWithOutlier);
 

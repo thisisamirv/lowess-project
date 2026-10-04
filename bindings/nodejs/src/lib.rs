@@ -195,12 +195,10 @@ impl LowessResult {
         let intervals = opts.intervals.as_ref();
         let query = binding_support::build_predict_options_with_bootstrap(
             binding_support::PredictOptionSet {
-                return_se: opts.return_se.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "se"),
+                return_se: has_output(opts.outputs.as_ref(), "se"),
                 confidence_level: intervals.and_then(|iv| iv.confidence),
                 prediction_level: intervals.and_then(|iv| iv.prediction),
-                return_derivative: opts.return_derivative.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "derivative"),
+                return_derivative: has_output(opts.outputs.as_ref(), "derivative"),
                 extrapolation: opts.extrapolation.as_deref(),
                 max_extrapolation_distance: opts.max_extrapolation_distance,
                 max_neighbor_distance: opts.max_neighbor_distance,
@@ -220,12 +218,6 @@ impl LowessResult {
 pub struct PredictOptions {
     /// Optional output components: se, derivative.
     pub outputs: Option<Vec<String>>,
-    /// Include standard errors in the output. Default: false.
-    #[napi(js_name = "return_se")]
-    pub return_se: Option<bool>,
-    /// Include the local fit's derivative (slope) in the output. Default: false.
-    #[napi(js_name = "return_derivative")]
-    pub return_derivative: Option<bool>,
     /// Grouped confidence/prediction levels and optional residual-bootstrap refits.
     pub intervals: Option<IntervalsOptions>,
     /// Prediction-time bootstrap seed, independent of the fit seed. Default: None.
@@ -419,25 +411,6 @@ pub struct SmoothOptions {
     pub cv: Option<CVOptions>,
     /// Shared seed for k-fold CV and residual bootstrap; 0 is valid. Default: None.
     pub seed: Option<i64>,
-    /// Return residuals in result. Default: false.
-    #[napi(js_name = "return_residuals")]
-    pub return_residuals: Option<bool>,
-    /// Return robustness weights in result. Default: false.
-    #[napi(js_name = "return_robustness_weights")]
-    pub return_robustness_weights: Option<bool>,
-    /// Return the per-point local fit derivative (slope) in result. Default: false.
-    #[napi(js_name = "return_derivative")]
-    pub return_derivative: Option<bool>,
-    /// Return diagnostics (RMSE, etc.). Default: false.
-    #[napi(js_name = "return_diagnostics")]
-    pub return_diagnostics: Option<bool>,
-    /// Compute standard errors. Default: false.
-    #[napi(js_name = "return_se")]
-    pub return_se: Option<bool>,
-    /// Return results sorted ascending by x instead of in original input order.
-    /// Default: false.
-    #[napi(js_name = "return_sorted")]
-    pub return_sorted: Option<bool>,
     /// Enable parallel execution. Default: true.
     pub parallel: Option<bool>,
     /// Execution backend: "cpu" (default) or "gpu" (requires the package to be
@@ -453,7 +426,7 @@ pub struct SmoothOptions {
 
 /// Configuration options for streaming LOWESS smoothing.
 ///
-/// A subset of [`SmoothOptions`]: cross-validation, `return_sorted`, and
+/// A subset of [`SmoothOptions`]: cross-validation, the `sorted` output, and
 /// `backend` are Batch-only and have no equivalent here, so they aren't
 /// fields on this type.
 #[napi(object)]
@@ -489,21 +462,6 @@ pub struct StreamingSmoothOptions {
     pub intervals: Option<IntervalsOptions>,
     /// Bootstrap seed; each combined chunk restarts from it. Default: None.
     pub seed: Option<i64>,
-    /// Return residuals in result. Default: false.
-    #[napi(js_name = "return_residuals")]
-    pub return_residuals: Option<bool>,
-    /// Return robustness weights in result. Default: false.
-    #[napi(js_name = "return_robustness_weights")]
-    pub return_robustness_weights: Option<bool>,
-    /// Return the per-point local fit derivative (slope) in result. Default: false.
-    #[napi(js_name = "return_derivative")]
-    pub return_derivative: Option<bool>,
-    /// Return diagnostics (RMSE, etc.). Default: false.
-    #[napi(js_name = "return_diagnostics")]
-    pub return_diagnostics: Option<bool>,
-    /// Compute standard errors. Default: false.
-    #[napi(js_name = "return_se")]
-    pub return_se: Option<bool>,
     /// Enable parallel execution. Default: true.
     pub parallel: Option<bool>,
     /// Policy for non-finite (NaN/Inf) values in each chunk ("error", "drop"). Default: "error".
@@ -514,9 +472,9 @@ pub struct StreamingSmoothOptions {
 /// Configuration options for online LOWESS smoothing.
 ///
 /// A subset of [`SmoothOptions`]: diagnostics, residuals, parallel execution,
-/// cross-validation, `return_sorted`, and `backend` are all no-ops for online
+/// cross-validation, the `sorted` output, and `backend` are all no-ops for online
 /// processing (it handles one point at a time), so they aren't fields on
-/// this type. `return_se` and `intervals` require `update_mode = "full"`.
+/// this type. The `se` output and `intervals` require `update_mode = "full"`.
 #[napi(object)]
 pub struct OnlineSmoothOptions {
     /// Smoothing fraction (0 < fraction <= 1). Default: 0.67.
@@ -551,18 +509,9 @@ pub struct OnlineSmoothOptions {
     pub intervals: Option<IntervalsOptions>,
     /// Bootstrap seed; each full-update window restarts from it. Default: None.
     pub seed: Option<i64>,
-    /// Return robustness weights in result. Default: false.
-    #[napi(js_name = "return_robustness_weights")]
-    pub return_robustness_weights: Option<bool>,
-    /// Return the per-point local fit derivative (slope) in result. Default: false.
-    #[napi(js_name = "return_derivative")]
-    pub return_derivative: Option<bool>,
     /// Policy for non-finite (NaN/Inf) `x`/`y` values passed to `addPoint` ("error", "drop"). Default: "error".
     #[napi(js_name = "missing")]
     pub missing: Option<String>,
-    /// Compute standard errors. Requires `update_mode = "full"`. Default: false.
-    #[napi(js_name = "return_se")]
-    pub return_se: Option<bool>,
 }
 
 /// Build a `LowessBuilder` from Batch options, applying every field.
@@ -594,16 +543,11 @@ fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LowessBuilde
                 boundary_policy: opts.boundary_policy.as_deref(),
                 scaling_method: opts.scaling_method.as_deref(),
                 auto_converge: opts.auto_converge,
-                return_residuals: opts.return_residuals.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "residuals"),
-                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "weights"),
-                return_diagnostics: opts.return_diagnostics.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "diagnostics"),
-                return_se: opts.return_se.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "se"),
-                return_sorted: opts.return_sorted.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "sorted"),
+                return_residuals: has_output(opts.outputs.as_ref(), "residuals"),
+                return_robustness_weights: has_output(opts.outputs.as_ref(), "weights"),
+                return_diagnostics: has_output(opts.outputs.as_ref(), "diagnostics"),
+                return_se: has_output(opts.outputs.as_ref(), "se"),
+                return_sorted: has_output(opts.outputs.as_ref(), "sorted"),
                 confidence_intervals: intervals.and_then(|iv| iv.confidence),
                 prediction_intervals: intervals.and_then(|iv| iv.prediction),
                 parallel: opts.parallel,
@@ -616,9 +560,7 @@ fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LowessBuilde
                 ..Default::default()
             },
         ))?;
-        if has_output(opts.outputs.as_ref(), "derivative")
-            || opts.return_derivative.unwrap_or(false)
-        {
+        if has_output(opts.outputs.as_ref(), "derivative") {
             builder = builder.return_derivative();
         }
         builder = apply_bootstrap_and_seed(builder, intervals, opts.seed)?;
@@ -648,14 +590,10 @@ fn streaming_options_to_builder(
                 boundary_policy: opts.boundary_policy.as_deref(),
                 scaling_method: opts.scaling_method.as_deref(),
                 auto_converge: opts.auto_converge,
-                return_residuals: opts.return_residuals.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "residuals"),
-                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "weights"),
-                return_diagnostics: opts.return_diagnostics.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "diagnostics"),
-                return_se: opts.return_se.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "se"),
+                return_residuals: has_output(opts.outputs.as_ref(), "residuals"),
+                return_robustness_weights: has_output(opts.outputs.as_ref(), "weights"),
+                return_diagnostics: has_output(opts.outputs.as_ref(), "diagnostics"),
+                return_se: has_output(opts.outputs.as_ref(), "se"),
                 confidence_intervals: opts.intervals.as_ref().and_then(|iv| iv.confidence),
                 prediction_intervals: opts.intervals.as_ref().and_then(|iv| iv.prediction),
                 parallel: opts.parallel,
@@ -663,9 +601,7 @@ fn streaming_options_to_builder(
                 ..Default::default()
             },
         ))?;
-        if has_output(opts.outputs.as_ref(), "derivative")
-            || opts.return_derivative.unwrap_or(false)
-        {
+        if has_output(opts.outputs.as_ref(), "derivative") {
             builder = builder.return_derivative();
         }
         builder = apply_bootstrap_and_seed(builder, opts.intervals.as_ref(), opts.seed)?;
@@ -690,19 +626,15 @@ fn online_options_to_builder(opts: Option<&OnlineSmoothOptions>) -> Result<Lowes
                 boundary_policy: opts.boundary_policy.as_deref(),
                 scaling_method: opts.scaling_method.as_deref(),
                 auto_converge: opts.auto_converge,
-                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "weights"),
-                return_se: opts.return_se.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "se"),
+                return_robustness_weights: has_output(opts.outputs.as_ref(), "weights"),
+                return_se: has_output(opts.outputs.as_ref(), "se"),
                 confidence_intervals: opts.intervals.as_ref().and_then(|iv| iv.confidence),
                 prediction_intervals: opts.intervals.as_ref().and_then(|iv| iv.prediction),
                 missing: opts.missing.as_deref(),
                 ..Default::default()
             },
         ))?;
-        if has_output(opts.outputs.as_ref(), "derivative")
-            || opts.return_derivative.unwrap_or(false)
-        {
+        if has_output(opts.outputs.as_ref(), "derivative") {
             builder = builder.return_derivative();
         }
         builder = apply_bootstrap_and_seed(builder, opts.intervals.as_ref(), opts.seed)?;

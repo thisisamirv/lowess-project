@@ -79,9 +79,9 @@ if ok {
 | `Intervals` | `*IntervalsOptions` | `nil` | Confidence/prediction levels and per-window bootstrap refits (`UpdateMode = "full"` only) |
 | `Seed` | `*uint64` | `nil` | Reproducible bootstrap draws for each full-update window |
 
-Incremental mode fits only the newest point. Positive `Delta` is rejected there, and `AutoConverge` requires full mode with at least one robustness iteration. | `ReturnSE` | `bool` | `false` | Populate `StandardError` in the result (requires `UpdateMode = "full"`; errors if combined with `"incremental"`) | | `ReturnRobustnessWeights` | `bool` | `false` | Include `RobustnessWeight` in result | | `ReturnDerivative` | `bool` | `false` | Include the latest point's local fit derivative (slope) in the result |
+Incremental mode fits only the newest point. Positive `Delta` is rejected there, and `AutoConverge` requires full mode with at least one robustness iteration.
 
-Cross-validation, GPU `Backend`, `CustomWeights`, `ReturnSorted`, `ReturnDiagnostics`, `ReturnResiduals`, and `Parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [API](api.md) for those.
+Cross-validation, GPU `Backend`, `CustomWeights`, the `"sorted"` output, and `Parallel` are Batch-only; the `"diagnostics"` and `"residuals"` outputs are unavailable online. See [API](api.md) for those options.
 
 ## Options
 
@@ -190,34 +190,25 @@ Minimum number of points required before smoothing starts. `AddPoint` returns `o
 | `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
 | `"full"` | `"resmooth"` | Recompute entire window | More accurate |
 
+### Outputs: se
+
+*See: [Intervals](../guide/intervals.md)*
+
+Select `"se"` to populate `StandardError`; it requires `UpdateMode = "full"`. The fast `"incremental"` path never computes standard errors, so selecting `"se"` or `Intervals` with another mode returns an error from `NewOnlineLowess`.
+
+### Outputs: weights
+
+Select `"weights"` to include the robustness weight for the latest point (from the last robustness iteration) in the result.
+
+### Outputs: derivative
+
+Select `"derivative"` to expose the latest point's local WLS slope in `PointResult.Derivative` at effectively no extra computation cost.
+
 ### Intervals
 
 *See: [Intervals](../guide/intervals.md)*
 
 Set `Intervals.Confidence` and/or `Intervals.Prediction` to a level such as `0.95`, or leave either nil to disable it. `Intervals.Bootstrap` (at least 2) refits the current full-update window for percentile bounds and standard errors. Set `Seed` for reproducible draws. All intervals require `UpdateMode = "full"`.
-
-### ReturnSE
-
-*See: [Intervals](../guide/intervals.md)*
-
-Populates `StandardError` — but only when combined with `UpdateMode = "full"`. The fast `"incremental"` path (the default) never computes standard errors, so combining `ReturnSE` or `Intervals` with anything other than `"full"` returns an error from `NewOnlineLowess`, rather than silently leaving `StandardError` as `NaN`.
-
-- `false` (default) — leaves `StandardError` as `NaN`
-- `true` — populates `StandardError`, and requires `UpdateMode = "full"`
-
-### ReturnRobustnessWeights
-
-Include the robustness weight for the latest point (from the last robustness iteration) in the result.
-
-- `false` (default) — leaves `PointResult.RobustnessWeight` as `NaN`
-- `true` — populates `PointResult.RobustnessWeight`
-
-### ReturnDerivative
-
-Each point's local WLS fit already computes a slope internally; this exposes the latest point's slope (rate of change of the smoothed curve) in `PointResult.Derivative` at effectively no extra computation cost.
-
-- `false` (default) — leaves `PointResult.Derivative` as `NaN`
-- `true` — populates it
 
 ## Result Structure
 
@@ -228,15 +219,15 @@ Returned by `AddPoint` once the window has enough points (`ok == false` until th
 | Field | Type | Notes |
 | --- | --- | --- |
 | `Y` | `float64` | Smoothed value for the latest point. |
-| `StandardError` | `float64` | Populated when `ReturnSE` is set (requires `UpdateMode = "full"`); `NaN` otherwise. |
+| `StandardError` | `float64` | Populated when `"se"` or any interval is set (requires `UpdateMode = "full"`); `NaN` otherwise. |
 | `ConfidenceLower` / `ConfidenceUpper` | `float64` | Bounds around the mean response if `Intervals.Confidence` was set (full mode only); `NaN` otherwise. |
 | `PredictionLower` / `PredictionUpper` | `float64` | Bounds for a new observation if `Intervals.Prediction` was set (full mode only); `NaN` otherwise. |
-| `Residual` | `float64` | Residual y − smoothed; always populated (there is no `ReturnResiduals` option for Online). |
-| `RobustnessWeight` | `float64` | Robustness weight, if `ReturnRobustnessWeights` was set. |
+| `Residual` | `float64` | Residual y − smoothed; always populated (there is no `"residuals"` output for Online). |
+| `RobustnessWeight` | `float64` | Robustness weight, if `"weights"` was requested. |
 | `IterationsUsed` | `int` | Robustness iterations performed (`-1` if not applicable). |
-| `Derivative` | `float64` | Local fit derivative/slope for the latest point, if `ReturnDerivative` was set (`NaN` otherwise). |
+| `Derivative` | `float64` | Local fit derivative/slope for the latest point, if `"derivative"` was requested (`NaN` otherwise). |
 
-There is no diagnostics structure or `ReturnDiagnostics` option for `OnlineLowess`: `PointResult` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.
+There is no diagnostics structure or `"diagnostics"` output for `OnlineLowess`: `PointResult` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.
 
 ## Example
 

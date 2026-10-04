@@ -308,6 +308,8 @@
 //! ### Full Features
 //!
 //! Configure uncertainty estimates and optional outputs per chunk:
+//! Common smoothing controls are shown explicitly; CV, case weights, retained prediction,
+//! and sorted output remain Batch-only options.
 //!
 //! ```rust
 //! use fastLowess::prelude::*;
@@ -317,6 +319,14 @@
 //! let mut model = StreamingLowess::new()
 //!     .fraction(0.6)                          // Local smoothing span
 //!     .iterations(1)                          // Robustness iterations
+//!     .weight_function("tricube")             // Kernel function
+//!     .robustness_method("bisquare")          // Outlier downweighting
+//!     .delta(0.01)                            // Interpolation optimization
+//!     .zero_weight_fallback("use_local_mean") // Zero-weight neighborhood fallback
+//!     .boundary_policy("extend")              // Boundary handling
+//!     .scaling_method("mad")                  // Robust residual scale
+//!     .auto_converge(1e-6)                    // Robustness convergence tolerance
+//!     .missing("error")                       // Reject non-finite observations
 //!     .chunk_size(10)                         // Points per input chunk
 //!     .overlap(2)                             // Points retained between chunks
 //!     .merge_strategy("weighted_average")     // Blend estimates in the overlap
@@ -341,6 +351,9 @@
 //! # assert!(first.confidence_lower.is_some());
 //! # assert!(first.prediction_upper.is_some());
 //! # assert!(first.derivative.is_some());
+//! # assert!(first.diagnostics.is_some());
+//! # assert!(first.residuals.is_some());
+//! # assert!(first.robustness_weights.is_some());
 //! let second = model.process_chunk(&x[10..], &y[10..])?;
 //! let final_chunk = model.finalize()?;
 //! let emitted = first.y.len() + second.y.len() + final_chunk.y.len();
@@ -440,6 +453,9 @@
 //! ### Full Features
 //!
 //! Full updates support robust fitting and uncertainty estimates for each latest point:
+//! Positive delta and convergence controls require full-update mode, and convergence
+//! additionally requires robustness iterations. CV, case weights, and retained prediction
+//! are Batch-only; Online reports the latest point rather than cumulative diagnostics.
 //!
 //! ```rust
 //! use fastLowess::prelude::*;
@@ -447,6 +463,14 @@
 //! let mut model = OnlineLowess::new()
 //!     .fraction(0.7)                          // Local smoothing span
 //!     .iterations(1)                          // Robustness iterations
+//!     .weight_function("tricube")             // Kernel function
+//!     .robustness_method("bisquare")          // Outlier downweighting
+//!     .delta(0.01)                            // Positive delta requires full updates
+//!     .zero_weight_fallback("use_local_mean") // Zero-weight neighborhood fallback
+//!     .boundary_policy("extend")              // Boundary handling
+//!     .scaling_method("mad")                  // Robust residual scale
+//!     .auto_converge(1e-6)                    // Full updates with robustness iterations
+//!     .missing("error")                       // Reject non-finite observations
 //!     .window_capacity(20)                    // Maximum sliding-window size
 //!     .min_points(5)                          // Wait for five points before smoothing
 //!     .update_mode("full")                    // Refit the whole window for intervals
@@ -472,6 +496,7 @@
 //!         assert!(output.confidence_lower.is_some());
 //!         assert!(output.prediction_upper.is_some());
 //!         assert!(output.derivative.is_some());
+//!         assert!(output.robustness_weight.is_some());
 //!     }
 //! }
 //! println!("Online full updates: {updates}");

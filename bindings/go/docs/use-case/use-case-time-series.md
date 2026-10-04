@@ -63,7 +63,7 @@ y[0]: 11.311602696688704
 
 Remove trend to analyze residual patterns.
 
-Setting `ReturnResiduals = true` stores `observed − smoothed` alongside the smooth. A slightly wider `Fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
+Setting `Outputs = []string{"residuals"}` stores `observed − smoothed` alongside the smooth. A slightly wider `Fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
 
 ```go
 package main

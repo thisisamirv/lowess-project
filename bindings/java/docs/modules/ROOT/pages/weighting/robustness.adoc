@@ -192,7 +192,7 @@ public class Example {
         Options options = Options.builder()
                 .fraction(0.7)
                 .iterations(3)
-                .returnRobustnessWeights(true)
+                .outputs("weights")
                 .build();
 
         try (Lowess model = new Lowess(options)) {

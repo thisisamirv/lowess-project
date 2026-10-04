@@ -1,11 +1,14 @@
 package fastlowess;
 
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
 /**
  * Options for {@link PredictModel#predict}. Construct via {@link #builder()}.
  *
- * @param returnSe whether to include standard errors in the output
- * @param returnDerivative whether to include the local fit's derivative (slope)
- * in the output
+ * @param outputs optional prediction components, such as {@code "se"} and
+ * {@code "derivative"}
  * @param intervals confidence/prediction levels and optional residual-bootstrap
  * refits
  * @param seed prediction-time bootstrap seed, or {@code null} for the default;
@@ -21,8 +24,7 @@ package fastlowess;
  * in-range-but-sparse query points, or {@code Double.NaN} to disable
  */
 public record PredictOptions(
-        boolean returnSe,
-        boolean returnDerivative,
+        List<String> outputs,
         IntervalsOptions intervals,
         Long seed,
         String extrapolation,
@@ -33,6 +35,7 @@ public record PredictOptions(
      * Normalizes a {@code null} interval group to "disabled".
      */
     public PredictOptions {
+        outputs = outputs == null ? List.of() : List.copyOf(outputs);
         intervals = intervals == null ? IntervalsOptions.DISABLED : intervals;
     }
 
@@ -50,8 +53,7 @@ public record PredictOptions(
      */
     public static final class Builder {
 
-        boolean returnSe = false;
-        boolean returnDerivative = false;
+        final Set<String> outputs = new LinkedHashSet<>();
         IntervalsOptions intervals = IntervalsOptions.DISABLED;
         Long seed = null;
         String extrapolation = "clamp";
@@ -59,30 +61,6 @@ public record PredictOptions(
         double maxNeighborDistance = Double.NaN;
 
         Builder() {
-        }
-
-        /**
-         * Whether to include standard errors in the output (default
-         * {@code false}).
-         *
-         * @param returnSe whether to include standard errors
-         * @return this builder, for chaining
-         */
-        public Builder returnSe(boolean returnSe) {
-            this.returnSe = returnSe;
-            return this;
-        }
-
-        /**
-         * Whether to include the local fit's derivative (slope) in the output
-         * (default {@code false}).
-         *
-         * @param returnDerivative whether to include the derivative
-         * @return this builder, for chaining
-         */
-        public Builder returnDerivative(boolean returnDerivative) {
-            this.returnDerivative = returnDerivative;
-            return this;
         }
 
         /**
@@ -95,10 +73,8 @@ public record PredictOptions(
         public Builder outputs(String... outputs) {
             for (String output : outputs) {
                 switch (output) {
-                    case "se" ->
-                        this.returnSe = true;
-                    case "derivative" ->
-                        this.returnDerivative = true;
+                    case "se", "derivative" ->
+                        this.outputs.add(output);
                     default ->
                         throw new IllegalArgumentException("Unknown output: " + output);
                 }
@@ -176,8 +152,7 @@ public record PredictOptions(
          */
         public PredictOptions build() {
             return new PredictOptions(
-                    returnSe,
-                    returnDerivative,
+                    List.copyOf(outputs),
                     intervals,
                     seed,
                     extrapolation,

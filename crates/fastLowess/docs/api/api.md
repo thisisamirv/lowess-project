@@ -108,10 +108,6 @@ These chained methods configure the builder. They correspond to the "Options Str
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-### delta
-
-Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to 1% of the x-range. Set it to `0.0` explicitly to disable interpolation and fit every point exactly.
-
 ### weight_function
 
 *See: [Weight Functions](crate::doc::weighting::kernels)*
@@ -132,22 +128,9 @@ Points within `delta` of each other on the x-axis share the same local fit inste
 - `"huber"`
 - `"talwar"`
 
-### scaling_method
+### delta
 
-*See: [Scaling Methods](crate::doc::weighting::scaling)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### boundary_policy
-
-*See: [Boundary Handling](crate::doc::advanced::boundary)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
+Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to 1% of the x-range. Set it to `0.0` explicitly to disable interpolation and fit every point exactly.
 
 ### zero_weight_fallback
 
@@ -158,6 +141,29 @@ Behavior when all neighborhood weights are zero:
 | `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### boundary_policy
+
+*See: [Boundary Handling](crate::doc::advanced::boundary)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
+### scaling_method
+
+*See: [Scaling Methods](crate::doc::weighting::scaling)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### auto_converge
+
+*See: [Robustness](crate::doc::weighting::robustness)*
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
 
 ### missing
 
@@ -170,18 +176,6 @@ Policy for handling non-finite (NaN/Inf) values in `x`/`y` (and, in Batch, `cust
 
 **Note:** A length mismatch between `x` and `y` always errors, even under `"drop"` — that is a caller error, not a data-quality issue for `missing` to mask.
 
-### auto_converge
-
-*See: [Robustness](crate::doc::weighting::robustness)*
-
-Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
-
-### intervals
-
-*See: [Intervals](crate::doc::guide::intervals)*
-
-Use `.intervals(IntervalsBuilder::new().confidence(0.90).prediction(0.99).bootstrap(1000))` to select independent confidence and prediction coverage levels and optionally replace analytic standard errors with residual-bootstrap refits. Set `.seed(42)` on `Lowess::new()` to seed both CV and bootstrap. Without it, each feature retains its own default seed; setting a seed alone does not enable bootstrap. `n < 2` returns `InvalidBootstrapSamples`. CPU Batch and Streaming refits run concurrently with `parallel(true)`; Online refits sequentially on the CPU, while GPU Batch samples and refits sequentially on the device and reduces bootstrap intervals there. GPU draws are deterministic for a given seed but differ from CPU draws. Online requires `update_mode("full")`.
-
 ### outputs
 
 *See: [`Diagnostics`](#diagnosticst)*
@@ -190,6 +184,12 @@ Use `.outputs(["diagnostics"])` to include a `Diagnostics` object (RMSE, MAE, R2
 
 - `false` (default) — leaves `result.diagnostics` as `None`
 - `true` — populates `result.diagnostics`
+
+### intervals
+
+*See: [Intervals](crate::doc::guide::intervals)*
+
+Use `.intervals(IntervalsBuilder::new().confidence(0.90).prediction(0.99).bootstrap(1000))` to select independent confidence and prediction coverage levels and optionally replace analytic standard errors with residual-bootstrap refits. Set `.seed(42)` on `Lowess::new()` to seed both CV and bootstrap. Without it, each feature retains its own default seed; setting a seed alone does not enable bootstrap. `n < 2` returns `InvalidBootstrapSamples`. CPU Batch and Streaming refits run concurrently with `parallel(true)`; Online refits sequentially on the CPU, while GPU Batch samples and refits sequentially on the device and reduces bootstrap intervals there. GPU draws are deterministic for a given seed but differ from CPU draws. Online requires `update_mode("full")`.
 
 ### Output names
 
@@ -245,17 +245,17 @@ The `fastLowess` crate provides an optional GPU-accelerated backend using `wgpu`
 - `.fraction(vec![..])`: Candidate fractions to evaluate; required.
 - `Lowess::new().seed(n)`: Shared seed for reproducible k-fold shuffling and bootstrap draws; CV ignores it for `"loocv"`.
 
-### custom_weights
-
-*See: [Custom Weights](crate::doc::weighting::custom_weights)*
-
-**Note:** In other language bindings `custom_weights` is a `fit()` argument; in Rust it is a builder step because all configuration lives on the builder and `fit()` consumes `self`.
-
 ### retain_model
 
 *See: [Predict](crate::doc::guide::predict)*
 
 Retains the fitted model's training data, enabling `Predict::call(&result, new_x)` to evaluate the fit at out-of-sample query points not in the training set. Off by default (no extra memory/clone cost unless requested).
+
+### custom_weights
+
+*See: [Custom Weights](crate::doc::weighting::custom_weights)*
+
+**Note:** In other language bindings `custom_weights` is a `fit()` argument; in Rust it is a builder step because all configuration lives on the builder and `fit()` consumes `self`.
 
 ## Result Structure
 

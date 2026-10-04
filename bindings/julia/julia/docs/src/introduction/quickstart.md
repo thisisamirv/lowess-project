@@ -67,7 +67,7 @@ model = Lowess(;
     fraction=0.7,
     iterations=5,
     robustness_method="bisquare",
-    return_robustness_weights=true
+    outputs=["weights"]
 )
 result = fit(model, x, y_with_outlier)
 

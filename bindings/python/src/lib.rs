@@ -520,11 +520,6 @@ impl PyStreamingLowess {
         boundary_policy="extend",
         auto_converge=None,
         outputs=None,
-        return_diagnostics=false,
-        return_residuals=false,
-        return_robustness_weights=false,
-        return_derivative=false,
-        return_se=false,
         intervals=None,
         seed=None,
         zero_weight_fallback="use_local_mean",
@@ -545,11 +540,6 @@ impl PyStreamingLowess {
         boundary_policy: &str,
         auto_converge: Option<f64>,
         outputs: Option<Vec<String>>,
-        return_diagnostics: bool,
-        return_residuals: bool,
-        return_robustness_weights: bool,
-        return_derivative: bool,
-        return_se: bool,
         intervals: Option<Bound<'_, PyDict>>,
         seed: Option<u64>,
         zero_weight_fallback: &str,
@@ -576,22 +566,10 @@ impl PyStreamingLowess {
                 boundary_policy: Some(boundary_policy),
                 zero_weight_fallback: Some(zero_weight_fallback),
                 auto_converge,
-                return_residuals: return_residuals
-                    || outputs
-                        .as_ref()
-                        .is_some_and(|v| v.iter().any(|x| x == "residuals")),
-                return_robustness_weights: return_robustness_weights
-                    || outputs
-                        .as_ref()
-                        .is_some_and(|v| v.iter().any(|x| x == "weights")),
-                return_diagnostics: return_diagnostics
-                    || outputs
-                        .as_ref()
-                        .is_some_and(|v| v.iter().any(|x| x == "diagnostics")),
-                return_se: return_se
-                    || outputs
-                        .as_ref()
-                        .is_some_and(|v| v.iter().any(|x| x == "se")),
+                return_residuals: has_output(outputs.as_ref(), "residuals"),
+                return_robustness_weights: has_output(outputs.as_ref(), "weights"),
+                return_diagnostics: has_output(outputs.as_ref(), "diagnostics"),
+                return_se: has_output(outputs.as_ref(), "se"),
                 return_sorted: false,
                 missing: Some(missing),
                 confidence_intervals: iv.confidence,
@@ -611,11 +589,7 @@ impl PyStreamingLowess {
                 retain_model: None,
             },
         ))?;
-        if return_derivative
-            || outputs
-                .as_ref()
-                .is_some_and(|v| v.iter().any(|x| x == "derivative"))
-        {
+        if has_output(outputs.as_ref(), "derivative") {
             builder = builder.return_derivative();
         }
         builder = apply_bootstrap_and_seed(builder, iv.bootstrap, seed);
@@ -736,9 +710,6 @@ impl PyOnlineLowess {
         update_mode="incremental",
         auto_converge=None,
         outputs=None,
-        return_robustness_weights=false,
-        return_derivative=false,
-        return_se=false,
         intervals=None,
         seed=None,
         zero_weight_fallback="use_local_mean",
@@ -758,9 +729,6 @@ impl PyOnlineLowess {
         update_mode: &str,
         auto_converge: Option<f64>,
         outputs: Option<Vec<String>>,
-        return_robustness_weights: bool,
-        return_derivative: bool,
-        return_se: bool,
         intervals: Option<Bound<'_, PyDict>>,
         seed: Option<u64>,
         zero_weight_fallback: &str,
@@ -781,12 +749,9 @@ impl PyOnlineLowess {
                 zero_weight_fallback: Some(zero_weight_fallback),
                 auto_converge,
                 return_residuals: false,
-                return_robustness_weights: return_robustness_weights
-                    || outputs
-                        .as_ref()
-                        .is_some_and(|v| v.iter().any(|x| x == "weights")),
+                return_robustness_weights: has_output(outputs.as_ref(), "weights"),
                 return_diagnostics: false,
-                return_se: return_se || has_output(outputs.as_ref(), "se"),
+                return_se: has_output(outputs.as_ref(), "se"),
                 return_sorted: false,
                 missing: Some(missing),
                 confidence_intervals: iv.confidence,
@@ -806,11 +771,7 @@ impl PyOnlineLowess {
                 retain_model: None,
             },
         ))?;
-        if return_derivative
-            || outputs
-                .as_ref()
-                .is_some_and(|v| v.iter().any(|x| x == "derivative"))
-        {
+        if has_output(outputs.as_ref(), "derivative") {
             builder = builder.return_derivative();
         }
         builder = apply_bootstrap_and_seed(builder, iv.bootstrap, seed);
@@ -880,18 +841,12 @@ impl PyLowess {
         intervals=None,
         cv=None,
         seed=None,
-        return_diagnostics=false,
-        return_residuals=false,
-        return_robustness_weights=false,
         zero_weight_fallback="use_local_mean",
         auto_converge=None,
         parallel=true,
-        return_se=false,
-        return_sorted=false,
         backend="cpu",
         missing="error",
         retain_model=false,
-        return_derivative=false
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -906,18 +861,12 @@ impl PyLowess {
         intervals: Option<Bound<'_, PyDict>>,
         cv: Option<Bound<'_, PyDict>>,
         seed: Option<u64>,
-        return_diagnostics: bool,
-        return_residuals: bool,
-        return_robustness_weights: bool,
         zero_weight_fallback: &str,
         auto_converge: Option<f64>,
         parallel: bool,
-        return_se: bool,
-        return_sorted: bool,
         backend: &str,
         missing: &str,
         retain_model: bool,
-        return_derivative: bool,
     ) -> PyResult<Self> {
         validate_outputs(
             outputs.as_ref(),
@@ -945,11 +894,11 @@ impl PyLowess {
                 boundary_policy: Some(boundary_policy),
                 zero_weight_fallback: Some(zero_weight_fallback),
                 auto_converge,
-                return_residuals: return_residuals || output("residuals"),
-                return_robustness_weights: return_robustness_weights || output("weights"),
-                return_diagnostics: return_diagnostics || output("diagnostics"),
-                return_se: return_se || output("se"),
-                return_sorted: return_sorted || output("sorted"),
+                return_residuals: output("residuals"),
+                return_robustness_weights: output("weights"),
+                return_diagnostics: output("diagnostics"),
+                return_se: output("se"),
+                return_sorted: output("sorted"),
                 missing: Some(missing),
                 confidence_intervals: iv.confidence,
                 prediction_intervals: iv.prediction,
@@ -968,7 +917,7 @@ impl PyLowess {
                 retain_model: Some(retain_model),
             },
         ))?;
-        if return_derivative || output("derivative") {
+        if output("derivative") {
             builder = builder.return_derivative();
         }
         builder = apply_bootstrap_and_seed(builder, iv.bootstrap, seed);

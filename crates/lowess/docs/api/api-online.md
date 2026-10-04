@@ -129,10 +129,6 @@ Cross-validation, `custom_weights`, `"sorted"`, `"diagnostics"`, and `"residuals
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-### delta
-
-Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to `0` in Online mode, i.e. interpolation is disabled and every point is fit exactly. Positive `delta` is rejected in incremental mode because it fits only the latest point.
-
 ### weight_function
 
 *See: [Weight Functions](crate::doc::weighting::kernels)*
@@ -153,22 +149,9 @@ Points within `delta` of each other on the x-axis share the same local fit inste
 - `"huber"`
 - `"talwar"`
 
-### scaling_method
+### delta
 
-*See: [Scaling Methods](crate::doc::weighting::scaling)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### boundary_policy
-
-*See: [Boundary Handling](crate::doc::advanced::boundary)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
+Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to `0` in Online mode, i.e. interpolation is disabled and every point is fit exactly. Positive `delta` is rejected in incremental mode because it fits only the latest point.
 
 ### zero_weight_fallback
 
@@ -180,6 +163,29 @@ Behavior when all neighborhood weights are zero:
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
 
+### boundary_policy
+
+*See: [Boundary Handling](crate::doc::advanced::boundary)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
+### scaling_method
+
+*See: [Scaling Methods](crate::doc::weighting::scaling)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### auto_converge
+
+*See: [Robustness](crate::doc::weighting::robustness)*
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping. A finite tolerance requires `update_mode("full")` and `iterations > 0`; otherwise the setting would have no effect.
+
 ### missing
 
 Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `add_point`:
@@ -189,11 +195,22 @@ Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `add_point
 | `"error"` (default) | Return an error (`InvalidNumericValue`) |
 | `"drop"` | Silently ignore the point — `add_point` returns `Ok(None)` instead of adding it to the window |
 
-### auto_converge
+### window_capacity
 
-*See: [Robustness](crate::doc::weighting::robustness)*
+Maximum number of most recent points kept in the sliding window; older points are discarded as new ones arrive. Each `add_point()` call costs O(`window_capacity`) rather than growing with total history.
 
-Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping. A finite tolerance requires `update_mode("full")` and `iterations > 0`; otherwise the setting would have no effect.
+### min_points
+
+Minimum number of points required before smoothing starts. `add_point()` returns `None` until the window reaches this size.
+
+### update_mode
+
+*See: [Execution Modes](crate::doc::guide::adapter_choice)*
+
+| Mode | Alias | Behavior | Speed |
+| --- | --- | --- | --- |
+| `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
+| `"full"` | `"resmooth"` | Recompute entire window | More accurate |
 
 ### outputs
 
@@ -218,23 +235,6 @@ Unknown names are collected and reported together by `.build()` as `LowessError:
 *See: [Intervals](crate::doc::guide::intervals)*
 
 Use `.intervals(IntervalsBuilder::new().confidence(0.90).prediction(0.99))` to return bounds for the latest point; the coverage levels are independent. Optional `.bootstrap(n)` bootstraps the current sliding window instead of computing analytic intervals; set `.seed(seed)` on `OnlineLowess::new()` to control its draws. A seed alone does not enable bootstrap. Online requires `update_mode("full")`; the default incremental mode rejects intervals at `.build()` with `LowessError::StandardErrorRequiresFullUpdateMode`.
-
-### window_capacity
-
-Maximum number of most recent points kept in the sliding window; older points are discarded as new ones arrive. Each `add_point()` call costs O(`window_capacity`) rather than growing with total history.
-
-### min_points
-
-Minimum number of points required before smoothing starts. `add_point()` returns `None` until the window reaches this size.
-
-### update_mode
-
-*See: [Execution Modes](crate::doc::guide::adapter_choice)*
-
-| Mode | Alias | Behavior | Speed |
-| --- | --- | --- | --- |
-| `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
-| `"full"` | `"resmooth"` | Recompute entire window | More accurate |
 
 ## Result Structure
 

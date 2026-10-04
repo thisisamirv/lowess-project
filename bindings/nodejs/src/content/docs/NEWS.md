@@ -12,11 +12,12 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Enabled the optional wgpu DirectX 12 backend for GPU-enabled Windows builds. DXC is loaded dynamically with an FXC fallback, avoiding eager imports of `dxcompiler.dll` and `dxil.dll`.
 * Added GLES for Android GPU builds with a target-scoped `wgpu` feature; Windows continues to omit the GLES-only loader imports.
-* Added grouped `outputs` arrays and nested `cv` options for batch, streaming, online, and prediction configuration while preserving legacy fields.
+* Added grouped `outputs` arrays and nested `cv` options for batch, streaming, online, and prediction configuration.
 * Added a grouped `intervals` option with residual-bootstrap intervals for `Lowess`, `StreamingLowess`, full-update `OnlineLowess`, and `LowessResult.predict()`.
 
 ### Changed
 
+* Breaking change: replaced individual `return_*` output booleans with `outputs: [...]` for Batch, Streaming, Online, and prediction options.
 * Breaking change: replaced flat interval options and `predict()`'s interval levels with `intervals: { confidence, prediction, bootstrap }`, and replaced flat CV options and `cv.seed` with `cv: { method, k, fractions }` plus one outer `seed` shared by CV and bootstrap. `predict()` has its own `seed`.
 
 ### Fixed

@@ -104,24 +104,24 @@ int main() {
 | --- | --- | --- | --- |
 | `fraction` | `double` | 0.67 | Smoothing fraction (bandwidth) |
 | `iterations` | `int` | 0 | Number of robustifying iterations (requires `update_mode = "full"`) |
-| `window_capacity` | `int` | 1000 | Max points in sliding window |
-| `min_points` | `int` | 2 | Min points before smoothing starts |
-| `update_mode` | `std::string` | "incremental" | Update mode (`"full"` or `"incremental"`) |
-| `delta` | `double` | NaN | Interpolation distance (`NaN` disables interpolation); positive values require `update_mode = "full"` |
 | `weight_function` | `std::string` | "tricube" | Weight function name |
 | `robustness_method` | `std::string` | "bisquare" | Robustness method name |
+| `delta` | `double` | NaN | Interpolation distance (`NaN` disables interpolation); positive values require `update_mode = "full"` |
 | `zero_weight_fallback` | `std::string` | "use_local_mean" | Zero-weight handling |
 | `boundary_policy` | `std::string` | "extend" | Boundary handling policy |
 | `scaling_method` | `std::string` | "mad" | Residual scaling method |
 | `auto_converge` | `double` | NaN | Auto-convergence tolerance; requires `update_mode = "full"` and `iterations > 0` |
 | `missing` | `std::string` | "error" | Policy for non-finite (NaN/Inf) values in each point |
+| `window_capacity` | `int` | 1000 | Max points in sliding window |
+| `min_points` | `int` | 2 | Min points before smoothing starts |
+| `update_mode` | `std::string` | "incremental" | Update mode (`"full"` or `"incremental"`) |
 | `outputs` | `std::vector<std::string>` | `{}` | Request `"se"`, `"weights"`, or `"derivative"` |
 | `intervals` | `IntervalsOptions` | disabled | Confidence/prediction levels and per-window bootstrap refits (`update_mode = "full"` only) |
 | `seed` | `std::optional<uint64_t>` | unset | Reproducible bootstrap draws for each full-update window |
 
 Incremental mode fits only the newest point. Positive `delta` is rejected there, and `auto_converge` requires full mode with at least one robustness iteration.
 
-Cross-validation, GPU `backend`, `custom_weights`, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [fastLowess](api.md) for those.
+Cross-validation, GPU `backend`, `custom_weights`, the `"sorted"`, `"diagnostics"`, and `"residuals"` outputs, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [fastLowess](api.md) for those.
 
 ## Options
 
@@ -147,10 +147,6 @@ Cross-validation, GPU `backend`, `custom_weights`, `return_sorted`, `return_diag
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-### delta
-
-Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to `0` in Online mode, i.e. interpolation is disabled and every point is fit exactly.
-
 ### weight_function
 
 *See: [Weight Functions](../weighting/kernels.md)*
@@ -171,22 +167,9 @@ Points within `delta` of each other on the x-axis share the same local fit inste
 - `"huber"`
 - `"talwar"`
 
-### scaling_method
+### delta
 
-*See: [Scaling Methods](../weighting/scaling.md)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### boundary_policy
-
-*See: [Boundary Handling](../advanced/boundary.md)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
+Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to `0` in Online mode, i.e. interpolation is disabled and every point is fit exactly.
 
 ### zero_weight_fallback
 
@@ -198,6 +181,29 @@ Behavior when all neighborhood weights are zero:
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
 
+### boundary_policy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
+### scaling_method
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### auto_converge
+
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+
 ### missing
 
 Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `add_point`:
@@ -206,19 +212,6 @@ Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `add_point
 | --- | --- |
 | `"error"` (default) | Return an error result |
 | `"drop"` | Silently ignore the point — `add_point` succeeds but returns an `OnlineOutput` whose `has_value()` is `false` instead of adding it to the window |
-
-### auto_converge
-
-*See: [Robustness](../weighting/robustness.md#auto-convergence)*
-
-Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
-
-### return_robustness_weights
-
-Include the robustness weight for the latest point (from the last robustness iteration) in the result.
-
-- `false` (default) — leaves `robustness_weight()` as NaN
-- `true` — populates `robustness_weight()`
 
 ### window_capacity
 
@@ -260,9 +253,9 @@ Returned (inside `Expected`) by `add_point()`. Check `has_value()` before readin
 | `standard_error()` | `double` | Populated when `"se"` or intervals are requested (full mode only); NaN otherwise |
 | `confidence_lower()` / `confidence_upper()` | `double` | Bounds around the mean response if `intervals.confidence` was set (full mode only) |
 | `prediction_lower()` / `prediction_upper()` | `double` | Bounds for a new observation if `intervals.prediction` was set (full mode only) |
-| `residual()` | `double` | Residual y − smoothed; always populated (there is no `return_residuals` option for Online) |
-| `robustness_weight()` | `double` | Robustness weight, if `return_robustness_weights` was set |
+| `residual()` | `double` | Residual y − smoothed; always populated (no output selection is needed) |
+| `robustness_weight()` | `double` | Robustness weight, if `outputs` contains `"weights"` |
 | `iterations_used()` | `int` | Robustness iterations performed (−1 if N/A) |
 | `derivative()` | `double` | Local fit derivative/slope if `"derivative"` was requested (NaN otherwise) |
 
-There is no `Diagnostics` object or `return_diagnostics` option for `OnlineLowess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.
+There is no `Diagnostics` object or `"diagnostics"` output for `OnlineLowess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.

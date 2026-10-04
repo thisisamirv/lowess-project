@@ -32,7 +32,7 @@ println("y[0]: ", result.y[1])
 
 Remove trend to analyze residual patterns.
 
-Setting `return_residuals = True` stores `observed − smoothed` alongside the smooth. A slightly wider `fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
+Setting `outputs = ["residuals"]` stores `observed − smoothed` alongside the smooth. A slightly wider `fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
 
 ```@example ts-detrend
 using FastLOWESS
@@ -42,7 +42,7 @@ t = collect(range(0, 2π, length=n))
 y = sin.(t) .+ 0.1
 
 # Smooth to get trend and residuals
-model = Lowess(; fraction=0.3, iterations=3, return_residuals=true)
+model = Lowess(; fraction=0.3, iterations=3, outputs=["residuals"])
 result = fit(model, t, y)
 
 trend = result.y

@@ -130,10 +130,6 @@ Cross-validation, GPU `backend`, `custom_weights`, and `"sorted"` are Batch-only
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-### delta
-
-Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to `0` in Streaming mode, i.e. interpolation is disabled and every point is fit exactly.
-
 ### weight_function
 
 *See: [Weight Functions](crate::doc::weighting::kernels)*
@@ -154,22 +150,9 @@ Points within `delta` of each other on the x-axis share the same local fit inste
 - `"huber"`
 - `"talwar"`
 
-### scaling_method
+### delta
 
-*See: [Scaling Methods](crate::doc::weighting::scaling)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### boundary_policy
-
-*See: [Boundary Handling](crate::doc::advanced::boundary)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
+Points within `delta` of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. `NaN` (default) auto-sets it to `0` in Streaming mode, i.e. interpolation is disabled and every point is fit exactly.
 
 ### zero_weight_fallback
 
@@ -180,6 +163,29 @@ Behavior when all neighborhood weights are zero:
 | `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### boundary_policy
+
+*See: [Boundary Handling](crate::doc::advanced::boundary)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
+### scaling_method
+
+*See: [Scaling Methods](crate::doc::weighting::scaling)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### auto_converge
+
+*See: [Robustness](crate::doc::weighting::robustness)*
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
 
 ### missing
 
@@ -192,11 +198,43 @@ Policy for handling non-finite (NaN/Inf) values within each chunk:
 
 **Note:** A length mismatch between `x` and `y` always errors, even under `"drop"`.
 
-### auto_converge
+### chunk_size
 
-*See: [Robustness](crate::doc::weighting::robustness)*
+Number of points processed per chunk. Larger chunks reduce per-chunk overhead and give each local fit more surrounding context, at the cost of higher peak memory; smaller chunks bound memory tightly but increase the fraction of points that fall in overlap regions. A good starting point is balancing available memory against how much processing overhead per chunk is acceptable — match it to your file-read buffer or message-batch size to avoid unnecessary copying.
 
-Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+### overlap
+
+Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via `merge_strategy`. A good starting point is 10–20% of `chunk_size`: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice.
+
+- Not called (default) — computes `chunk_size / 10`, clamped to at least 1 and less than `chunk_size`
+- Any `usize >= 1` and `< chunk_size`
+
+### merge_strategy
+
+*See: [Merge Strategies](crate::doc::advanced::merge)*
+
+| Strategy | Alias | Behavior |
+| --- | --- | --- |
+| `"weighted_average"` (default) | `"weighted"` | Distance-weighted blend |
+| `"average"` | `"mean"` | Average overlapping values |
+| `"take_first"` | `"first"` | Keep left chunk values |
+| `"take_last"` | `"last"` | Keep right chunk values |
+
+### parallel
+
+Enable multi-threaded execution via Rayon.
+
+- `true` (default) — parallelizes the local regression fits across CPU cores
+- `false` — forces single-threaded execution (useful for benchmarking or deterministic profiling)
+
+### return_se
+
+*See: [Intervals](crate::doc::guide::intervals)*
+
+Computes standard errors per chunk the same way Batch does, then merges the overlap region across chunk boundaries the same way `y`/`derivative` are, via `merge_strategy`.
+
+- `false` (default) — leaves `result.standard_errors` as `None`
+- `true` — populates it
 
 ### return_diagnostics
 
@@ -228,49 +266,11 @@ Each point's local WLS fit already computes a slope internally; this exposes tha
 - `false` (default) — leaves `result.derivative` as `None`
 - `true` — populates it
 
-### return_se
-
-*See: [Intervals](crate::doc::guide::intervals)*
-
-Computes standard errors per chunk the same way Batch does, then merges the overlap region across chunk boundaries the same way `y`/`derivative` are, via `merge_strategy`.
-
-- `false` (default) — leaves `result.standard_errors` as `None`
-- `true` — populates it
-
 ### intervals
 
 *See: [Intervals](crate::doc::guide::intervals)*
 
 Configure independent confidence and prediction bounds with `.intervals(IntervalsBuilder::new().confidence(0.90).prediction(0.99))`. Optional `.bootstrap(n)` replaces analytic intervals with per-chunk residual-bootstrap estimates; set `.seed(seed)` on `StreamingLowess::new()` to control draws. A seed alone does not enable bootstrap. Bounds and standard errors are merged across overlap boundaries via `merge_strategy`. With `parallel(true)`, bootstrap refits run concurrently.
-
-### parallel
-
-Enable multi-threaded execution via Rayon.
-
-- `true` (default) — parallelizes the local regression fits across CPU cores
-- `false` — forces single-threaded execution (useful for benchmarking or deterministic profiling)
-
-### chunk_size
-
-Number of points processed per chunk. Larger chunks reduce per-chunk overhead and give each local fit more surrounding context, at the cost of higher peak memory; smaller chunks bound memory tightly but increase the fraction of points that fall in overlap regions. A good starting point is balancing available memory against how much processing overhead per chunk is acceptable — match it to your file-read buffer or message-batch size to avoid unnecessary copying.
-
-### overlap
-
-Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via `merge_strategy`. A good starting point is 10–20% of `chunk_size`: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice.
-
-- Not called (default) — computes `chunk_size / 10`, clamped to at least 1 and less than `chunk_size`
-- Any `usize >= 1` and `< chunk_size`
-
-### merge_strategy
-
-*See: [Merge Strategies](crate::doc::advanced::merge)*
-
-| Strategy | Alias | Behavior |
-| --- | --- | --- |
-| `"weighted_average"` (default) | `"weighted"` | Distance-weighted blend |
-| `"average"` | `"mean"` | Average overlapping values |
-| `"take_first"` | `"first"` | Keep left chunk values |
-| `"take_last"` | `"last"` | Keep right chunk values |
 
 ## Result Structure
 

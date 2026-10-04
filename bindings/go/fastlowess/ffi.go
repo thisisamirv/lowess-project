@@ -114,8 +114,8 @@ func cDoubleSliceToGo(ptr *C.double, n int) []float64 {
 	return out
 }
 
-// Diagnostics holds goodness-of-fit metrics, populated when ReturnDiagnostics
-// is enabled.
+// Diagnostics holds goodness-of-fit metrics, populated when Outputs contains
+// "diagnostics".
 type Diagnostics struct {
 	RMSE     float64
 	MAE      float64
@@ -144,7 +144,7 @@ type Result struct {
 	// Y is the smoothed y values (length N).
 	Y []float64
 
-	// StandardErrors is nil unless ReturnSE, "se" in Outputs, or Intervals was requested.
+	// StandardErrors is nil unless "se" in Outputs or Intervals was requested.
 	StandardErrors []float64
 	// ConfidenceLower/ConfidenceUpper are nil unless Intervals.Confidence was set.
 	ConfidenceLower []float64
@@ -152,11 +152,11 @@ type Result struct {
 	// PredictionLower/PredictionUpper are nil unless Intervals.Prediction was set.
 	PredictionLower []float64
 	PredictionUpper []float64
-	// Residuals is nil unless ReturnResiduals was requested.
+	// Residuals is nil unless Outputs contains "residuals".
 	Residuals []float64
-	// RobustnessWeights is nil unless ReturnRobustnessWeights was requested.
+	// RobustnessWeights is nil unless Outputs contains "weights".
 	RobustnessWeights []float64
-	// Derivative is nil unless ReturnDerivative was requested (one value per output point).
+	// Derivative is nil unless Outputs contains "derivative" (one value per output point).
 	Derivative []float64
 	// CVScores is nil unless cross-validation was configured.
 	CVScores []float64
@@ -167,7 +167,7 @@ type Result struct {
 	// if not available (e.g. for streaming intermediate chunks).
 	IterationsUsed int
 
-	// Diagnostics is nil unless ReturnDiagnostics was requested.
+	// Diagnostics is nil unless Outputs contains "diagnostics".
 	Diagnostics *Diagnostics
 
 	// PredictModel is non-nil only if Options.RetainModel was set to true. Enables

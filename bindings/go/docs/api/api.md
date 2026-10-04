@@ -69,7 +69,6 @@ result, err := model.Fit(x, y)
 | `CV` | `*CVOptions` | `nil` (disabled) | Grouped cross-validation configuration. |
 | `Seed` | `*uint64` | `nil` | Shared CV/bootstrap seed; zero is a valid deterministic seed. |
 | `RetainModel` | `bool` | `false` | Retain training data, enabling `Result.PredictModel` for out-of-sample prediction. |
-| `ReturnDerivative` | `bool` | `false` | Include the per-point local fit derivative (slope) in the result. |
 
 Use `fastlowess.DefaultOptions()` and override only the fields you need:
 
@@ -187,6 +186,34 @@ The batch `Lowess` type can optionally run on a GPU-accelerated backend powered 
 - `"cpu"` (default)
 - `"gpu"` — requires a `gpu`-feature build of the native library
 
+### Outputs: se
+
+*See: [Intervals](../guide/intervals.md#standard-errors)*
+
+Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
+
+### Outputs: diagnostics
+
+*See: [`Diagnostics`](#diagnostics)*
+
+Select `"diagnostics"` to populate `Result.Diagnostics` (RMSE, MAE, R², AIC/Aicc, effective degrees of freedom). AIC/AICc/`EffectiveDF` additionally require `"se"` (or confidence/prediction intervals), since they depend on hat-matrix statistics.
+
+### Outputs: residuals
+
+Select `"residuals"` to populate `Result.Residuals` (`Y - fitted`).
+
+### Outputs: weights
+
+Select `"weights"` to populate `Result.RobustnessWeights` (from the last robustness iteration).
+
+### Outputs: derivative
+
+Select `"derivative"` to expose each point's local WLS slope in `Result.Derivative` at effectively no extra computation cost.
+
+### Outputs: sorted
+
+When set to `true`, it reorders every result field (residuals, intervals, etc.) by `X` in an ascending manner, instead of in original input order. To get both orderings, sort the default result client-side (e.g. via `sort.Slice`) instead of calling `Fit` twice.
+
 ### Intervals
 
 *See: [Intervals](../guide/intervals.md)*
@@ -236,46 +263,6 @@ weights[0] = 5.0 // trust the first observation more
 result, err := model.Fit(x, y, weights)
 ```
 
-### ReturnSE
-
-*See: [Intervals](../guide/intervals.md#standard-errors)*
-
-Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
-
-### ReturnDiagnostics
-
-*See: [`Diagnostics`](#diagnostics)*
-
-Populate `Result.Diagnostics` (RMSE, MAE, R², AIC/AICc, effective degrees of freedom). AIC/AICc/`EffectiveDF` additionally require `ReturnSE: true` (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.
-
-- `false` (default) — leaves `Result.Diagnostics` as `nil`
-- `true` — populates `Result.Diagnostics`
-
-### ReturnResiduals
-
-Populate `Result.Residuals` (`Y - fitted`).
-
-- `false` (default) — leaves `Result.Residuals` as `nil`
-- `true` — populates `Result.Residuals`
-
-### ReturnRobustnessWeights
-
-Populate `Result.RobustnessWeights` (from the last robustness iteration).
-
-- `false` (default) — leaves `Result.RobustnessWeights` as `nil`
-- `true` — populates `Result.RobustnessWeights`
-
-### ReturnDerivative
-
-Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `Result.Derivative`, enabling turning-point/rate-of-change analysis at effectively no extra computation cost.
-
-- `false` (default) — leaves `Result.Derivative` as `nil`
-- `true` — populates it
-
-### ReturnSorted
-
-When set to `true`, it reorders every result field (residuals, intervals, etc.) by `X` in an ascending manner, instead of in original input order. To get both orderings, sort the default result client-side (e.g. via `sort.Slice`) instead of calling `Fit` twice.
-
 ## Result Structure
 
 ### `Result`
@@ -283,16 +270,16 @@ When set to `true`, it reorders every result field (residuals, intervals, etc.) 
 | Field | Type | Populated when |
 | --- | --- | --- |
 | `X`, `Y` | `[]float64` | Always. |
-| `StandardErrors` | `[]float64` | `ReturnSE` or `Intervals` |
+| `StandardErrors` | `[]float64` | `"se"` output or `Intervals` |
 | `ConfidenceLower`, `ConfidenceUpper` | `[]float64` | `Intervals.Confidence` set |
 | `PredictionLower`, `PredictionUpper` | `[]float64` | `Intervals.Prediction` set |
-| `Residuals` | `[]float64` | `ReturnResiduals` |
-| `RobustnessWeights` | `[]float64` | `ReturnRobustnessWeights` |
+| `Residuals` | `[]float64` | `"residuals"` output |
+| `RobustnessWeights` | `[]float64` | `"weights"` output |
 | `CVScores` | `[]float64` | `CV.Fractions` set |
 | `FractionUsed` | `float64` | Always. |
 | `IterationsUsed` | `int` | Always (`-1` if not available). |
-| `Diagnostics` | `*Diagnostics` | `ReturnDiagnostics` |
-| `Derivative` | `[]float64` | `ReturnDerivative` |
+| `Diagnostics` | `*Diagnostics` | `"diagnostics"` output |
+| `Derivative` | `[]float64` | `"derivative"` output |
 
 ### `Diagnostics`
 

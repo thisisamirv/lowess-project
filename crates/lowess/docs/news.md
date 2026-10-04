@@ -17,6 +17,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Changed
 
+* Replaced individual `return_*` fit and prediction selectors with grouped `.outputs([...])` configuration.
 * Breaking change: a single `.seed(seed)` on the outer Rust fit builder now controls both CV folds and residual-bootstrap draws; nested CV and interval seed setters were removed. A seed alone does not enable bootstrap.
 * Breaking change: removed individual `confidence_intervals`, `prediction_intervals`, `bootstrap_intervals`, and `bootstrap_seed` setters from the Rust fitting builders; configure them via `.intervals(IntervalsBuilder::new()...)`.
 * Breaking change: replaced `CVBuilder::method(...).fractions(...)` with `CVBuilder::new().method(...).fraction(...)` (k-fold, `k = 5` by default; `"loocv"` selects leave-one-out).

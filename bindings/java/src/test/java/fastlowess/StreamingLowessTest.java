@@ -72,7 +72,7 @@ class StreamingLowessTest {
                 StreamingOptions.builder()
                         .fraction(0.2)
                         .chunkSize(50)
-                        .returnSe(true)
+                        .outputs("se")
                         .intervals(IntervalsOptions.builder().confidence(0.95).prediction(0.95).build())
                         .build())) {
             Result chunkResult = model.processChunk(x, y);

@@ -100,7 +100,7 @@ test('batch smoothing', () => {
 
     const model = new fastlowess.Lowess({
         fraction: 0.3,
-        return_diagnostics: true
+        outputs: ["diagnostics"]
     });
 
     const result = model.fit(x, y);
@@ -181,9 +181,7 @@ test('return_sorted = true returns results sorted ascending by x', () => {
 
     const model = new fastlowess.Lowess({
         fraction: 0.7,
-        return_residuals: true,
-        return_robustness_weights: true,
-        return_sorted: true
+        outputs: ["residuals", "weights", "sorted"]
     });
     const result = model.fit(x, y);
 
@@ -196,8 +194,7 @@ test('return_sorted = true returns results sorted ascending by x', () => {
     // Same (x, y) pairs as the unsorted-order fit, just reordered.
     const unsortedModel = new fastlowess.Lowess({
         fraction: 0.7,
-        return_residuals: true,
-        return_robustness_weights: true
+        outputs: ["residuals", "weights"]
     });
     const unsortedResult = unsortedModel.fit(x, y);
 
@@ -215,7 +212,7 @@ test('SmoothOptions: return_derivative returns per-point local fit slope', () =>
 
     const model = new fastlowess.Lowess({
         fraction: 0.7,
-        return_derivative: true,
+        outputs: ["derivative"],
     });
     const result = model.fit(x, y);
 
@@ -360,7 +357,7 @@ test('online missing: "drop" ignores non-finite point', () => {
 test('streaming: return_se and grouped intervals', () => {
     const streamer = new fastlowess.StreamingLowess({
         fraction: 0.2,
-        return_se: true,
+        outputs: ["se"],
         intervals: { confidence: 0.95, prediction: 0.95 }
     }, {
         chunk_size: 50
@@ -385,7 +382,7 @@ test('online: return_se and intervals require update_mode "full"', () => {
     assert.throws(() => {
         new fastlowess.OnlineLowess({
             fraction: 0.5,
-            return_se: true
+            outputs: ["se"]
         }, {
             window_capacity: 10,
             min_points: 3
@@ -396,7 +393,7 @@ test('online: return_se and intervals require update_mode "full"', () => {
 test('online: return_se and grouped intervals', () => {
     const online = new fastlowess.OnlineLowess({
         fraction: 0.5,
-        return_se: true,
+        outputs: ["se"],
         intervals: { confidence: 0.95, prediction: 0.95 }
     }, {
         window_capacity: 10,

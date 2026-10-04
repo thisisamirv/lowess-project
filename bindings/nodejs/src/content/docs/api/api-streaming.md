@@ -100,13 +100,8 @@ Fraction used: 0.5
 | `outputs` | `string[]` | `[]` | Select `se`, `diagnostics`, `residuals`, `weights`, and/or `derivative` |
 | `intervals` | `object` | `null` | Grouped `confidence`, `prediction`, and per-chunk `bootstrap` options |
 | `seed` | `number` | `null` | Reproducible bootstrap draws for each combined chunk |
-| `return_se` | `boolean` | `false` | Populate `standard_errors` in the result |
-| `return_diagnostics` | `boolean` | `false` | Include diagnostics in result |
-| `return_residuals` | `boolean` | `false` | Include residuals in result |
-| `return_robustness_weights` | `boolean` | `false` | Include weights in result |
-| `return_derivative` | `boolean` | `false` | Include the per-point local fit derivative (slope) in result |
 
-Cross-validation, GPU `backend`, `custom_weights`, and `return_sorted` are Batch-only and not available here; see [fastLowess](api.md) for those. Standard errors and confidence/prediction intervals are computed per combined chunk (including the previous overlap), then blended across overlap regions via `merge_strategy` like `y`/`derivative` are; they are local chunk intervals, not whole-stream intervals.
+Cross-validation, GPU `backend`, `custom_weights`, and the `"sorted"` output are Batch-only and not available here; see [fastLowess](api.md) for those. Standard errors and confidence/prediction intervals are computed per combined chunk (including the previous overlap), then blended across overlap regions via `merge_strategy` like `y`/`derivative` are; they are local chunk intervals, not whole-stream intervals.
 
 ## Options
 
@@ -229,6 +224,30 @@ Enable multi-threaded execution via Rayon.
 - `true` (default) — parallelizes the local regression fits across CPU cores
 - `false` — forces single-threaded execution
 
+### outputs: se
+
+*See: [Intervals](../guide/intervals.md)*
+
+Computes standard errors per chunk the same way Batch does, then merges the overlap region across chunk boundaries the same way `y`/`derivative` are, via `merge_strategy`.
+
+### outputs: diagnostics
+
+*See: [`Diagnostics`](#diagnostics)*
+
+Select `"diagnostics"` to include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `effective_df`/`aic`/`aicc` require per-chunk hat-matrix leverage to be threaded into the cumulative diagnostics computation across chunk boundaries, which isn't currently done (even with `"se"` or `intervals` selected), so they're always `null` here.
+
+### outputs: residuals
+
+Include per-point residuals (`y - fitted`) in the result.
+
+### outputs: weights
+
+Include the final per-point robustness weights (from the last robustness iteration) in the result.
+
+### outputs: derivative
+
+Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `LowessResult.derivative` at effectively no extra computation cost. Derivative values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
+
 ### intervals
 
 *See: [Intervals](../guide/intervals.md)*
@@ -238,45 +257,6 @@ An object such as `{ confidence: 0.90, prediction: 0.99, bootstrap: 200 }`, popu
 ### seed
 
 Seeds bootstrap draws. Each combined chunk restarts from the same seed. It does not enable bootstrap by itself; `0` is a valid seed.
-
-### return_se
-
-*See: [Intervals](../guide/intervals.md)*
-
-Computes standard errors per chunk the same way Batch does, then merges the overlap region across chunk boundaries the same way `y`/`derivative` are, via `merge_strategy`.
-
-- `false` (default) — leaves `result.standard_errors` as `null`
-- `true` — populates it
-
-### return_diagnostics
-
-*See: [`Diagnostics`](#diagnostics)*
-
-Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `effective_df`/`aic`/`aicc` require per-chunk hat-matrix leverage to be threaded into the cumulative diagnostics computation across chunk boundaries, which isn't currently done (even with `return_se` or `intervals` set), so they're always `null` here.
-
-- `false` (default) — leaves `result.diagnostics` as `null`
-- `true` — populates `result.diagnostics`
-
-### return_residuals
-
-Include per-point residuals (`y - fitted`) in the result.
-
-- `false` (default) — leaves `result.residuals` as `null`
-- `true` — populates `result.residuals`
-
-### return_robustness_weights
-
-Include the final per-point robustness weights (from the last robustness iteration) in the result.
-
-- `false` (default) — leaves `result.robustness_weights` as `null`
-- `true` — populates `result.robustness_weights`
-
-### return_derivative
-
-Each point's local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) in `LowessResult.derivative` at effectively no extra computation cost. Derivative values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
-
-- `false` (default) — leaves `result.derivative` as `null`
-- `true` — populates it
 
 ## Result Structure
 
@@ -290,16 +270,16 @@ Returned by `process_chunk()` and `finalize()`.
 | `y` | `Float64Array` | Smoothed y values |
 | `fraction_used` | `number` | Fraction used |
 | `iterations_used` | `number \| null` | Robustness iterations actually performed |
-| `standard_errors` | `Float64Array \| null` | Per-point standard errors (if `return_se` or any interval was set) |
+| `standard_errors` | `Float64Array \| null` | Per-point standard errors (if `"se"` or any interval was set) |
 | `confidence_lower` | `Float64Array \| null` | Lower confidence bounds (if `intervals.confidence` was set) |
 | `confidence_upper` | `Float64Array \| null` | Upper confidence bounds (if `intervals.confidence` was set) |
 | `prediction_lower` | `Float64Array \| null` | Lower prediction bounds (if `intervals.prediction` was set) |
 | `prediction_upper` | `Float64Array \| null` | Upper prediction bounds (if `intervals.prediction` was set) |
-| `residuals` | `Float64Array \| null` | Residuals (if `return_residuals`) |
-| `robustness_weights` | `Float64Array \| null` | Robustness weights (if `return_robustness_weights`) |
+| `residuals` | `Float64Array \| null` | Residuals (if `"residuals"` was requested) |
+| `robustness_weights` | `Float64Array \| null` | Robustness weights (if `"weights"` was requested) |
 | `cv_scores` | `Float64Array \| null` | Always `null` (Batch only) |
-| `diagnostics` | `Diagnostics \| null` | Fit metrics (if `return_diagnostics`) |
-| `derivative` | `Float64Array \| null` | Per-point local fit derivative/slope (if `return_derivative`) |
+| `diagnostics` | `Diagnostics \| null` | Fit metrics (if `"diagnostics"` was requested) |
+| `derivative` | `Float64Array \| null` | Per-point local fit derivative/slope (if `"derivative"` was requested) |
 
 ### `Diagnostics`
 
