@@ -19,7 +19,7 @@ use num_traits::Float;
 use std::vec::Vec;
 
 // Internal dependencies
-use crate::evaluation::intervals::IntervalMethod;
+use crate::evaluation::intervals::{IntervalMethod, MIN_BOOTSTRAP_SAMPLES};
 use crate::primitives::errors::LowessError;
 use crate::primitives::policies::UpdateMode;
 
@@ -149,6 +149,14 @@ impl Validator {
         }
         if method.prediction {
             Self::validate_interval_level(method.prediction_coverage())?;
+        }
+        Ok(())
+    }
+
+    #[inline(never)]
+    pub fn validate_bootstrap_samples(n_boot: usize) -> Result<(), LowessError> {
+        if n_boot < MIN_BOOTSTRAP_SAMPLES {
+            return Err(LowessError::InvalidBootstrapSamples(n_boot));
         }
         Ok(())
     }

@@ -290,6 +290,19 @@ fn test_validate_interval_method_rejects_invalid_levels() {
     }
 }
 
+#[test]
+fn test_validate_bootstrap_samples() {
+    for n_boot in [0, 1] {
+        assert!(matches!(
+            Validator::validate_bootstrap_samples(n_boot),
+            Err(LowessError::InvalidBootstrapSamples(value)) if value == n_boot
+        ));
+    }
+    for n_boot in [2, 256, usize::MAX] {
+        assert!(Validator::validate_bootstrap_samples(n_boot).is_ok());
+    }
+}
+
 /// Test fraction boundary values.
 ///
 /// Verifies correct handling of boundary fraction values.

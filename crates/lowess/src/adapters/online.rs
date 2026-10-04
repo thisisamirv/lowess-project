@@ -29,7 +29,7 @@ use crate::engine::executor::{
 use crate::engine::executor::{LowessConfig, LowessExecutor};
 use crate::engine::validator::Validator;
 use crate::evaluation::defaults::{DEFAULT_DELTA, DEFAULT_FRACTION};
-use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod, MIN_BOOTSTRAP_SAMPLES};
+use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod};
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
 use crate::math::kernel::WeightFunction;
@@ -198,10 +198,8 @@ impl<T: Float> OnlineLowessBuilder<T> {
             self.update_mode,
         )?;
 
-        if let Some(bc) = self.bootstrap
-            && bc.n_boot < MIN_BOOTSTRAP_SAMPLES
-        {
-            return Err(LowessError::InvalidBootstrapSamples(bc.n_boot));
+        if let Some(bc) = self.bootstrap {
+            Validator::validate_bootstrap_samples(bc.n_boot)?;
         }
 
         // Validate that robustness iterations are only combined with update_mode("full")

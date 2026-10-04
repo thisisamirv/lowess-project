@@ -36,9 +36,7 @@ use crate::engine::validator::Validator;
 use crate::evaluation::cv::CVKind;
 use crate::evaluation::defaults::{DEFAULT_CV_SEED, DEFAULT_FRACTION};
 use crate::evaluation::diagnostics::Diagnostics;
-use crate::evaluation::intervals::{
-    BootstrapConfig, BootstrapOutput, IntervalMethod, MIN_BOOTSTRAP_SAMPLES,
-};
+use crate::evaluation::intervals::{BootstrapConfig, BootstrapOutput, IntervalMethod};
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
 use crate::math::kernel::WeightFunction;
@@ -237,10 +235,8 @@ impl<T: Float> BatchLowessBuilder<T> {
         if let Some(ref method) = self.interval_type {
             Validator::validate_interval_method(method)?;
         }
-        if let Some(bc) = self.bootstrap
-            && bc.n_boot < MIN_BOOTSTRAP_SAMPLES
-        {
-            return Err(LowessError::InvalidBootstrapSamples(bc.n_boot));
+        if let Some(bc) = self.bootstrap {
+            Validator::validate_bootstrap_samples(bc.n_boot)?;
         }
 
         // Validate CV fractions and method

@@ -31,7 +31,7 @@ use crate::engine::executor::{LowessConfig, LowessExecutor};
 use crate::engine::validator::Validator;
 use crate::evaluation::defaults::{DEFAULT_DELTA, DEFAULT_FRACTION};
 use crate::evaluation::diagnostics::DiagnosticsState;
-use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod, MIN_BOOTSTRAP_SAMPLES};
+use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod};
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
 use crate::math::kernel::WeightFunction;
@@ -199,10 +199,8 @@ impl<T: Float> StreamingLowessBuilder<T> {
         // Validate overlap
         Validator::validate_overlap(self.overlap, self.chunk_size)?;
 
-        if let Some(bc) = self.bootstrap
-            && bc.n_boot < MIN_BOOTSTRAP_SAMPLES
-        {
-            return Err(LowessError::InvalidBootstrapSamples(bc.n_boot));
+        if let Some(bc) = self.bootstrap {
+            Validator::validate_bootstrap_samples(bc.n_boot)?;
         }
 
         let has_diag = self.return_diagnostics;
