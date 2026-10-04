@@ -25,6 +25,14 @@ const gpuLoader = `${gpuLoaderMarker}  if (!process.env.NAPI_RS_NATIVE_LIBRARY_P
 const marker = "module.exports.installGpu = require('./gpu-installer.js').installGpu"
 
 let contents = fs.readFileSync(indexPath, 'utf8')
+contents = contents.replace(
+    /bindingPackageVersion !== '\d+\.\d+\.\d+'/g,
+    "bindingPackageVersion !== require('./package.json').version"
+)
+contents = contents.replace(
+    /expected \d+\.\d+\.\d+ but got/g,
+    () => "expected ${require('./package.json').version} but got"
+)
 if (!contents.includes(gpuLoaderMarker)) {
     if (!contents.includes(nativeLoaderMarker)) {
         throw new Error('Could not locate the N-API native loader insertion point')

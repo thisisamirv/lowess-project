@@ -6,6 +6,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
 const fastlowess = require('..');
+const nativeLoaderSource = fs.readFileSync(path.join(__dirname, '..', 'index.js'), 'utf8');
 const gpuInstallerTesting = require('../gpu-installer')._testing;
 
 test('version metadata is available without a native addon', () => {
@@ -29,6 +30,15 @@ test('version metadata is available without a native addon', () => {
     } finally {
         fs.rmSync(directory, { recursive: true, force: true });
     }
+});
+
+test('native loader version checks follow package metadata', () => {
+    assert.match(
+        nativeLoaderSource,
+        /bindingPackageVersion !== require\('\.\/package\.json'\)\.version/
+    );
+    assert.doesNotMatch(nativeLoaderSource, /bindingPackageVersion !== '\d+\.\d+\.\d+'/);
+    assert.doesNotMatch(nativeLoaderSource, /expected \d+\.\d+\.\d+ but got/);
 });
 
 test('GPU target detection handles musl reports and rejects unsupported ARM musl', () => {
