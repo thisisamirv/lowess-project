@@ -31,19 +31,23 @@ jobs:
           - os: ubuntu-latest
             artifact_name: libfastlowess.so
             asset_name: libfastlowess-linux-x64.so
+            platform_dir: linux-x64
             target_dir: target/release
           - os: ubuntu-latest
             container: "alpine:latest"
             artifact_name: libfastlowess.so
             asset_name: libfastlowess-linux-x64-musl.so
+            platform_dir: linux-x64-musl
             target_dir: target/release
           - os: ubuntu-24.04-arm
             artifact_name: libfastlowess.so
             asset_name: libfastlowess-linux-arm64.so
+            platform_dir: linux-arm64
             target_dir: target/release
           - os: ubuntu-24.04-arm
             artifact_name: libfastlowess.so
             asset_name: libfastlowess-linux-arm64-musl.so
+            platform_dir: linux-arm64-musl
             target_dir: target/aarch64-unknown-linux-musl/release
             cargo_target: "--target aarch64-unknown-linux-musl"
             rust_target: aarch64-unknown-linux-musl
@@ -51,6 +55,7 @@ jobs:
           - os: ubuntu-latest
             artifact_name: libfastlowess.so
             asset_name: libfastlowess-linux-x86.so
+            platform_dir: linux-x86
             target_dir: target/i686-unknown-linux-gnu/release
             cargo_target: "--target i686-unknown-linux-gnu"
             rust_target: i686-unknown-linux-gnu
@@ -60,6 +65,7 @@ jobs:
           - os: ubuntu-latest
             artifact_name: libfastlowess.so
             asset_name: libfastlowess-linux-armv7.so
+            platform_dir: linux-armv7
             target_dir: target/armv7-unknown-linux-gnueabihf/release
             cargo_target: "--target armv7-unknown-linux-gnueabihf"
             rust_target: armv7-unknown-linux-gnueabihf
@@ -69,6 +75,7 @@ jobs:
           - os: ubuntu-latest
             artifact_name: libfastlowess.so
             asset_name: libfastlowess-android-arm64-v8a.so
+            platform_dir: android-arm64-v8a
             target_dir: target/aarch64-linux-android/release
             cargo_target: "--target aarch64-linux-android"
             rust_target: aarch64-linux-android
@@ -78,6 +85,7 @@ jobs:
           - os: ubuntu-latest
             artifact_name: libfastlowess.so
             asset_name: libfastlowess-android-armeabi-v7a.so
+            platform_dir: android-armeabi-v7a
             target_dir: target/armv7-linux-androideabi/release
             cargo_target: "--target armv7-linux-androideabi"
             rust_target: armv7-linux-androideabi
@@ -87,6 +95,7 @@ jobs:
           - os: ubuntu-latest
             artifact_name: libfastlowess.so
             asset_name: libfastlowess-android-x86.so
+            platform_dir: android-x86
             target_dir: target/i686-linux-android/release
             cargo_target: "--target i686-linux-android"
             rust_target: i686-linux-android
@@ -96,6 +105,7 @@ jobs:
           - os: ubuntu-latest
             artifact_name: libfastlowess.so
             asset_name: libfastlowess-android-x86_64.so
+            platform_dir: android-x86_64
             target_dir: target/x86_64-linux-android/release
             cargo_target: "--target x86_64-linux-android"
             rust_target: x86_64-linux-android
@@ -105,12 +115,14 @@ jobs:
           - os: windows-latest
             artifact_name: fastlowess.dll
             asset_name: fastlowess-win32-x64.dll
+            platform_dir: windows-x64-msvc
             import_library_asset_name: fastlowess-win32-x64.lib
             windows_toolchain: msvc
             target_dir: target/release
           - os: windows-latest
             artifact_name: fastlowess.dll
             asset_name: fastlowess-win32-x64-gnu.dll
+            platform_dir: windows-x64-gnu
             import_library_asset_name: libfastlowess-win32-x64-gnu.dll.a
             windows_toolchain: gnu
             target_dir: target/x86_64-pc-windows-gnu/release
@@ -119,20 +131,24 @@ jobs:
           - os: windows-11-arm
             artifact_name: fastlowess.dll
             asset_name: fastlowess-win32-arm64.dll
+            platform_dir: windows-arm64
             import_library_asset_name: fastlowess-win32-arm64.lib
             windows_toolchain: msvc
             target_dir: target/release
           - os: macos-15-intel
             artifact_name: libfastlowess.dylib
             asset_name: libfastlowess-macos-x64.dylib
+            platform_dir: macos-x64
             target_dir: target/release
           - os: macos-latest
             artifact_name: libfastlowess.dylib
             asset_name: libfastlowess-macos-arm64.dylib
+            platform_dir: macos-arm64
             target_dir: target/release
           - os: macos-latest
             artifact_name: libfastlowess_cpp.a
             asset_name: libfastlowess-ios-arm64.a
+            platform_dir: ios-arm64
             target_dir: target/aarch64-apple-ios/release
             cargo_target: "--target aarch64-apple-ios"
             rust_target: aarch64-apple-ios
@@ -140,6 +156,7 @@ jobs:
           - os: macos-latest
             artifact_name: libfastlowess_cpp.a
             asset_name: libfastlowess-ios-simulator-arm64.a
+            platform_dir: ios-simulator-arm64
             target_dir: target/aarch64-apple-ios-sim/release
             cargo_target: "--target aarch64-apple-ios-sim"
             rust_target: aarch64-apple-ios-sim
@@ -147,6 +164,7 @@ jobs:
           - os: macos-latest
             artifact_name: libfastlowess_cpp.a
             asset_name: libfastlowess-ios-simulator-x86_64.a
+            platform_dir: ios-simulator-x86_64
             target_dir: target/x86_64-apple-ios/release
             cargo_target: "--target x86_64-apple-ios"
             rust_target: x86_64-apple-ios
@@ -253,28 +271,65 @@ jobs:
           mv ${{ matrix.target_dir }}/fastlowess_cpp.dll ${{ matrix.asset_name }}
           mv ${{ matrix.target_dir }}/libfastlowess_cpp.dll.a ${{ matrix.import_library_asset_name }}
 
-      - name: Upload Binaries to Release
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}
-          files: ${{ matrix.asset_name }}
+      - name: Assemble platform package
+        shell: bash
+        run: |
+          package_dir="package/${{ matrix.platform_dir }}"
+          mkdir -p "$package_dir"
+          cp "${{ matrix.asset_name }}" "$package_dir/"
+          if [ -n "${{ matrix.import_library_asset_name }}" ]; then
+            cp "${{ matrix.import_library_asset_name }}" "$package_dir/"
+          fi
+          cp bindings/cpp/include/fastlowess.hpp "$package_dir/"
+          cp bindings/cpp/include/fastlowess.h "$package_dir/"
+          cp bindings/cpp/include/fastlowess_version.h "$package_dir/"
 
-      - name: Upload Windows import libraries
-        if: runner.os == 'Windows'
-        uses: softprops/action-gh-release@v3
+      - name: Upload platform package artifact
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}
-          files: ${{ matrix.import_library_asset_name }}
+          name: cpp-${{ matrix.platform_dir }}
+          path: package/${{ matrix.platform_dir }}
+          if-no-files-found: error
 
-      - name: Upload Headers to Release
-        if: matrix.asset_name == 'libfastlowess-linux-x64.so'
+  package-and-upload:
+    name: Package and upload C++ release archive
+    runs-on: ubuntu-latest
+    needs: build-and-upload
+    steps:
+      - name: Download platform packages
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create and validate platform archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-packages
+          shopt -s nullglob
+          package_count=0
+          for artifact_dir in artifacts/cpp-*; do
+            [ -d "$artifact_dir" ] || continue
+            platform="${artifact_dir#artifacts/cpp-}"
+            for header in fastlowess.hpp fastlowess.h fastlowess_version.h; do
+              test -f "$artifact_dir/$header"
+            done
+            find "$artifact_dir" -maxdepth 1 -type f | grep -Eq '\.(so|dylib|dll|a)$'
+            archive="release-packages/libfastlowess-${platform}.tar"
+            files=("$artifact_dir"/*)
+            tar -cf "$archive" -C "$artifact_dir" "${files[@]##*/}"
+            for header in fastlowess.hpp fastlowess.h fastlowess_version.h; do
+              tar -tf "$archive" | grep -Fxq "$header"
+            done
+            package_count=$((package_count + 1))
+          done
+          test "$package_count" -eq 18
+
+      - name: Upload platform archives to release
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}
-          files: |
-            bindings/cpp/include/fastlowess.hpp
-            bindings/cpp/include/fastlowess.h
-            bindings/cpp/include/fastlowess_version.h
+          files: release-packages/*.tar
 
   spack-release:
     name: Update Spack recipe

@@ -15,6 +15,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Changed
 
+* Package each prebuilt platform library and its headers in a separate release tar archive.
 * Breaking change: replaced flat interval levels with grouped `intervals.confidence`, `intervals.prediction`, and `intervals.bootstrap` on Batch, Streaming, Online, and Predict options. Use the optional outer `seed` for CV and fit-time bootstrap, or on Predict options for prediction-time bootstrap; zero is a valid seed.
 * Breaking change: replaced flat `return_*`/`cv_*` fields with grouped `outputs` and nested `cv` options; prediction outputs are grouped as well.
 * Requires C++17 for the public wrapper's use of `std::optional`.
