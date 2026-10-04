@@ -299,6 +299,9 @@ func (l *Lowess) Fit(x, y []float64, customWeights ...[]float64) (Result, error)
 	var cw []float64
 	if len(customWeights) > 0 {
 		cw = customWeights[0]
+		if len(cw) != len(y) {
+			return Result{}, fmt.Errorf("fastlowess: custom_weights length (%d) must match y length (%d)", len(cw), len(y))
+		}
 	}
 
 	xPtr, xLen := cDoubles(x)

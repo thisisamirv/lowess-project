@@ -24,6 +24,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Reject explicitly empty custom weights instead of treating them as omitted.
 * Fixed model finalizers potentially releasing native state during in-flight calls; model receivers are now kept alive until cgo calls return.
 * Fixed unknown `Outputs` names being silently ignored and `Fit` silently ignoring extra custom-weight slices; invalid inputs now return errors.
 * Fixed k-fold CV silently coercing fold counts below two; active k-fold now rejects them while LOOCV continues to ignore `K`.

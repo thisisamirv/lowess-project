@@ -1550,6 +1550,19 @@ func TestCustomWeights(t *testing.T) {
 		}
 	})
 
+	t.Run("EmptyWeightsRaiseError", func(t *testing.T) {
+		x := []float64{0.0, 1.0, 2.0}
+		y := []float64{0.0, 1.0, 2.0}
+		model, err := fastlowess.NewLowess(fastlowess.DefaultOptions())
+		if err != nil {
+			t.Fatalf("NewLowess failed: %v", err)
+		}
+		defer model.Close()
+		if _, err := model.Fit(x, y, []float64{}); err == nil {
+			t.Fatal("expected an error for an explicitly empty custom weight slice")
+		}
+	})
+
 	t.Run("MultipleWeightSlicesRaiseError", func(t *testing.T) {
 		x, y := sineData(10)
 		weights := make([]float64, len(x))
