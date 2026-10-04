@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **lowess:**
 
+- Added a parsed-source architecture test enforcing the seven-layer dependency order, sibling-file restrictions, macro paths, and direct-owner imports. Defaults files may import same-layer modules but not higher layers; regression tests pin the exceptions and checker behavior.
 - Added grouped analytic and residual-bootstrap interval configuration via `.intervals(IntervalsBuilder::new().confidence(level).prediction(level).bootstrap(n))` across Batch fits, Streaming fits, full-update Online fits, and the retained-model `Predict` API introduced in 4.1.0. `IntervalsBuilder` is available from the crate root and prelude; `.seed(seed)` makes out-of-sample bootstrap SEs and percentile intervals reproducible. Bootstrap refits use `custom_bootstrap_pass` in batches of 256, with resampling done beforehand so results do not depend on scheduling. Online incremental mode rejects bootstrap with `StandardErrorRequiresFullUpdateMode`; `n < 2` returns `InvalidBootstrapSamples`. Documented in `crates/lowess/docs/guide/intervals.md`.
 - Added a full-featured quick-start example for the existing Batch `Predict` API.
 - Added crate-level Streaming and Online quick starts covering typical use, full features, result/error handling, and ndarray-to-slice integration examples (ndarray is dev-only).

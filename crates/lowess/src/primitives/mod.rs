@@ -1,8 +1,8 @@
 //! Layer 1: Primitives
 //!
 //! This layer provides the primitive abstractions, data structures, and
-//! utility functions used throughout the crate. Only `parser` depends on
-//! sibling primitive modules, as permitted by the layering rules.
+//! utility functions used throughout the crate. Primitive option parsing lives
+//! with the type definitions; cross-file dependencies are limited to errors.
 
 // Sorting utilities.
 pub mod sorting;
@@ -21,6 +21,3 @@ pub mod buffer;
 
 // Shared input and update policies.
 pub mod policies;
-
-// Primitive option parsing.
-pub mod parser;
