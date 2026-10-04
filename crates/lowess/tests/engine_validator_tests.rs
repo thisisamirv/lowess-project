@@ -13,6 +13,7 @@
 //! 3. **Error Messages** - Proper error reporting
 
 use lowess::internals::engine::validator::Validator;
+use lowess::internals::evaluation::intervals::IntervalMethod;
 use lowess::internals::primitives::errors::LowessError;
 
 // ============================================================================
@@ -239,6 +240,53 @@ fn test_validate_interval_level() {
             assert!(v.is_nan(), "Error should contain NaN")
         }
         _ => panic!("Expected InvalidIntervals error"),
+    }
+}
+
+#[test]
+fn test_validate_interval_method_enabled_levels() {
+    for method in [
+        IntervalMethod::se(),
+        IntervalMethod::confidence(0.95),
+        IntervalMethod::prediction(0.95),
+        IntervalMethod {
+            prediction_level: Some(0.99),
+            prediction: true,
+            ..IntervalMethod::confidence(0.90)
+        },
+        IntervalMethod {
+            level: f64::NAN,
+            prediction_level: Some(f64::NAN),
+            ..IntervalMethod::se()
+        },
+    ] {
+        assert!(Validator::validate_interval_method(&method).is_ok());
+    }
+}
+
+#[test]
+fn test_validate_interval_method_rejects_invalid_levels() {
+    for invalid_level in [0.0, 1.0, -0.1, f64::INFINITY, f64::NAN] {
+        for method in [
+            IntervalMethod::confidence(invalid_level),
+            IntervalMethod::prediction(invalid_level),
+            IntervalMethod {
+                prediction_level: Some(invalid_level),
+                prediction: true,
+                ..IntervalMethod::confidence(0.95)
+            },
+            IntervalMethod {
+                level: invalid_level,
+                prediction: true,
+                ..IntervalMethod::se()
+            },
+        ] {
+            assert!(matches!(
+                Validator::validate_interval_method(&method),
+                Err(LowessError::InvalidIntervals(value))
+                    if value == invalid_level || (value.is_nan() && invalid_level.is_nan())
+            ));
+        }
     }
 }
 

@@ -19,6 +19,7 @@ use num_traits::Float;
 use std::vec::Vec;
 
 // Internal dependencies
+use crate::evaluation::intervals::IntervalMethod;
 use crate::primitives::errors::LowessError;
 use crate::primitives::policies::UpdateMode;
 
@@ -135,6 +136,19 @@ impl Validator {
             return Err(LowessError::InvalidIntervals(
                 level.to_f64().unwrap_or(f64::NAN),
             ));
+        }
+        Ok(())
+    }
+
+    #[inline(never)]
+    pub fn validate_interval_method<T: Float>(
+        method: &IntervalMethod<T>,
+    ) -> Result<(), LowessError> {
+        if method.confidence {
+            Self::validate_interval_level(method.level)?;
+        }
+        if method.prediction {
+            Self::validate_interval_level(method.prediction_coverage())?;
         }
         Ok(())
     }

@@ -235,12 +235,7 @@ impl<T: Float> BatchLowessBuilder<T> {
 
         // Validate interval type
         if let Some(ref method) = self.interval_type {
-            if method.confidence {
-                Validator::validate_interval_level(method.level)?;
-            }
-            if method.prediction {
-                Validator::validate_interval_level(method.prediction_coverage())?;
-            }
+            Validator::validate_interval_method(method)?;
         }
         if let Some(bc) = self.bootstrap
             && bc.n_boot < MIN_BOOTSTRAP_SAMPLES
