@@ -22,6 +22,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Publish the Windows MSVC import libraries referenced by the prebuilt installation instructions; specify C++17 in the MSVC compile commands.
 * Fixed global OLS fits treating predictor values with a large offset as degenerate; translated inputs now retain their fitted slope.
 * Fixed fraction-1 global fits ignoring custom weights, including when Batch sorts observations by x.
 * Fixed Batch `missing = "drop"` accepting custom weights with a length different from the original input; weights are validated before rows are dropped.

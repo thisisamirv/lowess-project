@@ -71,7 +71,8 @@ wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fast
 wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp
 wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.h
 wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess_version.h
-cl myapp.cpp /link fastlowess-win32-x64.lib
+wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess-win32-x64.lib
+cl /std:c++17 myapp.cpp /link fastlowess-win32-x64.lib
 ```
 
 ## Pre-built Binaries (Windows (ARM64))
@@ -81,7 +82,8 @@ wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fast
 wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp
 wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.h
 wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess_version.h
-cl myapp.cpp /link fastlowess-win32-arm64.lib
+wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess-win32-arm64.lib
+cl /std:c++17 myapp.cpp /link fastlowess-win32-arm64.lib
 ```
 
 ## From Source

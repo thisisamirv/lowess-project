@@ -49,10 +49,12 @@ jobs:
           - os: windows-latest
             artifact_name: fastlowess.dll
             asset_name: fastlowess-win32-x64.dll
+            import_library_asset_name: fastlowess-win32-x64.lib
             target_dir: target/release
           - os: windows-11-arm
             artifact_name: fastlowess.dll
             asset_name: fastlowess-win32-arm64.dll
+            import_library_asset_name: fastlowess-win32-arm64.lib
             target_dir: target/release
           - os: macos-15-intel
             artifact_name: libfastlowess.dylib
@@ -119,12 +121,20 @@ jobs:
         run: |
           # Windows: fastlowess_cpp.dll
           mv ${{ matrix.target_dir }}/fastlowess_cpp.dll ${{ matrix.asset_name }}
+          mv ${{ matrix.target_dir }}/fastlowess_cpp.dll.lib ${{ matrix.import_library_asset_name }}
 
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}
           files: ${{ matrix.asset_name }}
+
+      - name: Upload Windows import libraries
+        if: runner.os == 'Windows'
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}
+          files: ${{ matrix.import_library_asset_name }}
 
       - name: Upload Headers to Release
         if: matrix.os == 'ubuntu-latest' && !matrix.container
