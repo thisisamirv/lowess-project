@@ -20,3 +20,31 @@
    fun:pthread_create*
    ...
 }
+
+# ARM64 Valgrind reports the uninitialized inactive payload of Rust's
+# Option<BootstrapConfig> while validating the safe batch, streaming, and
+# online builders. Suppress only conditional checks in those build paths.
+{
+   rust-batch-bootstrap-option
+   Memcheck:Cond
+   ...
+   fun:*build<f64>*
+   ...
+   fun:build_batch
+}
+{
+   rust-streaming-bootstrap-option
+   Memcheck:Cond
+   ...
+   fun:*build<f64>*
+   ...
+   fun:build_streaming
+}
+{
+   rust-online-bootstrap-option
+   Memcheck:Cond
+   ...
+   fun:*build<f64>*
+   ...
+   fun:build_online
+}
