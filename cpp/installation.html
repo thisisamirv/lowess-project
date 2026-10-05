@@ -104,7 +104,7 @@ $(document).ready(function(){initNavTree('installation.html',''); initResizable(
 <div class="contents">
 <div class="textblock"><h1>Installation</h1>
 <p>Install the LOWESS library for your preferred language.</p>
-<p>Each prebuilt platform archive contains that platform's library and the matching C++ and C headers. Download and extract the archive for your target; its files are placed in the current directory.</p>
+<p>Each prebuilt platform archive contains that platform's library and the matching C++ and C headers. Starting with the next C++ release, archives also include dependency-license notices generated from the committed workspace lockfile. Download and extract the archive for your target; its files are placed in the current directory.</p>
 <h2>Pre-built Binaries (Linux (x64))</h2>
 <div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-x64.tar</div>
 <div class="line">tar -xf libfastlowess-linux-x64.tar</div>
@@ -197,9 +197,14 @@ $(document).ready(function(){initNavTree('installation.html',''); initResizable(
 <div class="fragment"><div class="line">spack test run --alias fastlowess-cpp-smoke fastlowess-cpp</div>
 <div class="line">spack test results -l fastlowess-cpp-smoke</div>
 </div><!-- fragment --><h2>From vcpkg (overlay)</h2>
-<p>A prebuilt overlay is available for x64 Windows shared libraries with the dynamic MSVC runtime. It installs the checksum-pinned upstream CPU DLL; Rust and Cargo are not required. Debug and Release applications use the same Release DLL. This port is not yet in vcpkg's curated registry.</p>
-<p>From the repository root, with vcpkg on your PATH:</p>
-<div class="fragment"><div class="line">vcpkg install fastlowess:x64-windows --overlay-ports=bindings/cpp/vcpkg</div>
+<p>A prebuilt overlay is available for shared CPU libraries on Windows x64/ARM64, Linux x64/ARM64, and macOS x64/ARM64. Windows uses the dynamic MSVC runtime. Linux triplets containing <code>musl</code> select musl artifacts; other Linux triplets select glibc artifacts. Use dynamic-linkage triplets: the standard Linux and macOS triplets that default to static linkage are not supported. Rust and Cargo are not required, and Debug and Release consumers use the same upstream Release library. This port is not yet in vcpkg's curated registry.</p>
+<p>From the repository root, run the command matching your native build host:</p>
+<div class="fragment"><div class="line"># Windows</div>
+<div class="line">vcpkg install fastlowess:x64-windows --overlay-ports=bindings/cpp/vcpkg</div>
+<div class="line"># Linux (using the dynamic community triplet)</div>
+<div class="line">vcpkg install fastlowess:x64-linux-dynamic --overlay-ports=bindings/cpp/vcpkg</div>
+<div class="line"># macOS (using the dynamic community triplet)</div>
+<div class="line">vcpkg install fastlowess:arm64-osx-dynamic --overlay-ports=bindings/cpp/vcpkg</div>
 </div><!-- fragment --><p>The installed package provides <code>fastlowess::fastlowess</code> through <code>find_package(fastlowess CONFIG REQUIRED)</code>. See the <a href="https://github.com/thisisamirv/lowess-project/tree/main/bindings/cpp/vcpkg">overlay packaging guide</a> for bootstrap commands, Debug/Release consumer tests, and submission steps.</p>
 <hr  />
 <h2>Verify Installation</h2>
