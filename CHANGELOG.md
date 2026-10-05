@@ -42,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **C++:**
 
 - Added Windows x64 MinGW, Linux x86/ARMv7, Android ABI, and iOS device/simulator release binaries with matching cross-target CI builds.
-- Added a checksum-pinned prebuilt vcpkg overlay for x64 Windows CPU DLLs, with generated import libraries, explicit Release-CRT mapping for Debug/Release consumers, a relocatable CMake target, and a standalone consumer test and packaging guide. Rust/Cargo are not required by the port.
+- Added a checksum-pinned prebuilt vcpkg overlay for Windows x64/ARM64, Linux x64/ARM64 (glibc or musl), and macOS x64/ARM64 CPU libraries. Windows import libraries are generated from verified exports; Debug and Release consumers map to the upstream Release artifact. The port includes a relocatable CMake target, standalone consumer test, and packaging guide; Rust/Cargo are not required.
 - Added Spack installation sanity checks and a standalone C++17 compile-and-run test against the installed headers and library.
 - Added a generated `fastlowess_version.h` with compile-time major/minor/patch and full-version macros, integrated Cargo/CMake generation and header packaging, and retained `cpp_version()` for loaded-library identification.
 
