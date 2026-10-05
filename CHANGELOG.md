@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **C++:**
 
 - Added Windows x64 MinGW, Linux x86/ARMv7, Android ABI, and iOS device/simulator release binaries with matching cross-target CI builds.
+- Added Spack installation sanity checks and a standalone C++17 compile-and-run test against the installed headers and library.
 - Added a generated `fastlowess_version.h` with compile-time major/minor/patch and full-version macros, integrated Cargo/CMake generation and header packaging, and retained `cpp_version()` for loaded-library identification.
 
 **Java:**
@@ -120,6 +121,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **C++:**
 
 - Changed prebuilt C++ releases to provide one tar archive per platform, containing its library, import library when applicable, and headers.
+- Expanded the Spack package description and linked its homepage to the C++ documentation.
 - Breaking change: grouped confidence/prediction levels and residual bootstrap counts under `intervals` for Batch, Streaming, Online, and Predict; moved the CV seed to one optional outer `seed` shared with fit-time bootstrap. Added seeded bootstrap prediction for retained models and native coverage for all adapters.
 - Breaking change: replaced flat `return_*`/`cv_*` fields with grouped `outputs` and nested `cv` options; prediction outputs are grouped as well.
 - Declared the public wrapper's C++17 requirement for `std::optional`.
@@ -228,6 +230,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **C++:**
 
 - Keep default and moved-from `LowessResult` diagnostics unavailable, and register the C++ test suite with the top-level CMake project.
+- Install `fastlowess_version.h` from the Spack recipe when present, preserving compatibility with older release archives.
 - Publish the Windows MSVC import libraries referenced by the prebuilt installation instructions; specify C++17 in the MSVC compile commands.
 - Run Windows MinGW C++ tests with CMake's portable copy utility and CTest instead of shell-specific copy/launch commands.
 - Fixed shell injection in the GPU installer, result and retained-handle cleanup leaks and empty-result accessors, silent acceptance of unsupported options/output names, swallowed constructor errors, negative iteration and CV-fold coercion, Windows FFI length truncation, and unsafe reuse of a fixed C++ test temp directory.

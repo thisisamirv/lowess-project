@@ -147,6 +147,13 @@ conda install -c conda-forge libfastlowess
 spack install fastlowess-cpp
 ```
 
+The recipe links its homepage to the C++ documentation and checks that the installed headers and library directory exist. Recipes with the standalone smoke test can compile and run a small linear fit against the installed library:
+
+```bash
+spack test run --alias fastlowess-cpp-smoke fastlowess-cpp
+spack test results -l fastlowess-cpp-smoke
+```
+
 ---
 
 ## Verify Installation
