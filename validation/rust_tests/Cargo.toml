@@ -1,5 +1,5 @@
 [package]
-name = "visual-validation"
+name = "rust-tests"
 version = "0.0.0"
 rust-version = "1.89"
 edition = "2024"
@@ -11,3 +11,6 @@ path = "src/visual.rs"
 
 [dependencies]
 fastLowess = { path = "../../crates/fastLowess" }
+
+[dev-dependencies]
+lowess = { path = "../../crates/lowess", features = ["dev"] }

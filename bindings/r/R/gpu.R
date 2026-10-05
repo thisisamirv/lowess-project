@@ -136,7 +136,8 @@ gpu_run_probe <- function(probe, timeout) {
 gpu_probe_succeeded <- function(output) {
     status <- attr(output, "status")
     (is.null(status) || status == 0L) &&
-    length(output) == 1L && identical(trimws(output[[1L]]), "TRUE")
+        length(output) == 1L &&
+        identical(trimws(output[[1L]]), "TRUE")
 }
 
 gpu_library_enabled <- function(path, timeout = 30L) {

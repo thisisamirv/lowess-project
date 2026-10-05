@@ -1,12 +1,12 @@
-# validation/Makefile — Visual validation and R property/reference tests.
+# validation/Makefile — Rust, Python, and R validation tests and visual tools.
 #
 # Targets:
-#   visual   Generate CSVs used by visual_validation/plot.py
+#   visual   Generate CSVs used by rust_tests/plot.py
 #   plot     Generate SVGs from those CSVs
 #   r-tests  Run R property/reference and golden-fixture tests
 
 PYTHON ?= python
-VISUAL_DIR := visual_validation
+RUST_TESTS_DIR := rust_tests
 R_LIB_DIR ?= ../bindings/r/.r-lib
 PYTHON_VENV ?= ../.venv
 ifeq ($(OS),Windows_NT)
@@ -15,15 +15,15 @@ else
 PYTHON_BINDING ?= $(PYTHON_VENV)/bin/python
 endif
 
-.PHONY: visual plot python-deps python-tests validation-deps r-tests
+.PHONY: visual plot python-deps python-tests rust-tests validation-deps r-tests
 
 visual:
 	@echo "Generating visual validation data..."
-	@cd $(VISUAL_DIR) && cargo run --bin visual --release
+	@cd $(RUST_TESTS_DIR) && cargo run --bin visual --release
 
 plot:
 	@echo "Generating visual validation plots..."
-	@cd $(VISUAL_DIR) && $(PYTHON) plot.py
+	@cd $(RUST_TESTS_DIR) && $(PYTHON) plot.py
 
 python-deps:
 	@if [ ! -x "$(PYTHON_BINDING)" ]; then $(PYTHON) -m venv "$(PYTHON_VENV)"; fi
@@ -34,6 +34,10 @@ python-deps:
 python-tests: python-deps
 	@echo "Running Python-binding boundary validation..."
 	@$(PYTHON_BINDING) -m pytest -q property_tests/test_boundary_padding.py
+
+rust-tests:
+	@echo "Running Rust core numerical validation..."
+	@cargo test --manifest-path ../Cargo.toml -p rust-tests --test numerical_regressions
 
 validation-deps:
 	@echo "Installing Locfit and quickcheck into the validation library when missing..."

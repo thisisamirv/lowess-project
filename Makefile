@@ -176,6 +176,7 @@ r-tests:
 	@"$(MAKE)" -f bindings/r/Makefile tests
 
 validate:
+	@"$(MAKE)" -C validation rust-tests
 	@"$(MAKE)" -C validation python-tests
 	@"$(MAKE)" -C validation r-tests
 

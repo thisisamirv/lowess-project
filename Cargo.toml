@@ -13,7 +13,7 @@ members = [
     "bindings/cpp",
     "bindings/go",
     "bindings/java",
-    "validation/visual_validation",
+    "validation/rust_tests",
     "benchmarks/fastLowess",
 ]
 exclude = ["bindings/r/src/vendor"]
