@@ -454,7 +454,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: The rust-numpy Project Developers, PyO3 Project and Contributors <https://github.com/PyO3>
     License: BSD-2-Clause
     ----------------------------------------
-    Package: objc2 (0.6.4)
+    Package: objc2 (0.6.5)
     Authors: Mads Marquart <mads@marquart.dk>
     License: MIT
     ----------------------------------------
