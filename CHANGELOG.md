@@ -92,7 +92,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated the validation GitHub Actions workflow to install the R binding and run the root `make validate` target, which owns Python and R validation setup.
 - Moved R property, reference, and golden-fixture tests into root `validation/`, removed the redundant JSON comparison pipeline, and added a root `validate` target that runs last in `all-dev`. Consolidated visual generation, plotting, numerical tests, and outputs under `validation/rust_tests/`; `r-dev` and `r-tests` remain package-only.
-- Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.166.0.
+- Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.167.0.
 - Removed automatic changelog updating script (`update_changelogs.py`) in order to manually write high quality changelogs.
 
 **lowess:**
@@ -105,7 +105,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced the `iteration_loop_with_callback` clippy suppression with a typed options bundle for its iteration controls and callbacks.
 - Marked `WeightFunction` as non-exhaustive and made GPU handling reject unsupported future kernels explicitly.
 - Removed the `accumulate_wls`/`solve_wls` methods from the `WLSSolver` trait (and their backing free functions): they became dead once the WLS fit path (`LinearFit::fit_wls`) was changed to a hand-written scalar loop preserving R's exact arithmetic order, superseding this SIMD-based formulation. `WLSSolver` is now a plain marker trait. Removed the now-unused `wide` dependency this code was the only user of.
-- Bumped the vendored KaTeX CDN version from `0.18.7` to `0.18.9`, updating SRI hashes to match.
+- Bumped the KaTeX CDN assets from `0.18.9` to `0.19.0` and refreshed their SRI hashes.
 
 **fastLowess:**
 
@@ -115,7 +115,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Breaking change: migrated wrappers and binding translation from individual `return_*`/`cv_*` calls to grouped `.outputs([...])` and `.cv(CVBuilder...)` configuration.
 - Replaced `std::mem::forget` with `Box::into_raw` in `vec_to_raw_ptr`, making the FFI ownership transfer explicit; bindings still release it through `free_raw_f64_buffer`.
 - Implemented `std::error::Error` for `BindingError`.
-- Bumped the vendored KaTeX CDN version from `0.18.7` to `0.18.9`, updating SRI hashes to match.
+- Bumped the KaTeX CDN assets from `0.18.9` to `0.19.0` and refreshed their SRI hashes.
 
 **C++:**
 
