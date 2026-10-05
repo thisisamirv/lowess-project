@@ -156,7 +156,7 @@ spack test results -l fastlowess-cpp-smoke
 
 ## From vcpkg (overlay)
 
-An initial source-built overlay is available for `x64-windows` shared libraries with the dynamic MSVC runtime. Rust 1.89 or newer is required to build it, but not to use the installed C++ library. This port is not yet in vcpkg's curated registry.
+A prebuilt overlay is available for x64 Windows shared libraries with the dynamic MSVC runtime. It installs the checksum-pinned upstream CPU DLL; Rust and Cargo are not required. Debug and Release applications use the same Release DLL. This port is not yet in vcpkg's curated registry.
 
 From the repository root, with vcpkg on your PATH:
 

@@ -3,7 +3,6 @@ debug/
 target/
 **/target/
 Cargo.lock
-!bindings/cpp/vcpkg/fastlowess/Cargo.lock
 **/*.rs.bk
 *.pdb
 **/mutants.out*/

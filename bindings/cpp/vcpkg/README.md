@@ -1,6 +1,6 @@
 # LOWESS for vcpkg
 
-The `fastlowess` overlay port provides Rust-backed C++17 LOWESS smoothing with batch streaming, and online adapters. It builds the published `v4.1.0` source release and exposes the CMake target `fastlowess::fastlowess`.
+The `fastlowess` overlay port provides Rust-backed C++17 LOWESS smoothing with batch, streaming, and online adapters. It installs the checksum-pinned CPU DLL from the published `v4.1.0` release and exposes the CMake target `fastlowess::fastlowess`. Rust and Cargo are not required to install or consume this port.
 
 This port is available as a repository overlay. It is not yet part of vcpkg's curated registry.
 
@@ -9,27 +9,21 @@ This port is available as a repository overlay. It is not yet part of vcpkg's cu
 | Setting | Support |
 | --- | --- |
 | Build host | Windows |
-| Target triplet | `x64-windows` (MSVC) |
+| Target triplets | `x64-windows`, `x64-windows-release` (MSVC ABI) |
 | Library linkage | Shared DLL |
 | MSVC runtime | Dynamic CRT |
 | Backend | CPU |
-| Configurations | Debug and Release |
+| Consumer configurations | Debug and Release, both using the Release DLL |
 
 Static libraries, static CRT, ARM, MinGW, UWP, GPU builds, and non-Windows targets are not supported by this port. The manifest excludes unvalidated triplets.
 
 ## Requirements
 
 - Visual Studio or Build Tools with the Desktop development with C++ workload and a Windows SDK.
-- Rust 1.89 or newer, with Cargo and the `x86_64-pc-windows-msvc` target.
 - An existing [vcpkg installation](https://learn.microsoft.com/en-us/vcpkg/get_started/get-started-packaging), with `VCPKG_ROOT` set to its directory.
 - CMake for C++ consumers.
 
-Rust is required to build the port, not to compile or run applications using the installed library. The port does not install or update Rust automatically.
-
-```powershell
-rustup update stable
-rustup target add x86_64-pc-windows-msvc
-```
+The tagged release did not publish an import library. The port uses the MSVC library manager to generate one from the DLL's verified export list. The DLL itself is not rebuilt or renamed.
 
 ## Installation
 
@@ -41,7 +35,7 @@ $vcpkg = $env:VCPKG_ROOT
 & "$vcpkg/vcpkg.exe" install fastlowess:x64-windows "--overlay-ports=$repo/bindings/cpp/vcpkg"
 ```
 
-The overlay builds the pinned release archive, not the working checkout. Both Debug and Release libraries are installed. Source and Cargo dependency downloads require network access unless already cached.
+The overlay downloads the upstream DLL and matching source archive for headers and license texts. Both downloads are verified by SHA512. Network access is needed unless these artifacts are cached; no crates.io or Rust toolchain downloads occur.
 
 ## CMake Integration
 
@@ -58,7 +52,9 @@ find_package(fastlowess CONFIG REQUIRED)
 target_link_libraries(my_app PRIVATE fastlowess::fastlowess)
 ```
 
-The target supplies the installed include directory, C++17 requirement, and the matching Debug or Release import library. Include `<fastlowess.hpp>` for the C++ interface or `<fastlowess.h>` for the C API. Ensure the matching `fastlowess_cpp.dll` is deployed beside the application or available on `PATH`.
+The target supplies the installed include directory, C++17 requirement, and import library. All consumer configurations map to the published Release DLL. Include `<fastlowess.hpp>` for the C++ interface. Its matching generated ABI header, `fastlowess.h`, is bundled with the port because the release archive omitted it. Ensure `fastlowess-win32-x64.dll` is deployed beside the application or available on `PATH`.
+
+The native DLL uses the release MSVC runtime. C++ wrapper objects own their own C++ allocations, while Rust-owned buffers are released through the DLL's FFI functions. The port declares `VCPKG_POLICY_ONLY_RELEASE_CRT`; it does not disable CRT-linkage checks. A matching Visual C++ runtime must be available on deployment machines.
 
 See the [C++ documentation](https://thisisamirv.github.io/lowess-project/cpp/) for API details and smoothing examples.
 
@@ -80,7 +76,7 @@ ctest --test-dir "$repo/target/vcpkg-consumer" -C Release --output-on-failure
 
 If installation used `--x-install-root`, set `VCPKG_INSTALLED_DIR` to that same directory instead of `$vcpkg/installed`.
 
-The port and both consumer configurations passed validation with vcpkg registry revision `13465a7b726f171350defa5368b901a52f7a6af5`. No CRT-check suppression is used.
+The prebuilt port passed vcpkg post-build validation for both listed triplets. Debug and Release consumer tests passed against the downloaded DLL using the local vcpkg checkout at registry revision `13465a7b726f171350defa5368b901a52f7a6af5`.
 
 ### clangd
 
@@ -95,10 +91,11 @@ Restart clangd after first configuration if cached diagnostics remain. Build dir
 ## Port Maintenance
 
 - `fastlowess/vcpkg.json` declares package metadata and supported triplets.
-- `fastlowess/portfile.cmake` verifies Rust, downloads the SHA512-pinned source, and installs the package through a thin CMake/Cargo wrapper.
-- `fastlowess/Cargo.lock` pins Cargo dependency resolution because the release archive does not include a lockfile. Builds use `--locked`.
-- The installed copyright notice describes Rust dependency-license provenance; the lockfile is installed under `share/fastlowess`.
+- `fastlowess/portfile.cmake` downloads the SHA512-pinned native DLL and matching source archive and installs the package through a thin CMake wrapper.
+- `fastlowess/fastlowess.def` records the verified DLL export names used to generate the import library.
+- `fastlowess/fastlowess.h` was generated from the exact `v4.1.0` source build with cbindgen. It must be updated alongside the binary and wrapper when their ABI changes.
+- The installed copyright notice includes the upstream license texts and Rust dependency-license discovery instructions.
 
-For a version update, refresh the manifest, source checksum, Cargo lockfile, and wrapper project version together, then repeat Debug and Release consumer tests. Do not expand supported triplets without testing them. Offline and vcpkg download-only operation have not been validated.
+For a version update, refresh the manifest, binary/source checksums, export definition, ABI header, and wrapper project version together, then repeat consumer tests. Do not expand supported triplets without testing them. Offline and vcpkg download-only operation have not been validated.
 
-Rust toolchain provisioning and Cargo downloads remain review considerations for curated-registry inclusion. Registry acceptance follows the [vcpkg maintainer guide](https://learn.microsoft.com/en-us/vcpkg/contributing/maintainer-guide).
+The `v4.1.0` release does not publish the Cargo lockfile used for its prebuilt binary, so exact Rust dependency-version provenance is unavailable. Future release bundles should include that lockfile, dependency notices, the ABI header, and import libraries. Prebuilt-artifact and licensing acceptance remain subject to the [vcpkg maintainer guide](https://learn.microsoft.com/en-us/vcpkg/contributing/maintainer-guide).
