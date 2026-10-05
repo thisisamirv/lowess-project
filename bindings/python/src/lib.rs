@@ -202,7 +202,7 @@ pub struct PyDiagnostics {
     #[pyo3(get)]
     pub effective_df: Option<f64>,
 
-    /// Residual standard deviation
+    /// Batch: robust residual scale estimate (1.4826 * MAD); Streaming: cumulative sample SD of emitted residuals.
     #[pyo3(get)]
     pub residual_sd: f64,
 }

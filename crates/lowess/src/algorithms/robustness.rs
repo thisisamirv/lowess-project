@@ -84,6 +84,9 @@ impl RobustnessMethod {
         if residuals.is_empty() {
             return false;
         }
+        if scale_range.is_empty() {
+            return true;
+        }
 
         let scale_residuals = &residuals[scale_range.clone()];
         let range_len = scale_residuals.len();

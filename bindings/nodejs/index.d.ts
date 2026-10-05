@@ -117,7 +117,7 @@ export interface Diagnostics {
   aicc?: number
   /** Effective degrees of freedom (if computed). */
   effective_df?: number
-  /** Residual standard deviation. */
+  /** Batch: robust residual scale estimate (1.4826 * MAD); Streaming: cumulative sample SD of emitted residuals. */
   residual_sd: number
 }
 

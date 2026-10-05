@@ -184,6 +184,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **lowess:**
 
+- Fixed Gaussian fit and prediction standard errors to include the full unbounded kernel support, stabilized streaming R-squared for large response offsets, and made empty robustness scale ranges stop safely. Documented the Batch and Streaming `residual_sd` estimators.
 - Reduced GPU adapter buffer requirements from 30 storage/32 total buffer bindings to 7 storage/8 total per shader stage by deriving per-pipeline layouts from WGSL entry-point resource use.
 - Fixed grouped confidence/prediction interval configuration to preserve independent coverage levels for analytic and bootstrap bounds.
 - Fixed Online incremental mode accepting positive `delta` and `auto_converge` options that it cannot apply; positive delta now requires full mode, and auto-convergence requires full mode with robustness iterations.

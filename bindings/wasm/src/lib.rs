@@ -437,6 +437,7 @@ pub struct Diagnostics {
     pub aicc: Option<f64>,
     #[wasm_bindgen(js_name = effective_df)]
     pub effective_df: Option<f64>,
+    /// Batch: robust residual scale estimate (1.4826 * MAD); Streaming: cumulative sample SD of emitted residuals.
     #[wasm_bindgen(js_name = residual_sd)]
     pub residual_sd: f64,
 }

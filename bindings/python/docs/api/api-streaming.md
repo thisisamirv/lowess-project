@@ -263,7 +263,7 @@ Returned by `process_chunk()` and `finalize()`.
 | `rmse` | `float` | Root Mean Squared Error |
 | `mae` | `float` | Mean Absolute Error |
 | `r_squared` | `float` | R-squared |
-| `residual_sd` | `float` | Residual standard deviation |
+| `residual_sd` | `float` | Cumulative sample SD of emitted residuals |
 | `effective_df` | `float \| None` | Always `None` (cumulative diagnostics don't integrate per-chunk leverage; Batch only) |
 | `aic` | `float \| None` | Always `None` (requires `effective_df`; Batch only) |
 | `aicc` | `float \| None` | Always `None` (requires `effective_df`; Batch only) |

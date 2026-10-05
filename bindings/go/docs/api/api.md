@@ -288,7 +288,7 @@ result, err := model.Fit(x, y, weights)
 | `RMSE` | `float64` | Root Mean Squared Error |
 | `MAE` | `float64` | Mean Absolute Error |
 | `RSquared` | `float64` | R-squared |
-| `ResidualSD` | `float64` | Residual standard deviation |
+| `ResidualSD` | `float64` | Robust residual scale estimate (`1.4826 * MAD`) |
 | `EffectiveDF` | `*float64` | Effective degrees of freedom, or `nil` if unavailable |
 | `AIC` | `*float64` | AIC, or `nil` if unavailable |
 | `AICc` | `*float64` | AICc, or `nil` if unavailable |

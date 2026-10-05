@@ -37,7 +37,7 @@ pub struct Diagnostics<T> {
     // Estimated effective degrees of freedom (df_eff).
     pub effective_df: Option<T>,
 
-    // Robust residual standard deviation estimated from MAD.
+    // Residual scale estimate: Batch uses scaled MAD; Streaming uses sample SD.
     pub residual_sd: T,
 }
 
@@ -50,6 +50,10 @@ pub struct DiagnosticsState<T> {
     pub sum_y: T,
     // Sum of squared y values.
     pub sum_y_sq: T,
+    // Running mean of y for numerically stable total-variance accumulation.
+    pub mean_y: T,
+    // Centered sum of squares of y, updated with Welford's method.
+    pub sum_y_centered_sq: T,
     // Sum of residuals (y - ŷ).
     pub sum_r: T,
     // Sum of squared residuals.
@@ -71,6 +75,8 @@ impl<T: Float> DiagnosticsState<T> {
             n: 0,
             sum_y: T::zero(),
             sum_y_sq: T::zero(),
+            mean_y: T::zero(),
+            sum_y_centered_sq: T::zero(),
             sum_r: T::zero(),
             sum_r_sq: T::zero(),
             sum_abs_r: T::zero(),
@@ -82,6 +88,11 @@ impl<T: Float> DiagnosticsState<T> {
         for (&yi, &ys) in y.iter().zip(y_smooth.iter()) {
             let r = yi - ys;
             self.n += 1;
+            let count = T::from(self.n).unwrap_or(T::one());
+            let delta = yi - self.mean_y;
+            self.mean_y = self.mean_y + delta / count;
+            let delta_after_update = yi - self.mean_y;
+            self.sum_y_centered_sq = self.sum_y_centered_sq + delta * delta_after_update;
             self.sum_y = self.sum_y + yi;
             self.sum_y_sq = self.sum_y_sq + yi * yi;
             self.sum_r = self.sum_r + r;
@@ -108,19 +119,22 @@ impl<T: Float> DiagnosticsState<T> {
         let rmse = (self.sum_r_sq / n_t).sqrt();
         let mae = self.sum_abs_r / n_t;
 
-        // R-squared: 1 - SS_res / SS_tot
-        let ss_tot = self.sum_y_sq - (self.sum_y * self.sum_y) / n_t;
-        let r_squared = if ss_tot > T::from(1e-12).unwrap() * self.sum_y_sq.abs() {
+        // Welford's centered sum avoids cancellation for data with a large offset.
+        let ss_tot = self.sum_y_centered_sq.max(T::zero());
+        let r_squared = if ss_tot > T::zero() {
             T::one() - self.sum_r_sq / ss_tot
-        } else if self.sum_r_sq < T::from(1e-12).unwrap() * self.sum_y_sq.abs()
-            || self.sum_r_sq == T::zero()
-        {
-            T::one()
         } else {
-            T::zero()
+            let roundoff =
+                T::from(16).unwrap_or(T::one()) * T::epsilon() * self.mean_y.abs().max(T::one());
+            let residual_roundoff = n_t * roundoff * roundoff;
+            if self.sum_r_sq <= residual_roundoff {
+                T::one()
+            } else {
+                T::zero()
+            }
         };
 
-        // Residual SD: estimated from global variance of residuals
+        // Streaming residual SD is the sample SD of emitted residuals.
         // Var(r) = (sum_r_sq - (sum_r)^2 / n) / (n - 1)
         let residual_sd = if self.n > 1 {
             let var_r = (self.sum_r_sq - (self.sum_r * self.sum_r) / n_t) / (n_t - T::one());

@@ -547,19 +547,13 @@ using FastLOWESS
             x = [3.0, 1.0, 5.0, 2.0, 4.0]
             y = [6.0, 2.0, 10.0, 4.0, 8.0]
 
-            model = Lowess(
-                fraction = 0.7,
-                outputs = ["residuals", "weights", "sorted"],
-            )
+            model = Lowess(fraction = 0.7, outputs = ["residuals", "weights", "sorted"])
             result = fit(model, x, y)
 
             @test issorted(result.x)
             @test result.x != x
 
-            unsorted_model = Lowess(
-                fraction = 0.7,
-                outputs = ["residuals", "weights"],
-            )
+            unsorted_model = Lowess(fraction = 0.7, outputs = ["residuals", "weights"])
             unsorted_result = fit(unsorted_model, x, y)
 
             @test sort(collect(zip(result.x, result.y))) ==

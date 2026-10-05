@@ -49,7 +49,7 @@ pub struct Diagnostics {
     /// Effective degrees of freedom (if computed).
     #[napi(js_name = "effective_df")]
     pub effective_df: Option<f64>,
-    /// Residual standard deviation.
+    /// Batch: robust residual scale estimate (1.4826 * MAD); Streaming: cumulative sample SD of emitted residuals.
     #[napi(js_name = "residual_sd")]
     pub residual_sd: f64,
 }

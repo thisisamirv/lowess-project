@@ -279,7 +279,7 @@ Per-observation weights, passed to `fit()` rather than the options object.
 | `rmse` | `number` | Root Mean Squared Error |
 | `mae` | `number` | Mean Absolute Error |
 | `r_squared` | `number` | R-squared |
-| `residual_sd` | `number` | Residual standard deviation |
+| `residual_sd` | `number` | Robust residual scale estimate (`1.4826 * MAD`) |
 | `effective_df` | `number` \| `null` | Effective degrees of freedom |
 | `aic` | `number` \| `null` | AIC |
 | `aicc` | `number` \| `null` | AICc |

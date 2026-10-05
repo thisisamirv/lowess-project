@@ -321,7 +321,7 @@ try (Lowess model = new Lowess(Options.builder().build())) {
 |`rmse()` |`double` |Root Mean Squared Error
 |`mae()` |`double` |Mean Absolute Error
 |`rSquared()` |`double` |R-squared
-|`residualSd()` |`double` |Residual standard deviation
+|`residualSd()` |`double` |Robust residual scale estimate (`1.4826 * MAD`)
 |`effectiveDf()` |`Optional<Double>` |Effective degrees of freedom
 |`aic()` |`Optional<Double>` |AIC
 |`aicc()` |`Optional<Double>` |AICc

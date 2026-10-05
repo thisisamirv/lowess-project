@@ -265,7 +265,7 @@ Per-observation weights, passed to `fit` rather than the constructor.
 | `rmse` | `Float64` | Root Mean Squared Error |
 | `mae` | `Float64` | Mean Absolute Error |
 | `r_squared` | `Float64` | R-squared |
-| `residual_sd` | `Float64` | Residual standard deviation |
+| `residual_sd` | `Float64` | Robust residual scale estimate (`1.4826 * MAD`) |
 | `effective_df` | `Union{Float64, Nothing}` | Effective degrees of freedom, or `nothing` if unavailable |
 | `aic` | `Union{Float64, Nothing}` | AIC, or `nothing` if unavailable |
 | `aicc` | `Union{Float64, Nothing}` | AICc, or `nothing` if unavailable |

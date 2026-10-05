@@ -37,7 +37,7 @@ class Diagnostics:
 
     @property
     def residual_sd(self) -> float:
-        """Residual standard deviation."""
+        """Batch: robust residual scale estimate (1.4826 * MAD); Streaming: cumulative sample SD of emitted residuals."""
 
 class OnlineOutput:
     """Result from a single add_point() call."""

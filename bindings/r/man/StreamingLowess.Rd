@@ -118,6 +118,8 @@ Best suited for datasets over 100,000 points, memory-constrained
 environments, or batch processing pipelines. For smaller datasets that fit
 in memory, see \code{\link{Lowess}}; for point-by-point real-time data,
 see \code{\link{OnlineLowess}}.
+When \code{"diagnostics"} is selected, \code{residual_sd} is the cumulative
+sample standard deviation of emitted residuals.
 
 Confidence and prediction interval coverage levels are independent.
 

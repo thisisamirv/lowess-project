@@ -312,7 +312,7 @@ Returned (inside `Expected`) by `process_chunk()` and `finalize()`.
 | `rmse()` | `double` | Root Mean Squared Error |
 | `mae()` | `double` | Mean Absolute Error |
 | `r_squared()` | `double` | R-squared |
-| `residual_sd()` | `double` | Residual standard deviation |
+| `residual_sd()` | `double` | Cumulative sample SD of emitted residuals |
 | `effective_df()` | `std::optional<double>` | Empty (cumulative diagnostics don't integrate per-chunk leverage; Batch only) |
 | `aic()` | `std::optional<double>` | Empty (requires `effective_df`; Batch only) |
 | `aicc()` | `std::optional<double>` | Empty (requires `effective_df`; Batch only) |

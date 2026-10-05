@@ -11,7 +11,8 @@ import java.util.Optional;
  * @param aic Akaike Information Criterion, if computed
  * @param aicc corrected Akaike Information Criterion, if computed
  * @param effectiveDf effective degrees of freedom, if computed
- * @param residualSd residual standard deviation
+ * @param residualSd Batch: robust residual scale estimate (1.4826 * MAD);
+ * Streaming: cumulative sample SD of emitted residuals
  */
 public record Diagnostics(
         double rmse,

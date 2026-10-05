@@ -279,7 +279,7 @@ All accessors are const methods (not public fields):
 | `rmse()` | `double` | Root Mean Squared Error |
 | `mae()` | `double` | Mean Absolute Error |
 | `r_squared()` | `double` | R-squared |
-| `residual_sd()` | `double` | Residual standard deviation |
+| `residual_sd()` | `double` | Robust residual scale estimate (`1.4826 * MAD`) |
 | `effective_df()` | `std::optional<double>` | Effective degrees of freedom, if computed |
 | `aic()` | `std::optional<double>` | AIC, if computed |
 | `aicc()` | `std::optional<double>` | AICc, if computed |

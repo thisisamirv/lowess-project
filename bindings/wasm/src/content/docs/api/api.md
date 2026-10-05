@@ -267,7 +267,7 @@ Each `Float64Array` property is an owned copy, not a view into WASM memory, so i
 | `rmse` | `number` | Root Mean Squared Error |
 | `mae` | `number` | Mean Absolute Error |
 | `r_squared` | `number` | R-squared |
-| `residual_sd` | `number` | Residual standard deviation |
+| `residual_sd` | `number` | Robust residual scale estimate (`1.4826 * MAD`) |
 | `effective_df` | `number` \| `undefined` | Effective degrees of freedom |
 | `aic` | `number` \| `undefined` | AIC |
 | `aicc` | `number` \| `undefined` | AICc |

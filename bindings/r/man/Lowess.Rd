@@ -119,6 +119,8 @@ Best suited when the dataset fits in memory and you need intervals,
 cross-validation, or diagnostics. For datasets that don't fit in memory or
 arrive in chunks, see \code{\link{StreamingLowess}}; for point-by-point
 real-time data, see \code{\link{OnlineLowess}}.
+When \code{"diagnostics"} is selected, \code{residual_sd} is the robust
+residual scale estimate (\code{1.4826 * MAD}).
 
 \code{fraction} is the most important parameter: it controls the size of the
 local neighbourhood used at each point.\tabular{lll}{

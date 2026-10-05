@@ -282,7 +282,7 @@ Returned by `processChunk` and `finish`.
 |`rmse()` |`double` |Root Mean Squared Error
 |`mae()` |`double` |Mean Absolute Error
 |`rSquared()` |`double` |R-squared
-|`residualSd()` |`double` |Residual standard deviation
+|`residualSd()` |`double` |Cumulative sample SD of emitted residuals
 |`effectiveDf()` |`Optional<Double>` |Always empty (requires standard errors, Batch only)
 |`aic()` |`Optional<Double>` |Always empty (requires `effectiveDf`, Batch only)
 |`aicc()` |`Optional<Double>` |Always empty (requires `effectiveDf`, Batch only)

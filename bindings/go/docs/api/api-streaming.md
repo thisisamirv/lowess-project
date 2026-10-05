@@ -260,7 +260,7 @@ Returned by `ProcessChunk` and `Finalize`.
 | `RMSE` | `float64` | Root Mean Squared Error |
 | `MAE` | `float64` | Mean Absolute Error |
 | `RSquared` | `float64` | R-squared |
-| `ResidualSD` | `float64` | Residual standard deviation |
+| `ResidualSD` | `float64` | Cumulative sample SD of emitted residuals |
 | `EffectiveDF` | `*float64` | `nil` (cumulative diagnostics don't integrate per-chunk leverage; Batch only) |
 | `AIC` | `*float64` | `nil` (requires `EffectiveDF`; Batch only) |
 | `AICc` | `*float64` | `nil` (requires `EffectiveDF`; Batch only) |

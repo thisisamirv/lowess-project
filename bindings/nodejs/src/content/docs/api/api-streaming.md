@@ -288,7 +288,7 @@ Returned by `process_chunk()` and `finalize()`.
 | `rmse` | `number` | Root Mean Squared Error |
 | `mae` | `number` | Mean Absolute Error |
 | `r_squared` | `number` | R-squared |
-| `residual_sd` | `number` | Residual standard deviation |
+| `residual_sd` | `number` | Cumulative sample SD of emitted residuals |
 | `effective_df` | `number \| null` | Always `null` (cumulative diagnostics don't integrate per-chunk leverage; Batch only) |
 | `aic` | `number \| null` | Always `null` (requires `effective_df`; Batch only) |
 | `aicc` | `number \| null` | Always `null` (requires `effective_df`; Batch only) |

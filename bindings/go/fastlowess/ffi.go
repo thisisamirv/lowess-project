@@ -125,7 +125,8 @@ type Diagnostics struct {
 	AICc *float64
 	// EffectiveDF is nil when it was not computed.
 	EffectiveDF *float64
-	ResidualSD  float64
+	// ResidualSD: Batch uses scaled MAD; Streaming uses cumulative sample SD of emitted residuals.
+	ResidualSD float64
 }
 
 func optionalFloat(value C.double) *float64 {

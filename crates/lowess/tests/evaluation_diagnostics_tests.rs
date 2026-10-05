@@ -340,3 +340,12 @@ fn test_diagnostics_finalize_single() {
     // If ss_tot is zero and rss != 0 -> R2 = 0.0 in finalize (line 198)
     assert_eq!(diag.r_squared, 0.0);
 }
+
+#[test]
+fn test_diagnostics_state_r_squared_is_stable_for_large_offsets() {
+    let mut state = DiagnosticsState::<f64>::new();
+    state.update(&[1.0e12, 1.0e12 + 1.0], &[1.0e12, 1.0e12]);
+    state.update(&[1.0e12 - 1.0], &[1.0e12]);
+
+    assert_relative_eq!(state.finalize().r_squared, 0.0, epsilon = 1e-12);
+}

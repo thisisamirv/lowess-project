@@ -1509,7 +1509,7 @@ impl<T: Float> LowessExecutor<T> {
         let mut std_errors = vec![T::zero(); n];
 
         // Use the interval method's logic to compute SE
-        interval_method.compute_window_se(
+        interval_method.compute_window_se_with_support(
             x,
             y,
             y_smooth,
@@ -1517,6 +1517,7 @@ impl<T: Float> LowessExecutor<T> {
             robustness_weights,
             custom_weights,
             &mut std_errors,
+            weight_function.support().is_none(),
             &|u| weight_function.compute_weight(u),
         );
 

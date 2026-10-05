@@ -378,7 +378,7 @@ Diagnostic statistics for LOWESS fit quality.
 - `aicc::Union{Float64, Nothing}`: Corrected AIC, or `nothing` if not computed
 - `effective_df::Union{Float64, Nothing}`: Effective degrees of freedom, or
 	`nothing` if not computed
-- `residual_sd::Float64`: Residual standard deviation
+- `residual_sd::Float64`: Batch uses robust residual scale estimate (`1.4826 * MAD`); Streaming uses cumulative sample SD of emitted residuals
 """
 struct Diagnostics
 	rmse::Float64

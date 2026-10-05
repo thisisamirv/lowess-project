@@ -587,3 +587,22 @@ fn test_mar_degenerate_scale_reports_true() {
         assert_relative_eq!(w, 1.0, epsilon = 1e-12);
     }
 }
+
+#[test]
+fn test_empty_mar_scale_range_is_degenerate_without_changing_weights() {
+    let residuals = [1.0f64, 2.0];
+    let mut weights = [0.25f64, 0.75];
+    let original_weights = weights;
+    let mut scratch = [0.0f64; 2];
+
+    let degenerate = RobustnessMethod::Bisquare.apply_robustness_weights(
+        &residuals,
+        &mut weights,
+        ScalingMethod::MAR,
+        &mut scratch,
+        0..0,
+    );
+
+    assert!(degenerate);
+    assert_eq!(weights, original_weights);
+}

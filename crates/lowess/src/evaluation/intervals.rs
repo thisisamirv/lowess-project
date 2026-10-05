@@ -242,6 +242,35 @@ impl<T: Float> IntervalMethod<T> {
     ) where
         F: Fn(T) -> T,
     {
+        self.compute_window_se_with_support(
+            x,
+            y,
+            y_smooth,
+            window_size,
+            robustness_weights,
+            custom_weights,
+            std_errors,
+            false,
+            weight_fn,
+        );
+    }
+
+    // Compute SEs with an optional full-data neighborhood for unbounded kernels.
+    #[allow(clippy::too_many_arguments)]
+    pub fn compute_window_se_with_support<F>(
+        &self,
+        x: &[T],
+        y: &[T],
+        y_smooth: &[T],
+        window_size: usize,
+        robustness_weights: &[T],
+        custom_weights: Option<&[T]>,
+        std_errors: &mut [T],
+        include_all_observations: bool,
+        weight_fn: &F,
+    ) where
+        F: Fn(T) -> T,
+    {
         // Early exit if no intervals or SE requested
         if !self.se && !self.confidence && !self.prediction {
             return;
@@ -285,7 +314,12 @@ impl<T: Float> IntervalMethod<T> {
             let mut t1 = T::zero();
             let mut t2 = T::zero();
 
-            for j in left..=right {
+            let (start, end) = if include_all_observations {
+                (0, n)
+            } else {
+                (left, right + 1)
+            };
+            for j in start..end {
                 let dist = (x[j] - x_current).abs();
                 let u = dist / bandwidth;
                 let w = if j == idx {
@@ -330,6 +364,35 @@ impl<T: Float> IntervalMethod<T> {
     where
         F: Fn(T) -> T,
     {
+        Self::compute_se_at_query_with_support(
+            x,
+            y,
+            y_smooth,
+            window,
+            x_query,
+            robustness_weights,
+            custom_weights,
+            false,
+            weight_fn,
+        )
+    }
+
+    // Query-point counterpart to `compute_window_se_with_support`.
+    #[allow(clippy::too_many_arguments)]
+    pub fn compute_se_at_query_with_support<F>(
+        x: &[T],
+        y: &[T],
+        y_smooth: &[T],
+        window: &Window,
+        x_query: T,
+        robustness_weights: &[T],
+        custom_weights: Option<&[T]>,
+        include_all_observations: bool,
+        weight_fn: &F,
+    ) -> T
+    where
+        F: Fn(T) -> T,
+    {
         let bandwidth = window.max_distance(x, x_query);
         if bandwidth <= T::zero() {
             return T::zero();
@@ -343,7 +406,12 @@ impl<T: Float> IntervalMethod<T> {
         let mut t1 = T::zero();
         let mut t2 = T::zero();
 
-        for j in window.left..=window.right {
+        let (start, end) = if include_all_observations {
+            (0, x.len())
+        } else {
+            (window.left, window.right + 1)
+        };
+        for j in start..end {
             let dist = (x[j] - x_query).abs();
             let u = dist / bandwidth;
             let w = weight_fn(u)

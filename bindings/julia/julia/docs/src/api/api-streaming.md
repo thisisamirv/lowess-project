@@ -264,7 +264,7 @@ Returned by `process_chunk` and `finalize`.
 | `rmse` | `Float64` | Root Mean Squared Error |
 | `mae` | `Float64` | Mean Absolute Error |
 | `r_squared` | `Float64` | R-squared |
-| `residual_sd` | `Float64` | Residual standard deviation |
+| `residual_sd` | `Float64` | Cumulative sample SD of emitted residuals |
 | `effective_df` | `Union{Float64, Nothing}` | `nothing` (cumulative diagnostics don't integrate per-chunk leverage; Batch only) |
 | `aic` | `Union{Float64, Nothing}` | `nothing` (requires `effective_df`; Batch only) |
 | `aicc` | `Union{Float64, Nothing}` | `nothing` (requires `effective_df`; Batch only) |

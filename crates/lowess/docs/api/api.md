@@ -276,7 +276,7 @@ Retains the fitted model's training data, enabling `Predict::call(&result, new_x
 | `rmse` | `T` | Root Mean Squared Error |
 | `mae` | `T` | Mean Absolute Error |
 | `r_squared` | `T` | R-squared |
-| `residual_sd` | `T` | Residual standard deviation |
+| `residual_sd` | `T` | Robust residual scale estimate (`1.4826 * MAD`) |
 | `effective_df` | `Option<T>` | Effective degrees of freedom (`None` if not computed) |
 | `aic` | `Option<T>` | AIC (`None` if not computed) |
 | `aicc` | `Option<T>` | AICc (`None` if not computed) |

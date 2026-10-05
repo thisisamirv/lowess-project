@@ -363,7 +363,7 @@ pub fn predict_one_full<T: Float + WLSSolver>(
     };
 
     let se = if need_se {
-        Some(IntervalMethod::compute_se_at_query(
+        Some(IntervalMethod::compute_se_at_query_with_support(
             &state.x,
             &state.y,
             &state.y_smooth,
@@ -371,6 +371,7 @@ pub fn predict_one_full<T: Float + WLSSolver>(
             eval_point,
             &state.robustness_weights,
             state.custom_weights.as_deref(),
+            state.weight_function.support().is_none(),
             &|u| state.weight_function.compute_weight(u),
         ))
     } else {

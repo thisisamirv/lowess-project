@@ -374,6 +374,8 @@ public:
   double rmse() const { return rmse_; }
   double mae() const { return mae_; }
   double r_squared() const { return r_squared_; }
+  /// Batch: robust residual scale estimate (1.4826 * MAD); Streaming:
+  /// cumulative sample SD of emitted residuals.
   double residual_sd() const { return residual_sd_; }
   /// Akaike Information Criterion, if computed.
   std::optional<double> aic() const { return aic_; }

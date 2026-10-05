@@ -252,7 +252,7 @@ Per-observation weights, passed to `fit()` rather than the constructor.
 | `rmse` | `float` | Root Mean Squared Error |
 | `mae` | `float` | Mean Absolute Error |
 | `r_squared` | `float` | R-squared |
-| `residual_sd` | `float` | Residual standard deviation |
+| `residual_sd` | `float` | Robust residual scale estimate (`1.4826 * MAD`) |
 | `effective_df` | `float \| None` | Effective degrees of freedom (`None` if not computed) |
 | `aic` | `float \| None` | AIC (`None` if not computed) |
 | `aicc` | `float \| None` | AICc (`None` if not computed) |

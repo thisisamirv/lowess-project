@@ -9,6 +9,114 @@ use lowess::internals::math::boundary::BoundaryPolicy;
 use lowess::internals::primitives::window::Window;
 use lowess::prelude::*;
 
+fn gaussian_se_over_all_observations(
+    x: &[f64],
+    y: &[f64],
+    y_smooth: &[f64],
+    window: &Window,
+    x_query: f64,
+    robustness_weights: &[f64],
+) -> f64 {
+    let bandwidth = window.max_distance(x, x_query);
+    let (mut sum_w_r2, mut sum_w, mut s1, mut s2) = (0.0, 0.0, 0.0, 0.0);
+    let (mut t0, mut t1, mut t2) = (0.0, 0.0, 0.0);
+
+    for j in 0..x.len() {
+        let dx = x[j] - x_query;
+        let u = dx.abs() / bandwidth;
+        let weight = (-0.5 * u * u).exp() * robustness_weights[j];
+        let residual = y[j] - y_smooth[j];
+        sum_w_r2 += weight * residual * residual;
+        sum_w += weight;
+        s1 += weight * dx;
+        s2 += weight * dx * dx;
+        t0 += weight * weight;
+        t1 += weight * weight * dx;
+        t2 += weight * weight * dx * dx;
+    }
+
+    IntervalMethod::<f64>::compute_se(sum_w, sum_w_r2, s1, s2, t0, t1, t2)
+}
+
+#[test]
+fn test_gaussian_fit_standard_errors_use_all_observations() {
+    let x: Vec<f64> = (0..9).map(f64::from).collect();
+    let y: Vec<f64> = x.iter().map(|&value| value * value).collect();
+    let fraction = 0.34;
+    let result = Lowess::new()
+        .fraction(fraction)
+        .iterations(0)
+        .weight_function("gaussian")
+        .boundary_policy(BoundaryPolicy::NoBoundary)
+        .intervals(IntervalsBuilder::new().confidence(0.95))
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let index = 4;
+    let window_size = Window::calculate_span(x.len(), fraction);
+    let mut window = Window::initialize(index, window_size, x.len());
+    window.recenter(&x, index, x.len());
+    let expected = gaussian_se_over_all_observations(
+        &x,
+        &y,
+        &result.y,
+        &window,
+        x[index],
+        &vec![1.0; x.len()],
+    );
+
+    assert_relative_eq!(
+        result.standard_errors.as_ref().unwrap()[index],
+        expected,
+        epsilon = 1e-12
+    );
+}
+
+#[test]
+fn test_gaussian_prediction_standard_errors_use_all_observations() {
+    let x: Vec<f64> = (0..9).map(f64::from).collect();
+    let y: Vec<f64> = x.iter().map(|&value| value * value).collect();
+    let fraction = 0.34;
+    let result = Lowess::new()
+        .fraction(fraction)
+        .iterations(0)
+        .weight_function("gaussian")
+        .boundary_policy(BoundaryPolicy::NoBoundary)
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let query = 4.5;
+    let prediction = Predict::new()
+        .return_se()
+        .build()
+        .unwrap()
+        .call(&result, &[query])
+        .unwrap();
+    let state = result.fit_state.as_deref().unwrap();
+    let seed = Window::locate(&state.x, query);
+    let mut window = Window::initialize(seed, state.window_size, state.x.len());
+    window.recenter_at(&state.x, query, state.x.len());
+    let expected = gaussian_se_over_all_observations(
+        &state.x,
+        &state.y,
+        &state.y_smooth,
+        &window,
+        query,
+        &state.robustness_weights,
+    );
+
+    assert_relative_eq!(
+        prediction.standard_errors.unwrap()[0],
+        expected,
+        epsilon = 1e-12
+    );
+}
+
 /// predict() must error when `.retain_model(true)` was not set before `fit()`.
 #[test]
 fn test_predict_unavailable_without_retain_model() {
