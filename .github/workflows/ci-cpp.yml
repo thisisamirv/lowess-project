@@ -173,6 +173,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
+          components: rustfmt, clippy
       - uses: android-actions/setup-android@v4
       - name: Install Android NDK and configure linker
         shell: bash
@@ -180,8 +181,14 @@ jobs:
           sdkmanager --install "ndk;27.2.12479018"
           ndk_bin="$ANDROID_HOME/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin"
           echo "${{ matrix.linker_env }}=$ndk_bin/${{ matrix.linker }}" >> "$GITHUB_ENV"
+      - name: Install C++ dev tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-tidy cppcheck valgrind
       - name: Build C++ library for Android
         run: cargo build --release --lib -p fastlowess-cpp --target ${{ matrix.target }}
+      - name: make cpp-dev
+        run: make cpp-dev
 
   ios:
     name: C++ iOS (${{ matrix.target }})
@@ -198,8 +205,16 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
+          components: rustfmt, clippy
+      - name: Install C++ dev tools
+        run: |
+          brew untap aws/tap || true
+          brew install llvm cppcheck
+          echo "$(brew --prefix llvm)/bin" >> "$GITHUB_PATH"
       - name: Build C++ static library for iOS
         run: cargo build --release --lib -p fastlowess-cpp --target ${{ matrix.target }}
+      - name: make cpp-dev
+        run: make cpp-dev
 
   clangcl:
     name: C++ (windows-latest, clang-cl)
