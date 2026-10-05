@@ -1,7 +1,7 @@
 use core::ops::Range;
 
 use lowess::internals::algorithms::robustness::RobustnessMethod;
-use lowess::internals::evaluation::diagnostics::DiagnosticsState;
+use lowess::internals::evaluation::diagnostics::{Diagnostics, DiagnosticsState};
 use lowess::internals::math::scaling::ScalingMethod;
 use lowess::prelude::*;
 
@@ -440,4 +440,33 @@ fn f32_local_linear_fit_remains_finite_at_small_x_scale() {
     for &derivative in result.derivative.as_ref().unwrap() {
         assert!((derivative - 2.0).abs() < 1e-3, "slope={derivative}");
     }
+}
+
+#[test]
+fn even_scales_remain_finite_when_the_inputs_are_near_f64_max() {
+    let value = f64::MAX;
+    for (method, expected) in [
+        (ScalingMethod::MAR, value),
+        (ScalingMethod::MAD, 0.0),
+        (ScalingMethod::Mean, value),
+    ] {
+        let mut values = [value; 4];
+        let actual = method.compute(&mut values);
+        assert_close(actual, expected, 0.0, 1e-15);
+    }
+}
+
+#[test]
+fn batch_and_streaming_r_squared_center_values_before_accumulating() {
+    let base = 9_007_199_254_740_992.0_f64;
+    let y = [base, base + 2.0, base + 2.0];
+    let y_smooth = [base; 3];
+
+    // Offsets from base are [0, 2, 2], so SS_tot = 8/3 and SS_res = 8.
+    let batch_r_squared = Diagnostics::calculate_r_squared(&y, &y_smooth);
+    assert_close(batch_r_squared, -2.0, 1e-12, 1e-12);
+
+    let mut state = DiagnosticsState::<f64>::new();
+    state.update(&y, &y_smooth);
+    assert_close(state.finalize().r_squared, -2.0, 1e-12, 1e-12);
 }

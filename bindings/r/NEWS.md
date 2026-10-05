@@ -15,12 +15,15 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Changed
 
+* Clarified that Batch `residual_sd` is `1.4826 * MAD`, while Streaming reports the cumulative sample standard deviation of emitted residuals.
 * Breaking change: replaced individual `return_*` arguments with grouped `outputs`, and replaced `Lowess()`'s four `cv_*` arguments with `cv = cv_opts(...)`.
 * Breaking change: replaced `confidence_intervals`/`prediction_intervals` (and `predict()`'s `confidence_level`/`prediction_level`) with `intervals = intervals_opts(confidence, prediction, bootstrap)`, and moved the cross-validation seed from `cv_opts(seed = ...)` to a shared `seed` argument.
 * Represent unavailable diagnostic metrics as R `NA` rather than generic `NaN` values.
 
 ### Fixed
 
+* Fixed CPU Gaussian standard errors for fitted and queried values to use the full unbounded kernel support.
+* Made even-sample medians and mean-absolute residual scaling overflow-resistant for large finite values, and centered Batch/Streaming R-squared accumulation to preserve one-ULP response variation at large offsets.
 * Reject unused constructor options, factors/multidimensional inputs, and malformed grouped options. Keep GPU sidecars mapped for live model finalizers, try older valid sidecars, verify native ABI/version and argument counts, bound candidate probes, and check download SHA-256 digests before execution.
 * Validate Streaming/Online iterations and plain-list CV fold counts before coercion, and accept integer custom weights.
 * Detect R's linked libc, confirm local GPU installs before probing candidates, use canonical library filenames, and activate versioned Windows GPU sidecars on restart without replacing loaded DLLs.

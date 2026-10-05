@@ -50,9 +50,13 @@ pub struct DiagnosticsState<T> {
     pub sum_y: T,
     // Sum of squared y values.
     pub sum_y_sq: T,
-    // Running mean of y for numerically stable total-variance accumulation.
+    // First response value, used as the origin for centered variance updates.
+    pub origin_y: T,
+    // Running mean of raw y values, retained alongside the centered accumulator.
     pub mean_y: T,
-    // Centered sum of squares of y, updated with Welford's method.
+    // Running mean of response offsets from `origin_y`.
+    pub mean_y_offset: T,
+    // Centered sum of squares of offsets from `origin_y`, updated with Welford's method.
     pub sum_y_centered_sq: T,
     // Sum of residuals (y - ŷ).
     pub sum_r: T,
@@ -75,7 +79,9 @@ impl<T: Float> DiagnosticsState<T> {
             n: 0,
             sum_y: T::zero(),
             sum_y_sq: T::zero(),
+            origin_y: T::zero(),
             mean_y: T::zero(),
+            mean_y_offset: T::zero(),
             sum_y_centered_sq: T::zero(),
             sum_r: T::zero(),
             sum_r_sq: T::zero(),
@@ -87,12 +93,19 @@ impl<T: Float> DiagnosticsState<T> {
     pub fn update(&mut self, y: &[T], y_smooth: &[T]) {
         for (&yi, &ys) in y.iter().zip(y_smooth.iter()) {
             let r = yi - ys;
+            if self.n == 0 {
+                self.origin_y = yi;
+            }
+            let y_offset = yi - self.origin_y;
             self.n += 1;
             let count = T::from(self.n).unwrap_or(T::one());
+            let offset_delta = y_offset - self.mean_y_offset;
+            self.mean_y_offset = self.mean_y_offset + offset_delta / count;
+            let offset_delta_after_update = y_offset - self.mean_y_offset;
+            self.sum_y_centered_sq =
+                self.sum_y_centered_sq + offset_delta * offset_delta_after_update;
             let delta = yi - self.mean_y;
             self.mean_y = self.mean_y + delta / count;
-            let delta_after_update = yi - self.mean_y;
-            self.sum_y_centered_sq = self.sum_y_centered_sq + delta * delta_after_update;
             self.sum_y = self.sum_y + yi;
             self.sum_y_sq = self.sum_y_sq + yi * yi;
             self.sum_r = self.sum_r + r;
@@ -124,10 +137,10 @@ impl<T: Float> DiagnosticsState<T> {
         let r_squared = if ss_tot > T::zero() {
             T::one() - self.sum_r_sq / ss_tot
         } else {
-            let roundoff =
-                T::from(16).unwrap_or(T::one()) * T::epsilon() * self.mean_y.abs().max(T::one());
-            let residual_roundoff = n_t * roundoff * roundoff;
-            if self.sum_r_sq <= residual_roundoff {
+            let response_scale = self.origin_y.abs().max(T::one());
+            let roundoff = T::from(16).unwrap_or(T::one()) * T::epsilon() * response_scale;
+            let residual_rms = (self.sum_r_sq / n_t).sqrt();
+            if residual_rms <= roundoff {
                 T::one()
             } else {
                 T::zero()
@@ -233,25 +246,32 @@ impl<T: Float> Diagnostics<T> {
     // sum of squares and SS_tot is the total sum of squares.
     pub fn calculate_r_squared(y: &[T], y_smooth: &[T]) -> T {
         let n = y.len();
+        if n == 0 {
+            return T::zero();
+        }
         if n == 1 {
             return T::one();
         }
 
-        let n_t = T::from(n).unwrap_or(T::one());
+        let origin = y[0];
+        let mut mean_offset = T::zero();
+        let mut ss_tot = T::zero();
+        // Center first so ULP-sized variation survives when responses have a large offset.
+        for (index, &yi) in y.iter().enumerate() {
+            let offset = yi - origin;
+            let count = T::from(index + 1).unwrap_or(T::one());
+            let delta = offset - mean_offset;
+            mean_offset = mean_offset + delta / count;
+            ss_tot = ss_tot + delta * (offset - mean_offset);
+        }
 
-        // Compute mean
-        let sum = y.iter().copied().fold(T::zero(), |acc, v| acc + v);
-        let mean = sum / n_t;
-
-        // Compute SS_tot and SS_res in one pass
-        let (ss_tot, ss_res) =
-            y.iter()
-                .zip(y_smooth.iter())
-                .fold((T::zero(), T::zero()), |(tot, res), (&yi, &ys)| {
-                    let deviation = yi - mean;
-                    let residual = yi - ys;
-                    (tot + deviation * deviation, res + residual * residual)
-                });
+        let ss_res = y
+            .iter()
+            .zip(y_smooth.iter())
+            .fold(T::zero(), |sum, (&yi, &ys)| {
+                let residual = yi - ys;
+                sum + residual * residual
+            });
 
         if ss_tot == T::zero() {
             // All y values are identical

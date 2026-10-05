@@ -18,12 +18,15 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Changed
 
+* Clarified that Batch `ResidualSD` is `1.4826 * MAD`, while Streaming reports the cumulative sample standard deviation of emitted residuals.
 * Breaking change: replaced individual `Return*` output fields with `Outputs: []string{...}` for Batch, Streaming, Online, and prediction options.
 * Breaking change: replaced flat interval/CV fields and nested CV seed with grouped options and one outer `Seed *uint64` shared by fit-time CV and bootstrap. `PredictOptions` has its own `Seed` for prediction-time bootstrap.
 * Represent unavailable diagnostic metrics as `nil` optional values instead of `NaN` sentinels.
 
 ### Fixed
 
+* Fixed CPU Gaussian standard errors for fitted and queried values to use the full unbounded kernel support.
+* Made even-sample medians and mean-absolute residual scaling overflow-resistant for large finite values, and centered Batch/Streaming R-squared accumulation to preserve one-ULP response variation at large offsets.
 * Reject explicitly empty custom weights instead of treating them as omitted.
 * Fixed model finalizers potentially releasing native state during in-flight calls; model receivers are now kept alive until cgo calls return.
 * Fixed unknown `Outputs` names being silently ignored and `Fit` silently ignoring extra custom-weight slices; invalid inputs now return errors.

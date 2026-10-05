@@ -64,12 +64,17 @@ impl ScalingMethod {
         if vals.is_empty() {
             return T::zero();
         }
-        let n = T::from(vals.len()).unwrap_or(T::one());
-        let mut sum = T::zero();
-        for val in vals.iter() {
-            sum = sum + val.abs();
+        let scale = vals
+            .iter()
+            .fold(T::zero(), |max_value, value| max_value.max(value.abs()));
+        if scale == T::zero() {
+            return T::zero();
         }
-        sum / n
+        let n = T::from(vals.len()).unwrap_or(T::one());
+        let scaled_sum = vals
+            .iter()
+            .fold(T::zero(), |sum, value| sum + value.abs() / scale);
+        scale * (scaled_sum / n)
     }
 
     // Compute the Median Absolute Deviation (MAD).
@@ -132,7 +137,12 @@ impl ScalingMethod {
                 i += 1;
             }
 
-            (lower + upper) / T::from(2.0).unwrap_or(T::one() + T::one())
+            let two = T::from(2.0).unwrap_or(T::one() + T::one());
+            if lower < T::zero() && upper > T::zero() {
+                (lower + upper) / two
+            } else {
+                lower + (upper - lower) / two
+            }
         } else {
             // Odd length: middle value
             vals.select_nth_unstable_by(mid, |a, b| a.partial_cmp(b).unwrap_or(Equal));

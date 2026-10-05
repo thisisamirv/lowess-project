@@ -15,11 +15,14 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Changed
 
+* Clarified that Batch `residual_sd` is `1.4826 * MAD`, while Streaming reports the cumulative sample standard deviation of emitted residuals.
 * Breaking change: replaced individual `return_*` output booleans with `outputs: [...]` for Batch, Streaming, Online, and prediction options.
 * Breaking change: replaced flat interval options and `predict()`'s interval levels with `intervals: { confidence, prediction, bootstrap }`, and replaced flat CV options and `cv.seed` with `cv: { method, k, fractions }` plus one outer `seed` shared by CV and bootstrap. `predict()` has its own `seed`.
 
 ### Fixed
 
+* Fixed CPU Gaussian standard errors for fitted and queried values to use the full unbounded kernel support.
+* Made even-sample medians and mean-absolute residual scaling overflow-resistant for large finite values, and centered Batch/Streaming R-squared accumulation to preserve one-ULP response variation at large offsets.
 * Fixed global OLS fits treating predictor values with a large offset as degenerate; translated inputs now retain their fitted slope.
 * Fixed fraction-1 global fits ignoring custom weights, including when Batch sorts observations by x.
 * Fixed Batch `missing = "drop"` accepting custom weights with a length different from the original input; weights are validated before rows are dropped.
