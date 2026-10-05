@@ -114,8 +114,8 @@ Restart clangd after first configuration if cached diagnostics remain. Build dir
 - `fastlowess/portfile.cmake` downloads the SHA512-pinned platform library and matching source archive and installs the package through a thin CMake wrapper.
 - `fastlowess/fastlowess.def` records the verified DLL export names used to generate the import library.
 - `fastlowess/fastlowess.h` was generated from the exact `v4.1.0` source build with cbindgen. It must be updated alongside the binary and wrapper when their ABI changes.
-- The installed copyright notice includes the upstream license texts and Rust dependency-license discovery instructions.
+- The v4.1.0 installed copyright notice includes the upstream license texts and discloses that exact Rust dependency provenance is unavailable. Future C++ release archives include `THIRD_PARTY_LICENSES.html`, generated from the committed workspace lockfile.
 
 For a version update, refresh the manifest, binary/source checksums, export definition, ABI header, and wrapper project version together, then repeat consumer tests. Do not expand supported triplets without testing them. Offline and vcpkg download-only operation have not been validated.
 
-The `v4.1.0` release does not publish the Cargo lockfile used for its prebuilt binaries, so exact Rust dependency-version provenance is unavailable. Future release bundles should include that lockfile, dependency notices, and matching headers/import libraries. Prebuilt-artifact and licensing acceptance remain subject to the [vcpkg maintainer guide](https://learn.microsoft.com/en-us/vcpkg/contributing/maintainer-guide).
+The `v4.1.0` release does not publish the Cargo lockfile used for its prebuilt binaries, so exact Rust dependency-version provenance cannot be reconstructed; a newly generated report cannot establish the licenses of those existing binaries. New C++ releases use the committed workspace lockfile and bundle the corresponding cargo-about report. Prebuilt-artifact and licensing acceptance remain subject to the [vcpkg maintainer guide](https://learn.microsoft.com/en-us/vcpkg/contributing/maintainer-guide).

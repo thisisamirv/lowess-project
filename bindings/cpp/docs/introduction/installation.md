@@ -4,7 +4,7 @@
 
 Install the LOWESS library for your preferred language.
 
-Each prebuilt platform archive contains that platform's library and the matching C++ and C headers. Download and extract the archive for your target; its files are placed in the current directory.
+Each prebuilt platform archive contains that platform's library and the matching C++ and C headers. Starting with the next C++ release, archives also include dependency-license notices generated from the committed workspace lockfile. Download and extract the archive for your target; its files are placed in the current directory.
 
 ## Pre-built Binaries (Linux (x64))
 

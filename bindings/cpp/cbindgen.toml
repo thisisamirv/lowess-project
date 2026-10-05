@@ -1,5 +1,6 @@
 no_includes = true
 header = "#include <stdint.h>\n#include <stddef.h>"
+include_guard = "FASTLOWESS_H"
 usize_is_size_t = true
 
 [parse]

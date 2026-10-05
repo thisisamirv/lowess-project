@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <cstdlib>
 #include <exception>
+#include <fastlowess.h>
 #include <fastlowess.hpp>
 #include <vector>
 
