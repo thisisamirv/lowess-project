@@ -243,7 +243,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Java:**
 
-- Fixed JNI retained-handle leaks and swallowed array-read failures, invalid CV/iteration coercion and empty-array options, and GPU installer target/local-library validation. Serialized Java model operations to protect native mutable handles.
+- Fixed JNI retained-handle leaks and swallowed array-read failures, invalid CV/iteration coercion and empty-array options, and GPU installer validation for both local and downloaded libraries; failed downloads no longer leave temporary files. Serialized Java model operations to protect native mutable handles.
 - Fixed `javadoc` "no main description" warnings in `OnlineOptions` and `StreamingOptions` builder methods by adding a leading description sentence to each Javadoc block.
 - Fixed `maven-javadoc-plugin` silently ignoring warnings because `pom.xml` used `failOnWarning` instead of `failOnWarnings`.
 

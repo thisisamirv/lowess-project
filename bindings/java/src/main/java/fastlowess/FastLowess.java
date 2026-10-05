@@ -183,22 +183,30 @@ public final class FastLowess {
         try {
             Files.createDirectories(dir);
             Path tmp = Files.createTempFile(dir, "download", ".tmp");
-            HttpClient client = HttpClient.newBuilder()
-                    .followRedirects(HttpClient.Redirect.NORMAL)
-                    .build();
-            HttpRequest request = HttpRequest.newBuilder(URI.create(url))
-                    .timeout(Duration.ofMinutes(5))
-                    .GET()
-                    .build();
-            HttpResponse<Path> response = client.send(
-                    request, HttpResponse.BodyHandlers.ofFile(tmp));
-            if (response.statusCode() != 200) {
-                Files.deleteIfExists(tmp);
-                throw new IllegalStateException(
-                        "Failed to download " + url + ": HTTP " + response.statusCode()
-                        + ". A matching GPU build may not exist for this platform/version yet.");
+            try {
+                HttpClient client = HttpClient.newBuilder()
+                        .followRedirects(HttpClient.Redirect.NORMAL)
+                        .build();
+                HttpRequest request = HttpRequest.newBuilder(URI.create(url))
+                        .timeout(Duration.ofMinutes(5))
+                        .GET()
+                        .build();
+                HttpResponse<Path> response = client.send(
+                        request, HttpResponse.BodyHandlers.ofFile(tmp));
+                if (response.statusCode() != 200) {
+                    throw new IllegalStateException(
+                            "Failed to download " + url + ": HTTP " + response.statusCode()
+                            + ". A matching GPU build may not exist for this platform/version yet.");
+                }
+                installDownloadedGpuLibrary(tmp, dest, gpuBuildMarker(platform, arch));
+            } catch (IOException | InterruptedException | RuntimeException e) {
+                try {
+                    Files.deleteIfExists(tmp);
+                } catch (IOException cleanupError) {
+                    e.addSuppressed(cleanupError);
+                }
+                throw e;
             }
-            Files.move(tmp, dest, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to download " + url, e);
         } catch (InterruptedException e) {
@@ -209,6 +217,15 @@ public final class FastLowess {
         System.out.println("GPU backend installed at " + dest + ".");
         System.out.println("Restart the JVM with -Dfastlowess.native.dir="
                 + dir + " for the change to take effect.");
+    }
+
+    static void installDownloadedGpuLibrary(Path tempFile, Path destination, String marker)
+            throws IOException {
+        if (!containsGpuBuildMarker(tempFile, marker)) {
+            throw new IllegalStateException(
+                    "Downloaded library is not a GPU-enabled Java library for marker " + marker);
+        }
+        Files.move(tempFile, destination, StandardCopyOption.REPLACE_EXISTING);
     }
 
     // Only these 4 platforms are built by release-gpu.yml.

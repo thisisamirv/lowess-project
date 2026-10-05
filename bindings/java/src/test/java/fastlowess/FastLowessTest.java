@@ -7,6 +7,7 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
@@ -45,5 +46,25 @@ class FastLowessTest {
         } finally {
             Files.deleteIfExists(invalid);
         }
+    }
+
+    @Test
+    void validatesDownloadedGpuLibraryBeforePromotion() throws IOException {
+        String marker = "fastlowess-java-gpu|abi-v4|windows-x86_64";
+        Path directory = Files.createTempDirectory("fastlowess-gpu-download");
+        Path destination = directory.resolve("fastlowess_java.dll");
+        Path wrongTarget = Files.createTempFile(directory, "wrong-target", ".tmp");
+        Files.writeString(wrongTarget, "fastlowess-java-gpu|abi-v4|linux-x86_64-glibc");
+
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                () -> FastLowess.installDownloadedGpuLibrary(wrongTarget, destination, marker));
+        assertTrue(error.getMessage().contains(marker));
+        assertFalse(Files.exists(destination));
+
+        Path matchingTarget = Files.createTempFile(directory, "matching-target", ".tmp");
+        Files.writeString(matchingTarget, marker);
+        FastLowess.installDownloadedGpuLibrary(matchingTarget, destination, marker);
+        assertTrue(Files.exists(destination));
+        assertFalse(Files.exists(matchingTarget));
     }
 }
