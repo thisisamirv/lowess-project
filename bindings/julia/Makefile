@@ -143,7 +143,7 @@ _julia_checks_internal:
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (julia)..."
 	@$(PYTHON) dev/check_links.py --lang julia
-	@$(PYTHON) dev/verify_snippets.py --lang julia --timeout 120
+	@$(PYTHON) dev/verify_snippets.py --lang julia --timeout 120 --update-outputs
 	@echo "$(JL_PKG) checks completed successfully!"
 	@echo ""
 	@echo "To use in Julia:"
