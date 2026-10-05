@@ -41,6 +41,7 @@ test_that("native probe helpers validate files and process results", {
     expect_identical(basename(rscript("unix")), "Rscript")
     expect_true(succeeded(" TRUE "))
     expect_false(succeeded("FALSE"))
+    expect_false(succeeded(c("TR", "UE")))
     expect_false(succeeded(structure("TRUE", status = 1L)))
     native <- getFromNamespace("wrap__gpu_enabled", "rfastlowess")
     probe <- getFromNamespace("gpu_library_enabled", "rfastlowess")
