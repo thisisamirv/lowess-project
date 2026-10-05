@@ -508,6 +508,56 @@ fn bisquare_weights_are_invariant_to_large_residual_scales() {
 }
 
 #[test]
+fn aic_stays_finite_when_raw_residual_squares_overflow() {
+    let residuals = [1.0e154_f64, -1.0e154];
+    let aic = Diagnostics::calculate_aic(&residuals, 2.0);
+    let expected = 4.0 * 1.0e154_f64.ln() + 4.0;
+
+    assert_close(aic, expected, 1e-12, 1e-12);
+}
+
+#[test]
+fn common_large_custom_weight_scaling_preserves_the_fit() {
+    let x: Vec<f64> = (0..9).map(f64::from).collect();
+    let y: Vec<f64> = x.iter().map(|&value| (0.4 * value).sin() + value).collect();
+    let fit_with_weights = |weights| {
+        Lowess::new()
+            .fraction(0.5)
+            .iterations(0)
+            .delta(0.0)
+            .boundary_policy("noboundary")
+            .custom_weights(weights)
+            .build()
+            .unwrap()
+            .fit(&x, &y)
+            .unwrap()
+            .y
+    };
+
+    let unit_weights = fit_with_weights(vec![1.0; x.len()]);
+    let large_weights = fit_with_weights(vec![1.0e308; x.len()]);
+    assert_slice_close(&large_weights, &unit_weights, 1e-12, 1e-12);
+
+    let tied_x = [3.0_f64; 3];
+    let tied_y = [1.0_f64, 2.0, 6.0];
+    let fit_tied_with_weights = |weight| {
+        Lowess::new()
+            .fraction(0.5)
+            .iterations(0)
+            .boundary_policy("noboundary")
+            .custom_weights(vec![weight; tied_x.len()])
+            .build()
+            .unwrap()
+            .fit(&tied_x, &tied_y)
+            .unwrap()
+            .y
+    };
+    let tied_unit = fit_tied_with_weights(1.0);
+    let tied_large = fit_tied_with_weights(1.0e308);
+    assert_slice_close(&tied_large, &tied_unit, 1e-12, 1e-12);
+}
+
+#[test]
 fn batch_and_streaming_r_squared_center_values_before_accumulating() {
     let base = 9_007_199_254_740_992.0_f64;
     let y = [base, base + 2.0, base + 2.0];

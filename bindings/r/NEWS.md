@@ -24,7 +24,8 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Fixed CPU Gaussian standard errors for fitted and queried values to use the full unbounded kernel support.
 * Made even-sample medians and mean-absolute residual scaling overflow-resistant for large finite values, and centered Batch/Streaming R-squared accumulation to preserve one-ULP response variation at large offsets.
-* Made Batch RMSE, MAE, and R-squared reductions scale-safe for large finite values, and preserved bisquare downweighting when the tuned residual scale exceeds the numeric range.
+* Made Batch RMSE, MAE, and R-squared reductions scale-safe for large finite values, preserved bisquare downweighting when tuned scales exceed the numeric range, and normalized custom weights before summation in local and all-tied fits.
+* Kept AIC finite when raw residual-square sums overflow, and made local/all-tied WLS invariant to common scaling of large finite case weights.
 * Reject unused constructor options, factors/multidimensional inputs, and malformed grouped options. Keep GPU sidecars mapped for live model finalizers, try older valid sidecars, verify native ABI/version and argument counts, bound candidate probes, and check download SHA-256 digests before execution.
 * Validate Streaming/Online iterations and plain-list CV fold counts before coercion, and accept integer custom weights.
 * Detect R's linked libc, confirm local GPU installs before probing candidates, use canonical library filenames, and activate versioned Windows GPU sidecars on restart without replacing loaded DLLs.

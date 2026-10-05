@@ -355,12 +355,25 @@ impl<T: Float + WLSSolver> LinearFit<T> {
         }
 
         let sum_w = weights.iter().copied().fold(T::zero(), |sum, w| sum + w);
-        if sum_w <= T::zero() {
-            return Self::zero();
-        }
-
-        for weight in weights.iter_mut() {
-            *weight = *weight / sum_w;
+        if sum_w.is_finite() {
+            if sum_w <= T::zero() {
+                return Self::zero();
+            }
+            for weight in weights.iter_mut() {
+                *weight = *weight / sum_w;
+            }
+        } else {
+            // Preserve the original arithmetic order unless summation overflows.
+            let weight_scale = weights.iter().copied().fold(T::zero(), T::max);
+            if weight_scale <= T::zero() {
+                return Self::zero();
+            }
+            let scaled_sum = weights
+                .iter()
+                .fold(T::zero(), |sum, &weight| sum + weight / weight_scale);
+            for weight in weights.iter_mut() {
+                *weight = (*weight / weight_scale) / scaled_sum;
+            }
         }
 
         let mut x_mean = T::zero();
@@ -523,6 +536,22 @@ impl<'a, T: Float + WLSSolver> RegressionContext<'a, T> {
                 self.weights[j] = w;
                 sum_w = sum_w + w;
                 j += 1;
+            }
+
+            if !sum_w.is_finite() {
+                let weight_scale = self.weights[weight_left..=tied_end]
+                    .iter()
+                    .copied()
+                    .fold(T::zero(), T::max);
+                sum_w = T::zero();
+                if weight_scale > T::zero() {
+                    let mut j = weight_left;
+                    while j <= tied_end {
+                        self.weights[j] = self.weights[j] / weight_scale;
+                        sum_w = sum_w + self.weights[j];
+                        j += 1;
+                    }
+                }
             }
 
             if sum_w > T::zero() {

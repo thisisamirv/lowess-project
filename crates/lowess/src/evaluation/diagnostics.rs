@@ -208,12 +208,6 @@ impl<T: Float> Diagnostics<T> {
         }
     }
 
-    // Compute the residual sum of squares (RSS).
-    // RSS = sum r_i^2.
-    fn calculate_rss(residuals: &[T]) -> T {
-        residuals.iter().fold(T::zero(), |acc, &r| acc + r * r)
-    }
-
     // Compute the root mean squared error (RMSE).
     // RMSE = sqrt((1/n) * sum (y_i - y_hat_i)^2).
     pub fn calculate_rmse(y: &[T], y_smooth: &[T]) -> T {
@@ -380,13 +374,22 @@ impl<T: Float> Diagnostics<T> {
     // AIC = n * ln(RSS / n) + 2 * df_eff.
     pub fn calculate_aic(residuals: &[T], effective_df: T) -> T {
         let n = T::from(residuals.len()).unwrap_or(T::one());
-        let rss = Self::calculate_rss(residuals);
+        let residual_scale = residuals
+            .iter()
+            .fold(T::zero(), |scale, &residual| scale.max(residual.abs()));
 
-        if rss <= T::zero() || n <= T::zero() {
+        if residual_scale <= T::zero() || n <= T::zero() {
             return T::infinity();
         }
 
-        n * (rss / n).ln() + T::from(Self::LINEAR_PARAMS).unwrap() * effective_df
+        let scaled_rss = residuals.iter().fold(T::zero(), |sum, &residual| {
+            let scaled = residual / residual_scale;
+            sum + scaled * scaled
+        });
+        let log_mean_squared_error =
+            T::from(2.0).unwrap() * residual_scale.ln() + (scaled_rss / n).ln();
+
+        n * log_mean_squared_error + T::from(Self::LINEAR_PARAMS).unwrap() * effective_df
     }
 
     // Compute the corrected Akaike Information Criterion (AICc).
