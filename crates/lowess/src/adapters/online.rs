@@ -411,7 +411,11 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                     let smoothed_val = smoothed_vec.last().copied().ok_or_else(|| {
                         LowessError::InvalidNumericValue("No smoothed output produced".into())
                     })?;
-                    let mut std_err = se_vec.as_ref().and_then(|v| v.last().copied());
+                    let mut std_err = if self.config.bootstrap.is_some() {
+                        None
+                    } else {
+                        se_vec.as_ref().and_then(|v| v.last().copied())
+                    };
                     let rob_weight = if self.config.return_robustness_weights {
                         result.robustness_weights.last().copied()
                     } else {
