@@ -100,9 +100,9 @@ export(PACKAGE fastlowess)
 
 # Tests
 set(fastlowess_test_source
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../tests/cpp/test_fastlowess.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/test_fastlowess.cpp"
 )
-set(fastlowess_test_include_dir "${CMAKE_CURRENT_SOURCE_DIR}/../../tests/cpp")
+set(fastlowess_test_include_dir "${CMAKE_CURRENT_SOURCE_DIR}/tests")
 
 if(EXISTS "${fastlowess_test_source}")
     enable_testing()

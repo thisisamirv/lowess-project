@@ -13,6 +13,7 @@
 #include <iterator>
 #include <string>
 #include <system_error>
+#include <utility>
 #include <vector>
 
 #if FASTLOWESS_CPP_VERSION_MAJOR < 0 || FASTLOWESS_CPP_VERSION_MINOR < 0 ||    \
@@ -428,6 +429,20 @@ void testGroupedCvBootstrapAndPredict() {
 
 void testEmptyResultAccessors() {
   std::cout << "Running testEmptyResultAccessors...\n";
+
+  const fastlowess::LowessResult empty_batch;
+  const auto empty_diagnostics = empty_batch.diagnostics();
+  assertTrue(!empty_batch.valid() && !empty_diagnostics.has_value(),
+             "default batch result should not report diagnostics");
+  assertTrue(std::isnan(empty_diagnostics.rmse()) &&
+                 !empty_diagnostics.aic().has_value(),
+             "default batch diagnostics should be unavailable");
+
+  fastlowess::LowessResult moved_from;
+  const fastlowess::LowessResult moved(std::move(moved_from));
+  // NOLINTNEXTLINE(bugprone-use-after-move,clang-analyzer-cplusplus.Move)
+  assertTrue(!moved_from.diagnostics().has_value(),
+             "moved-from batch result should not report diagnostics");
 
   fastlowess::StreamingLowess streaming;
   const auto empty = streaming.finalize().value();

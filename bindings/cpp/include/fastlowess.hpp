@@ -592,7 +592,7 @@ private:
  */
 class LowessResult {
 public:
-  LowessResult() = default;
+  LowessResult() : result_(empty_result()) {}
 
   explicit LowessResult(const fastlowess_CppLowessResult &c_result)
       : result_(c_result) {}
@@ -604,14 +604,14 @@ public:
   LowessResult &operator=(const LowessResult &) = delete;
 
   LowessResult(LowessResult &&other) noexcept : result_(other.result_) {
-    other.result_ = fastlowess_CppLowessResult{};
+    other.result_ = empty_result();
   }
 
   LowessResult &operator=(LowessResult &&other) noexcept {
     if (this != &other) {
       release();
       result_ = other.result_;
-      other.result_ = fastlowess_CppLowessResult{};
+      other.result_ = empty_result();
     }
     return *this;
   }
@@ -750,6 +750,19 @@ public:
   }
 
 private:
+  static fastlowess_CppLowessResult empty_result() {
+    fastlowess_CppLowessResult result{};
+    result.iterations_used = -1;
+    result.rmse = NAN;
+    result.mae = NAN;
+    result.r_squared = NAN;
+    result.aic = NAN;
+    result.aicc = NAN;
+    result.effective_df = NAN;
+    result.residual_sd = NAN;
+    return result;
+  }
+
   void release() noexcept {
     if (result_.predict_handle != nullptr) {
       cpp_predict_handle_free(result_.predict_handle);

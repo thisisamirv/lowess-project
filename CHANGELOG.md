@@ -227,6 +227,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **C++:**
 
+- Keep default and moved-from `LowessResult` diagnostics unavailable, and register the C++ test suite with the top-level CMake project.
 - Publish the Windows MSVC import libraries referenced by the prebuilt installation instructions; specify C++17 in the MSVC compile commands.
 - Run Windows MinGW C++ tests with CMake's portable copy utility and CTest instead of shell-specific copy/launch commands.
 - Fixed shell injection in the GPU installer, result and retained-handle cleanup leaks and empty-result accessors, silent acceptance of unsupported options/output names, swallowed constructor errors, negative iteration and CV-fold coercion, Windows FFI length truncation, and unsafe reuse of a fixed C++ test temp directory.
