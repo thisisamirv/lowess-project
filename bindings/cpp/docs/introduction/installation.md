@@ -154,6 +154,18 @@ spack test run --alias fastlowess-cpp-smoke fastlowess-cpp
 spack test results -l fastlowess-cpp-smoke
 ```
 
+## From vcpkg (overlay)
+
+An initial source-built overlay is available for `x64-windows` shared libraries with the dynamic MSVC runtime. Rust 1.89 or newer is required to build it, but not to use the installed C++ library. This port is not yet in vcpkg's curated registry.
+
+From the repository root, with vcpkg on your PATH:
+
+```powershell
+vcpkg install fastlowess:x64-windows --overlay-ports=bindings/cpp/vcpkg
+```
+
+The installed package provides `fastlowess::fastlowess` through `find_package(fastlowess CONFIG REQUIRED)`. See the [overlay packaging guide](https://github.com/thisisamirv/lowess-project/tree/main/bindings/cpp/vcpkg) for bootstrap commands, Debug/Release consumer tests, and submission steps.
+
 ---
 
 ## Verify Installation

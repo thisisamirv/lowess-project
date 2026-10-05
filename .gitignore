@@ -3,6 +3,7 @@ debug/
 target/
 **/target/
 Cargo.lock
+!bindings/cpp/vcpkg/fastlowess/Cargo.lock
 **/*.rs.bk
 *.pdb
 **/mutants.out*/
@@ -61,13 +62,15 @@ venv/
 .vscode/
 .clangd
 !/bindings/cpp/.clangd
+!/bindings/cpp/vcpkg/test-project/.clangd
 .cache/
 compile_commands.json
 *.swp
 *.swo
 *~
 *.todo
-response.md
+.response.md
+.internal_note.md
 
 # OS / System
 .DS_Store

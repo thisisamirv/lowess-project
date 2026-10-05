@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **C++:**
 
 - Added Windows x64 MinGW, Linux x86/ARMv7, Android ABI, and iOS device/simulator release binaries with matching cross-target CI builds.
+- Added a pinned, source-built vcpkg overlay for `x64-windows` CPU-only shared libraries, with separate Debug/Release builds, a relocatable CMake target, Rust dependency provenance, and a standalone consumer test and publishing guide.
 - Added Spack installation sanity checks and a standalone C++17 compile-and-run test against the installed headers and library.
 - Added a generated `fastlowess_version.h` with compile-time major/minor/patch and full-version macros, integrated Cargo/CMake generation and header packaging, and retained `cpp_version()` for loaded-library identification.
 
