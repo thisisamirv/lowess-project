@@ -154,7 +154,7 @@ jobs:
 
       - name: Build docs
         env:
-          FASTLOWESS_LIB: target/release/libfastlowess_jl.so
+          FASTLOWESS_LIB: ${{ github.workspace }}/target/release/libfastlowess_jl.so
         run: julia --project=bindings/julia/julia/docs bindings/julia/julia/docs/make.jl
 
       - uses: actions/upload-artifact@v7
