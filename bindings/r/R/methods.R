@@ -40,7 +40,7 @@ print.LowessResult <- function(x, ...) {
         cat("  Iterations Used:  ", x$iterations_used, "\n")
     }
     if (!is.null(x$cv_scores)) {
-        cat("  CV Scores:        ", length(x$cv_scores), "folds\n")
+        cat("  CV Scores:        ", length(x$cv_scores), "scores\n")
     }
     invisible(x)
 }

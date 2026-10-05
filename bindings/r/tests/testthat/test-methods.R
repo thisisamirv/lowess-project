@@ -56,6 +56,8 @@ test_that("print.LowessResult shows cv_scores when present", {
     )
     out <- capture.output(print(result))
     expect_true(any(grepl("CV Scores", out, fixed = TRUE)))
+    expect_true(any(grepl("3 scores", out, fixed = TRUE)))
+    expect_false(any(grepl("3 folds", out, fixed = TRUE)))
 })
 
 test_that("print.StreamingLowess outputs correct fields", {
@@ -69,12 +71,17 @@ test_that("print.StreamingLowess outputs correct fields", {
 })
 
 test_that("print.OnlineLowess outputs correct fields", {
-    model <- OnlineLowess(fraction = 0.2, window_capacity = 20L)
+    model <- OnlineLowess(
+        fraction = 0.2,
+        window_capacity = 20L,
+        update_mode = "full"
+    )
     out <- capture.output(print(model))
     expect_true(any(grepl("OnlineLowess Model", out, fixed = TRUE)))
     expect_true(any(grepl("Fraction", out, fixed = TRUE)))
     expect_true(any(grepl("Window Capacity", out, fixed = TRUE)))
     expect_true(any(grepl("Min Points", out, fixed = TRUE)))
+    expect_true(any(grepl("Update Mode:.*full", out)))
     expect_identical(print(model), model)
 })
 
