@@ -150,7 +150,7 @@ func InstallGPU(yes bool, localPath string) error {
 	}
 
 	fmt.Printf("Downloading %s ...\n", url)
-	if err := downloadGPULibrary(url, dest); err != nil {
+	if err := downloadGPULibrary(url, dest, gpuBuildMarker()); err != nil {
 		return fmt.Errorf("failed to download %s: %w\n"+
 			"a matching GPU build may not exist for this platform/version yet", url, err)
 	}
@@ -202,7 +202,7 @@ func copyGPULibrary(src, dest, marker string) error {
 	return os.Rename(tmp, dest)
 }
 
-func downloadGPULibrary(url, dest string) error {
+func downloadGPULibrary(url, dest, marker string) error {
 	client := &http.Client{Timeout: 5 * time.Minute}
 	resp, err := client.Get(url)
 	if err != nil {
@@ -224,6 +224,10 @@ func downloadGPULibrary(url, dest string) error {
 		return err
 	}
 	if err := f.Close(); err != nil {
+		_ = os.Remove(tmp)
+		return err
+	}
+	if err := validateGPUArchive(tmp, marker); err != nil {
 		_ = os.Remove(tmp)
 		return err
 	}

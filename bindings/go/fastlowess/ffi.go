@@ -140,7 +140,8 @@ func optionalFloat(value C.double) *float64 {
 // Result is the outcome of a batch fit, streaming chunk/finalize, or is
 // embedded conceptually (as PointResult) for the online model.
 type Result struct {
-	// X is the sorted input x values (length N).
+	// X contains the input x coordinates corresponding to Y (length N).
+	// Batch results preserve input order unless Outputs contains "sorted".
 	X []float64
 	// Y is the smoothed y values (length N).
 	Y []float64

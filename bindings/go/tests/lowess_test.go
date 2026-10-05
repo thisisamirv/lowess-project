@@ -1,7 +1,10 @@
 package fastlowess_test
 
 import (
+	"bytes"
+	"io"
 	"math"
+	"net/http"
 	"os"
 	"path/filepath"
 	"slices"
@@ -85,6 +88,54 @@ func TestInstallGPURejectsUnmarkedLocalArchive(t *testing.T) {
 	}
 	if err := fastlowess.InstallGPU(true, localPath); err == nil {
 		t.Fatal("expected installer to reject an archive without the GPU build marker")
+	}
+}
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (roundTrip roundTripFunc) RoundTrip(request *http.Request) (*http.Response, error) {
+	return roundTrip(request)
+}
+
+func TestInstallGPURejectsUnmarkedDownloadedArchive(t *testing.T) {
+	if fastlowess.GPUEnabled() {
+		t.Skip("installer is unnecessary when the current library already has GPU support")
+	}
+
+	directory := t.TempDir()
+	t.Setenv("HOME", directory)
+	t.Setenv("USERPROFILE", directory)
+
+	requested := false
+	originalTransport := http.DefaultTransport
+	t.Cleanup(func() { http.DefaultTransport = originalTransport })
+	http.DefaultTransport = roundTripFunc(func(request *http.Request) (*http.Response, error) {
+		requested = true
+		body := []byte("!<arch>\nnot a matching GPU archive")
+		return &http.Response{
+			StatusCode:    http.StatusOK,
+			Status:        "200 OK",
+			Header:        make(http.Header),
+			Body:          io.NopCloser(bytes.NewReader(body)),
+			ContentLength: int64(len(body)),
+			Request:       request,
+		}, nil
+	})
+
+	if err := fastlowess.InstallGPU(true, ""); err == nil {
+		t.Fatal("expected installer to reject a downloaded archive without the GPU build marker")
+	}
+	if !requested {
+		t.Skip("no prebuilt GPU archive is available for this platform")
+	}
+
+	installDirectory := filepath.Join(directory, ".fastlowess", "gpu")
+	entries, err := os.ReadDir(installDirectory)
+	if err != nil {
+		t.Fatalf("failed to inspect GPU install directory: %v", err)
+	}
+	if len(entries) != 0 {
+		t.Fatalf("invalid download left files in install directory: %v", entries)
 	}
 }
 
