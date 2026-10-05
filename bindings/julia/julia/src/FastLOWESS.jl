@@ -37,12 +37,12 @@ function _output_flags(outputs)
     unknown = setdiff(normalized_outputs, collect(allowed))
     isempty(unknown) || throw(ArgumentError("Unknown outputs: $(join(unknown, ", "))"))
     return (
-        diagnostics="diagnostics" in normalized_outputs,
-        residuals="residuals" in normalized_outputs,
-        weights="weights" in normalized_outputs,
-        derivative="derivative" in normalized_outputs,
-        se="se" in normalized_outputs,
-        sorted="sorted" in normalized_outputs,
+        diagnostics = "diagnostics" in normalized_outputs,
+        residuals = "residuals" in normalized_outputs,
+        weights = "weights" in normalized_outputs,
+        derivative = "derivative" in normalized_outputs,
+        se = "se" in normalized_outputs,
+        sorted = "sorted" in normalized_outputs,
     )
 end
 
@@ -54,27 +54,27 @@ function _check_group_keys(group, allowed, name)
 end
 
 function _cv_options(cv)
-    cv === nothing && return (fractions=Float64[], method="kfold", k=5)
+    cv === nothing && return (fractions = Float64[], method = "kfold", k = 5)
     _check_group_keys(cv, (:method, :k, :fractions), "cv")
     haskey(cv, :fractions) || throw(ArgumentError("cv requires `fractions`"))
     return (
-        fractions=Float64.(cv[:fractions]),
-        method=String(get(cv, :method, "kfold")),
-        k=Int(get(cv, :k, 5)),
+        fractions = Float64.(cv[:fractions]),
+        method = String(get(cv, :method, "kfold")),
+        k = Int(get(cv, :k, 5)),
     )
 end
 
 function _intervals_options(intervals)
-    intervals === nothing && return (confidence=NaN, prediction=NaN, bootstrap=0)
+    intervals === nothing && return (confidence = NaN, prediction = NaN, bootstrap = 0)
     _check_group_keys(intervals, (:confidence, :prediction, :bootstrap), "intervals")
     confidence = get(intervals, :confidence, nothing)
     prediction = get(intervals, :prediction, nothing)
     bootstrap = Int(get(intervals, :bootstrap, 0))
     bootstrap >= 0 || throw(ArgumentError("intervals bootstrap must be non-negative"))
     return (
-        confidence=confidence === nothing ? NaN : Float64(confidence),
-        prediction=prediction === nothing ? NaN : Float64(prediction),
-        bootstrap=bootstrap,
+        confidence = confidence === nothing ? NaN : Float64(confidence),
+        prediction = prediction === nothing ? NaN : Float64(prediction),
+        bootstrap = bootstrap,
     )
 end
 
@@ -276,7 +276,7 @@ on subsequent calls without re-downloading or re-prompting. Set
 `ENV["FASTLOWESS_LIB"]` to the printed path in your Julia startup config to
 use it automatically in future sessions.
 """
-function install_gpu(; yes::Bool=false, local_path::Union{String,Nothing}=nothing)
+function install_gpu(; yes::Bool = false, local_path::Union{String,Nothing} = nothing)
     if gpu_available()
         println("GPU backend is already active.")
         return nothing
@@ -344,7 +344,7 @@ function install_gpu(; yes::Bool=false, local_path::Union{String,Nothing}=nothin
         try
             download(url, dest)
         catch e
-            rm(dest, force=true)
+            rm(dest, force = true)
             error(
                 "Failed to download $(url): $(e)\nA matching GPU build may not exist for this platform/version yet.",
             )
@@ -352,7 +352,7 @@ function install_gpu(; yes::Bool=false, local_path::Union{String,Nothing}=nothin
     end
 
     if !_check_gpu_support(dest)
-        rm(dest, force=true)
+        rm(dest, force = true)
         error(
             "Downloaded library does not report GPU support. The download may be corrupted or mismatched; try again.",
         )
@@ -476,12 +476,12 @@ Evaluate the fitted model at out-of-sample query points not in the training set.
 function predict(
     model::PredictModel,
     new_x::Vector{Float64};
-    outputs::Vector{String}=String[],
-    intervals=nothing,
-    seed::Union{Integer,Nothing}=nothing,
-    extrapolation::String="clamp",
-    max_extrapolation_distance::Union{Float64,Nothing}=nothing,
-    max_neighbor_distance::Union{Float64,Nothing}=nothing,
+    outputs::Vector{String} = String[],
+    intervals = nothing,
+    seed::Union{Integer,Nothing} = nothing,
+    extrapolation::String = "clamp",
+    max_extrapolation_distance::Union{Float64,Nothing} = nothing,
+    max_neighbor_distance::Union{Float64,Nothing} = nothing,
 )
     flags = _output_flags(outputs)
     iv = _intervals_options(intervals)
@@ -680,7 +680,7 @@ function ptr_to_vector(ptr::Ptr{Cdouble}, n::Int)
     if ptr == C_NULL
         return nothing
     end
-    return unsafe_wrap(Array, ptr, n, own=false) |> copy
+    return unsafe_wrap(Array, ptr, n, own = false) |> copy
 end
 
 function convert_result(c_result::CJlLowessResult)
@@ -904,23 +904,23 @@ mutable struct Lowess
     handle::Ptr{Cvoid}
 
     function Lowess(;
-        fraction::Float64=0.67,
-        iterations::Int=3,
-        delta::Float64=NaN,
-        weight_function::String="tricube",
-        robustness_method::String="bisquare",
-        scaling_method::String="mad",
-        boundary_policy::String="extend",
-        intervals=nothing,
-        outputs=String[],
-        cv=nothing,
-        seed::Union{Integer,Nothing}=nothing,
-        zero_weight_fallback::String="use_local_mean",
-        auto_converge::Float64=NaN,
-        parallel::Bool=true,
-        backend::String="cpu",
-        missing::String="error",
-        retain_model::Bool=false,
+        fraction::Float64 = 0.67,
+        iterations::Int = 3,
+        delta::Float64 = NaN,
+        weight_function::String = "tricube",
+        robustness_method::String = "bisquare",
+        scaling_method::String = "mad",
+        boundary_policy::String = "extend",
+        intervals = nothing,
+        outputs = String[],
+        cv = nothing,
+        seed::Union{Integer,Nothing} = nothing,
+        zero_weight_fallback::String = "use_local_mean",
+        auto_converge::Float64 = NaN,
+        parallel::Bool = true,
+        backend::String = "cpu",
+        missing::String = "error",
+        retain_model::Bool = false,
     )
         flags = _output_flags(outputs)
         iv = _intervals_options(intervals)
@@ -1021,7 +1021,7 @@ function fit(
     l::Lowess,
     x::Vector{Float64},
     y::Vector{Float64};
-    custom_weights::Union{Vector{Float64},Nothing}=nothing,
+    custom_weights::Union{Vector{Float64},Nothing} = nothing,
 )
     n = length(x)
     if n != length(y)
@@ -1084,23 +1084,23 @@ mutable struct StreamingLowess
     lock::ReentrantLock
 
     function StreamingLowess(;
-        fraction::Float64=0.67,
-        chunk_size::Int=5000,
-        overlap::Int=-1,
-        iterations::Int=3,
-        delta::Float64=NaN,
-        weight_function::String="tricube",
-        robustness_method::String="bisquare",
-        scaling_method::String="mad",
-        boundary_policy::String="extend",
-        auto_converge::Float64=NaN,
-        outputs=String[],
-        zero_weight_fallback::String="use_local_mean",
-        merge_strategy::String="weighted_average",
-        parallel::Bool=true,
-        missing::String="error",
-        intervals=nothing,
-        seed::Union{Integer,Nothing}=nothing,
+        fraction::Float64 = 0.67,
+        chunk_size::Int = 5000,
+        overlap::Int = -1,
+        iterations::Int = 3,
+        delta::Float64 = NaN,
+        weight_function::String = "tricube",
+        robustness_method::String = "bisquare",
+        scaling_method::String = "mad",
+        boundary_policy::String = "extend",
+        auto_converge::Float64 = NaN,
+        outputs = String[],
+        zero_weight_fallback::String = "use_local_mean",
+        merge_strategy::String = "weighted_average",
+        parallel::Bool = true,
+        missing::String = "error",
+        intervals = nothing,
+        seed::Union{Integer,Nothing} = nothing,
     )
         flags = _output_flags(outputs)
         iv = _intervals_options(intervals)
@@ -1261,22 +1261,22 @@ mutable struct OnlineLowess
     lock::ReentrantLock
 
     function OnlineLowess(;
-        fraction::Float64=0.67,
-        window_capacity::Int=1000,
-        min_points::Int=2,
-        iterations::Int=0,
-        delta::Float64=NaN,
-        weight_function::String="tricube",
-        robustness_method::String="bisquare",
-        scaling_method::String="mad",
-        boundary_policy::String="extend",
-        update_mode::String="incremental",
-        auto_converge::Float64=NaN,
-        outputs=String[],
-        zero_weight_fallback::String="use_local_mean",
-        missing::String="error",
-        intervals=nothing,
-        seed::Union{Integer,Nothing}=nothing,
+        fraction::Float64 = 0.67,
+        window_capacity::Int = 1000,
+        min_points::Int = 2,
+        iterations::Int = 0,
+        delta::Float64 = NaN,
+        weight_function::String = "tricube",
+        robustness_method::String = "bisquare",
+        scaling_method::String = "mad",
+        boundary_policy::String = "extend",
+        update_mode::String = "incremental",
+        auto_converge::Float64 = NaN,
+        outputs = String[],
+        zero_weight_fallback::String = "use_local_mean",
+        missing::String = "error",
+        intervals = nothing,
+        seed::Union{Integer,Nothing} = nothing,
     )
         flags = _output_flags(outputs)
         iv = _intervals_options(intervals)
