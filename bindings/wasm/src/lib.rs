@@ -729,15 +729,16 @@ impl PredictOutput {
 // LOWESS smoother.
 #[wasm_bindgen(skip_typescript)]
 pub struct Lowess {
-    options: JsValue,
+    builder: LowessBuilder<f64>,
 }
 
 #[wasm_bindgen]
 impl Lowess {
     /// Create a new `Lowess` model with the given options.
     #[wasm_bindgen(constructor, skip_typescript)]
-    pub fn new(options: JsValue) -> Lowess {
-        Lowess { options }
+    pub fn new(options: JsValue) -> Result<Lowess, JsValue> {
+        let builder = batch_options_from_value(options)?;
+        Ok(Lowess { builder })
     }
 
     /// Fit the model to data and return smoothed values.
@@ -752,7 +753,7 @@ impl Lowess {
         smooth(
             x,
             y,
-            self.options.clone(),
+            self.builder.clone(),
             customWeights.map(|b| b.to_vec()),
         )
     }
@@ -888,12 +889,7 @@ fn online_options_to_builder(
     Ok(builder)
 }
 
-fn smooth(
-    x: &Float64Array,
-    y: &Float64Array,
-    options: JsValue,
-    custom_weights: Option<Vec<f64>>,
-) -> Result<LowessResult, JsValue> {
+fn batch_options_from_value(options: JsValue) -> Result<LowessBuilder<f64>, JsValue> {
     validate_option_keys(
         &options,
         "batch",
@@ -928,8 +924,15 @@ fn smooth(
     } else {
         None
     };
-    let builder = batch_options_to_builder(opts)?;
+    batch_options_to_builder(opts)
+}
 
+fn smooth(
+    x: &Float64Array,
+    y: &Float64Array,
+    builder: LowessBuilder<f64>,
+    custom_weights: Option<Vec<f64>>,
+) -> Result<LowessResult, JsValue> {
     let x_vec = x.to_vec();
     let y_vec = y.to_vec();
 
