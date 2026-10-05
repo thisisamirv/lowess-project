@@ -172,9 +172,9 @@ export interface OnlineOutput {
  * Configuration options for online LOWESS smoothing.
  *
  * A subset of [`SmoothOptions`]: diagnostics, residuals, parallel execution,
- * cross-validation, `return_sorted`, and `backend` are all no-ops for online
+ * cross-validation, the `sorted` output, and `backend` are all no-ops for online
  * processing (it handles one point at a time), so they aren't fields on
- * this type. `return_se` and `intervals` require `update_mode = "full"`.
+ * this type. The `se` output and `intervals` require `update_mode = "full"`.
  */
 export interface OnlineSmoothOptions {
   /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
@@ -205,7 +205,7 @@ export interface OnlineSmoothOptions {
    * Requires `update_mode = "full"`.
    */
   intervals?: IntervalsOptions
-  /** Bootstrap seed; each full-update window restarts from it. Default: None. */
+  /** JavaScript safe-integer bootstrap seed; each full-update window restarts from it. Default: None. */
   seed?: number
   /** Policy for non-finite (NaN/Inf) `x`/`y` values passed to `addPoint` ("error", "drop"). Default: "error". */
   missing?: string
@@ -217,7 +217,7 @@ export interface PredictOptions {
   outputs?: Array<string>
   /** Grouped confidence/prediction levels and optional residual-bootstrap refits. */
   intervals?: IntervalsOptions
-  /** Prediction-time bootstrap seed, independent of the fit seed. Default: None. */
+  /** Prediction-time seed; must be a non-negative JavaScript safe integer. Default: None. */
   seed?: number
   /** Behavior for query points outside the training range ("clamp", "linear", "error"). Default: "clamp". */
   extrapolation?: string
@@ -261,7 +261,7 @@ export interface SmoothOptions {
   intervals?: IntervalsOptions
   /** Grouped cross-validation configuration. */
   cv?: CvOptions
-  /** Shared seed for k-fold CV and residual bootstrap; 0 is valid. Default: None. */
+  /** Shared JavaScript safe-integer seed for k-fold CV and residual bootstrap; 0 is valid. Default: None. */
   seed?: number
   /** Enable parallel execution. Default: true. */
   parallel?: boolean
@@ -289,7 +289,7 @@ export interface StreamingOptions {
 /**
  * Configuration options for streaming LOWESS smoothing.
  *
- * A subset of [`SmoothOptions`]: cross-validation, `return_sorted`, and
+ * A subset of [`SmoothOptions`]: cross-validation, the `sorted` output, and
  * `backend` are Batch-only and have no equivalent here, so they aren't
  * fields on this type.
  */
@@ -319,7 +319,7 @@ export interface StreamingSmoothOptions {
   outputs?: Array<string>
   /** Confidence/prediction levels and per-chunk residual-bootstrap refits. */
   intervals?: IntervalsOptions
-  /** Bootstrap seed; each combined chunk restarts from it. Default: None. */
+  /** JavaScript safe-integer bootstrap seed; each combined chunk restarts from it. Default: None. */
   seed?: number
   /** Enable parallel execution. Default: true. */
   parallel?: boolean

@@ -77,7 +77,7 @@ Fraction used: 0.5
 | `outputs` | `string[]` | `[]` | Select `se`, `diagnostics`, `residuals`, `weights`, `derivative`, and/or `sorted` |
 | `intervals` | `object` | `null` | Grouped interval options: `confidence`, `prediction`, and `bootstrap` |
 | `cv` | `object` | `null` | Grouped CV options: `method`, `k`, and `fractions` |
-| `seed` | `number` | `null` | Shared CV/bootstrap seed; `0` is a valid seed |
+| `seed` | `number` | `null` | Shared CV/bootstrap seed; must be an integer from `0` through `Number.MAX_SAFE_INTEGER` |
 | `retain_model` | `boolean` | `false` | Retain training data, enabling `result.predict()` |
 | `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`, not the options object |
 
@@ -237,7 +237,7 @@ Seed k-fold shuffling with the outer `seed` option, not inside `cv`.
 
 ### seed
 
-One seed shared by k-fold CV shuffling and fit-time residual bootstrap. It does not enable either feature by itself; `null` (default) uses each feature's default, and `0` is a valid seed. Negative values throw.
+One seed shared by k-fold CV shuffling and fit-time residual bootstrap. It does not enable either feature by itself; `null` (default) uses each feature's default. Seeds must be finite, non-negative safe integers no greater than `Number.MAX_SAFE_INTEGER`; fractional, negative, and unsafe values throw. `0` is valid.
 
 ### retain_model
 

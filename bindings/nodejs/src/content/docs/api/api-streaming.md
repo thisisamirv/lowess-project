@@ -99,7 +99,7 @@ Fraction used: 0.5
 | `parallel` | `boolean` | `true` | Enable parallel execution |
 | `outputs` | `string[]` | `[]` | Select `se`, `diagnostics`, `residuals`, `weights`, and/or `derivative` |
 | `intervals` | `object` | `null` | Grouped `confidence`, `prediction`, and per-chunk `bootstrap` options |
-| `seed` | `number` | `null` | Reproducible bootstrap draws for each combined chunk |
+| `seed` | `number` | `null` | Reproducible bootstrap draws for each combined chunk; must be an integer from `0` through `Number.MAX_SAFE_INTEGER` |
 
 Cross-validation, GPU `backend`, `custom_weights`, and the `"sorted"` output are Batch-only and not available here; see [fastLowess](api.md) for those. Standard errors and confidence/prediction intervals are computed per combined chunk (including the previous overlap), then blended across overlap regions via `merge_strategy` like `y`/`derivative` are; they are local chunk intervals, not whole-stream intervals.
 
@@ -256,7 +256,7 @@ An object such as `{ confidence: 0.90, prediction: 0.99, bootstrap: 200 }`, popu
 
 ### seed
 
-Seeds bootstrap draws. Each combined chunk restarts from the same seed. It does not enable bootstrap by itself; `0` is a valid seed.
+Seeds bootstrap draws. Each combined chunk restarts from the same seed. It does not enable bootstrap by itself. Seeds must be finite, non-negative safe integers no greater than `Number.MAX_SAFE_INTEGER`; fractional, negative, and unsafe values throw. `0` is valid.
 
 ## Result Structure
 

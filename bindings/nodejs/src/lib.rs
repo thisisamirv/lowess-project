@@ -220,8 +220,8 @@ pub struct PredictOptions {
     pub outputs: Option<Vec<String>>,
     /// Grouped confidence/prediction levels and optional residual-bootstrap refits.
     pub intervals: Option<IntervalsOptions>,
-    /// Prediction-time bootstrap seed, independent of the fit seed. Default: None.
-    pub seed: Option<i64>,
+    /// Prediction-time seed; must be a non-negative JavaScript safe integer. Default: None.
+    pub seed: Option<f64>,
     /// Behavior for query points outside the training range ("clamp", "linear", "error"). Default: "clamp".
     pub extrapolation: Option<String>,
     /// Under "linear" extrapolation, the maximum allowed distance beyond the training
@@ -352,11 +352,15 @@ fn bootstrap_count(intervals: Option<&IntervalsOptions>) -> Option<usize> {
         .map(|n| n as usize)
 }
 
-fn parse_seed(seed: Option<i64>) -> Result<Option<u64>> {
+const MAX_SAFE_INTEGER: f64 = 9_007_199_254_740_991.0;
+
+fn parse_seed(seed: Option<f64>) -> Result<Option<u64>> {
     match seed {
-        Some(s) if s < 0 => Err(to_napi_error(binding_support::BindingError::invalid_arg(
-            format!("seed must be non-negative, got {s}"),
-        ))),
+        Some(s) if !s.is_finite() || s.fract() != 0.0 || s < 0.0 || s > MAX_SAFE_INTEGER => {
+            Err(to_napi_error(binding_support::BindingError::invalid_arg(
+                format!("seed must be a non-negative JavaScript safe integer, got {s}"),
+            )))
+        }
         Some(s) => Ok(Some(s as u64)),
         None => Ok(None),
     }
@@ -365,7 +369,7 @@ fn parse_seed(seed: Option<i64>) -> Result<Option<u64>> {
 fn apply_bootstrap_and_seed(
     mut builder: LowessBuilder<f64>,
     intervals: Option<&IntervalsOptions>,
-    seed: Option<i64>,
+    seed: Option<f64>,
 ) -> Result<LowessBuilder<f64>> {
     if let Some(n_boot) = bootstrap_count(intervals) {
         builder = builder.intervals(IntervalsBuilder::new().bootstrap(n_boot));
@@ -409,8 +413,8 @@ pub struct SmoothOptions {
     pub intervals: Option<IntervalsOptions>,
     /// Grouped cross-validation configuration.
     pub cv: Option<CVOptions>,
-    /// Shared seed for k-fold CV and residual bootstrap; 0 is valid. Default: None.
-    pub seed: Option<i64>,
+    /// Shared JavaScript safe-integer seed for k-fold CV and residual bootstrap; 0 is valid. Default: None.
+    pub seed: Option<f64>,
     /// Enable parallel execution. Default: true.
     pub parallel: Option<bool>,
     /// Execution backend: "cpu" (default) or "gpu" (requires the package to be
@@ -460,8 +464,8 @@ pub struct StreamingSmoothOptions {
     pub outputs: Option<Vec<String>>,
     /// Confidence/prediction levels and per-chunk residual-bootstrap refits.
     pub intervals: Option<IntervalsOptions>,
-    /// Bootstrap seed; each combined chunk restarts from it. Default: None.
-    pub seed: Option<i64>,
+    /// JavaScript safe-integer bootstrap seed; each combined chunk restarts from it. Default: None.
+    pub seed: Option<f64>,
     /// Enable parallel execution. Default: true.
     pub parallel: Option<bool>,
     /// Policy for non-finite (NaN/Inf) values in each chunk ("error", "drop"). Default: "error".
@@ -507,8 +511,8 @@ pub struct OnlineSmoothOptions {
     /// Confidence/prediction levels and per-window residual-bootstrap refits.
     /// Requires `update_mode = "full"`.
     pub intervals: Option<IntervalsOptions>,
-    /// Bootstrap seed; each full-update window restarts from it. Default: None.
-    pub seed: Option<i64>,
+    /// JavaScript safe-integer bootstrap seed; each full-update window restarts from it. Default: None.
+    pub seed: Option<f64>,
     /// Policy for non-finite (NaN/Inf) `x`/`y` values passed to `addPoint` ("error", "drop"). Default: "error".
     #[napi(js_name = "missing")]
     pub missing: Option<String>,

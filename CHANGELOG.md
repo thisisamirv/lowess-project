@@ -257,6 +257,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Keep generated N-API package-version checks in `index.js` synchronized with `package.json` after builds and version bumps.
 - Fixed `OnlineLowess` and `LowessResult.predict()` silently ignoring `outputs`; online `"weights"`/`"derivative"`/`"se"` and prediction `"se"`/`"derivative"` are now applied.
 - Reject unknown output names, reliably detect musl when selecting GPU addons, validate installs to a Windows-safe versioned sidecar, reject unsupported musl ARM, and preserve the `fit_async()` return type across builds.
+- Reject fractional, non-finite, negative, and JavaScript-unsafe seeds across Batch, Streaming, Online, and prediction APIs.
 
 **Python:**
 

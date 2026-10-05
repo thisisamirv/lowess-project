@@ -456,6 +456,30 @@ test('batch: negative seed and single bootstrap replicate are rejected', () => {
     }).fit(x, y));
 });
 
+test('seeds must be non-negative JavaScript safe integers in every API mode', () => {
+    const { x, y } = wavy(20);
+    const invalidSeeds = [1.5, Number.NaN, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1];
+    const retained = new fastlowess.Lowess({ retain_model: true }).fit(x, y);
+
+    for (const seed of invalidSeeds) {
+        assert.throws(() => new fastlowess.Lowess({ seed }).fit(x, y), /safe integer/);
+        assert.throws(
+            () => new fastlowess.StreamingLowess({ seed }, { chunk_size: x.length }),
+            /safe integer/
+        );
+        assert.throws(
+            () => new fastlowess.OnlineLowess({ seed }, { window_capacity: 20, min_points: 2 }),
+            /safe integer/
+        );
+        assert.throws(
+            () => retained.predict(new Float64Array([1.5]), { seed }),
+            /safe integer/
+        );
+    }
+
+    assert.doesNotThrow(() => new fastlowess.Lowess({ seed: Number.MAX_SAFE_INTEGER }).fit(x, y));
+});
+
 test('streaming: seeded bootstrap intervals', () => {
     const { x, y } = wavy(30, 0.1);
     const lower = [0, 1].map(() => new fastlowess.StreamingLowess(

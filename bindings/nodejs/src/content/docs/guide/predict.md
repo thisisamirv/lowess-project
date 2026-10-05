@@ -21,7 +21,7 @@ Requires `retain_model: true` on the constructor before `fit()`, otherwise `pred
 | --- | --- | --- | --- |
 | `outputs` | `string[]` | `[]` | Select `"se"` and/or `"derivative"` |
 | `intervals` | `object` | `null` | Grouped `confidence`, `prediction`, and optional `bootstrap` options |
-| `seed` | `number` | `null` | Reproducible prediction-time bootstrap draws; `0` is valid |
+| `seed` | `number` | `null` | Reproducible prediction-time bootstrap draws; must be an integer from `0` through `Number.MAX_SAFE_INTEGER` |
 | `extrapolation` | `string` | `"clamp"` | Behavior for query points outside the training `x`-range |
 | `max_extrapolation_distance` | `number` | disabled | Under `"linear"` extrapolation, the max allowed distance beyond the training boundary before erroring |
 | `max_neighbor_distance` | `number` | disabled | Max allowed distance to the farthest training point in a query's local window before erroring |
@@ -38,7 +38,7 @@ Set `bootstrap` to at least `2` to resample the retained Batch residuals, refit 
 
 ### seed
 
-Seeds prediction-time bootstrap draws, independently of the fit/CV `seed` on `Lowess`. It does not enable bootstrap by itself.
+Seeds prediction-time bootstrap draws, independently of the fit/CV `seed` on `Lowess`. It does not enable bootstrap by itself. Seeds must be finite, non-negative safe integers no greater than `Number.MAX_SAFE_INTEGER`; fractional, negative, and unsafe values throw. `0` is valid.
 
 ### extrapolation
 

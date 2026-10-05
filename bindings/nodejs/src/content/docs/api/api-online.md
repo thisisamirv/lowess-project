@@ -85,7 +85,7 @@ Smoothed y: 0.22659245357374927
 | `update_mode` | `string` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
 | `outputs` | `string[]` | `[]` | Select `se`, `weights`, and/or `derivative`; `se` requires `update_mode: "full"` |
 | `intervals` | `object` | `null` | Grouped `confidence`, `prediction`, and per-window `bootstrap` options (requires `update_mode: "full"`) |
-| `seed` | `number` | `null` | Reproducible bootstrap draws for each full-update window |
+| `seed` | `number` | `null` | Reproducible bootstrap draws for each full-update window; must be an integer from `0` through `Number.MAX_SAFE_INTEGER` |
 
 Incremental mode fits only the newest point. Positive `delta` is rejected there, and `auto_converge` requires full mode with at least one robustness iteration.
 
@@ -220,7 +220,7 @@ An object such as `{ confidence: 0.90, prediction: 0.99, bootstrap: 200 }`, popu
 
 ### seed
 
-Seeds bootstrap draws. Each full-update window restarts from the same seed. It does not enable bootstrap by itself; `0` is a valid seed.
+Seeds bootstrap draws. Each full-update window restarts from the same seed. It does not enable bootstrap by itself. Seeds must be finite, non-negative safe integers no greater than `Number.MAX_SAFE_INTEGER`; fractional, negative, and unsafe values throw. `0` is valid.
 
 ## Result Structure
 
