@@ -33,15 +33,16 @@ export gpu_available, install_gpu, version
 
 function _output_flags(outputs)
     allowed = ("diagnostics", "residuals", "weights", "derivative", "se", "sorted")
-    unknown = setdiff(String.(outputs), collect(allowed))
+    normalized_outputs = String.(outputs)
+    unknown = setdiff(normalized_outputs, collect(allowed))
     isempty(unknown) || throw(ArgumentError("Unknown outputs: $(join(unknown, ", "))"))
     return (
-        diagnostics="diagnostics" in outputs,
-        residuals="residuals" in outputs,
-        weights="weights" in outputs,
-        derivative="derivative" in outputs,
-        se="se" in outputs,
-        sorted="sorted" in outputs,
+        diagnostics="diagnostics" in normalized_outputs,
+        residuals="residuals" in normalized_outputs,
+        weights="weights" in normalized_outputs,
+        derivative="derivative" in normalized_outputs,
+        se="se" in normalized_outputs,
+        sorted="sorted" in normalized_outputs,
     )
 end
 

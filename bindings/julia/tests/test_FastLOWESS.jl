@@ -99,6 +99,9 @@ using FastLOWESS
             @test result.diagnostics.aic === nothing
             @test result.diagnostics.aicc === nothing
             @test result.diagnostics.effective_df === nothing
+
+            symbol_output = fit(Lowess(fraction=0.5, outputs=[:diagnostics]), x, y)
+            @test symbol_output.diagnostics !== nothing
         end
 
         @testset "with residuals" begin
