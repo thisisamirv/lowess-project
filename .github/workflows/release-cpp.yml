@@ -203,7 +203,7 @@ jobs:
 
       - name: Set up Android SDK
         if: matrix.android_abi != ''
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Install Android NDK and configure linker
         if: matrix.android_abi != ''
@@ -285,7 +285,7 @@ jobs:
           cp bindings/cpp/include/fastlowess_version.h "$package_dir/"
 
       - name: Upload platform package artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cpp-${{ matrix.platform_dir }}
           path: package/${{ matrix.platform_dir }}
@@ -297,7 +297,7 @@ jobs:
     needs: build-and-upload
     steps:
       - name: Download platform packages
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: artifacts
 
