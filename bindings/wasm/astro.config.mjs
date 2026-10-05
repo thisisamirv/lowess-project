@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import { unified } from '@astrojs/markdown-remark';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 
@@ -8,13 +9,16 @@ export default defineConfig({
     base: process.env.VITE_BASE ?? '/',
     outDir: './dist',
     markdown: {
-        remarkPlugins: [remarkMath],
-        rehypePlugins: [rehypeKatex],
+        processor: unified({
+            remarkPlugins: [remarkMath],
+            rehypePlugins: [rehypeKatex],
+        }),
     },
     integrations: [
         starlight({
             title: 'fastlowess-wasm',
             description: 'High-performance LOWESS smoothing for WebAssembly',
+            disable404Route: true,
             customCss: ['./src/styles/katex.css'],
             expressiveCode: {
                 shiki: { langAlias: { output: 'text' } },

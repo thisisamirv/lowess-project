@@ -1,0 +1,40 @@
+---
+const docsUrl = import.meta.env.BASE_URL;
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width" />
+        <meta name="description" content="The requested documentation page was not found." />
+        <title>Page not found | fastlowess-wasm</title>
+    </head>
+    <body>
+        <main>
+            <p class="status">404</p>
+            <h1>Page not found</h1>
+            <p>The requested documentation page could not be found.</p>
+            <a href={docsUrl}>Return to the documentation</a>
+        </main>
+    </body>
+</html>
+
+<style>
+    main {
+        max-width: 42rem;
+        margin: 15vh auto;
+        padding: 2rem;
+        color: #202a35;
+        font-family: system-ui, sans-serif;
+    }
+
+    .status {
+        color: #087f6e;
+        font-weight: 700;
+    }
+
+    a {
+        color: #075e9a;
+    }
+</style>
