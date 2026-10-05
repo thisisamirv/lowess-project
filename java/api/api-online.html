@@ -396,25 +396,13 @@ result.ifPresent(r -&gt; System.out.println(r.y()));</code></pre>
 <td class="tableblock halign-left valign-top"><p class="tableblock">unset</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Reproducible bootstrap draws for each full-update window</p></td>
 </tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnRobustnessWeights</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Include <code>robustnessWeight()</code> in result</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDerivative</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Include the latest point&#8217;s local fit derivative (slope) in the result</p></td>
-</tr>
 </tbody>
 </table>
 <div class="paragraph">
 <p>Incremental mode fits only the newest point. Positive <code>delta</code> is rejected there, and <code>autoConverge</code> requires full mode with at least one robustness iteration.</p>
 </div>
 <div class="paragraph">
-<p>Cross-validation, GPU <code>backend</code>, <code>customWeights</code>, <code>returnSorted</code>, <code>returnDiagnostics</code>, <code>returnResiduals</code>, and <code>parallel</code> are Batch-only (or Batch/Streaming-only) and not available here; see <a href="api.html" class="xref page">API</a> for those.</p>
+<p>Cross-validation, GPU <code>backend</code>, <code>customWeights</code>, the <code>sorted</code> output, and <code>parallel</code> are Batch-only; the <code>diagnostics</code> and <code>residuals</code> outputs are unavailable online. See <a href="api.html" class="xref page">API</a> for those options.</p>
 </div>
 </div>
 </div>
@@ -722,6 +710,18 @@ result.ifPresent(r -&gt; System.out.println(r.y()));</code></pre>
 </table>
 </div>
 <div class="sect2">
+<h3 id="outputs-weights"><a class="anchor" href="#outputs-weights"></a>outputs: weights</h3>
+<div class="paragraph">
+<p>Select <code>"weights"</code> to include the robustness weight for the latest point (from the last robustness iteration) in the result.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="outputs-derivative"><a class="anchor" href="#outputs-derivative"></a>outputs: derivative</h3>
+<div class="paragraph">
+<p>Each point&#8217;s local WLS fit already computes a slope internally; this exposes the latest point&#8217;s slope (rate of change of the smoothed curve) via <code>PointResult.derivative()</code> at effectively no extra computation cost.</p>
+</div>
+</div>
+<div class="sect2">
 <h3 id="intervals"><a class="anchor" href="#intervals"></a>intervals</h3>
 <div class="paragraph">
 <p><em>See: <a href="../guide/intervals.html" class="xref page">Intervals</a></em></p>
@@ -734,38 +734,6 @@ result.ifPresent(r -&gt; System.out.println(r.y()));</code></pre>
 <h3 id="seed"><a class="anchor" href="#seed"></a>seed</h3>
 <div class="paragraph">
 <p>Seeds bootstrap draws. Each full-update window restarts from the same seed. It does not enable bootstrap by itself; <code>0</code> is valid.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="returnrobustnessweights"><a class="anchor" href="#returnrobustnessweights"></a>returnRobustnessWeights</h3>
-<div class="paragraph">
-<p>Include the robustness weight for the latest point (from the last robustness iteration) in the result.</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>false</code> (default) — leaves <code>robustnessWeight()</code> empty</p>
-</li>
-<li>
-<p><code>true</code> — populates <code>robustnessWeight()</code></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="returnderivative"><a class="anchor" href="#returnderivative"></a>returnDerivative</h3>
-<div class="paragraph">
-<p>Each point&#8217;s local WLS fit already computes a slope internally; this exposes the latest point&#8217;s slope (rate of change of the smoothed curve) via <code>PointResult.derivative()</code> at effectively no extra computation cost.</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>false</code> (default) — leaves <code>derivative()</code> empty</p>
-</li>
-<li>
-<p><code>true</code> — populates <code>derivative()</code></p>
-</li>
-</ul>
 </div>
 </div>
 </div>
@@ -815,12 +783,12 @@ result.ifPresent(r -&gt; System.out.println(r.y()));</code></pre>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>residual()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>OptionalDouble</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Residual y minus smoothed; always populated (there is no <code>returnResiduals</code> option for Online).</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Residual y minus smoothed; always populated (there is no <code>"residuals"</code> output for Online).</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>robustnessWeight()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>OptionalDouble</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Robustness weight, if <code>returnRobustnessWeights</code> was set.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Robustness weight, if <code>"weights"</code> was requested.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>iterationsUsed()</code></p></td>
@@ -830,12 +798,12 @@ result.ifPresent(r -&gt; System.out.println(r.y()));</code></pre>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>derivative()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>OptionalDouble</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Local fit derivative/slope for the latest point, if <code>returnDerivative</code> was set.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Local fit derivative/slope for the latest point, if <code>"derivative"</code> was requested.</p></td>
 </tr>
 </tbody>
 </table>
 <div class="paragraph">
-<p>There is no diagnostics accessor or <code>returnDiagnostics</code> option for <code>OnlineLowess</code>: <code>PointResult</code> carries no diagnostics field, since diagnostics like RMSE/R<sup>2</sup> need more than one point&#8217;s worth of history to be meaningful.</p>
+<p>There is no diagnostics accessor or <code>"diagnostics"</code> output for <code>OnlineLowess</code>: <code>PointResult</code> carries no diagnostics field, since diagnostics like RMSE/R<sup>2</sup> need more than one point&#8217;s worth of history to be meaningful.</p>
 </div>
 </div>
 </div>

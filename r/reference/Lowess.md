@@ -154,6 +154,8 @@ or arrive in chunks, see
 [`StreamingLowess`](https://thisisamirv.github.io/lowess-project/r/reference/StreamingLowess.md);
 for point-by-point real-time data, see
 [`OnlineLowess`](https://thisisamirv.github.io/lowess-project/r/reference/OnlineLowess.md).
+When `"diagnostics"` is selected, `residual_sd` is the robust residual
+scale estimate (`1.4826 * MAD`).
 
 `fraction` is the most important parameter: it controls the size of the
 local neighbourhood used at each point.

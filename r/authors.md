@@ -402,7 +402,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: gfx-rs developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: napi (3.14.0)
+    Package: napi (3.14.1)
     Authors: Nathan Sobo <nathan@github.com>, Yinan Long <lynweklm@gmail.com>
     License: MIT
     ----------------------------------------
@@ -410,11 +410,11 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: LongYinan <lynweklm@gmail.com>
     License: MIT
     ----------------------------------------
-    Package: napi-derive (3.6.10)
+    Package: napi-derive (3.6.11)
     Authors: LongYinan <lynweklm@gmail.com>, Forehalo <forehalo@gmail.com>
     License: MIT
     ----------------------------------------
-    Package: napi-derive-backend (6.1.4)
+    Package: napi-derive-backend (6.1.5)
     Authors:
     License: MIT
     ----------------------------------------

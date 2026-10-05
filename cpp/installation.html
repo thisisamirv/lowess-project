@@ -104,54 +104,79 @@ $(document).ready(function(){initNavTree('installation.html',''); initResizable(
 <div class="contents">
 <div class="textblock"><h1>Installation</h1>
 <p>Install the LOWESS library for your preferred language.</p>
+<p>Each prebuilt platform archive contains that platform's library and the matching C++ and C headers. Download and extract the archive for your target; its files are placed in the current directory.</p>
 <h2>Pre-built Binaries (Linux (x64))</h2>
-<div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-x64.so</div>
-<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp</div>
-<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.h</div>
-<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess_version.h</div>
+<div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-x64.tar</div>
+<div class="line">tar -xf libfastlowess-linux-x64.tar</div>
 <div class="line">g++ -o myapp myapp.cpp -L. -lfastlowess-linux-x64</div>
 </div><!-- fragment --><h2>Pre-built Binaries (Linux (ARM64))</h2>
-<div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-arm64.so</div>
-<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp</div>
-<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.h</div>
-<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess_version.h</div>
+<div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-arm64.tar</div>
+<div class="line">tar -xf libfastlowess-linux-arm64.tar</div>
 <div class="line">g++ -o myapp myapp.cpp -L. -lfastlowess-linux-arm64</div>
+</div><!-- fragment --><h2>Pre-built Binaries (Linux (x86), 32-bit)</h2>
+<div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-x86.tar</div>
+<div class="line">tar -xf libfastlowess-linux-x86.tar</div>
+<div class="line">g++ -m32 -std=c++17 -I. -o myapp myapp.cpp -L. -lfastlowess-linux-x86</div>
+</div><!-- fragment --><h2>Pre-built Binaries (Linux (ARMv7), hard-float)</h2>
+<div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-armv7.tar</div>
+<div class="line">tar -xf libfastlowess-linux-armv7.tar</div>
+<div class="line">arm-linux-gnueabihf-g++ -std=c++17 -I. -o myapp myapp.cpp -L. -lfastlowess-linux-armv7</div>
 </div><!-- fragment --><h2>Pre-built Binaries (Linux (x64), musl/Alpine)</h2>
-<div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-x64-musl.so</div>
-<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp</div>
-<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.h</div>
-<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess_version.h</div>
+<div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-x64-musl.tar</div>
+<div class="line">tar -xf libfastlowess-linux-x64-musl.tar</div>
 <div class="line">g++ -o myapp myapp.cpp -L. -lfastlowess-linux-x64-musl</div>
 </div><!-- fragment --><h2>Pre-built Binaries (Linux (ARM64), musl/Alpine)</h2>
-<div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-arm64-musl.so</div>
-<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp</div>
-<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.h</div>
-<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess_version.h</div>
+<div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-linux-arm64-musl.tar</div>
+<div class="line">tar -xf libfastlowess-linux-arm64-musl.tar</div>
 <div class="line">g++ -o myapp myapp.cpp -L. -lfastlowess-linux-arm64-musl</div>
 </div><!-- fragment --><h2>Pre-built Binaries (macOS (x64))</h2>
-<div class="fragment"><div class="line">curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-macos-x64.dylib</div>
-<div class="line">curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp</div>
-<div class="line">curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.h</div>
-<div class="line">curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess_version.h</div>
+<div class="fragment"><div class="line">curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-macos-x64.tar</div>
+<div class="line">tar -xf libfastlowess-macos-x64.tar</div>
 <div class="line">clang++ -o myapp myapp.cpp -L. -lfastlowess-macos-x64</div>
 </div><!-- fragment --><h2>Pre-built Binaries (macOS (ARM64))</h2>
-<div class="fragment"><div class="line">curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-macos-arm64.dylib</div>
-<div class="line">curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp</div>
-<div class="line">curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.h</div>
-<div class="line">curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess_version.h</div>
+<div class="fragment"><div class="line">curl -LO https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-macos-arm64.tar</div>
+<div class="line">tar -xf libfastlowess-macos-arm64.tar</div>
 <div class="line">clang++ -o myapp myapp.cpp -L. -lfastlowess-macos-arm64</div>
-</div><!-- fragment --><h2>Pre-built Binaries (Windows (x64))</h2>
-<div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess-win32-x64.dll</div>
-<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp</div>
-<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.h</div>
-<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess_version.h</div>
-<div class="line">cl myapp.cpp /link fastlowess-win32-x64.lib</div>
+</div><!-- fragment --><h2>Pre-built Binaries (Android)</h2>
+<p>Choose the shared library matching the Android ABI used by your application:</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">ABI   </th><th class="markdownTableHeadNone">Release archive    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>arm64-v8a</code>   </td><td class="markdownTableBodyNone"><code>libfastlowess-android-arm64-v8a.tar</code>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>armeabi-v7a</code>   </td><td class="markdownTableBodyNone"><code>libfastlowess-android-armeabi-v7a.tar</code>    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>x86</code>   </td><td class="markdownTableBodyNone"><code>libfastlowess-android-x86.tar</code>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>x86_64</code>   </td><td class="markdownTableBodyNone"><code>libfastlowess-android-x86_64.tar</code>   </td></tr>
+</table>
+<p>Download and extract the archive for the ABI being built by the Android NDK. It contains the <code>.so</code> and all three headers.</p>
+<h2>Pre-built Binaries (iOS)</h2>
+<p>The release provides static archives for physical devices and simulators. Use only the archive matching the active Xcode destination:</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Destination   </th><th class="markdownTableHeadNone">Rust target   </th><th class="markdownTableHeadNone">Release archive    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">iOS device (arm64)   </td><td class="markdownTableBodyNone"><code>aarch64-apple-ios</code>   </td><td class="markdownTableBodyNone"><code>libfastlowess-ios-arm64.tar</code>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">iOS simulator (Apple silicon)   </td><td class="markdownTableBodyNone"><code>aarch64-apple-ios-sim</code>   </td><td class="markdownTableBodyNone"><code>libfastlowess-ios-simulator-arm64.tar</code>    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">iOS simulator (Intel)   </td><td class="markdownTableBodyNone"><code>x86_64-apple-ios</code>   </td><td class="markdownTableBodyNone"><code>libfastlowess-ios-simulator-x86_64.tar</code>   </td></tr>
+</table>
+<p>Download and extract the archive matching the active Xcode destination. It contains the static library and all three headers.</p>
+<h2>Pre-built Binaries (Windows (x64))</h2>
+<div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-windows-x64-msvc.tar</div>
+<div class="line">tar -xf libfastlowess-windows-x64-msvc.tar</div>
+<div class="line">cl /std:c++17 myapp.cpp /link fastlowess-win32-x64.lib</div>
 </div><!-- fragment --><h2>Pre-built Binaries (Windows (ARM64))</h2>
-<div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess-win32-arm64.dll</div>
-<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.hpp</div>
-<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess.h</div>
-<div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/fastlowess_version.h</div>
-<div class="line">cl myapp.cpp /link fastlowess-win32-arm64.lib</div>
+<div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-windows-arm64.tar</div>
+<div class="line">tar -xf libfastlowess-windows-arm64.tar</div>
+<div class="line">cl /std:c++17 myapp.cpp /link fastlowess-win32-arm64.lib</div>
+</div><!-- fragment --><h2>Pre-built Binaries (Windows (x64), MinGW-w64)</h2>
+<div class="fragment"><div class="line">wget https://github.com/thisisamirv/lowess-project/releases/latest/download/libfastlowess-windows-x64-gnu.tar</div>
+<div class="line">tar -xf libfastlowess-windows-x64-gnu.tar</div>
+<div class="line">g++ -std=c++17 -I. -o myapp myapp.cpp -L. -lfastlowess-win32-x64-gnu</div>
 </div><!-- fragment --><h2>From Source</h2>
 <div class="fragment"><div class="line"># Install Rust first: https://rustup.rs/</div>
 <div class="line">git clone https://github.com/thisisamirv/lowess-project</div>
@@ -185,8 +210,8 @@ $(document).ready(function(){initNavTree('installation.html',''); initResizable(
 <div class="line"><span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 <div class="ttc" id="aclassfastlowess_1_1Expected_html_aeb88e40ff81b811771e6e2013fad7a6c"><div class="ttname"><a href="classfastlowess_1_1Expected.html#aeb88e40ff81b811771e6e2013fad7a6c">fastlowess::Expected::value</a></div><div class="ttdeci">T &amp; value() &amp;</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:150</div></div>
-<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:765</div></div>
-<div class="ttc" id="aclassfastlowess_1_1Lowess_html_a504a722970109b32ab8318352d224a2e"><div class="ttname"><a href="classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e">fastlowess::Lowess::fit</a></div><div class="ttdeci">Expected&lt; LowessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:823</div></div>
+<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:780</div></div>
+<div class="ttc" id="aclassfastlowess_1_1Lowess_html_a504a722970109b32ab8318352d224a2e"><div class="ttname"><a href="classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e">fastlowess::Lowess::fit</a></div><div class="ttdeci">Expected&lt; LowessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:838</div></div>
 <div class="ttc" id="afastlowess_8hpp_html"><div class="ttname"><a href="fastlowess_8hpp.html">fastlowess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLowess library.</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">Installed successfully!</div>
 </div><!-- fragment --><h2>Check the Header and Library Versions</h2>

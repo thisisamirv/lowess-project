@@ -198,7 +198,9 @@ prediction. Default: <code>FALSE</code>.</p></dd>
     <p>Best suited when the dataset fits in memory and you need intervals,
 cross-validation, or diagnostics. For datasets that don't fit in memory or
 arrive in chunks, see <code><a href="StreamingLowess.html">StreamingLowess</a></code>; for point-by-point
-real-time data, see <code><a href="OnlineLowess.html">OnlineLowess</a></code>.</p>
+real-time data, see <code><a href="OnlineLowess.html">OnlineLowess</a></code>.
+When <code>"diagnostics"</code> is selected, <code>residual_sd</code> is the robust
+residual scale estimate (<code>1.4826 * MAD</code>).</p>
 <p><code>fraction</code> is the most important parameter: it controls the size of the
 local neighbourhood used at each point.</p><table class="table table"><tr><td>Range</td><td>Effect</td><td>Use case</td></tr><tr><td>0.1-0.3</td><td>Fine detail</td><td>Rapidly changing signals</td></tr><tr><td>0.3-0.5</td><td>Balanced</td><td>General purpose</td></tr><tr><td>0.5-0.7</td><td>Heavy smoothing</td><td>Noisy data</td></tr><tr><td>0.7-1.0</td><td>Very smooth</td><td>Trend extraction</td></tr></table></div>
 

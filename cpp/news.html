@@ -107,11 +107,14 @@ $(document).ready(function(){initNavTree('news.html',''); initResizable(); });
 <h2>[Unreleased]</h2>
 <h3>Added</h3>
 <ul>
+<li>Added Windows x64 MinGW, Linux x86/ARMv7, Android ABI, and iOS device/simulator release binaries with matching cross-target CI builds.</li>
 <li>Enabled the optional wgpu DirectX 12 backend for GPU-enabled Windows builds. DXC is loaded dynamically with an FXC fallback, avoiding eager imports of <code>dxcompiler.dll</code> and <code>dxil.dll</code>.</li>
 <li>Added GLES for Android GPU builds with a target-scoped <code>wgpu</code> feature; Windows continues to omit the GLES-only loader imports.</li>
 </ul>
 <h3>Changed</h3>
 <ul>
+<li>Clarified that Batch <code>residual_sd</code> is <code>1.4826 * MAD</code>, while Streaming reports the cumulative sample standard deviation of emitted residuals.</li>
+<li>Package each prebuilt platform library and its headers in a separate release tar archive.</li>
 <li>Breaking change: replaced flat interval levels with grouped <code>intervals.confidence</code>, <code>intervals.prediction</code>, and <code>intervals.bootstrap</code> on Batch, Streaming, Online, and Predict options. Use the optional outer <code>seed</code> for CV and fit-time bootstrap, or on Predict options for prediction-time bootstrap; zero is a valid seed.</li>
 <li>Breaking change: replaced flat <code>return_*</code>/<code>cv_*</code> fields with grouped <code>outputs</code> and nested <code>cv</code> options; prediction outputs are grouped as well.</li>
 <li>Requires C++17 for the public wrapper's use of <code>std::optional</code>.</li>
@@ -120,6 +123,11 @@ $(document).ready(function(){initNavTree('news.html',''); initResizable(); });
 </ul>
 <h3>Fixed</h3>
 <ul>
+<li>Fixed CPU Gaussian standard errors for fitted and queried values to use the full unbounded kernel support.</li>
+<li>Made even-sample medians and mean-absolute residual scaling overflow-resistant for large finite values, and centered Batch/Streaming R-squared accumulation to preserve one-ULP response variation at large offsets.</li>
+<li>Made Batch RMSE, MAE, and R-squared reductions scale-safe for large finite values, preserved bisquare downweighting when tuned scales exceed the numeric range, and normalized custom weights before summation in local and all-tied fits.</li>
+<li>Kept AIC finite when raw residual-square sums overflow, and made local/all-tied WLS invariant to common scaling of large finite case weights.</li>
+<li>Publish the Windows MSVC import libraries referenced by the prebuilt installation instructions; specify C++17 in the MSVC compile commands.</li>
 <li>Fixed global OLS fits treating predictor values with a large offset as degenerate; translated inputs now retain their fitted slope.</li>
 <li>Fixed fraction-1 global fits ignoring custom weights, including when Batch sorts observations by x.</li>
 <li>Fixed Batch <code>missing = "drop"</code> accepting custom weights with a length different from the original input; weights are validated before rows are dropped.</li>

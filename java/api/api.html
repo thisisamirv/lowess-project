@@ -381,6 +381,12 @@ try (Lowess model = new Lowess(options)) {
 <td class="tableblock halign-left valign-top"><p class="tableblock">Select <code>se</code>, <code>diagnostics</code>, <code>residuals</code>, <code>weights</code>, <code>derivative</code>, and/or <code>sorted</code>.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>retainModel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Retain training data, enabling <code>Result.predictModel()</code>.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>intervals(IntervalsOptions)</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>IntervalsOptions</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">disabled</p></td>
@@ -397,12 +403,6 @@ try (Lowess model = new Lowess(options)) {
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>long</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">unset</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Shared CV/bootstrap seed; <code>0</code> is a valid deterministic seed.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>retainModel</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Retain training data, enabling <code>Result.predictModel()</code>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -721,6 +721,45 @@ A length mismatch between <code>x</code> and <code>y</code> always throws, even 
 </div>
 </div>
 <div class="sect2">
+<h3 id="outputs-se"><a class="anchor" href="#outputs-se"></a>outputs: se</h3>
+<div class="paragraph">
+<p><em>See: <a href="../guide/intervals.html" class="xref page">Intervals</a></em></p>
+</div>
+<div class="paragraph">
+<p>Select <code>"se"</code> to compute hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) and standard errors.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="outputs-diagnostics"><a class="anchor" href="#outputs-diagnostics"></a>outputs: diagnostics</h3>
+<div class="paragraph">
+<p>Select <code>"diagnostics"</code> to populate <code>Result.diagnostics()</code> (RMSE, MAE, R², AIC/AICc, effective degrees of freedom). AIC/AICc/effective degrees of freedom additionally require <code>"se"</code> (or confidence/prediction intervals), since they depend on hat-matrix statistics.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="outputs-residuals"><a class="anchor" href="#outputs-residuals"></a>outputs: residuals</h3>
+<div class="paragraph">
+<p>Select <code>"residuals"</code> to populate <code>Result.residuals()</code> (<code>y - fitted</code>).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="outputs-weights"><a class="anchor" href="#outputs-weights"></a>outputs: weights</h3>
+<div class="paragraph">
+<p>Select <code>"weights"</code> to populate <code>Result.robustnessWeights()</code> (from the last robustness iteration).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="outputs-derivative"><a class="anchor" href="#outputs-derivative"></a>outputs: derivative</h3>
+<div class="paragraph">
+<p>Each point&#8217;s local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) via <code>Result.derivative()</code>, enabling turning-point/rate-of-change analysis at effectively no extra computation cost.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="outputs-sorted"><a class="anchor" href="#outputs-sorted"></a>outputs: sorted</h3>
+<div class="paragraph">
+<p>When set to <code>true</code>, it reorders every result field (residuals, intervals, etc.) by <code>x</code> in an ascending manner, instead of in original input order. To get both orderings, sort the default result client-side (e.g. via a <code>Comparator</code> over the returned <code>x()</code> array) instead of calling <code>fit()</code> twice.</p>
+</div>
+</div>
+<div class="sect2">
 <h3 id="intervals"><a class="anchor" href="#intervals"></a>intervals</h3>
 <div class="paragraph">
 <p><em>See: <a href="../guide/intervals.html" class="xref page">Intervals</a></em></p>
@@ -754,8 +793,8 @@ A length mismatch between <code>x</code> and <code>y</code> always throws, even 
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Options options = Options.builder()
         .cv(CVOptions.builder().method("kfold").k(5)
-            .fractions(0.1, 0.2, 0.3, 0.5).build())
         .seed(42L)
+            .fractions(0.1, 0.2, 0.3, 0.5).build())
         .build();
 
 try (Lowess model = new Lowess(options)) {
@@ -799,85 +838,6 @@ try (Lowess model = new Lowess(Options.builder().build())) {
     Result result = model.fit(x, y, weights);
 }</code></pre>
 </div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="returnse"><a class="anchor" href="#returnse"></a>returnSe</h3>
-<div class="paragraph">
-<p><em>See: <a href="../guide/intervals.html" class="xref page">Intervals</a></em></p>
-</div>
-<div class="paragraph">
-<p>Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="returndiagnostics"><a class="anchor" href="#returndiagnostics"></a>returnDiagnostics</h3>
-<div class="paragraph">
-<p>Populate <code>Result.diagnostics()</code> (RMSE, MAE, R², AIC/AICc, effective degrees of freedom). AIC/AICc/effective degrees of freedom additionally require <code>returnSe = true</code> (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>false</code> (default) — leaves <code>Result.diagnostics()</code> empty</p>
-</li>
-<li>
-<p><code>true</code> — populates <code>Result.diagnostics()</code></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="returnresiduals"><a class="anchor" href="#returnresiduals"></a>returnResiduals</h3>
-<div class="paragraph">
-<p>Populate <code>Result.residuals()</code> (<code>y - fitted</code>).</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>false</code> (default) — leaves <code>Result.residuals()</code> empty</p>
-</li>
-<li>
-<p><code>true</code> — populates <code>Result.residuals()</code></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="returnrobustnessweights"><a class="anchor" href="#returnrobustnessweights"></a>returnRobustnessWeights</h3>
-<div class="paragraph">
-<p>Populate <code>Result.robustnessWeights()</code> (from the last robustness iteration).</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>false</code> (default) — leaves <code>Result.robustnessWeights()</code> empty</p>
-</li>
-<li>
-<p><code>true</code> — populates <code>Result.robustnessWeights()</code></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="returnderivative"><a class="anchor" href="#returnderivative"></a>returnDerivative</h3>
-<div class="paragraph">
-<p>Each point&#8217;s local WLS fit already computes a slope internally; this exposes that per-point slope (rate of change of the smoothed curve) via <code>Result.derivative()</code>, enabling turning-point/rate-of-change analysis at effectively no extra computation cost.</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>false</code> (default) — leaves <code>Result.derivative()</code> empty</p>
-</li>
-<li>
-<p><code>true</code> — populates <code>Result.derivative()</code></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="returnsorted"><a class="anchor" href="#returnsorted"></a>returnSorted</h3>
-<div class="paragraph">
-<p>When set to <code>true</code>, it reorders every result field (residuals, intervals, etc.) by <code>x</code> in an ascending manner, instead of in original input order. To get both orderings, sort the default result client-side (e.g. via a <code>Comparator</code> over the returned <code>x()</code> array) instead of calling <code>fit()</code> twice.</p>
 </div>
 </div>
 </div>
@@ -924,12 +884,12 @@ try (Lowess model = new Lowess(Options.builder().build())) {
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>residuals()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnResiduals</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"residuals"</code> output</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>robustnessWeights()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnRobustnessWeights</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"weights"</code> output</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>cvScores()</code></p></td>
@@ -949,12 +909,12 @@ try (Lowess model = new Lowess(Options.builder().build())) {
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>diagnostics()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;Diagnostics&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDiagnostics</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"diagnostics"</code> output</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>derivative()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDerivative</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"derivative"</code> output</p></td>
 </tr>
 </tbody>
 </table>
@@ -993,7 +953,7 @@ try (Lowess model = new Lowess(Options.builder().build())) {
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>residualSd()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Residual standard deviation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Robust residual scale estimate (<code>1.4826 * MAD</code>)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>effectiveDf()</code></p></td>

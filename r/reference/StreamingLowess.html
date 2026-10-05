@@ -199,7 +199,9 @@ unavailable, it controls bootstrap resampling only.
     <p>Best suited for datasets over 100,000 points, memory-constrained
 environments, or batch processing pipelines. For smaller datasets that fit
 in memory, see <code><a href="Lowess.html">Lowess</a></code>; for point-by-point real-time data,
-see <code><a href="OnlineLowess.html">OnlineLowess</a></code>.</p>
+see <code><a href="OnlineLowess.html">OnlineLowess</a></code>.
+When <code>"diagnostics"</code> is selected, <code>residual_sd</code> is the cumulative
+sample standard deviation of emitted residuals.</p>
 <p>Confidence and prediction interval coverage levels are independent.</p>
 <p>Overlapping regions between chunks are reconciled via <code>merge_strategy</code>:</p><table class="table table"><tr><td>Strategy</td><td>Alias</td><td>Behavior</td></tr><tr><td>"weighted_average" (default)</td><td>"weighted"</td><td>Distance-weighted blend</td></tr><tr><td>"average"</td><td>"mean"</td><td>Average overlapping values</td></tr><tr><td>"take_first"</td><td>"first"</td><td>Keep left chunk values</td></tr><tr><td>"take_last"</td><td>"last"</td><td>Keep right chunk values</td></tr></table></div>
 

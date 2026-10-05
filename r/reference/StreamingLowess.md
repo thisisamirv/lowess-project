@@ -154,6 +154,8 @@ fit in memory, see
 [`Lowess`](https://thisisamirv.github.io/lowess-project/r/reference/Lowess.md);
 for point-by-point real-time data, see
 [`OnlineLowess`](https://thisisamirv.github.io/lowess-project/r/reference/OnlineLowess.md).
+When `"diagnostics"` is selected, `residual_sd` is the cumulative sample
+standard deviation of emitted residuals.
 
 Confidence and prediction interval coverage levels are independent.
 

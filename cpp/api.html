@@ -135,7 +135,7 @@ $(document).ready(function(){initNavTree('api.html',''); initResizable(); });
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:765</div></div>
+<div class="ttc" id="aclassfastlowess_1_1Lowess_html"><div class="ttname"><a href="classfastlowess_1_1Lowess.html">fastlowess::Lowess</a></div><div class="ttdoc">Batch LOWESS model.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:780</div></div>
 <div class="ttc" id="afastlowess_8hpp_html"><div class="ttname"><a href="fastlowess_8hpp.html">fastlowess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLowess library.</div></div>
 <div class="ttc" id="astructfastlowess_1_1LowessOptions_html"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html">fastlowess::LowessOptions</a></div><div class="ttdoc">Options for configuring LOWESS smoothing.</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:194</div></div>
 <div class="ttc" id="astructfastlowess_1_1LowessOptions_html_ac4c7e581cd561fc11a928f9901bb5ec6"><div class="ttname"><a href="structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6">fastlowess::LowessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastlowess.hpp:195</div></div>
@@ -243,8 +243,6 @@ $(document).ready(function(){initNavTree('api.html',''); initResizable(); });
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone">7+   </td><td class="markdownTableBodyNone">Very strong   </td><td class="markdownTableBodyNone">Heavy outliers   </td></tr>
 </table>
-<h3>delta</h3>
-<p>Points within <code>delta</code> of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. <code>NaN</code> (default) auto-sets it to 1% of the x-range. Set it to <code>0</code> explicitly to disable interpolation and fit every point exactly.</p>
 <h3>weight_function</h3>
 <p><em>See: <a class="el" href="kernels_8md.html">Weight Functions</a></em></p>
 <ul>
@@ -263,21 +261,8 @@ $(document).ready(function(){initNavTree('api.html',''); initResizable(); });
 <li><code>"huber"</code></li>
 <li><code>"talwar"</code></li>
 </ul>
-<h3>scaling_method</h3>
-<p><em>See: <a class="el" href="scaling_8md.html">Scaling Methods</a></em></p>
-<ul>
-<li><code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>)</li>
-<li><code>"mar"</code> (alias: <code>"median_absolute_residual"</code>)</li>
-<li><code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>)</li>
-</ul>
-<h3>boundary_policy</h3>
-<p><em>See: <a class="el" href="boundary_8md.html">Boundary Handling</a></em></p>
-<ul>
-<li><code>"extend"</code> (default; alias: <code>"pad"</code>)</li>
-<li><code>"reflect"</code> (alias: <code>"mirror"</code>)</li>
-<li><code>"zero"</code></li>
-<li><code>"noboundary"</code> (alias: <code>"none"</code>)</li>
-</ul>
+<h3>delta</h3>
+<p>Points within <code>delta</code> of each other on the x-axis share the same local fit instead of each computing its own regression — an interpolation shortcut that trades a small amount of accuracy for a large speedup on dense, evenly-spaced data. <code>NaN</code> (default) auto-sets it to 1% of the x-range. Set it to <code>0</code> explicitly to disable interpolation and fit every point exactly.</p>
 <h3>zero_weight_fallback</h3>
 <p>Behavior when all neighborhood weights are zero:</p>
 <table class="markdownTable">
@@ -290,6 +275,24 @@ $(document).ready(function(){initNavTree('api.html',''); initResizable(); });
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>"return_none"</code> (alias: <code>"none"</code>)   </td><td class="markdownTableBodyNone">Return <code>NaN</code>   </td></tr>
 </table>
+<h3>boundary_policy</h3>
+<p><em>See: <a class="el" href="boundary_8md.html">Boundary Handling</a></em></p>
+<ul>
+<li><code>"extend"</code> (default; alias: <code>"pad"</code>)</li>
+<li><code>"reflect"</code> (alias: <code>"mirror"</code>)</li>
+<li><code>"zero"</code></li>
+<li><code>"noboundary"</code> (alias: <code>"none"</code>)</li>
+</ul>
+<h3>scaling_method</h3>
+<p><em>See: <a class="el" href="scaling_8md.html">Scaling Methods</a></em></p>
+<ul>
+<li><code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>)</li>
+<li><code>"mar"</code> (alias: <code>"median_absolute_residual"</code>)</li>
+<li><code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>)</li>
+</ul>
+<h3>auto_converge</h3>
+<p><em>See: <a href="../weighting/robustness.md#auto-convergence">Robustness</a></em></p>
+<p>Convergence tolerance for early stopping of robustness iterations. <code>NaN</code> (default) disables early stopping.</p>
 <h3>missing</h3>
 <p>Policy for handling non-finite (NaN/Inf) values in <code>x</code>/<code>y</code> (and <code>custom_weights</code>):</p>
 <table class="markdownTable">
@@ -301,16 +304,6 @@ $(document).ready(function(){initNavTree('api.html',''); initResizable(); });
 <td class="markdownTableBodyNone"><code>"drop"</code>   </td><td class="markdownTableBodyNone">Silently remove observations where <code>x</code> or <code>y</code> is non-finite before fitting   </td></tr>
 </table>
 <p><b>Note:</b> A length mismatch between <code>x</code> and <code>y</code> always errors, even under <code>"drop"</code>.</p>
-<h3>auto_converge</h3>
-<p><em>See: <a href="../weighting/robustness.md#auto-convergence">Robustness</a></em></p>
-<p>Convergence tolerance for early stopping of robustness iterations. <code>NaN</code> (default) disables early stopping.</p>
-<h3>intervals</h3>
-<p><em>See: <a class="el" href="intervals_8md.html">Intervals</a></em></p>
-<p>Set <code>intervals.confidence</code> and/or <code>intervals.prediction</code> independently; for example, use <code>0.90</code> for confidence coverage and <code>0.99</code> for prediction coverage. Both default to <code>NaN</code> (disabled). Set <code>intervals.bootstrap</code> to at least 2 to replace analytic uncertainty with residual-bootstrap refits. <code>seed</code> controls both CV and bootstrap when configured; it does not enable either by itself.</p>
-<h3>outputs</h3>
-<p>*See: `Diagnostics`*</p>
-<p>Request any of <code>"diagnostics"</code>, <code>"residuals"</code>, <code>"weights"</code>, <code>"derivative"</code>, <code>"se"</code>, or <code>"sorted"</code>. The <code>"se"</code> output computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) as well as standard errors. AIC/AICc/effective degrees of freedom also require <code>"se"</code> or intervals to be populated.</p>
-<p><code>"sorted"</code> reorders every result field (residuals, intervals, etc.) by <code>x</code> in ascending order instead of original input order. To get both orderings, sort the default result client-side (e.g. via <code>std::sort</code> over an index vector) instead of calling <code>fit()</code> twice.</p>
 <h3>parallel</h3>
 <p>Enable multi-threaded execution via Rayon.</p>
 <ul>
@@ -319,6 +312,13 @@ $(document).ready(function(){initNavTree('api.html',''); initResizable(); });
 </ul>
 <h3>backend</h3>
 <p>The batch <code><a class="el" href="classfastlowess_1_1Lowess.html" title="Batch LOWESS model.">fastlowess::Lowess</a></code> class can optionally run on a GPU-accelerated backend powered by <code>wgpu</code>, for high-throughput processing of large datasets (10k+ points). See the <a class="el" href="gpu-backend_8md.html">GPU Backend guide</a> for installation, usage, supported features, and hardware requirements.</p>
+<h3>outputs</h3>
+<p>*See: `Diagnostics`*</p>
+<p>Request any of <code>"diagnostics"</code>, <code>"residuals"</code>, <code>"weights"</code>, <code>"derivative"</code>, <code>"se"</code>, or <code>"sorted"</code>. The <code>"se"</code> output computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) as well as standard errors. AIC/AICc/effective degrees of freedom also require <code>"se"</code> or intervals to be populated.</p>
+<p><code>"sorted"</code> reorders every result field (residuals, intervals, etc.) by <code>x</code> in ascending order instead of original input order. To get both orderings, sort the default result client-side (e.g. via <code>std::sort</code> over an index vector) instead of calling <code>fit()</code> twice.</p>
+<h3>intervals</h3>
+<p><em>See: <a class="el" href="intervals_8md.html">Intervals</a></em></p>
+<p>Set <code>intervals.confidence</code> and/or <code>intervals.prediction</code> independently; for example, use <code>0.90</code> for confidence coverage and <code>0.99</code> for prediction coverage. Both default to <code>NaN</code> (disabled). Set <code>intervals.bootstrap</code> to at least 2 to replace analytic uncertainty with residual-bootstrap refits. <code>seed</code> controls both CV and bootstrap when configured; it does not enable either by itself.</p>
 <h3>CV Options</h3>
 <p><em>See: <a class="el" href="cross-validation_8md.html">Cross-Validation</a></em></p>
 <ul>
@@ -327,12 +327,12 @@ $(document).ready(function(){initNavTree('api.html',''); initResizable(); });
 <li><code>cv.fractions</code>: Candidate fractions to evaluate; empty disables CV.</li>
 <li><code>seed</code>: Reproducible k-fold shuffling and bootstrap draws; unset uses each feature's default, while zero is a valid seed.</li>
 </ul>
-<h3>custom_weights</h3>
-<p><em>See: <a class="el" href="custom-weights_8md.html">Custom Weights</a></em></p>
-<p>Per-observation weights, passed to <code>fit()</code> rather than the constructor.</p>
 <h3>retain_model</h3>
 <p><em>See: <a class="el" href="predict_8md.html">Predict</a></em></p>
 <p>Retains the fitted model's training data, enabling <code>LowessResult::predict_model()</code> to obtain a <code>PredictModel</code> for out-of-sample query points not in the training set. <code>false</code> (default) — no extra memory/copy cost unless requested.</p>
+<h3>custom_weights</h3>
+<p><em>See: <a class="el" href="custom-weights_8md.html">Custom Weights</a></em></p>
+<p>Per-observation weights, passed to <code>fit()</code> rather than the constructor.</p>
 <h2>Result Structure</h2>
 <h3><a class="el" href="classfastlowess_1_1LowessResult.html" title="Result of LOWESS smoothing operation.">fastlowess::LowessResult</a></h3>
 <p>A RAII wrapper around the C result struct <code>fastlowess_CppLowessResult</code>.</p>
@@ -358,13 +358,13 @@ $(document).ready(function(){initNavTree('api.html',''); initResizable(); });
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>prediction_upper()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Upper prediction bounds (empty if not computed)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>residuals()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Residuals (if <code>return_residuals</code>; empty if not computed)    </td></tr>
+<td class="markdownTableBodyNone"><code>residuals()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Residuals (if <code>outputs</code> contains <code>"residuals"</code>; empty if not computed)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>robustness_weights()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Robustness weights (if <code>return_robustness_weights</code>; empty if not computed)    </td></tr>
+<td class="markdownTableBodyNone"><code>robustness_weights()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Robustness weights (if <code>outputs</code> contains <code>"weights"</code>; empty if not computed)    </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>cv_scores()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">CV score per tested fraction (empty if CV not run)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>diagnostics()</code>   </td><td class="markdownTableBodyNone"><code>Diagnostics</code>   </td><td class="markdownTableBodyNone">Fit metrics — check <code>diagnostics().has_value()</code> before use (if <code>return_diagnostics</code>)    </td></tr>
+<td class="markdownTableBodyNone"><code>diagnostics()</code>   </td><td class="markdownTableBodyNone"><code>Diagnostics</code>   </td><td class="markdownTableBodyNone">Fit metrics — check <code>diagnostics().has_value()</code> before use (if <code>outputs</code> contains <code>"diagnostics"</code>)    </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>derivative()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Per-point local fit derivative/slope if <code>"derivative"</code> was requested (empty otherwise)   </td></tr>
 </table>
@@ -380,7 +380,7 @@ $(document).ready(function(){initNavTree('api.html',''); initResizable(); });
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>r_squared()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">R-squared    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>residual_sd()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Residual standard deviation    </td></tr>
+<td class="markdownTableBodyNone"><code>residual_sd()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Robust residual scale estimate (<code>1.4826 * MAD</code>)    </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>effective_df()</code>   </td><td class="markdownTableBodyNone"><code>std::optional&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Effective degrees of freedom, if computed    </td></tr>
 <tr class="markdownTableRowEven">

@@ -33,6 +33,8 @@
 
 ### Changed
 
+- Clarified that Batch `residual_sd` is `1.4826 * MAD`, while Streaming
+  reports the cumulative sample standard deviation of emitted residuals.
 - Breaking change: replaced individual `return_*` arguments with grouped
   `outputs`, and replaced
   [`Lowess()`](https://thisisamirv.github.io/lowess-project/r/reference/Lowess.md)’s
@@ -49,6 +51,19 @@
 
 ### Fixed
 
+- Fixed CPU Gaussian standard errors for fitted and queried values to
+  use the full unbounded kernel support.
+- Made even-sample medians and mean-absolute residual scaling
+  overflow-resistant for large finite values, and centered
+  Batch/Streaming R-squared accumulation to preserve one-ULP response
+  variation at large offsets.
+- Made Batch RMSE, MAE, and R-squared reductions scale-safe for large
+  finite values, preserved bisquare downweighting when tuned scales
+  exceed the numeric range, and normalized custom weights before
+  summation in local and all-tied fits.
+- Kept AIC finite when raw residual-square sums overflow, and made
+  local/all-tied WLS invariant to common scaling of large finite case
+  weights.
 - Reject unused constructor options, factors/multidimensional inputs,
   and malformed grouped options. Keep GPU sidecars mapped for live model
   finalizers, try older valid sidecars, verify native ABI/version and

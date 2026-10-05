@@ -251,7 +251,7 @@ public class Example {
 <p>Remove trend to analyze residual patterns.</p>
 </div>
 <div class="paragraph">
-<p>Setting <code>returnResiduals = true</code> stores <code>observed − smoothed</code> alongside the smooth. A slightly wider <code>fraction = 0.3</code> produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.</p>
+<p>Setting <code>.outputs("residuals")</code> stores <code>observed − smoothed</code> alongside the smooth. A slightly wider <code>fraction = 0.3</code> produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -272,7 +272,7 @@ public class Example {
         Options options = Options.builder()
                 .fraction(0.3)
                 .iterations(3)
-                .returnResiduals(true)
+                .outputs("residuals")
                 .build();
 
         try (Lowess model = new Lowess(options)) {
@@ -447,7 +447,7 @@ public class Example {
         Options options = Options.builder()
                 .fraction(0.3)
                 .iterations(3)
-                .returnDiagnostics(true)
+                .outputs("diagnostics")
                 .build();
 
         try (Lowess model = new Lowess(options)) {

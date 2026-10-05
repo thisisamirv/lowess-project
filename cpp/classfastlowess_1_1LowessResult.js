@@ -1,6 +1,6 @@
 var classfastlowess_1_1LowessResult =
 [
-    [ "LowessResult", "classfastlowess_1_1LowessResult.html#a0892db62a16346f5dbfdf7e1c35edeee", null ],
+    [ "LowessResult", "classfastlowess_1_1LowessResult.html#adfec572c42ea53c2db14b70db29e072c", null ],
     [ "LowessResult", "classfastlowess_1_1LowessResult.html#ac86141f193bac1ef68fad68d2cae44a4", null ],
     [ "~LowessResult", "classfastlowess_1_1LowessResult.html#af18015fd5f887f56ffcc51d7fd31c5b6", null ],
     [ "LowessResult", "classfastlowess_1_1LowessResult.html#a99de99bdf1f6b24516cbda340b4bb73a", null ],

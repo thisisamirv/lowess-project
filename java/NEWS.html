@@ -224,6 +224,12 @@
 <div class="ulist">
 <ul>
 <li>
+<p>Clarified that Batch <code>residualSd()</code> is <code>1.4826 * MAD</code>, while Streaming reports the cumulative sample standard deviation of emitted residuals.</p>
+</li>
+<li>
+<p>Breaking change: replaced individual <code>return&#8230;&#8203;</code> output setters and prediction flags with <code>outputs(&#8230;&#8203;)</code> for Batch, Streaming, Online, and prediction options.</p>
+</li>
+<li>
 <p>Breaking change: replaced flat interval setters and <code>PredictOptions</code> interval levels with <code>intervals(IntervalsOptions)</code>, and replaced flat CV setters and <code>CVOptions.seed</code> with <code>cv(CVOptions)</code> plus one outer <code>seed(long)</code> shared by CV and bootstrap. <code>PredictOptions</code> has its own <code>seed</code> for prediction-time bootstrap.</p>
 </li>
 </ul>
@@ -233,6 +239,18 @@
 <h3 id="fixed"><a class="anchor" href="#fixed"></a>Fixed</h3>
 <div class="ulist">
 <ul>
+<li>
+<p>Fixed CPU Gaussian standard errors for fitted and queried values to use the full unbounded kernel support.</p>
+</li>
+<li>
+<p>Made even-sample medians and mean-absolute residual scaling overflow-resistant for large finite values, and centered Batch/Streaming R-squared accumulation to preserve one-ULP response variation at large offsets.</p>
+</li>
+<li>
+<p>Made Batch RMSE, MAE, and R-squared reductions scale-safe for large finite values, preserved bisquare downweighting when tuned scales exceed the numeric range, and normalized custom weights before summation in local and all-tied fits.</p>
+</li>
+<li>
+<p>Kept AIC finite when raw residual-square sums overflow, and made local/all-tied WLS invariant to common scaling of large finite case weights.</p>
+</li>
 <li>
 <p>Fixed global OLS fits treating predictor values with a large offset as degenerate; translated inputs now retain their fitted slope.</p>
 </li>
