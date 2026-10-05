@@ -272,6 +272,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **WASM:**
 
+- Declare and document the supported safe-integer Number and full-width unsigned BigInt seed inputs; cover rejection of lossy numeric values.
 - Fixed `OnlineLowess` silently ignoring `outputs`; `"weights"`, `"derivative"`, and `"se"` are now applied.
 - Reject unknown option keys and `outputs` names, and return owned typed-array copies so results remain valid after freeing their WASM owners.
 

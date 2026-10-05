@@ -374,6 +374,22 @@ test('WASM batch: negative seed and single bootstrap replicate are rejected', ()
     }).fit(x, y));
 });
 
+test('WASM seeds reject lossy Numbers and accept unsigned 64-bit BigInts', () => {
+    const { x, y } = wavy(20);
+    const unsafeNumber = Number.MAX_SAFE_INTEGER + 1;
+    const maxU64 = 18446744073709551615n;
+
+    for (const seed of [1.5, Number.NaN, Number.POSITIVE_INFINITY, unsafeNumber]) {
+        assert.throws(() => new fastlowess.Lowess({ seed }).fit(x, y));
+    }
+    assert.throws(() => new fastlowess.Lowess({ seed: -1n }).fit(x, y));
+    assert.throws(() => new fastlowess.Lowess({ seed: maxU64 + 1n }).fit(x, y));
+
+    for (const seed of [0, Number.MAX_SAFE_INTEGER, 0n, maxU64]) {
+        assert.doesNotThrow(() => new fastlowess.Lowess({ seed }).fit(x, y));
+    }
+});
+
 test('WASM streaming: seeded bootstrap intervals', () => {
     const { x, y } = wavy(30, 0.1);
     const lower = [0, 1].map(() => copy(new fastlowess.StreamingLowess(

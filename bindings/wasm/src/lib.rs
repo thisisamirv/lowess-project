@@ -49,8 +49,8 @@ export interface SmoothOptions {
     intervals?: IntervalsOptions;
     /** Grouped cross-validation configuration. */
     cv?: CVOptions;
-    /** Shared seed for k-fold CV and residual bootstrap; 0 is valid. Does not enable either by itself. */
-    seed?: number;
+    /** Safe-integer Number or unsigned 64-bit BigInt seed for CV/bootstrap; 0 is valid. Does not enable either by itself. */
+    seed?: number | bigint;
     /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
     fraction?: number;
     /** Number of robustness iterations. Default: 3. */
@@ -83,8 +83,8 @@ export interface PredictOptions {
     outputs?: string[];
     /** Grouped confidence/prediction levels and optional residual-bootstrap refits. */
     intervals?: IntervalsOptions;
-    /** Prediction-time bootstrap seed, independent of the fit seed. */
-    seed?: number;
+    /** Prediction-time safe-integer Number or unsigned 64-bit BigInt seed, independent of the fit seed. */
+    seed?: number | bigint;
     /** Behavior for query points outside the training range ("clamp", "linear", "error"). Default: "clamp". */
     extrapolation?: string;
     /** Under "linear" extrapolation, the maximum allowed distance beyond the training boundary before `predict()` errors instead of returning an unbounded value. */
@@ -142,8 +142,8 @@ export interface StreamingSmoothOptions {
     outputs?: string[];
     /** Confidence/prediction levels and per-chunk residual-bootstrap refits. */
     intervals?: IntervalsOptions;
-    /** Bootstrap seed; each combined chunk restarts from it. */
-    seed?: number;
+    /** Bootstrap safe-integer Number or unsigned 64-bit BigInt seed; each combined chunk restarts from it. */
+    seed?: number | bigint;
     /** Enable parallel execution. Default: true. */
     parallel?: boolean;
     /** Policy for non-finite (NaN/Inf) values in each chunk ("error", "drop"). Default: "error". */
@@ -174,8 +174,8 @@ export interface OnlineSmoothOptions {
     outputs?: string[];
     /** Confidence/prediction levels and per-window residual-bootstrap refits. Requires `update_mode = "full"`. */
     intervals?: IntervalsOptions;
-    /** Bootstrap seed; each full-update window restarts from it. */
-    seed?: number;
+    /** Bootstrap safe-integer Number or unsigned 64-bit BigInt seed; each full-update window restarts from it. */
+    seed?: number | bigint;
     /** Policy for non-finite (NaN/Inf) `x`/`y` values passed to `add_point` ("error", "drop"). Default: "error". */
     missing?: string;
 }
