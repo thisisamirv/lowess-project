@@ -457,6 +457,57 @@ fn even_scales_remain_finite_when_the_inputs_are_near_f64_max() {
 }
 
 #[test]
+fn batch_diagnostics_resist_overflow_in_squares_and_absolute_sums() {
+    let scale = 1.0e154_f64;
+    let y = [-scale, 0.0, scale];
+    let y_smooth = [0.0; 3];
+
+    assert_close(
+        Diagnostics::calculate_rmse(&y, &y_smooth),
+        scale * (2.0_f64 / 3.0).sqrt(),
+        1e138,
+        1e-12,
+    );
+    assert_close(
+        Diagnostics::calculate_mae(&y, &y_smooth),
+        2.0 * scale / 3.0,
+        1e138,
+        1e-12,
+    );
+    assert_close(
+        Diagnostics::calculate_r_squared(&y, &y_smooth),
+        0.0,
+        1e-12,
+        1e-12,
+    );
+}
+
+#[test]
+fn bisquare_weights_are_invariant_to_large_residual_scales() {
+    let base_residuals = [0.0_f64, 0.0, 4.0, 8.0, 16.0];
+    let scaled_residuals: Vec<f64> = base_residuals
+        .iter()
+        .map(|&residual| residual * 1.0e307)
+        .collect();
+    let weights_for = |residuals: &[f64]| {
+        let mut weights = vec![1.0; residuals.len()];
+        let mut scratch = vec![0.0; residuals.len()];
+        RobustnessMethod::Bisquare.apply_robustness_weights(
+            residuals,
+            &mut weights,
+            ScalingMethod::MAR,
+            &mut scratch,
+            0..residuals.len(),
+        );
+        weights
+    };
+
+    let expected = weights_for(&base_residuals);
+    let actual = weights_for(&scaled_residuals);
+    assert_slice_close(&actual, &expected, 1e-12, 1e-12);
+}
+
+#[test]
 fn batch_and_streaming_r_squared_center_values_before_accumulating() {
     let base = 9_007_199_254_740_992.0_f64;
     let y = [base, base + 2.0, base + 2.0];

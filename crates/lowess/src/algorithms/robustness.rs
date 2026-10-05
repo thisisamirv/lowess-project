@@ -99,15 +99,27 @@ impl RobustnessMethod {
         };
 
         let c_t = T::from(tuning_constant).unwrap_or(T::one());
-
-        let mean_abs = scale_residuals
+        let mean_abs_scale = scale_residuals
             .iter()
-            .fold(T::zero(), |sum, residual| sum + residual.abs())
-            / T::from(range_len).unwrap_or(T::one());
+            .fold(T::zero(), |scale, residual| scale.max(residual.abs()));
+        let mean_abs = if mean_abs_scale == T::zero() {
+            T::zero()
+        } else {
+            let scaled_sum = scale_residuals.iter().fold(T::zero(), |sum, residual| {
+                sum + residual.abs() / mean_abs_scale
+            });
+            mean_abs_scale * (scaled_sum / T::from(range_len).unwrap_or(T::one()))
+        };
+
+        let mut bisquare_scale_factor = c_t;
         let tuned_scale = if method_type == 0 && matches!(scaling_method, ScalingMethod::MAR) {
             let mid = range_len / 2;
             if range_len.is_multiple_of(2) {
                 let lower = scale_scratch[..mid].iter().copied().fold(T::zero(), T::max);
+                if base_scale > T::zero() {
+                    bisquare_scale_factor = T::from(3.0).unwrap_or(T::one())
+                        * (lower / base_scale + scale_scratch[mid] / base_scale);
+                }
                 T::from(3.0).unwrap_or(T::one()) * (lower + scale_scratch[mid])
             } else {
                 c_t * scale_scratch[mid]
@@ -123,7 +135,8 @@ impl RobustnessMethod {
 
         for (i, &r) in residuals.iter().enumerate() {
             weights[i] = match method_type {
-                0 => Self::bisquare_weight(r, tuned_scale),
+                0 if tuned_scale.is_finite() => Self::bisquare_weight(r, tuned_scale),
+                0 => Self::bisquare_weight_from_factor(r, base_scale, bisquare_scale_factor),
                 1 => Self::huber_weight(r, base_scale, c_t),
                 _ => Self::talwar_weight(r, base_scale, c_t),
             };
@@ -203,6 +216,24 @@ impl RobustnessMethod {
             tmp * tmp
         } else {
             // Large residual: weight = 0.0
+            T::zero()
+        }
+    }
+
+    // Evaluate bisquare weights without constructing an overflowing tuned scale.
+    #[inline]
+    fn bisquare_weight_from_factor<T: Float>(residual: T, base_scale: T, factor: T) -> T {
+        if base_scale <= T::zero() || factor <= T::zero() {
+            return T::one();
+        }
+
+        let normalized = (residual.abs() / factor) / base_scale;
+        if normalized <= T::from(0.001).unwrap_or_else(T::epsilon) {
+            T::one()
+        } else if normalized <= T::from(0.999).unwrap_or_else(|| T::one() - T::epsilon()) {
+            let tmp = T::one() - normalized * normalized;
+            tmp * tmp
+        } else {
             T::zero()
         }
     }

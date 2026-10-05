@@ -27,6 +27,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Fixed CPU Gaussian standard errors for fitted and queried values to use the full unbounded kernel support.
 * Made even-sample medians and mean-absolute residual scaling overflow-resistant for large finite values, and centered Batch/Streaming R-squared accumulation to preserve one-ULP response variation at large offsets.
+* Made Batch RMSE, MAE, and R-squared reductions scale-safe for large finite values, and preserved bisquare downweighting when the tuned residual scale exceeds the numeric range.
 * Reject explicitly empty custom weights instead of treating them as omitted.
 * Fixed model finalizers potentially releasing native state during in-flight calls; model receivers are now kept alive until cgo calls return.
 * Fixed unknown `Outputs` names being silently ignored and `Fit` silently ignoring extra custom-weight slices; invalid inputs now return errors.

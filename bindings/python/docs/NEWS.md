@@ -23,6 +23,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Fixed CPU Gaussian standard errors for fitted and queried values to use the full unbounded kernel support.
 * Made even-sample medians and mean-absolute residual scaling overflow-resistant for large finite values, and centered Batch/Streaming R-squared accumulation to preserve one-ULP response variation at large offsets.
+* Made Batch RMSE, MAE, and R-squared reductions scale-safe for large finite values, and preserved bisquare downweighting when the tuned residual scale exceeds the numeric range.
 * Fixed global OLS fits treating predictor values with a large offset as degenerate; translated inputs now retain their fitted slope.
 * Fixed fraction-1 global fits ignoring custom weights, including when Batch sorts observations by x.
 * Fixed Batch `missing = "drop"` accepting custom weights with a length different from the original input; weights are validated before rows are dropped.

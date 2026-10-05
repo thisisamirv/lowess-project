@@ -218,27 +218,45 @@ impl<T: Float> Diagnostics<T> {
     // RMSE = sqrt((1/n) * sum (y_i - y_hat_i)^2).
     pub fn calculate_rmse(y: &[T], y_smooth: &[T]) -> T {
         let n_t = T::from(y.len()).unwrap_or(T::one());
-        let rss = y
+        let residual_scale = y
             .iter()
             .zip(y_smooth.iter())
-            .fold(T::zero(), |acc, (&yi, &ys)| {
-                let r = yi - ys;
-                acc + r * r
-            });
+            .fold(T::zero(), |scale, (&yi, &ys)| scale.max((yi - ys).abs()));
+        if residual_scale == T::zero() {
+            return T::zero();
+        }
 
-        (rss / n_t).sqrt()
+        let scaled_sum_squares =
+            y.iter()
+                .zip(y_smooth.iter())
+                .fold(T::zero(), |sum, (&yi, &ys)| {
+                    let scaled_residual = (yi - ys) / residual_scale;
+                    sum + scaled_residual * scaled_residual
+                });
+
+        residual_scale * (scaled_sum_squares / n_t).sqrt()
     }
 
     // Compute the mean absolute error (MAE).
     // MAE = (1/n) * sum |y_i - y_hat_i|.
     pub fn calculate_mae(y: &[T], y_smooth: &[T]) -> T {
         let n_t = T::from(y.len()).unwrap_or(T::one());
-        let sum = y
+        let residual_scale = y
             .iter()
             .zip(y_smooth.iter())
-            .fold(T::zero(), |acc, (&yi, &ys)| acc + (yi - ys).abs());
+            .fold(T::zero(), |scale, (&yi, &ys)| scale.max((yi - ys).abs()));
+        if residual_scale == T::zero() {
+            return T::zero();
+        }
 
-        sum / n_t
+        let scaled_sum_abs = y
+            .iter()
+            .zip(y_smooth.iter())
+            .fold(T::zero(), |sum, (&yi, &ys)| {
+                sum + (yi - ys).abs() / residual_scale
+            });
+
+        residual_scale * (scaled_sum_abs / n_t)
     }
 
     // Compute the coefficient of determination (R^2).
@@ -255,33 +273,48 @@ impl<T: Float> Diagnostics<T> {
 
         let origin = y[0];
         let mut mean_offset = T::zero();
-        let mut ss_tot = T::zero();
-        // Center first so ULP-sized variation survives when responses have a large offset.
         for (index, &yi) in y.iter().enumerate() {
             let offset = yi - origin;
             let count = T::from(index + 1).unwrap_or(T::one());
-            let delta = offset - mean_offset;
-            mean_offset = mean_offset + delta / count;
-            ss_tot = ss_tot + delta * (offset - mean_offset);
+            mean_offset = mean_offset + (offset - mean_offset) / count;
         }
 
-        let ss_res = y
-            .iter()
-            .zip(y_smooth.iter())
-            .fold(T::zero(), |sum, (&yi, &ys)| {
+        // Scale both sums before squaring so large, finite values don't overflow.
+        let (response_scale, residual_scale) = y.iter().zip(y_smooth.iter()).fold(
+            (T::zero(), T::zero()),
+            |(y_scale, r_scale), (&yi, &ys)| {
+                let deviation = (yi - origin) - mean_offset;
                 let residual = yi - ys;
-                sum + residual * residual
-            });
+                (y_scale.max(deviation.abs()), r_scale.max(residual.abs()))
+            },
+        );
 
-        if ss_tot == T::zero() {
+        if response_scale == T::zero() {
             // All y values are identical
-            if ss_res == T::zero() {
+            if residual_scale == T::zero() {
                 T::one() // Perfect fit
             } else {
                 T::zero() // No variance to explain
             }
         } else {
-            T::one() - ss_res / ss_tot
+            let (scaled_ss_tot, scaled_ss_res) = y.iter().zip(y_smooth.iter()).fold(
+                (T::zero(), T::zero()),
+                |(tot, res), (&yi, &ys)| {
+                    let scaled_deviation = ((yi - origin) - mean_offset) / response_scale;
+                    let scaled_residual = if residual_scale == T::zero() {
+                        T::zero()
+                    } else {
+                        (yi - ys) / residual_scale
+                    };
+                    (
+                        tot + scaled_deviation * scaled_deviation,
+                        res + scaled_residual * scaled_residual,
+                    )
+                },
+            );
+            let scale_ratio = residual_scale / response_scale;
+            let rss_ratio = scale_ratio * scale_ratio * (scaled_ss_res / scaled_ss_tot);
+            T::one() - rss_ratio
         }
     }
 
