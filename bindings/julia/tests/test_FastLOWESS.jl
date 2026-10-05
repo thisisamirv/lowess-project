@@ -26,7 +26,7 @@ if project_name != "FastLOWESS"
     project_root = dirname(dirname(script_dir))
     julia_pkg_dir = joinpath(project_root, "bindings", "julia", "julia")
     if !haskey(Pkg.project().dependencies, "FastLOWESS")
-        Pkg.develop(path = julia_pkg_dir)
+        Pkg.develop(path=julia_pkg_dir)
     end
 end
 
@@ -46,7 +46,7 @@ using FastLOWESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
-            model = Lowess(fraction = 0.5)
+            model = Lowess(fraction=0.5)
             result = fit(model, x, y)
 
             @test result isa LowessResult
@@ -61,7 +61,7 @@ using FastLOWESS
             x2 = [1.0, 2.0, 3.0]
             y2 = [1.0, 2.0, 3.0]
 
-            model = Lowess(fraction = 0.5)
+            model = Lowess(fraction=0.5)
 
             # First fit
             result1 = fit(model, x1, y1)
@@ -76,7 +76,7 @@ using FastLOWESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
-            model = Lowess(fraction = 0.5, parallel = false)
+            model = Lowess(fraction=0.5, parallel=false)
             result = fit(model, x, y)
 
             @test result isa LowessResult
@@ -87,7 +87,7 @@ using FastLOWESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
-            model = Lowess(fraction = 0.5, outputs = ["diagnostics"])
+            model = Lowess(fraction=0.5, outputs=["diagnostics"])
             result = fit(model, x, y)
 
             @test result.diagnostics !== nothing
@@ -105,7 +105,7 @@ using FastLOWESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
-            model = Lowess(fraction = 0.5, outputs = ["residuals"])
+            model = Lowess(fraction=0.5, outputs=["residuals"])
             result = fit(model, x, y)
 
             @test result.residuals !== nothing
@@ -116,7 +116,7 @@ using FastLOWESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.1, 100.0, 8.2, 9.8]  # Outlier
 
-            model = Lowess(fraction = 0.7, iterations = 3, outputs = ["weights"])
+            model = Lowess(fraction=0.7, iterations=3, outputs=["weights"])
             result = fit(model, x, y)
 
             @test result.robustness_weights !== nothing
@@ -129,7 +129,7 @@ using FastLOWESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
-            model = Lowess(fraction = 0.7, outputs = ["derivative"])
+            model = Lowess(fraction=0.7, outputs=["derivative"])
             result = fit(model, x, y)
 
             @test result.derivative !== nothing
@@ -138,10 +138,10 @@ using FastLOWESS
 
         @testset "with confidence intervals" begin
             Random.seed!(42)
-            x = collect(range(0, 10, length = 20))
+            x = collect(range(0, 10, length=20))
             y = 2 .* x .+ randn(20)
 
-            model = Lowess(fraction = 0.5, intervals = (confidence = 0.95,))
+            model = Lowess(fraction=0.5, intervals=(confidence=0.95,))
             result = fit(model, x, y)
 
             @test result.confidence_lower !== nothing
@@ -153,10 +153,10 @@ using FastLOWESS
 
         @testset "with prediction intervals" begin
             Random.seed!(42)
-            x = collect(range(0, 10, length = 20))
+            x = collect(range(0, 10, length=20))
             y = 2 .* x .+ randn(20)
 
-            model = Lowess(fraction = 0.5, intervals = (prediction = 0.95,))
+            model = Lowess(fraction=0.5, intervals=(prediction=0.95,))
             result = fit(model, x, y)
 
             @test result.prediction_lower !== nothing
@@ -169,7 +169,7 @@ using FastLOWESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, NaN, 6.0, 8.0, 10.0]
 
-            model = Lowess(fraction = 0.5, missing = "drop")
+            model = Lowess(fraction=0.5, missing="drop")
             result = fit(model, x, y)
 
             @test length(result.y) == length(x) - 1
@@ -179,20 +179,20 @@ using FastLOWESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, NaN, 6.0, 8.0, 10.0]
 
-            model = Lowess(fraction = 0.5)
+            model = Lowess(fraction=0.5)
             @test_throws ErrorException fit(model, x, y)
         end
     end
 
     @testset "Weight Functions" begin
-        x = collect(range(0, 10, length = 20))
+        x = collect(range(0, 10, length=20))
         y = sin.(x)
 
         kernels = ["tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle"]
 
         for kernel ∈ kernels
             @testset "$kernel" begin
-                model = Lowess(fraction = 0.5, weight_function = kernel)
+                model = Lowess(fraction=0.5, weight_function=kernel)
                 result = fit(model, x, y)
                 @test length(result.y) == length(x)
             end
@@ -207,7 +207,7 @@ using FastLOWESS
 
         for method ∈ methods
             @testset "$method" begin
-                model = Lowess(fraction = 0.7, iterations = 3, robustness_method = method)
+                model = Lowess(fraction=0.7, iterations=3, robustness_method=method)
                 result = fit(model, x, y)
                 @test length(result.y) == length(x)
             end
@@ -220,7 +220,7 @@ using FastLOWESS
 
         for iterations ∈ [0, 1, 3, 5]
             @testset "iterations=$iterations" begin
-                model = Lowess(fraction = 0.7, iterations = iterations)
+                model = Lowess(fraction=0.7, iterations=iterations)
                 result = fit(model, x, y)
                 @test length(result.y) == length(x)
             end
@@ -229,10 +229,10 @@ using FastLOWESS
 
     @testset "StreamingLowess" begin
         @testset "basic streaming" begin
-            x = collect(range(0, 1000, length = 2000))
+            x = collect(range(0, 1000, length=2000))
             y = sin.(x ./ 100)
 
-            stream = StreamingLowess(fraction = 0.1, chunk_size = 1000)
+            stream = StreamingLowess(fraction=0.1, chunk_size=1000)
 
             # First chunk
             r1 = process_chunk(stream, x[1:1000], y[1:1000])
@@ -250,10 +250,10 @@ using FastLOWESS
 
         @testset "larger dataset streaming results" begin
             Random.seed!(42)
-            x = collect(range(0, 1000, length = 5000))
+            x = collect(range(0, 1000, length=5000))
             y = sin.(x ./ 100) .+ randn(5000) .* 0.1
 
-            stream = StreamingLowess(fraction = 0.05, chunk_size = 1500)
+            stream = StreamingLowess(fraction=0.05, chunk_size=1500)
 
             # We just verify it runs without error
             process_chunk(stream, x[1:2500], y[1:2500])
@@ -262,14 +262,14 @@ using FastLOWESS
         end
 
         @testset "streaming accuracy" begin
-            x = collect(range(0, 100, length = 200))
+            x = collect(range(0, 100, length=200))
             y = 2 .* x .+ 1  # Perfect linear
 
-            stream = StreamingLowess(fraction = 0.5, chunk_size = 1000)
+            stream = StreamingLowess(fraction=0.5, chunk_size=1000)
             r1 = process_chunk(stream, x, y)
             r2 = finalize(stream)
 
-            model_batch = Lowess(fraction = 0.5)
+            model_batch = Lowess(fraction=0.5)
             result_batch = fit(model_batch, x, y)
 
             # Combine streaming results
@@ -279,11 +279,11 @@ using FastLOWESS
         end
 
         @testset "missing = \"drop\" removes non-finite rows" begin
-            x = collect(range(0, 100, length = 50))
+            x = collect(range(0, 100, length=50))
             y = sin.(x ./ 10)
             y[5] = NaN
 
-            stream = StreamingLowess(fraction = 0.1, chunk_size = 50, missing = "drop")
+            stream = StreamingLowess(fraction=0.1, chunk_size=50, missing="drop")
             r1 = process_chunk(stream, x, y)
             r2 = finalize(stream)
 
@@ -292,14 +292,14 @@ using FastLOWESS
 
         @testset "return_se and confidence/prediction intervals" begin
             Random.seed!(42)
-            x = collect(range(0, 100, length = 200))
+            x = collect(range(0, 100, length=200))
             y = sin.(x ./ 10) .+ randn(200) .* 0.1
 
             stream = StreamingLowess(
-                fraction = 0.2,
-                chunk_size = 50,
-                outputs = ["se"],
-                intervals = (confidence = 0.95, prediction = 0.95),
+                fraction=0.2,
+                chunk_size=50,
+                outputs=["se"],
+                intervals=(confidence=0.95, prediction=0.95),
             )
             r1 = process_chunk(stream, x, y)
             r2 = finalize(stream)
@@ -317,9 +317,9 @@ using FastLOWESS
             y = sin.(x) .+ 0.1 .* cos.(7 .* x)
             lower = map(1:2) do _
                 stream = StreamingLowess(
-                    chunk_size = length(x),
-                    intervals = (confidence = 0.95, prediction = 0.95, bootstrap = 20),
-                    seed = 42,
+                    chunk_size=length(x),
+                    intervals=(confidence=0.95, prediction=0.95, bootstrap=20),
+                    seed=42,
                 )
                 chunk = process_chunk(stream, x, y)
                 @test chunk.standard_errors !== nothing
@@ -328,7 +328,7 @@ using FastLOWESS
             end
             @test lower[1] == lower[2]
             @test_throws ErrorException StreamingLowess(
-                intervals = (confidence = 0.95, bootstrap = 1),
+                intervals=(confidence=0.95, bootstrap=1),
             )
         end
     end
@@ -338,7 +338,7 @@ using FastLOWESS
             x = collect(Float64, 1:10)
             y = collect(Float64, 2:2:20)
 
-            online = OnlineLowess(fraction = 0.5, window_capacity = 10, min_points = 3)
+            online = OnlineLowess(fraction=0.5, window_capacity=10, min_points=3)
             results = [add_point(online, xi, yi) for (xi, yi) ∈ zip(x, y)]
 
             @test any(r !== nothing for r ∈ results)
@@ -347,10 +347,10 @@ using FastLOWESS
 
         @testset "with noise" begin
             Random.seed!(42)
-            x = collect(range(0, 20, length = 50))
+            x = collect(range(0, 20, length=50))
             y = 2 .* x .+ randn(50)
 
-            online = OnlineLowess(fraction = 0.3, window_capacity = 20, min_points = 5)
+            online = OnlineLowess(fraction=0.3, window_capacity=20, min_points=5)
             results =
                 filter(!isnothing, [add_point(online, xi, yi) for (xi, yi) ∈ zip(x, y)])
 
@@ -361,14 +361,14 @@ using FastLOWESS
             x = collect(Float64, 0:99)
             y = 20.0 .+ 5.0 .* sin.(x .* 0.1)
 
-            o1 = OnlineLowess(fraction = 0.3, window_capacity = 50, update_mode = "full")
+            o1 = OnlineLowess(fraction=0.3, window_capacity=50, update_mode="full")
             results_full =
                 filter(!isnothing, [add_point(o1, xi, yi) for (xi, yi) ∈ zip(x, y)])
 
             o2 = OnlineLowess(
-                fraction = 0.3,
-                window_capacity = 50,
-                update_mode = "incremental",
+                fraction=0.3,
+                window_capacity=50,
+                update_mode="incremental",
             )
             results_inc =
                 filter(!isnothing, [add_point(o2, xi, yi) for (xi, yi) ∈ zip(x, y)])
@@ -378,17 +378,17 @@ using FastLOWESS
         end
 
         @testset "missing = \"drop\" ignores non-finite point" begin
-            online = OnlineLowess(fraction = 0.5, window_capacity = 10, missing = "drop")
+            online = OnlineLowess(fraction=0.5, window_capacity=10, missing="drop")
             result = add_point(online, 1.0, NaN)
             @test result === nothing
         end
 
         @testset "return_se and confidence/prediction intervals require full mode" begin
             @test_throws ErrorException OnlineLowess(
-                fraction = 0.5,
-                window_capacity = 10,
-                min_points = 3,
-                outputs = ["se"],
+                fraction=0.5,
+                window_capacity=10,
+                min_points=3,
+                outputs=["se"],
             )
         end
 
@@ -397,12 +397,12 @@ using FastLOWESS
             y = collect(Float64, 2:2:20)
 
             online = OnlineLowess(
-                fraction = 0.5,
-                window_capacity = 10,
-                min_points = 3,
-                update_mode = "full",
-                outputs = ["se"],
-                intervals = (confidence = 0.95, prediction = 0.95),
+                fraction=0.5,
+                window_capacity=10,
+                min_points=3,
+                update_mode="full",
+                outputs=["se"],
+                intervals=(confidence=0.95, prediction=0.95),
             )
             results =
                 filter(!isnothing, [add_point(online, xi, yi) for (xi, yi) ∈ zip(x, y)])
@@ -421,12 +421,12 @@ using FastLOWESS
             y = sin.(x) .+ 0.1 .* cos.(7 .* x)
             bounds = map(1:2) do _
                 online = OnlineLowess(
-                    fraction = 0.5,
-                    window_capacity = 20,
-                    min_points = 5,
-                    update_mode = "full",
-                    intervals = (confidence = 0.95, prediction = 0.95, bootstrap = 20),
-                    seed = 0,
+                    fraction=0.5,
+                    window_capacity=20,
+                    min_points=5,
+                    update_mode="full",
+                    intervals=(confidence=0.95, prediction=0.95, bootstrap=20),
+                    seed=0,
                 )
                 last = filter(
                     !isnothing,
@@ -437,18 +437,18 @@ using FastLOWESS
             @test all(!isnothing, bounds[1])
             @test bounds[1] == bounds[2]
             @test_throws ErrorException OnlineLowess(
-                intervals = (confidence = 0.95, bootstrap = 10),
+                intervals=(confidence=0.95, bootstrap=10),
             )
         end
     end
 
     @testset "Concurrent stateful access" begin
-        online = OnlineLowess(window_capacity = 64, min_points = 2)
+        online = OnlineLowess(window_capacity=64, min_points=2)
         online_tasks = [Threads.@spawn add_point(online, 1.0, 1.0) for _ ∈ 1:32]
         online_results = fetch.(online_tasks)
         @test count(result -> result !== nothing, online_results) == 31
 
-        stream = StreamingLowess(fraction = 0.5, chunk_size = 100, overlap = 10)
+        stream = StreamingLowess(fraction=0.5, chunk_size=100, overlap=10)
         stream_tasks =
             [Threads.@spawn process_chunk(stream, fill(1.0, 10), fill(1.0, 10)) for _ ∈ 1:8]
         stream_results = fetch.(stream_tasks)
@@ -459,7 +459,7 @@ using FastLOWESS
     @testset "Appending results" begin
         x = collect(1.0:5.0)
         y = 2 .* x
-        first = fit(Lowess(outputs = ["residuals"]), x, y)
+        first = fit(Lowess(outputs=["residuals"]), x, y)
         second = fit(Lowess(), x, y)
         original_x = copy(first.x)
 
@@ -467,7 +467,7 @@ using FastLOWESS
         @test first.x == original_x
         @test length(first.residuals) == length(first.x)
 
-        matching = fit(Lowess(outputs = ["residuals"]), x, y)
+        matching = fit(Lowess(outputs=["residuals"]), x, y)
         append!(first, matching)
         @test length(first.x) == 2length(x)
         @test length(first.residuals) == length(first.x)
@@ -478,7 +478,7 @@ using FastLOWESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.0, 6.0, 8.0, 10.0]
 
-            model = Lowess(fraction = 0.5)
+            model = Lowess(fraction=0.5)
             result = fit(model, x, y)
 
             @test result.diagnostics === nothing
@@ -495,7 +495,7 @@ using FastLOWESS
         x = [1.0, 2.0, 3.0, 4.0, 5.0]
         y = [2.0, 4.0, 6.0, 8.0, 10.0]  # Perfect linear
 
-        model = Lowess(fraction = 0.5, outputs = ["diagnostics"])
+        model = Lowess(fraction=0.5, outputs=["diagnostics"])
         result = fit(model, x, y)
 
         diag = result.diagnostics
@@ -509,7 +509,7 @@ using FastLOWESS
             x = [1.0, 2.0]
             y = [2.0, 4.0]
 
-            model = Lowess(fraction = 1.0)
+            model = Lowess(fraction=1.0)
             result = fit(model, x, y)
             @test length(result.y) == 2
         end
@@ -517,10 +517,10 @@ using FastLOWESS
         @testset "large dataset" begin
             Random.seed!(42)
             n = 1000
-            x = collect(range(0, 100, length = n))
+            x = collect(range(0, 100, length=n))
             y = sin.(x ./ 10) .+ randn(n) .* 0.1
 
-            model = Lowess(fraction = 0.1)
+            model = Lowess(fraction=0.1)
             result = fit(model, x, y)
             @test length(result.y) == n
         end
@@ -529,7 +529,7 @@ using FastLOWESS
             x = [3.0, 1.0, 5.0, 2.0, 4.0]
             y = [6.0, 2.0, 10.0, 4.0, 8.0]
 
-            model = Lowess(fraction = 0.7)
+            model = Lowess(fraction=0.7)
             result = fit(model, x, y)
             @test length(result.y) == 5
         end
@@ -538,7 +538,7 @@ using FastLOWESS
             x = [3.0, 1.0, 5.0, 2.0, 4.0]
             y = [6.0, 2.0, 10.0, 4.0, 8.0]
 
-            model = Lowess(fraction = 0.7)
+            model = Lowess(fraction=0.7)
             result = fit(model, x, y)
             @test result.x == x
         end
@@ -547,17 +547,17 @@ using FastLOWESS
             x = [3.0, 1.0, 5.0, 2.0, 4.0]
             y = [6.0, 2.0, 10.0, 4.0, 8.0]
 
-            model = Lowess(fraction = 0.7, outputs = ["residuals", "weights", "sorted"])
+            model = Lowess(fraction=0.7, outputs=["residuals", "weights", "sorted"])
             result = fit(model, x, y)
 
             @test issorted(result.x)
             @test result.x != x
 
-            unsorted_model = Lowess(fraction = 0.7, outputs = ["residuals", "weights"])
+            unsorted_model = Lowess(fraction=0.7, outputs=["residuals", "weights"])
             unsorted_result = fit(unsorted_model, x, y)
 
             @test sort(collect(zip(result.x, result.y))) ==
-                  sort(collect(zip(unsorted_result.x, unsorted_result.y)))
+                sort(collect(zip(unsorted_result.x, unsorted_result.y)))
             @test length(result.residuals) == length(x)
             @test length(result.robustness_weights) == length(x)
         end
@@ -566,7 +566,7 @@ using FastLOWESS
             x = [1.0, 1.0, 2.0, 2.0, 3.0]
             y = [2.0, 2.1, 4.0, 3.9, 6.0]
 
-            model = Lowess(fraction = 0.7)
+            model = Lowess(fraction=0.7)
             result = fit(model, x, y)
             @test length(result.y) == 5
         end
@@ -575,7 +575,7 @@ using FastLOWESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [5.0, 5.0, 5.0, 5.0, 5.0]
 
-            model = Lowess(fraction = 0.5)
+            model = Lowess(fraction=0.5)
             result = fit(model, x, y)
             @test result.y ≈ y rtol = 1e-10
         end
@@ -583,10 +583,10 @@ using FastLOWESS
 
     @testset "Cross-Validation" begin
         @testset "basic CV" begin
-            x = collect(range(0, 10, length = 50))
+            x = collect(range(0, 10, length=50))
             y = 2 .* x .+ sin.(x)
 
-            model = Lowess(cv = (fractions = [0.2, 0.3, 0.5, 0.7],))
+            model = Lowess(cv=(fractions=[0.2, 0.3, 0.5, 0.7],))
             result = fit(model, x, y)
 
             @test result.fraction_used in [0.2, 0.3, 0.5, 0.7]
@@ -594,30 +594,30 @@ using FastLOWESS
         end
 
         @testset "k-fold CV" begin
-            x = collect(range(0, 10, length = 30))
+            x = collect(range(0, 10, length=30))
             y = x .^ 2
 
-            model = Lowess(cv = (method = "kfold", k = 5, fractions = [0.3, 0.5]))
+            model = Lowess(cv=(method="kfold", k=5, fractions=[0.3, 0.5]))
             result = fit(model, x, y)
 
             @test result.fraction_used in [0.3, 0.5]
         end
 
         @testset "LOOCV" begin
-            x = collect(range(0, 10, length = 20))
+            x = collect(range(0, 10, length=20))
             y = sin.(x)
 
-            model = Lowess(cv = (method = "loocv", fractions = [0.4, 0.6]))
+            model = Lowess(cv=(method="loocv", fractions=[0.4, 0.6]))
             result = fit(model, x, y)
 
             @test result.fraction_used in [0.4, 0.6]
         end
 
         @testset "grouped option validation" begin
-            @test_throws ArgumentError Lowess(cv = (fractions = [0.3], seed = 1))
-            @test_throws ArgumentError Lowess(cv = (method = "kfold",))
-            @test_throws ArgumentError Lowess(intervals = (level = 0.95,))
-            @test_throws ArgumentError Lowess(seed = -1)
+            @test_throws ArgumentError Lowess(cv=(fractions=[0.3], seed=1))
+            @test_throws ArgumentError Lowess(cv=(method="kfold",))
+            @test_throws ArgumentError Lowess(intervals=(level=0.95,))
+            @test_throws ArgumentError Lowess(seed=-1)
         end
 
         @testset "shared seed reproduces CV and bootstrap" begin
@@ -625,9 +625,9 @@ using FastLOWESS
             y = sin.(x .* 0.1) .+ 0.1 .* cos.(0.7 .* x)
             runs = map(1:2) do _
                 model = Lowess(
-                    intervals = (confidence = 0.95, prediction = 0.95, bootstrap = 20),
-                    cv = (method = "kfold", k = 4, fractions = [0.3, 0.5, 0.7]),
-                    seed = 0,
+                    intervals=(confidence=0.95, prediction=0.95, bootstrap=20),
+                    cv=(method="kfold", k=4, fractions=[0.3, 0.5, 0.7]),
+                    seed=0,
                 )
                 fit(model, x, y)
             end
@@ -642,13 +642,13 @@ using FastLOWESS
         x = collect(Float64, 0:29)
         y = sin.(x .* 0.1) .+ 0.1 .* cos.(0.7 .* x)
         new_x = [2.5, 10.5, 20.5]
-        model = fit(Lowess(retain_model = true), x, y).predict_model
+        model = fit(Lowess(retain_model=true), x, y).predict_model
 
         analytic = predict(
             model,
             new_x;
-            outputs = ["se", "derivative"],
-            intervals = (confidence = 0.95, prediction = 0.95),
+            outputs=["se", "derivative"],
+            intervals=(confidence=0.95, prediction=0.95),
         )
         @test length(analytic.standard_errors) == length(new_x)
         @test length(analytic.derivative) == length(new_x)
@@ -657,8 +657,8 @@ using FastLOWESS
         boot(seed) = predict(
             model,
             new_x;
-            intervals = (confidence = 0.95, bootstrap = 20),
-            seed = seed,
+            intervals=(confidence=0.95, bootstrap=20),
+            seed=seed,
         ).confidence_lower
         @test boot(7) == boot(7)
     end
@@ -666,9 +666,9 @@ using FastLOWESS
     @testset "Error Handling" begin
         @testset "constructor errors include native details" begin
             constructors = (
-                () -> Lowess(weight_function = "invalid"),
-                () -> StreamingLowess(weight_function = "invalid"),
-                () -> OnlineLowess(weight_function = "invalid"),
+                () -> Lowess(weight_function="invalid"),
+                () -> StreamingLowess(weight_function="invalid"),
+                () -> OnlineLowess(weight_function="invalid"),
             )
 
             for constructor ∈ constructors
@@ -687,30 +687,30 @@ using FastLOWESS
             x = [1.0, 2.0, 3.0]
             y = [2.0, 4.0]
 
-            model = Lowess(fraction = 0.5)
+            model = Lowess(fraction=0.5)
             @test_throws ArgumentError fit(model, x, y)
         end
 
         @testset "invalid weight function" begin
             # Error happens at construction time now
-            @test_throws ErrorException Lowess(fraction = 0.5, weight_function = "invalid")
+            @test_throws ErrorException Lowess(fraction=0.5, weight_function="invalid")
         end
 
         @testset "invalid robustness method" begin
             @test_throws ErrorException Lowess(
-                fraction = 0.5,
-                robustness_method = "invalid",
+                fraction=0.5,
+                robustness_method="invalid",
             )
         end
 
         @testset "invalid missing policy" begin
-            @test_throws ErrorException Lowess(fraction = 0.5, missing = "invalid")
+            @test_throws ErrorException Lowess(fraction=0.5, missing="invalid")
         end
     end
 
     @testset "GPU installer target and path handling" begin
         @test FastLOWESS._validate_gpu_platform("linux", "x86_64-unknown-linux-gnu") ==
-              "linux"
+            "linux"
         @test_throws ErrorException FastLOWESS._validate_gpu_platform(
             "linux",
             "x86_64-unknown-linux-musl",
@@ -734,16 +734,16 @@ using FastLOWESS
 
         @testset "uniform weights match no weights" begin
             n = 20
-            x = collect(range(0.0, 5.0, length = n))
+            x = collect(range(0.0, 5.0, length=n))
             y = sin.(x)
             weights = ones(Float64, n)
 
-            model = Lowess(fraction = 0.4, iterations = 2)
+            model = Lowess(fraction=0.4, iterations=2)
             result_no_w = fit(model, x, y)
-            result_unit_w = fit(model, x, y; custom_weights = weights)
+            result_unit_w = fit(model, x, y; custom_weights=weights)
 
             for i ∈ 1:n
-                @test isapprox(result_no_w.y[i], result_unit_w.y[i], atol = 1e-10)
+                @test isapprox(result_no_w.y[i], result_unit_w.y[i], atol=1e-10)
             end
         end
 
@@ -753,12 +753,12 @@ using FastLOWESS
             y = x .* 2.0
             y[6] = 100.0  # outlier at index 6 (1-based)
 
-            model = Lowess(fraction = 0.5, iterations = 0)
+            model = Lowess(fraction=0.5, iterations=0)
             result_no_w = fit(model, x, y)
 
             weights = ones(Float64, n)
             weights[6] = 0.0
-            result_zero_w = fit(model, x, y; custom_weights = weights)
+            result_zero_w = fit(model, x, y; custom_weights=weights)
 
             true_val = 5.0 * 2.0  # x=5 (index 6)
             err_no_w = abs(result_no_w.y[6] - true_val)
@@ -775,8 +775,8 @@ using FastLOWESS
             weights_high = ones(Float64, n)
             weights_high[8] = 100.0
 
-            model = Lowess(fraction = 0.6, iterations = 0)
-            result_high = fit(model, x, y; custom_weights = weights_high)
+            model = Lowess(fraction=0.6, iterations=0)
+            result_high = fit(model, x, y; custom_weights=weights_high)
             result_equal = fit(model, x, y)
 
             @test result_high.y[8] > result_equal.y[8]
@@ -787,8 +787,8 @@ using FastLOWESS
             y = collect(1.0:10.0)
             weights = ones(Float64, 7)  # wrong length
 
-            model = Lowess(fraction = 0.5)
-            @test_throws Exception fit(model, x, y; custom_weights = weights)
+            model = Lowess(fraction=0.5)
+            @test_throws Exception fit(model, x, y; custom_weights=weights)
         end
 
         @testset "negative weight raises error" begin
@@ -796,8 +796,8 @@ using FastLOWESS
             y = collect(1.0:5.0)
             weights = [1.0, -1.0, 1.0, 1.0, 1.0]
 
-            model = Lowess(fraction = 0.5)
-            @test_throws Exception fit(model, x, y; custom_weights = weights)
+            model = Lowess(fraction=0.5)
+            @test_throws Exception fit(model, x, y; custom_weights=weights)
         end
 
     end  # Custom Weights testset
