@@ -117,6 +117,9 @@ jobs:
         run: cargo build --profile release-c --features gpu --manifest-path bindings/go/Cargo.toml --target-dir "$GITHUB_WORKSPACE/target-gpu"
       - name: Test InstallGPU(localPath)
         working-directory: bindings/go/fastlowess
+        env:
+          GOFLAGS: -tags=external_native
+          GOWORK: "off"
         run: |
           mkdir -p /tmp/gputest
           cat > /tmp/gputest/main.go <<'GO'
