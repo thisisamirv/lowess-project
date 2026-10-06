@@ -175,7 +175,7 @@ test_that("matches initial stats::lowess fits for sparse one-spike responses", {
     )
 })
 
-test_that("matches stats::lowess at explicit delta and predictor-gap boundaries", {
+test_that("matches stats::lowess at delta and gap boundaries", {
     property <- function(samples, fraction, iterations, mode, parallel) {
         predictors <- samples[[1]]
         gaps <- diff(sort(unique(predictors)))
@@ -331,7 +331,7 @@ test_that("matches stats::lowess across clusters, gaps and near ties", {
     )
 })
 
-test_that("matches stats::lowess at neighborhood and numerical-scale boundaries", {
+test_that("matches stats::lowess at span and scale boundaries", {
     property <- function(
         samples,
         neighbors,
@@ -376,7 +376,7 @@ test_that("matches stats::lowess at neighborhood and numerical-scale boundaries"
     )
 })
 
-test_that("matches stats::lowess for structured signals and multiple outliers", {
+test_that("matches stats::lowess for structured and outlier signals", {
     property <- function(
         samples,
         shape,

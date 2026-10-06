@@ -277,6 +277,7 @@ check_stats_lowess <- function(
     max_diff <- max(abs(result$y - expected_y))
     comparison_scale <- max(1, abs(result$y), abs(expected_y))
     if (max_diff > tolerance * comparison_scale) {
+        counts <- lowess_reference_counts
         if (
             cmad_is_noise_floor(
                 x_fit,
@@ -286,8 +287,7 @@ check_stats_lowess <- function(
                 delta = resolved_delta
             )
         ) {
-            lowess_reference_counts$noise_floor <- lowess_reference_counts$noise_floor +
-                1L
+            counts$noise_floor <- counts$noise_floor + 1L
             hedgehog::discard()
         }
         if (
@@ -301,8 +301,7 @@ check_stats_lowess <- function(
                 delta = resolved_delta
             )
         ) {
-            lowess_reference_counts$ulp_unstable <- lowess_reference_counts$ulp_unstable +
-                1L
+            counts$ulp_unstable <- counts$ulp_unstable + 1L
             hedgehog::discard()
         }
         lowess_reference_counts$failures[[
