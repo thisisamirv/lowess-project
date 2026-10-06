@@ -26,7 +26,10 @@ make go-dev    # full dev checks: fmt, lint, tests, doc snippets
 
 Outside the monorepo, download the prebuilt static library and header attached to a [GitHub release](https://github.com/thisisamirv/lowess-project/releases), then point `cgo` at them:
 
+Put `fastlowess_go.h` in your native installation's `include` directory and rename the selected platform archive to `libfastlowess_go.a` in its `lib` directory. The `-lfastlowess_go` linker flag does not find the platform-suffixed release filename automatically. Use the Go module and native assets from the same release; `go get` does not install the native library or header.
+
 ```sh
+export CGO_ENABLED=1
 export CGO_CFLAGS="-I/path/to/fastlowess_go/include"
 export CGO_LDFLAGS="-L/path/to/fastlowess_go/lib -lfastlowess_go -lm -ldl -lpthread"  # Linux
 go build ./...
@@ -41,7 +44,7 @@ Alternatively, build the native library yourself from the [`lowess-project`](htt
 ```sh
 git clone https://github.com/thisisamirv/lowess-project
 cd lowess-project
-cargo build -p fastlowess-go --profile release-c
+cargo build --locked -p fastlowess-go --profile release-c
 ```
 
 ## GPU backend

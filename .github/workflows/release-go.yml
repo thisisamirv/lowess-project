@@ -18,8 +18,47 @@ permissions:
   contents: write
 
 jobs:
+  validate-release:
+    name: Validate Go release metadata
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: "1.23.x"
+          cache: false
+
+      - name: Check release version and module path
+        env:
+          TAG: ${{ github.event.release.tag_name || github.event.inputs.tag }}
+        run: |
+          set -euo pipefail
+          export GOWORK=off
+          native_version="$(cargo metadata --locked --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "fastlowess-go") | .version')"
+          test "$TAG" = "v${native_version}"
+          major="${native_version%%.*}"
+          expected_module="github.com/thisisamirv/lowess-project/bindings/go/fastlowess"
+          if [ "$major" -ge 2 ]; then
+            expected_module="${expected_module}/v${major}"
+          fi
+          actual_module="$(cd bindings/go/fastlowess && go list -m)"
+          test "$actual_module" = "$expected_module"
+          release_commit="$(git rev-parse "refs/tags/${TAG}^{commit}")"
+          test "$release_commit" = "$(git rev-parse HEAD)"
+          module_tag="bindings/go/fastlowess/${TAG}"
+          if git show-ref --verify --quiet "refs/tags/$module_tag"; then
+            test "$(git rev-parse "${module_tag}^{commit}")" = "$release_commit"
+          fi
+
   build-and-upload:
     name: Build ${{ matrix.os }}${{ matrix.container && ' (musl)' || '' }}
+    needs: validate-release
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container }}
     strategy:
@@ -28,41 +67,41 @@ jobs:
           - os: ubuntu-latest
             asset_name: libfastlowess_go-linux-x64.a
             cargo_target: ""
-            target_dir: target/release
+            target_dir: target/release-c
           - os: ubuntu-latest
             container: "alpine:latest"
             asset_name: libfastlowess_go-linux-x64-musl.a
             cargo_target: ""
-            target_dir: target/release
+            target_dir: target/release-c
           - os: ubuntu-24.04-arm
             asset_name: libfastlowess_go-linux-arm64.a
             cargo_target: ""
-            target_dir: target/release
+            target_dir: target/release-c
           - os: ubuntu-24.04-arm
             asset_name: libfastlowess_go-linux-arm64-musl.a
             cargo_target: "--target aarch64-unknown-linux-musl"
-            target_dir: target/aarch64-unknown-linux-musl/release
+            target_dir: target/aarch64-unknown-linux-musl/release-c
           - os: macos-15-intel
             asset_name: libfastlowess_go-macos-x64.a
             cargo_target: ""
-            target_dir: target/release
+            target_dir: target/release-c
           - os: macos-latest
             asset_name: libfastlowess_go-macos-arm64.a
             cargo_target: ""
-            target_dir: target/release
+            target_dir: target/release-c
           - os: windows-latest
             asset_name: libfastlowess_go-win32-x64.a
             cargo_target: "--target x86_64-pc-windows-gnu"
-            target_dir: target/x86_64-pc-windows-gnu/release
+            target_dir: target/x86_64-pc-windows-gnu/release-c
           - os: windows-11-arm
             asset_name: libfastlowess_go-win32-arm64.a
             cargo_target: "--target aarch64-pc-windows-gnullvm"
-            target_dir: target/aarch64-pc-windows-gnullvm/release
+            target_dir: target/aarch64-pc-windows-gnullvm/release-c
 
     steps:
       - name: Install Alpine build dependencies
         if: matrix.container
-        run: apk add --no-cache build-base curl bash git
+        run: apk add --no-cache build-base curl bash git go
 
       - uses: actions/checkout@v7
         with:
@@ -70,6 +109,12 @@ jobs:
 
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
+
+      - uses: actions/setup-go@v7
+        if: ${{ !matrix.container }}
+        with:
+          go-version: "1.23.x"
+          cache: false
 
       - name: Install musl toolchain + target (Linux aarch64 musl)
         if: matrix.cargo_target == '--target aarch64-unknown-linux-musl'
@@ -85,6 +130,7 @@ jobs:
         run: |
           rustup toolchain install stable-x86_64-pc-windows-gnu
           rustup target add x86_64-pc-windows-gnu
+          choco install mingw -y
 
       # cgo needs a GNU-flavor C toolchain (MSVC .lib archives aren't
       # cgo-compatible). aarch64-pc-windows-gnu doesn't exist as a Rust
@@ -106,7 +152,27 @@ jobs:
 
       - name: Build Go native library
         working-directory: bindings/go
-        run: cargo build --release --lib ${{ matrix.cargo_target }}
+        run: cargo build --locked --profile release-c --lib ${{ matrix.cargo_target }}
+
+      - name: Test standalone Go consumer
+        shell: bash
+        run: |
+          set -euo pipefail
+          staging="$(mktemp -d)"
+          cp -R bindings/go/fastlowess "$staging/fastlowess"
+          cp -R bindings/go/tests "$staging/tests"
+          export GOWORK=off
+          export CGO_ENABLED=1
+          export CGO_CFLAGS="-I${GITHUB_WORKSPACE}/bindings/go/include"
+          export CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/${{ matrix.target_dir }}"
+          if [ "${{ matrix.os }}" = "windows-11-arm" ]; then
+            export CC=aarch64-w64-mingw32-clang
+            export GOOS=windows GOARCH=arm64
+          elif [ "${{ matrix.cargo_target }}" = "--target aarch64-unknown-linux-musl" ]; then
+            export CC=musl-gcc
+          fi
+          cd "$staging/tests"
+          go test ./...
 
       - name: Prepare Asset
         shell: bash
@@ -117,6 +183,7 @@ jobs:
         with:
           tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}
           files: ${{ matrix.asset_name }}
+          fail_on_unmatched_files: true
 
       - name: Upload Header to Release
         if: matrix.os == 'ubuntu-latest' && !matrix.container
@@ -124,12 +191,14 @@ jobs:
         with:
           tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}
           files: bindings/go/include/fastlowess_go.h
+          fail_on_unmatched_files: true
 
   # Go's module resolver (and pkg.go.dev) only recognizes a nested module as
   # "tagged"/"stable" if a tag matching <module-subdir>/vX.Y.Z exists, in
   # addition to the repo-wide vX.Y.Z tag used for the GitHub Release.
   tag-go-module:
     name: Tag Go module
+    needs: build-and-upload
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -141,12 +210,27 @@ jobs:
         env:
           TAG: ${{ github.event.release.tag_name || github.event.inputs.tag }}
         run: |
+          set -euo pipefail
           MODULE_TAG="bindings/go/fastlowess/${TAG}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if git rev-parse "$MODULE_TAG" >/dev/null 2>&1; then
-            echo "Tag $MODULE_TAG already exists, skipping."
+          if git show-ref --verify --quiet "refs/tags/$MODULE_TAG"; then
+            test "$(git rev-parse "${MODULE_TAG}^{commit}")" = "$(git rev-parse HEAD)"
+            echo "Tag $MODULE_TAG already points to the release commit."
           else
-            git tag "$MODULE_TAG" "${{ github.event.inputs.commit || github.sha }}"
+            git tag "$MODULE_TAG" HEAD
             git push origin "$MODULE_TAG"
           fi
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: "1.23.x"
+          cache: false
+
+      - name: Verify public module resolution
+        working-directory: bindings/go/fastlowess
+        env:
+          GOWORK: "off"
+          GOPROXY: https://proxy.golang.org
+          TAG: ${{ github.event.release.tag_name || github.event.inputs.tag }}
+        run: go list -m "$(go list -m)@${TAG}"

@@ -241,6 +241,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Go:**
 
+- Build release archives with the committed lockfile and cgo-compatible `release-c` profile; validate standalone consumers and release metadata before publishing module tags, reject conflicting tags, and verify public proxy resolution.
 - Reject explicitly empty custom weights instead of treating them as omitted.
 - Declared cgo seed arguments as `unsigned long long` so the Go type checker sees `C.ulonglong`. `uint64_t` was not exported as `C.uint64_t`.
 - Fixed finalizers potentially freeing native models during cgo calls, silently ignored output/extra weight arguments, k-fold count coercion, musl GPU downloads, unverified local and downloaded GPU archives, and 32-bit C ABI length truncation on Windows.
