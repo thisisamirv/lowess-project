@@ -12,12 +12,14 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Added
 
+* New Go module releases bundle the native header, CPU libraries for Linux/macOS/Windows on amd64 and arm64, dependency license notices, and checksums. Consumers no longer need separate native downloads or manual `CGO_CFLAGS`/`CGO_LDFLAGS` setup; cgo and a compatible C compiler are still required.
 * Enabled the optional wgpu DirectX 12 backend for GPU-enabled Windows builds. DXC is loaded dynamically with an FXC fallback, avoiding eager imports of `dxcompiler.dll` and `dxil.dll`.
 * Added GLES for Android GPU builds with a target-scoped `wgpu` feature; Windows continues to omit the GLES-only loader imports.
 * Added grouped `Outputs []string`, `CV *CVOptions`, and `Intervals *IntervalsOptions` for fitting and prediction, including residual-bootstrap intervals for all adapters.
 
 ### Changed
 
+* Native linking now defaults to the bundled CPU library. Use `-tags=musl` on musl Linux, or `-tags=external_native` for source-built, custom, or GPU libraries; the monorepo Make targets select external-native mode automatically.
 * Clarified that Batch `ResidualSD` is `1.4826 * MAD`, while Streaming reports the cumulative sample standard deviation of emitted residuals.
 * Breaking change: replaced individual `Return*` output fields with `Outputs: []string{...}` for Batch, Streaming, Online, and prediction options.
 * Breaking change: replaced flat interval/CV fields and nested CV seed with grouped options and one outer `Seed *uint64` shared by fit-time CV and bootstrap. `PredictOptions` has its own `Seed` for prediction-time bootstrap.

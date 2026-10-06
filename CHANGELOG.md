@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Go:**
 
+- Bundle native headers, eight desktop CPU archives, dependency notices, checksums, and source provenance in new Go module releases so supported consumers need no manual native installation; add musl selection and an external-native override for source/custom builds.
 - Extended the existing Go fit and prediction APIs with grouped `Outputs []string`, `CV *CVOptions`, and `Intervals *IntervalsOptions`, including residual-bootstrap intervals across Batch, Streaming, Online, and Predict.
 
 **C++:**

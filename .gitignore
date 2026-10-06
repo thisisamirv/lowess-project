@@ -141,6 +141,8 @@ spack/
 bindings/go/docs-site/public/
 bindings/go/docs-site/resources/
 bindings/go/docs-site/.hugo_build.lock
+bindings/go/fastlowess/include/
+bindings/go/fastlowess/native/
 
 # Antora (Java docs)
 bindings/java/docs-site/public/

@@ -41,6 +41,7 @@ else
 endif
 
 GO_LIBRARY_DIR_ABS := $(abspath $(GO_LIBRARY_DIR))
+export GOFLAGS := $(GOFLAGS) -tags=external_native
 
 .PHONY: default dev clean docs
 

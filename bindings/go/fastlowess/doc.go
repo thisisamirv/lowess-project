@@ -32,9 +32,10 @@
 //
 // This package uses cgo to link against the native fastlowess_go library
 // (built from the sibling Rust crate in this same directory). Within this
-// monorepo, `make go` builds the Rust library before running `go build`/`go
-// test`. Outside the monorepo, point CGO_CFLAGS/CGO_LDFLAGS at a prebuilt
-// copy of the library and header (see README.md).
+// monorepo, `make go` selects external_native and builds the Rust library.
+// Bundled Go releases include native headers and CPU libraries for Linux,
+// macOS, and Windows on amd64/arm64. Select the musl build tag on Alpine.
+// Custom libraries require external_native and CGO_CFLAGS/CGO_LDFLAGS.
 //
 // # Resource management
 //

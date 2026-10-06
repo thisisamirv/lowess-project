@@ -171,7 +171,7 @@ func printRebuildInstructions(dest, dir string) {
 	default:
 		fmt.Printf("  export CGO_LDFLAGS=\"-L%s -lfastlowess_go -lm -ldl -lpthread\"\n", dir)
 	}
-	fmt.Println("then `go build ./...`.")
+	fmt.Println("then `go build -tags=external_native ./...`.")
 }
 
 func copyGPULibrary(src, dest, marker string) error {

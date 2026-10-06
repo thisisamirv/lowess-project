@@ -1,7 +1,6 @@
 package fastlowess
 
 /*
-#cgo CFLAGS: -I${SRCDIR}/../include
 #include "fastlowess_go.h"
 */
 import "C"

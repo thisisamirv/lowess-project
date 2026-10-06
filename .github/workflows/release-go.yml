@@ -21,6 +21,8 @@ jobs:
   validate-release:
     name: Validate Go release metadata
     runs-on: ubuntu-latest
+    outputs:
+      published: ${{ steps.metadata.outputs.published }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -35,6 +37,7 @@ jobs:
           cache: false
 
       - name: Check release version and module path
+        id: metadata
         env:
           TAG: ${{ github.event.release.tag_name || github.event.inputs.tag }}
         run: |
@@ -53,12 +56,21 @@ jobs:
           test "$release_commit" = "$(git rev-parse HEAD)"
           module_tag="bindings/go/fastlowess/${TAG}"
           if git show-ref --verify --quiet "refs/tags/$module_tag"; then
-            test "$(git rev-parse "${module_tag}^{commit}")" = "$release_commit"
+            test "$(git rev-parse "${module_tag}^")" = "$release_commit"
+            git show "${module_tag}:bindings/go/fastlowess/native/manifest.json" | jq -e --arg commit "$release_commit" --arg version "$TAG" '.source_commit == $commit and .version == $version'
+            git diff --quiet "$release_commit" "$module_tag" -- . ':(exclude)bindings/go/fastlowess/include' ':(exclude)bindings/go/fastlowess/native'
+            staging="$(mktemp -d)"
+            git archive "${module_tag}:bindings/go/fastlowess" | tar -x -C "$staging"
+            (cd "$staging" && sha256sum -c native/SHA256SUMS)
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
           fi
 
   build-and-upload:
     name: Build ${{ matrix.os }}${{ matrix.container && ' (musl)' || '' }}
     needs: validate-release
+    if: needs.validate-release.outputs.published != 'true'
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container }}
     strategy:
@@ -66,35 +78,43 @@ jobs:
         include:
           - os: ubuntu-latest
             asset_name: libfastlowess_go-linux-x64.a
+            native_dir: linux_amd64
             cargo_target: ""
             target_dir: target/release-c
           - os: ubuntu-latest
             container: "alpine:latest"
             asset_name: libfastlowess_go-linux-x64-musl.a
+            native_dir: linux_amd64_musl
             cargo_target: ""
             target_dir: target/release-c
           - os: ubuntu-24.04-arm
             asset_name: libfastlowess_go-linux-arm64.a
+            native_dir: linux_arm64
             cargo_target: ""
             target_dir: target/release-c
           - os: ubuntu-24.04-arm
             asset_name: libfastlowess_go-linux-arm64-musl.a
+            native_dir: linux_arm64_musl
             cargo_target: "--target aarch64-unknown-linux-musl"
             target_dir: target/aarch64-unknown-linux-musl/release-c
           - os: macos-15-intel
             asset_name: libfastlowess_go-macos-x64.a
+            native_dir: darwin_amd64
             cargo_target: ""
             target_dir: target/release-c
           - os: macos-latest
             asset_name: libfastlowess_go-macos-arm64.a
+            native_dir: darwin_arm64
             cargo_target: ""
             target_dir: target/release-c
           - os: windows-latest
             asset_name: libfastlowess_go-win32-x64.a
+            native_dir: windows_amd64
             cargo_target: "--target x86_64-pc-windows-gnu"
             target_dir: target/x86_64-pc-windows-gnu/release-c
           - os: windows-11-arm
             asset_name: libfastlowess_go-win32-arm64.a
+            native_dir: windows_arm64
             cargo_target: "--target aarch64-pc-windows-gnullvm"
             target_dir: target/aarch64-pc-windows-gnullvm/release-c
 
@@ -161,10 +181,12 @@ jobs:
           staging="$(mktemp -d)"
           cp -R bindings/go/fastlowess "$staging/fastlowess"
           cp -R bindings/go/tests "$staging/tests"
+          mkdir -p "$staging/fastlowess/include" "$staging/fastlowess/native/${{ matrix.native_dir }}"
+          cp bindings/go/include/fastlowess_go.h "$staging/fastlowess/include/"
+          cp ${{ matrix.target_dir }}/libfastlowess_go.a "$staging/fastlowess/native/${{ matrix.native_dir }}/"
           export GOWORK=off
           export CGO_ENABLED=1
-          export CGO_CFLAGS="-I${GITHUB_WORKSPACE}/bindings/go/include"
-          export CGO_LDFLAGS="-L${GITHUB_WORKSPACE}/${{ matrix.target_dir }}"
+          unset CGO_CFLAGS CGO_LDFLAGS GOFLAGS
           if [ "${{ matrix.os }}" = "windows-11-arm" ]; then
             export CC=aarch64-w64-mingw32-clang
             export GOOS=windows GOARCH=arm64
@@ -172,7 +194,27 @@ jobs:
             export CC=musl-gcc
           fi
           cd "$staging/tests"
-          go test ./...
+          if [[ "${{ matrix.native_dir }}" = *_musl ]]; then
+            go test -tags=musl ./...
+          else
+            go test ./...
+          fi
+
+      - name: Stage module native files
+        shell: bash
+        run: |
+          mkdir -p module-native/native/${{ matrix.native_dir }}
+          cp ${{ matrix.target_dir }}/libfastlowess_go.a module-native/native/${{ matrix.native_dir }}/
+          if [ "${{ matrix.native_dir }}" = "linux_amd64" ]; then
+            mkdir -p module-native/include
+            cp bindings/go/include/fastlowess_go.h module-native/include/
+          fi
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: go-native-${{ matrix.native_dir }}
+          path: module-native
+          if-no-files-found: error
 
       - name: Prepare Asset
         shell: bash
@@ -197,8 +239,9 @@ jobs:
   # "tagged"/"stable" if a tag matching <module-subdir>/vX.Y.Z exists, in
   # addition to the repo-wide vX.Y.Z tag used for the GitHub Release.
   tag-go-module:
-    name: Tag Go module
-    needs: build-and-upload
+    name: Package and tag bundled Go module
+    needs: [validate-release, build-and-upload]
+    if: needs.validate-release.outputs.published != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -206,26 +249,27 @@ jobs:
           ref: ${{ github.event.inputs.commit || github.sha }}
           fetch-depth: 0
 
-      - name: Create and push nested module tag
-        env:
-          TAG: ${{ github.event.release.tag_name || github.event.inputs.tag }}
-        run: |
-          set -euo pipefail
-          MODULE_TAG="bindings/go/fastlowess/${TAG}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          if git show-ref --verify --quiet "refs/tags/$MODULE_TAG"; then
-            test "$(git rev-parse "${MODULE_TAG}^{commit}")" = "$(git rev-parse HEAD)"
-            echo "Tag $MODULE_TAG already points to the release commit."
-          else
-            git tag "$MODULE_TAG" HEAD
-            git push origin "$MODULE_TAG"
-          fi
-
       - uses: actions/setup-go@v7
         with:
           go-version: "1.23.x"
           cache: false
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-about
+        run: cargo install cargo-about --version 0.9.2 --locked --features cli
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: go-native-*
+          merge-multiple: true
+          path: bindings/go/fastlowess
+
+      - name: Assemble, test, and publish Go module
+        env:
+          TAG: ${{ github.event.release.tag_name || github.event.inputs.tag }}
+          PUBLISH_GO_MODULE: "true"
+        run: bash dev/runners/package_go_module.sh fastlowess
 
       - name: Verify public module resolution
         working-directory: bindings/go/fastlowess
@@ -233,4 +277,8 @@ jobs:
           GOWORK: "off"
           GOPROXY: https://proxy.golang.org
           TAG: ${{ github.event.release.tag_name || github.event.inputs.tag }}
-        run: go list -m "$(go list -m)@${TAG}"
+        run: |
+          go mod download -json "$(go list -m)@${TAG}" > "$RUNNER_TEMP/go-module.json"
+          module_dir="$(jq -r '.Dir' "$RUNNER_TEMP/go-module.json")"
+          cd "$module_dir"
+          sha256sum -c native/SHA256SUMS
