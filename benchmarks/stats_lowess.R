@@ -143,7 +143,10 @@ benchmark_scalability <- function(iterations = 10) {
             lowess(x = data$x, y = data$y, f = 0.1, iter = 3)
         }
         results[[paste0("scale_", size)]] <- run_benchmark(
-            paste0("scale_", size), size, run, iterations
+            paste0("scale_", size),
+            size,
+            run,
+            iterations
         )
     }
     results
@@ -160,7 +163,10 @@ benchmark_fraction <- function(iterations = 10) {
             lowess(x = data$x, y = data$y, f = frac, iter = 3)
         }
         results[[paste0("fraction_", frac)]] <- run_benchmark(
-            paste0("fraction_", frac), size, run, iterations
+            paste0("fraction_", frac),
+            size,
+            run,
+            iterations
         )
     }
     results
@@ -177,7 +183,10 @@ benchmark_iterations <- function(iterations = 10) {
             lowess(x = data$x, y = data$y, f = 0.2, iter = it)
         }
         results[[paste0("iterations_", it)]] <- run_benchmark(
-            paste0("iterations_", it), size, run, iterations
+            paste0("iterations_", it),
+            size,
+            run,
+            iterations
         )
     }
     results
@@ -193,7 +202,10 @@ benchmark_financial <- function(iterations = 10) {
             lowess(x = data$x, y = data$y, f = 0.1, iter = 2)
         }
         results[[paste0("financial_", size)]] <- run_benchmark(
-            paste0("financial_", size), size, run, iterations
+            paste0("financial_", size),
+            size,
+            run,
+            iterations
         )
     }
     results
@@ -209,7 +221,10 @@ benchmark_scientific <- function(iterations = 10) {
             lowess(x = data$x, y = data$y, f = 0.15, iter = 3)
         }
         results[[paste0("scientific_", size)]] <- run_benchmark(
-            paste0("scientific_", size), size, run, iterations
+            paste0("scientific_", size),
+            size,
+            run,
+            iterations
         )
     }
     results
@@ -226,7 +241,10 @@ benchmark_genomic <- function(iterations = 10) {
             lowess(x = data$x, y = data$y, f = 0.1, iter = 3)
         }
         results[[paste0("genomic_", size_str)]] <- run_benchmark(
-            paste0("genomic_", size_str), size, run, iterations
+            paste0("genomic_", size_str),
+            size,
+            run,
+            iterations
         )
     }
     results
@@ -242,7 +260,10 @@ benchmark_pathological <- function(iterations = 10) {
         lowess(x = data_clustered$x, y = data_clustered$y, f = 0.3, iter = 2)
     }
     results$clustered <- run_benchmark(
-        "clustered", size, run_clustered, iterations
+        "clustered",
+        size,
+        run_clustered,
+        iterations
     )
 
     # High noise
@@ -251,7 +272,10 @@ benchmark_pathological <- function(iterations = 10) {
         lowess(x = data_noisy$x, y = data_noisy$y, f = 0.5, iter = 5)
     }
     results$high_noise <- run_benchmark(
-        "high_noise", size, run_noise, iterations
+        "high_noise",
+        size,
+        run_noise,
+        iterations
     )
 
     # Extreme outliers
@@ -260,7 +284,10 @@ benchmark_pathological <- function(iterations = 10) {
         lowess(x = data_outlier$x, y = data_outlier$y, f = 0.2, iter = 10)
     }
     results$extreme_outliers <- run_benchmark(
-        "extreme_outliers", size, run_outliers, iterations
+        "extreme_outliers",
+        size,
+        run_outliers,
+        iterations
     )
 
     # Constant y
@@ -271,7 +298,10 @@ benchmark_pathological <- function(iterations = 10) {
         lowess(x = data_const$x, y = data_const$y, f = 0.2, iter = 2)
     }
     results$constant_y <- run_benchmark(
-        "constant_y", size, run_const, iterations
+        "constant_y",
+        size,
+        run_const,
+        iterations
     )
 
     results
@@ -287,7 +317,10 @@ benchmark_large <- function(iterations = 3) {
         lowess(x = data$x, y = data$y, f = 0.1, iter = 3, delta = 0)
     }
     results$large_delta_0 <- run_benchmark(
-        "large_delta_0", size, run, iterations,
+        "large_delta_0",
+        size,
+        run,
+        iterations,
         warmup = 1
     )
 
@@ -298,7 +331,10 @@ benchmark_large <- function(iterations = 3) {
         lowess(x = data$x, y = data$y, f = 0.1, iter = 3)
     }
     results$large_delta_0.1 <- run_benchmark(
-        "large_delta_0.1", size, run_delta_default, iterations,
+        "large_delta_0.1",
+        size,
+        run_delta_default,
+        iterations,
         warmup = 1
     )
 
@@ -307,7 +343,10 @@ benchmark_large <- function(iterations = 3) {
         lowess(x = data$x, y = data$y, f = 0.1, iter = 10, delta = 0)
     }
     results$large_high_iter <- run_benchmark(
-        "large_high_iter", size, run_high_iter, iterations,
+        "large_high_iter",
+        size,
+        run_high_iter,
+        iterations,
         warmup = 1
     )
 
@@ -319,7 +358,10 @@ benchmark_large <- function(iterations = 3) {
         lowess(x = data_frac$x, y = data_frac$y, f = 0.67, iter = 3, delta = 0)
     }
     results$large_high_fraction <- run_benchmark(
-        "large_high_fraction", size_frac, run_high_frac, iterations,
+        "large_high_fraction",
+        size_frac,
+        run_high_frac,
+        iterations,
         warmup = 1
     )
 

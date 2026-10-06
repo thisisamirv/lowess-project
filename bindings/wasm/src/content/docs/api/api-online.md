@@ -84,7 +84,7 @@ Smoothed y: 0.22659245357374927
 
 Incremental mode fits only the newest point. Positive `delta` is rejected there, and `auto_converge` requires full mode with at least one robustness iteration.
 
-Cross-validation, GPU `backend`, `custom_weights`, the `"sorted"` output, and `parallel` are Batch-only; the `"diagnostics"` and `"residuals"` outputs are not available online. See [fastLowess](api.md) for those options.
+Cross-validation, `custom_weights`, and the `"sorted"` output are Batch-only; the `"diagnostics"` and `"residuals"` outputs are not available online. See [fastLowess](api.md) for those options.
 
 ## Options
 

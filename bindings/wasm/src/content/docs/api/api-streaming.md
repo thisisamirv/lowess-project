@@ -97,7 +97,7 @@ Fraction used: 0.5
 | `intervals` | `object` | `null` | Grouped `confidence`, `prediction`, and per-chunk `bootstrap` options |
 | `seed` | `number \| bigint` | `null` | Reproducible bootstrap draws; Number values must be safe integers, BigInt supports the full unsigned 64-bit range |
 
-Cross-validation, GPU `backend`, `custom_weights`, and the `"sorted"` output are Batch-only and not available here; see [fastLowess](api.md) for those. Standard errors and confidence/prediction intervals are computed per combined chunk (including the previous overlap), then blended across overlap regions via `merge_strategy` like `y`/`derivative` are; they are local chunk intervals, not whole-stream intervals.
+Cross-validation, `custom_weights`, and the `"sorted"` output are Batch-only and not available here; see [fastLowess](api.md) for those. Standard errors and confidence/prediction intervals are computed per combined chunk (including the previous overlap), then blended across overlap regions via `merge_strategy` like `y`/`derivative` are; they are local chunk intervals, not whole-stream intervals.
 
 ## Options
 

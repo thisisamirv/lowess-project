@@ -32,7 +32,12 @@ run_benchmark <- function(name, size, func, n_iter = 10, warmup = 2) {
         tryCatch(
             {
                 val <- func()
-                times[i] <- as.numeric(difftime(Sys.time(), start, units = "secs")) * 1000
+                times[i] <- as.numeric(difftime(
+                    Sys.time(),
+                    start,
+                    units = "secs"
+                )) *
+                    1000
                 last_output <- val
             },
             error = function(e) {
@@ -42,15 +47,15 @@ run_benchmark <- function(name, size, func, n_iter = 10, warmup = 2) {
     }
 
     list(
-        name            = name,
-        size            = size,
-        iterations      = n_iter,
-        mean_time_ms    = mean(times),
-        std_time_ms     = sd(times),
-        median_time_ms  = median(times),
-        min_time_ms     = min(times),
-        max_time_ms     = max(times),
-        fitted          = if (!is.null(last_output)) as.numeric(last_output$y) else NULL
+        name = name,
+        size = size,
+        iterations = n_iter,
+        mean_time_ms = mean(times),
+        std_time_ms = sd(times),
+        median_time_ms = median(times),
+        min_time_ms = min(times),
+        max_time_ms = max(times),
+        fitted = if (!is.null(last_output)) as.numeric(last_output$y) else NULL
     )
 }
 
@@ -125,11 +130,11 @@ generate_high_noise_data <- function(size, seed = 42) {
 
 make_model <- function(fraction, iterations) {
     Lowess(
-        fraction        = fraction,
-        iterations      = iterations,
-        parallel        = isTRUE(getOption("rfastlowess.parallel")),
+        fraction = fraction,
+        iterations = iterations,
+        parallel = isTRUE(getOption("rfastlowess.parallel")),
         boundary_policy = "noboundary",
-        scaling_method  = "mar"
+        scaling_method = "mar"
     )
 }
 
@@ -139,7 +144,8 @@ benchmark_scalability <- function(n_iter = 10) {
         d <- generate_sine_data(size)
         model <- make_model(0.1, 3)
         results[[paste0("scale_", size)]] <- run_benchmark(
-            paste0("scale_", size), size,
+            paste0("scale_", size),
+            size,
             function() fit(model, d$x, d$y),
             n_iter
         )
@@ -154,7 +160,8 @@ benchmark_fraction <- function(n_iter = 10) {
     results <- lapply(fracs, function(frac) {
         model <- make_model(frac, 3)
         run_benchmark(
-            paste0("fraction_", frac), size,
+            paste0("fraction_", frac),
+            size,
             function() fit(model, d$x, d$y),
             n_iter
         )
@@ -170,7 +177,8 @@ benchmark_iterations <- function(n_iter = 10) {
     results <- lapply(iter_values, function(it) {
         model <- make_model(0.2, it)
         run_benchmark(
-            paste0("iterations_", it), size,
+            paste0("iterations_", it),
+            size,
             function() fit(model, d$x, d$y),
             n_iter
         )
@@ -185,7 +193,8 @@ benchmark_financial <- function(n_iter = 10) {
         d <- generate_financial_data(size)
         model <- make_model(0.1, 2)
         results[[paste0("financial_", size)]] <- run_benchmark(
-            paste0("financial_", size), size,
+            paste0("financial_", size),
+            size,
             function() fit(model, d$x, d$y),
             n_iter
         )
@@ -199,7 +208,8 @@ benchmark_scientific <- function(n_iter = 10) {
         d <- generate_scientific_data(size)
         model <- make_model(0.15, 3)
         results[[paste0("scientific_", size)]] <- run_benchmark(
-            paste0("scientific_", size), size,
+            paste0("scientific_", size),
+            size,
             function() fit(model, d$x, d$y),
             n_iter
         )
@@ -214,7 +224,8 @@ benchmark_genomic <- function(n_iter = 10) {
         model <- make_model(0.1, 3)
         size_str <- format(size, scientific = FALSE, trim = TRUE)
         results[[paste0("genomic_", size_str)]] <- run_benchmark(
-            paste0("genomic_", size_str), size,
+            paste0("genomic_", size_str),
+            size,
             function() fit(model, d$x, d$y),
             n_iter
         )
@@ -229,26 +240,38 @@ benchmark_pathological <- function(n_iter = 10) {
     d <- generate_clustered_data(size)
     model <- make_model(0.3, 2)
     results$clustered <- run_benchmark(
-        "clustered", size, function() fit(model, d$x, d$y), n_iter
+        "clustered",
+        size,
+        function() fit(model, d$x, d$y),
+        n_iter
     )
 
     d <- generate_high_noise_data(size)
     model <- make_model(0.5, 5)
     results$high_noise <- run_benchmark(
-        "high_noise", size, function() fit(model, d$x, d$y), n_iter
+        "high_noise",
+        size,
+        function() fit(model, d$x, d$y),
+        n_iter
     )
 
     d <- generate_outlier_data(size)
     model <- make_model(0.2, 10)
     results$extreme_outliers <- run_benchmark(
-        "extreme_outliers", size, function() fit(model, d$x, d$y), n_iter
+        "extreme_outliers",
+        size,
+        function() fit(model, d$x, d$y),
+        n_iter
     )
 
     xk <- as.numeric(seq_len(size))
     yk <- rep(5.0, size)
     model <- make_model(0.2, 2)
     results$constant_y <- run_benchmark(
-        "constant_y", size, function() fit(model, xk, yk), n_iter
+        "constant_y",
+        size,
+        function() fit(model, xk, yk),
+        n_iter
     )
 
     results
@@ -261,46 +284,55 @@ benchmark_large <- function(n_iter = 3) {
     size <- 50000
     d <- generate_sine_data(size)
     model <- Lowess(
-        fraction        = 0.1,
-        iterations      = 3,
-        delta           = 0,
-        parallel        = isTRUE(getOption("rfastlowess.parallel")),
+        fraction = 0.1,
+        iterations = 3,
+        delta = 0,
+        parallel = isTRUE(getOption("rfastlowess.parallel")),
         boundary_policy = "noboundary",
-        scaling_method  = "mar"
+        scaling_method = "mar"
     )
-    results <- list(large_delta_0 = run_benchmark(
-        "large_delta_0", size, function() fit(model, d$x, d$y), n_iter,
-        warmup = 1
-    ))
+    results <- list(
+        large_delta_0 = run_benchmark(
+            "large_delta_0",
+            size,
+            function() fit(model, d$x, d$y),
+            n_iter,
+            warmup = 1
+        )
+    )
 
     # Same workload as above but with delta left at its default (auto =
     # 1/100th of the x range = 0.1 here), showing how much the
     # interpolation shortcut speeds things up at scale.
     model_delta_default <- Lowess(
-        fraction        = 0.1,
-        iterations      = 3,
-        parallel        = isTRUE(getOption("rfastlowess.parallel")),
+        fraction = 0.1,
+        iterations = 3,
+        parallel = isTRUE(getOption("rfastlowess.parallel")),
         boundary_policy = "noboundary",
-        scaling_method  = "mar"
+        scaling_method = "mar"
     )
     results$large_delta_0.1 <- run_benchmark(
-        "large_delta_0.1", size,
-        function() fit(model_delta_default, d$x, d$y), n_iter,
+        "large_delta_0.1",
+        size,
+        function() fit(model_delta_default, d$x, d$y),
+        n_iter,
         warmup = 1
     )
 
     # More robustness iterations at the same scale (still delta = 0).
     model_high_iter <- Lowess(
-        fraction        = 0.1,
-        iterations      = 10,
-        delta           = 0,
-        parallel        = isTRUE(getOption("rfastlowess.parallel")),
+        fraction = 0.1,
+        iterations = 10,
+        delta = 0,
+        parallel = isTRUE(getOption("rfastlowess.parallel")),
         boundary_policy = "noboundary",
-        scaling_method  = "mar"
+        scaling_method = "mar"
     )
     results$large_high_iter <- run_benchmark(
-        "large_high_iter", size,
-        function() fit(model_high_iter, d$x, d$y), n_iter,
+        "large_high_iter",
+        size,
+        function() fit(model_high_iter, d$x, d$y),
+        n_iter,
         warmup = 1
     )
 
@@ -309,16 +341,18 @@ benchmark_large <- function(n_iter = 3) {
     size_frac <- 20000
     d_frac <- generate_sine_data(size_frac)
     model_high_frac <- Lowess(
-        fraction        = 0.67,
-        iterations      = 3,
-        delta           = 0,
-        parallel        = isTRUE(getOption("rfastlowess.parallel")),
+        fraction = 0.67,
+        iterations = 3,
+        delta = 0,
+        parallel = isTRUE(getOption("rfastlowess.parallel")),
         boundary_policy = "noboundary",
-        scaling_method  = "mar"
+        scaling_method = "mar"
     )
     results$large_high_fraction <- run_benchmark(
-        "large_high_fraction", size_frac,
-        function() fit(model_high_frac, d_frac$x, d_frac$y), n_iter,
+        "large_high_fraction",
+        size_frac,
+        function() fit(model_high_frac, d_frac$x, d_frac$y),
+        n_iter,
         warmup = 1
     )
 
@@ -338,7 +372,10 @@ main <- function() {
         use_parallel <- TRUE
         mode_label <- "parallel"
     } else {
-        stop("Usage: Rscript rfastlowess.R --serial | --parallel\n", call. = FALSE)
+        stop(
+            "Usage: Rscript rfastlowess.R --serial | --parallel\n",
+            call. = FALSE
+        )
     }
     options(rfastlowess.parallel = use_parallel)
 
@@ -366,7 +403,9 @@ main <- function() {
         script_dir <- getwd()
     }
     out_dir <- file.path(script_dir, "output")
-    if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
+    if (!dir.exists(out_dir)) {
+        dir.create(out_dir, recursive = TRUE)
+    }
 
     out_path <- file.path(out_dir, sprintf("rfastlowess_%s.json", mode_label))
     write_json(all_results, out_path, auto_unbox = TRUE, pretty = TRUE)
