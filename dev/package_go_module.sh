@@ -17,7 +17,7 @@ for platform in linux_amd64 linux_arm64 linux_amd64_musl linux_arm64_musl darwin
 	test -s "${module_dir}/native/${platform}/lib${package}_go.a"
 done
 
-cargo about generate --manifest-path bindings/go/Cargo.toml --locked about.hbs \
+cargo about generate --manifest-path bindings/go/Cargo.toml --locked --config dev/about.toml dev/about.hbs \
 	--output-file "${module_dir}/native/THIRD_PARTY_LICENSES.html"
 jq -n --arg source_commit "$source_commit" --arg version "$TAG" \
 	'{source_commit: $source_commit, version: $version}' >"${module_dir}/native/manifest.json"
