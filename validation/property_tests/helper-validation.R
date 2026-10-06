@@ -2,6 +2,13 @@
 # `stats::lowess`. Used by both the fixed scenarios in test-validation.R and
 # the randomized property-based fuzzing in test-property-lowess.R.
 
+lowess_reference_counts <- new.env(parent = emptyenv())
+lowess_reference_counts$compared <- 0L
+lowess_reference_counts$too_short <- 0L
+lowess_reference_counts$noise_floor <- 0L
+lowess_reference_counts$ulp_unstable <- 0L
+lowess_reference_counts$failures <- list()
+
 #' Assert that this package reproduces `stats::lowess` on a fixed dataset.
 #'
 #' Pins R's comparison settings: no boundary padding (`"noboundary"`),
@@ -107,19 +114,33 @@ expect_stats_lowess_sorted <- function(
 #' `0.001`/`0.999 * cmad` cutoffs each lands on is decided by the compiler and
 #' there is no well-defined answer to compare against.
 #' @noRd
-cmad_is_noise_floor <- function(x, y, fraction, iterations, guard = 100) {
+cmad_is_noise_floor <- function(
+    x,
+    y,
+    fraction,
+    iterations,
+    guard = 100,
+    delta = NULL
+) {
     if (iterations < 1L) {
         return(FALSE)
     }
     ord <- order(x)
     x <- as.double(x[ord])
     y <- as.double(y[ord])
+    resolved_delta <- if (is.null(delta)) 0.01 * diff(range(x)) else delta
     n <- length(x)
     eps <- .Machine$double.eps
     scale <- max(1, max(abs(y)))
     m1 <- n %/% 2L
     for (k in 0:(iterations - 1L)) {
-        fit_k <- stats::lowess(x, y, f = fraction, iter = k)$y
+        fit_k <- stats::lowess(
+            x,
+            y,
+            f = fraction,
+            iter = k,
+            delta = resolved_delta
+        )$y
         s <- sort(abs(y - fit_k))
         cmad <- if (n %% 2L == 0L) {
             m2 <- n - m1 - 1L
@@ -152,11 +173,13 @@ reference_is_ulp_unstable <- function(
     iterations,
     base_fit,
     tolerance,
-    trials = 1000L
+    trials = 1000L,
+    delta = NULL
 ) {
     ord <- order(x)
     x <- as.double(x[ord])
     y <- as.double(y[ord])
+    resolved_delta <- if (is.null(delta)) 0.01 * diff(range(x)) else delta
     n <- length(x)
     eps <- .Machine$double.eps
     x_ulp <- ifelse(x == 0, eps, abs(x) * eps)
@@ -188,7 +211,8 @@ reference_is_ulp_unstable <- function(
             x_perturbed,
             y_perturbed,
             f = fraction,
-            iter = iterations
+            iter = iterations,
+            delta = resolved_delta
         )$y
         if (max(abs(perturbed_fit - base_fit)) > tolerance * comparison_scale) {
             return(TRUE)
@@ -209,21 +233,34 @@ check_stats_lowess <- function(
     iterations,
     sorted = FALSE,
     zero_weight_fallback = "return_original",
-    tolerance = 1e-10
+    tolerance = 1e-10,
+    delta = NULL,
+    parallel = TRUE
 ) {
-    if (sorted) {
-        x_fit <- as.double(x)
-        y_fit <- as.double(y)
-    } else {
-        ord <- order(x)
-        x_fit <- as.double(x[ord])
-        y_fit <- as.double(y[ord])
+    x_fit <- as.double(x)
+    y_fit <- as.double(y)
+    if (length(x_fit) < 2L) {
+        lowess_reference_counts$too_short <- lowess_reference_counts$too_short +
+            1L
+        hedgehog::discard()
     }
+    ord <- order(x_fit)
+    resolved_delta <- if (is.null(delta)) 0.01 * diff(range(x_fit)) else delta
 
-    reference <- stats::lowess(x_fit, y_fit, f = fraction, iter = iterations)
+    reference <- stats::lowess(
+        x_fit,
+        y_fit,
+        f = fraction,
+        iter = iterations,
+        delta = resolved_delta
+    )
+    expected_x <- if (sorted) reference$x else x_fit
+    expected_y <- if (sorted) reference$y else reference$y[order(ord)]
     model <- Lowess(
         fraction = fraction,
         iterations = as.integer(iterations),
+        delta = resolved_delta,
+        parallel = parallel,
         boundary_policy = "noboundary",
         scaling_method = "mar",
         zero_weight_fallback = zero_weight_fallback,
@@ -231,50 +268,82 @@ check_stats_lowess <- function(
     )
     result <- fit(model, x_fit, y_fit)
 
-    if (
-        sorted &&
-            !isTRUE(all.equal(result$x, reference$x, tolerance = tolerance))
-    ) {
-        stop("x does not match stats::lowess sorted output", call. = FALSE)
+    if (!isTRUE(all.equal(result$x, expected_x, tolerance = 0))) {
+        stop(
+            "x does not match the requested LOWESS output order",
+            call. = FALSE
+        )
     }
-    max_diff <- max(abs(result$y - reference$y))
-    comparison_scale <- max(1, abs(result$y), abs(reference$y))
+    max_diff <- max(abs(result$y - expected_y))
+    comparison_scale <- max(1, abs(result$y), abs(expected_y))
     if (max_diff > tolerance * comparison_scale) {
         if (
-            cmad_is_noise_floor(x_fit, y_fit, fraction, iterations) ||
-                reference_is_ulp_unstable(
-                    x_fit,
-                    y_fit,
-                    fraction,
-                    iterations,
-                    reference$y,
-                    tolerance
-                )
+            cmad_is_noise_floor(
+                x_fit,
+                y_fit,
+                fraction,
+                iterations,
+                delta = resolved_delta
+            )
         ) {
-            # `stats::lowess()` itself does not reproduce this fit when its
-            # own inputs are perturbed by a single ULP: the bisquare hard
-            # cutoff is being decided by rounding noise, not a real signal,
-            # so there is no well-defined reference to compare against.
-            return(TRUE)
+            lowess_reference_counts$noise_floor <- lowess_reference_counts$noise_floor +
+                1L
+            hedgehog::discard()
         }
+        if (
+            reference_is_ulp_unstable(
+                x_fit,
+                y_fit,
+                fraction,
+                iterations,
+                reference$y,
+                tolerance,
+                delta = resolved_delta
+            )
+        ) {
+            lowess_reference_counts$ulp_unstable <- lowess_reference_counts$ulp_unstable +
+                1L
+            hedgehog::discard()
+        }
+        lowess_reference_counts$failures[[
+            length(lowess_reference_counts$failures) + 1L
+        ]] <- list(
+            x = x_fit,
+            y = y_fit,
+            fraction = fraction,
+            iterations = iterations,
+            sorted = sorted,
+            zero_weight_fallback = zero_weight_fallback,
+            tolerance = tolerance,
+            delta = resolved_delta,
+            parallel = parallel
+        )
         iteration_counts <- seq.int(0L, as.integer(iterations))
         iteration_fits <- lapply(iteration_counts, function(n_iter) {
             reference_iter <- stats::lowess(
                 x_fit,
                 y_fit,
                 f = fraction,
-                iter = n_iter
+                iter = n_iter,
+                delta = resolved_delta
             )
             model_iter <- Lowess(
                 fraction = fraction,
                 iterations = n_iter,
+                delta = resolved_delta,
+                parallel = parallel,
                 boundary_policy = "noboundary",
                 scaling_method = "mar",
                 zero_weight_fallback = zero_weight_fallback,
                 outputs = if (sorted) "sorted" else NULL
             )
             result_iter <- fit(model_iter, x_fit, y_fit)
-            list(reference = reference_iter$y, package = result_iter$y)
+            expected_iter <- if (sorted) {
+                reference_iter$y
+            } else {
+                reference_iter$y[order(ord)]
+            }
+            list(reference = expected_iter, package = result_iter$y)
         })
         iteration_diffs <- vapply(
             iteration_fits,
@@ -283,7 +352,9 @@ check_stats_lowess <- function(
             },
             numeric(1)
         )
-        first_divergence <- which(iteration_diffs > tolerance)[1]
+        first_divergence <- which(
+            iteration_diffs > tolerance * comparison_scale
+        )[1]
         iteration_summary <- toString(
             sprintf("%d=%.17g", iteration_counts, iteration_diffs)
         )
@@ -292,19 +363,21 @@ check_stats_lowess <- function(
                 "y does not match stats::lowess output ",
                 "(max abs diff: %.17g; x: %s; y: %s; ",
                 "reference y: %s; package y: %s; ",
-                "fraction: %.17g; iterations: %d; ",
+                "fraction: %.17g; iterations: %d; delta: %.17g; parallel: %s; ",
                 "per-iteration max diffs [iter=diff]: %s)"
             ),
             max_diff,
             toString(sprintf("%.17g", x)),
             toString(sprintf("%.17g", y)),
-            toString(sprintf("%.17g", reference$y)),
+            toString(sprintf("%.17g", expected_y)),
             toString(sprintf("%.17g", result$y)),
             fraction,
             iterations,
+            resolved_delta,
+            parallel,
             iteration_summary
         )
-        if (length(first_divergence) > 0L && first_divergence > 1L) {
+        if (!is.na(first_divergence) && first_divergence > 1L) {
             previous_fits <- iteration_fits[[first_divergence - 1L]]
             residual_y <- if (sorted) y_fit[order(x_fit)] else y_fit
             failure_message <- paste0(
@@ -336,5 +409,6 @@ check_stats_lowess <- function(
     if (!identical(result$fraction_used, fraction)) {
         stop("fraction_used does not match requested fraction", call. = FALSE)
     }
+    lowess_reference_counts$compared <- lowess_reference_counts$compared + 1L
     TRUE
 }
