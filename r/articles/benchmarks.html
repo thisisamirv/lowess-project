@@ -61,169 +61,559 @@
 
     
     
+<p>These measurements compare the R binding and Rust GPU backend; they
+are shared reference results, not separately measured timings for each
+binding. Timings depend on hardware, drivers, thread availability, and
+workload; crossover points are observations from this run, not universal
+thresholds.</p>
 <div class="section level2">
-<h2 id="cpu-benchmarks">CPU Benchmarks<a class="anchor" aria-label="anchor" href="#cpu-benchmarks"></a>
+<h2 id="r-and-cpu-comparison">R and CPU Comparison<a class="anchor" aria-label="anchor" href="#r-and-cpu-comparison"></a>
 </h2>
-<p>Speedup relative to R’s <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess</a></code> (higher is
-better):</p>
-<table class="table">
-<thead><tr class="header">
-<th>Category</th>
-<th>R baseline</th>
-<th>rfastlowess Serial</th>
-<th>rfastlowess Parallel</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><strong>Clustered</strong></td>
-<td>1.88 ms</td>
-<td>0.8×</td>
-<td><strong>2.1×</strong></td>
-</tr>
-<tr class="even">
-<td><strong>Constant Y</strong></td>
-<td>1.50 ms</td>
-<td>0.7×</td>
-<td><strong>2.0×</strong></td>
-</tr>
-<tr class="odd">
-<td><strong>Extreme Outliers</strong></td>
-<td>5.32 ms</td>
-<td>0.9×</td>
-<td><strong>2.0×</strong></td>
-</tr>
-<tr class="even">
-<td>
-<strong>Financial</strong> (500–5K)</td>
-<td>0.60 ms</td>
-<td>1.0×</td>
-<td><strong>1.3×</strong></td>
-</tr>
-<tr class="odd">
-<td>
-<strong>Fraction</strong> (0.05–0.67)</td>
-<td>3.24 ms</td>
-<td>0.9×</td>
-<td><strong>2.4×</strong></td>
-</tr>
-<tr class="even">
-<td>
-<strong>Genomic</strong> (1K–100K)</td>
-<td>8.50 ms</td>
-<td>1.0×</td>
-<td><strong>1.9×</strong></td>
-</tr>
-<tr class="odd">
-<td><strong>High Noise</strong></td>
-<td>6.98 ms</td>
-<td>0.9×</td>
-<td><strong>3.0×</strong></td>
-</tr>
-<tr class="even">
-<td>
-<strong>Iterations</strong> (0–10)</td>
-<td>2.28 ms</td>
-<td>0.8×</td>
-<td><strong>1.7×</strong></td>
-</tr>
-<tr class="odd">
-<td>
-<strong>Large</strong> (50K, delta=0)</td>
-<td>10.16 s</td>
-<td>1.6×</td>
-<td><strong>7.3×</strong></td>
-</tr>
-<tr class="even">
-<td>
-<strong>Large</strong> (50K, delta=auto)</td>
-<td>11.48 ms</td>
-<td>0.8×</td>
-<td><strong>2.0×</strong></td>
-</tr>
-<tr class="odd">
-<td>
-<strong>Large</strong> (50K, 10 iter)</td>
-<td>37.17 s</td>
-<td>2.7×</td>
-<td><strong>9.8×</strong></td>
-</tr>
-<tr class="even">
-<td>
-<strong>Large</strong> (20K, fraction=0.67)</td>
-<td>10.90 s</td>
-<td>2.3×</td>
-<td><strong>12.2×</strong></td>
-</tr>
-<tr class="odd">
-<td>
-<strong>Scale</strong> (1K–10K)</td>
-<td>1.36 ms</td>
-<td>1.0×</td>
-<td><strong>1.4×</strong></td>
-</tr>
-<tr class="even">
-<td>
-<strong>Scientific</strong> (500–5K)</td>
-<td>0.87 ms</td>
-<td>1.3×</td>
-<td><strong>1.4×</strong></td>
-</tr>
-</tbody>
-</table>
-<p><em>Times are averages of the per-scenario medians in multi-scenario
-categories; speedups are averages of the corresponding per-scenario
-speedups. Individual scenario results are in the benchmarks
-README.</em></p>
-<hr>
+<div class="float">
+<img src="../reference/figures/benchmark_comparison.svg" alt="Runtime and speedup comparison of stats::lowess with serial and parallel rfastlowess across benchmark categories"><div class="figcaption">Runtime and speedup comparison of stats::lowess
+with serial and parallel rfastlowess across benchmark categories</div>
 </div>
-<div class="section level2">
-<h2 id="gpu-backend">GPU Backend<a class="anchor" aria-label="anchor" href="#gpu-backend"></a>
-</h2>
-<p>For large batch datasets, the GPU backend can outperform CPU-parallel
-execution. The crossover point depends on <code>fraction × n</code>:</p>
+<p>The plot and table use <strong>mean</strong> CPU timings. Parentheses
+show speedup relative to <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess</a></code>; values above 1
+indicate faster execution than R.</p>
 <table class="table">
-<thead><tr class="header">
-<th>Fraction</th>
-<th>Iterations = 0</th>
-<th>Iterations = 3</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>0.1</td>
-<td>n ≥ 100K</td>
-<td>n ≥ 250K</td>
-</tr>
-<tr class="even">
-<td>0.3</td>
-<td>n ≥ 100K</td>
-<td>n ≥ 100K</td>
-</tr>
-<tr class="odd">
-<td>0.5</td>
-<td>n ≥ 50K</td>
-<td>n ≥ 50K</td>
-</tr>
-</tbody>
-</table>
-<p>The table gives the first dataset size where GPU median time is less
-than CPU-parallel median time. A representative large-data result
-is:</p>
-<table class="table">
+<colgroup>
+<col width="20%">
+<col width="26%">
+<col width="26%">
+<col width="26%">
+</colgroup>
 <thead><tr class="header">
 <th>Scenario</th>
-<th>CPU-Parallel</th>
-<th>GPU</th>
-<th>Speedup</th>
+<th align="right"><code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess</a></code></th>
+<th align="right">rfastlowess (serial)</th>
+<th align="right">rfastlowess (parallel)</th>
 </tr></thead>
-<tbody><tr class="odd">
-<td>n = 1M, fraction = 0.5</td>
-<td>1.24 s</td>
-<td>187 ms</td>
-<td><strong>6.6×</strong></td>
-</tr></tbody>
+<tbody>
+<tr class="odd">
+<td>clustered</td>
+<td align="right">2.34 ms</td>
+<td align="right">2.15 ms (1.1×)</td>
+<td align="right">1.07 ms (2.2×)</td>
+</tr>
+<tr class="even">
+<td>constant_y</td>
+<td align="right">1.62 ms</td>
+<td align="right">2.12 ms (0.8×)</td>
+<td align="right">0.76 ms (2.1×)</td>
+</tr>
+<tr class="odd">
+<td>extreme_outliers</td>
+<td align="right">6.34 ms</td>
+<td align="right">6.35 ms (1.0×)</td>
+<td align="right">2.91 ms (2.2×)</td>
+</tr>
+<tr class="even">
+<td>financial_1000</td>
+<td align="right">0.26 ms</td>
+<td align="right">0.22 ms (1.2×)</td>
+<td align="right">0.22 ms (1.2×)</td>
+</tr>
+<tr class="odd">
+<td>financial_500</td>
+<td align="right">0.22 ms</td>
+<td align="right">0.14 ms (1.6×)</td>
+<td align="right">0.15 ms (1.5×)</td>
+</tr>
+<tr class="even">
+<td>financial_5000</td>
+<td align="right">1.12 ms</td>
+<td align="right">0.92 ms (1.2×)</td>
+<td align="right">0.79 ms (1.4×)</td>
+</tr>
+<tr class="odd">
+<td>fraction_0.05</td>
+<td align="right">0.97 ms</td>
+<td align="right">0.76 ms (1.3×)</td>
+<td align="right">0.93 ms (1.1×)</td>
+</tr>
+<tr class="even">
+<td>fraction_0.1</td>
+<td align="right">1.67 ms</td>
+<td align="right">1.39 ms (1.2×)</td>
+<td align="right">1.05 ms (1.6×)</td>
+</tr>
+<tr class="odd">
+<td>fraction_0.2</td>
+<td align="right">2.58 ms</td>
+<td align="right">2.28 ms (1.1×)</td>
+<td align="right">1.20 ms (2.1×)</td>
+</tr>
+<tr class="even">
+<td>fraction_0.3</td>
+<td align="right">3.65 ms</td>
+<td align="right">3.20 ms (1.1×)</td>
+<td align="right">1.28 ms (2.9×)</td>
+</tr>
+<tr class="odd">
+<td>fraction_0.5</td>
+<td align="right">4.97 ms</td>
+<td align="right">4.98 ms (1.0×)</td>
+<td align="right">1.87 ms (2.7×)</td>
+</tr>
+<tr class="even">
+<td>fraction_0.67</td>
+<td align="right">6.07 ms</td>
+<td align="right">6.73 ms (0.9×)</td>
+<td align="right">1.84 ms (3.3×)</td>
+</tr>
+<tr class="odd">
+<td>genomic_1000</td>
+<td align="right">0.23 ms</td>
+<td align="right">0.28 ms (0.8×)</td>
+<td align="right">0.34 ms (0.7×)</td>
+</tr>
+<tr class="even">
+<td>genomic_100000</td>
+<td align="right">32.71 ms</td>
+<td align="right">25.84 ms (1.3×)</td>
+<td align="right">8.76 ms (3.7×)</td>
+</tr>
+<tr class="odd">
+<td>genomic_5000</td>
+<td align="right">1.42 ms</td>
+<td align="right">1.57 ms (0.9×)</td>
+<td align="right">1.10 ms (1.3×)</td>
+</tr>
+<tr class="even">
+<td>high_noise</td>
+<td align="right">8.01 ms</td>
+<td align="right">7.46 ms (1.1×)</td>
+<td align="right">2.33 ms (3.4×)</td>
+</tr>
+<tr class="odd">
+<td>iterations_0</td>
+<td align="right">0.48 ms</td>
+<td align="right">0.50 ms (1.0×)</td>
+<td align="right">0.36 ms (1.3×)</td>
+</tr>
+<tr class="even">
+<td>iterations_1</td>
+<td align="right">1.31 ms</td>
+<td align="right">1.47 ms (0.9×)</td>
+<td align="right">0.60 ms (2.2×)</td>
+</tr>
+<tr class="odd">
+<td>iterations_10</td>
+<td align="right">7.29 ms</td>
+<td align="right">5.96 ms (1.2×)</td>
+<td align="right">2.63 ms (2.8×)</td>
+</tr>
+<tr class="even">
+<td>iterations_2</td>
+<td align="right">1.95 ms</td>
+<td align="right">2.09 ms (0.9×)</td>
+<td align="right">1.07 ms (1.8×)</td>
+</tr>
+<tr class="odd">
+<td>iterations_3</td>
+<td align="right">2.57 ms</td>
+<td align="right">2.19 ms (1.2×)</td>
+<td align="right">1.10 ms (2.3×)</td>
+</tr>
+<tr class="even">
+<td>iterations_5</td>
+<td align="right">3.37 ms</td>
+<td align="right">3.33 ms (1.0×)</td>
+<td align="right">1.62 ms (2.1×)</td>
+</tr>
+<tr class="odd">
+<td>large_delta_0</td>
+<td align="right">10 067.77 ms</td>
+<td align="right">5 279.61 ms (1.9×)</td>
+<td align="right">1 434.48 ms (7.0×)</td>
+</tr>
+<tr class="even">
+<td>large_delta_0.1</td>
+<td align="right">11.90 ms</td>
+<td align="right">12.68 ms (0.9×)</td>
+<td align="right">5.05 ms (2.4×)</td>
+</tr>
+<tr class="odd">
+<td>large_high_fraction</td>
+<td align="right">9 434.85 ms</td>
+<td align="right">4 940.71 ms (1.9×)</td>
+<td align="right">1 216.33 ms (7.8×)</td>
+</tr>
+<tr class="even">
+<td>large_high_iter</td>
+<td align="right">31 189.44 ms</td>
+<td align="right">14 409.17 ms (2.2×)</td>
+<td align="right">4 475.26 ms (7.0×)</td>
+</tr>
+<tr class="odd">
+<td>scale_1000</td>
+<td align="right">0.38 ms</td>
+<td align="right">0.36 ms (1.1×)</td>
+<td align="right">0.35 ms (1.1×)</td>
+</tr>
+<tr class="even">
+<td>scale_10000</td>
+<td align="right">2.69 ms</td>
+<td align="right">2.59 ms (1.0×)</td>
+<td align="right">1.51 ms (1.8×)</td>
+</tr>
+<tr class="odd">
+<td>scale_5000</td>
+<td align="right">1.82 ms</td>
+<td align="right">1.43 ms (1.3×)</td>
+<td align="right">0.99 ms (1.8×)</td>
+</tr>
+<tr class="even">
+<td>scientific_1000</td>
+<td align="right">0.42 ms</td>
+<td align="right">0.60 ms (0.7×)</td>
+<td align="right">0.50 ms (0.8×)</td>
+</tr>
+<tr class="odd">
+<td>scientific_500</td>
+<td align="right">0.29 ms</td>
+<td align="right">0.25 ms (1.2×)</td>
+<td align="right">0.30 ms (1.0×)</td>
+</tr>
+<tr class="even">
+<td>scientific_5000</td>
+<td align="right">1.92 ms</td>
+<td align="right">1.88 ms (1.0×)</td>
+<td align="right">1.35 ms (1.4×)</td>
+</tr>
+</tbody>
 </table>
-<p>See the benchmarks README in the source repository for the full
-sweep, end-to-end GPU timings, and transfer-overhead breakdown.</p>
+<p>At small sizes, fixed per-call overhead can dominate, and parallel
+execution is not always faster. The large wide-window workload reaches
+<strong>7.8×</strong> parallel speedup; the high-iteration workload
+reaches <strong>2.2×</strong> serial speedup. Allowing default
+<code>delta</code> reduces the reference workload from approximately
+10.07 s to 11.90 ms.</p>
+</div>
+<div class="section level2">
+<h2 id="cpu-parallel-versus-gpu">CPU-Parallel versus GPU<a class="anchor" aria-label="anchor" href="#cpu-parallel-versus-gpu"></a>
+</h2>
+<p>The first measured input size where GPU median time is below
+CPU-parallel median time:</p>
+<table class="table">
+<thead><tr class="header">
+<th align="right">Fraction</th>
+<th align="right">0 robustness iterations</th>
+<th align="right">3 robustness iterations</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.1</td>
+<td align="right">50 000</td>
+<td align="right">50 000</td>
+</tr>
+<tr class="even">
+<td align="right">0.3</td>
+<td align="right">50 000</td>
+<td align="right">50 000</td>
+</tr>
+<tr class="odd">
+<td align="right">0.5</td>
+<td align="right">25 000</td>
+<td align="right">25 000</td>
+</tr>
+</tbody>
+</table>
+<p>Selected median timings, with GPU speedup defined as CPU-parallel
+time divided by GPU time:</p>
+<table class="table">
+<thead><tr class="header">
+<th align="right">n</th>
+<th align="right">Fraction</th>
+<th align="right">Iterations</th>
+<th align="right">CPU-parallel</th>
+<th align="right">GPU</th>
+<th align="right">GPU speedup</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">10 000</td>
+<td align="right">0.5</td>
+<td align="right">3</td>
+<td align="right">4.66 ms</td>
+<td align="right">6.31 ms</td>
+<td align="right">0.74×</td>
+</tr>
+<tr class="even">
+<td align="right">50 000</td>
+<td align="right">0.5</td>
+<td align="right">0</td>
+<td align="right">7.69 ms</td>
+<td align="right">2.64 ms</td>
+<td align="right">2.92×</td>
+</tr>
+<tr class="odd">
+<td align="right">100 000</td>
+<td align="right">0.5</td>
+<td align="right">3</td>
+<td align="right">52.40 ms</td>
+<td align="right">24.62 ms</td>
+<td align="right">2.13×</td>
+</tr>
+<tr class="even">
+<td align="right">250 000</td>
+<td align="right">0.3</td>
+<td align="right">3</td>
+<td align="right">96.33 ms</td>
+<td align="right">49.14 ms</td>
+<td align="right">1.96×</td>
+</tr>
+<tr class="odd">
+<td align="right">1 000 000</td>
+<td align="right">0.5</td>
+<td align="right">3</td>
+<td align="right">1 118.35 ms</td>
+<td align="right">236.47 ms</td>
+<td align="right">4.73×</td>
+</tr>
+</tbody>
+</table>
+<p>The GPU is slower for the selected 10 000-point case, but
+approximately <strong>4.7× faster</strong> for the million-point case.
+Wider windows increase per-query work and can make GPU execution
+worthwhile at smaller input sizes.</p>
+<p>The crossover is the <strong>first sampled GPU win</strong>, not a
+guarantee that every larger input favors the GPU. At fraction 0.1, CPU
+wins again at 100K for both iteration counts.</p>
+<!-- markdownlint-disable-next-line MD033 -->
+<details><!-- markdownlint-disable-next-line MD033 --><summary>
+Full crossover sweep with text charts
+</summary><pre class="text"><code>fraction=0.1  iterations=0  - first GPU win: 50K
+       n   CPU (med)   GPU (med)   speedup  chart
+--------  ----------  ----------  --------  ------------------------
+      1K     0.06 ms     1.08 ms     0.06×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+      2K     0.27 ms     0.97 ms     0.27×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+      5K     0.21 ms     0.87 ms     0.24×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+     10K     0.31 ms     1.73 ms     0.18×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+     25K     0.78 ms     2.03 ms     0.38×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒
+     50K     2.78 ms     2.20 ms     1.26×  GPU █  ◀ crossover
+    100K     5.52 ms     6.71 ms     0.82×  CPU ▒▒▒▒
+    250K    23.10 ms    15.10 ms     1.53×  GPU ███
+    500K    42.44 ms    35.62 ms     1.19×  GPU █
+      1M    89.78 ms    62.94 ms     1.43×  GPU ██
+
+fraction=0.3  iterations=0  - first GPU win: 50K
+       n   CPU (med)   GPU (med)   speedup  chart
+--------  ----------  ----------  --------  ------------------------
+      1K     0.11 ms     0.74 ms     0.15×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+      2K     0.30 ms     0.78 ms     0.38×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒
+      5K     0.36 ms     0.83 ms     0.43×  CPU ▒▒▒▒▒▒▒▒▒▒▒
+     10K     0.68 ms     1.48 ms     0.46×  CPU ▒▒▒▒▒▒▒▒▒▒▒
+     25K     1.60 ms     1.83 ms     0.88×  CPU ▒▒
+     50K     5.14 ms     2.40 ms     2.14×  GPU ██████  ◀ crossover
+    100K     9.33 ms     5.69 ms     1.64×  GPU ███
+    250K    30.04 ms    16.16 ms     1.86×  GPU ████
+    500K    58.62 ms    34.27 ms     1.71×  GPU ████
+      1M   126.25 ms    69.38 ms     1.82×  GPU ████
+
+fraction=0.5  iterations=0  - first GPU win: 25K
+       n   CPU (med)   GPU (med)   speedup  chart
+--------  ----------  ----------  --------  ------------------------
+      1K     0.23 ms     0.92 ms     0.25×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+      2K     0.30 ms     0.86 ms     0.35×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒
+      5K     0.51 ms     1.56 ms     0.32×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+     10K     1.10 ms     1.46 ms     0.75×  CPU ▒▒▒▒▒
+     25K     2.36 ms     1.85 ms     1.27×  GPU █  ◀ crossover
+     50K     7.69 ms     2.64 ms     2.92×  GPU ██████████
+    100K    15.81 ms     5.31 ms     2.98×  GPU ██████████
+    250K    37.61 ms    17.10 ms     2.20×  GPU ██████
+    500K    80.02 ms    35.82 ms     2.23×  GPU ██████
+      1M   231.02 ms    70.12 ms     3.29×  GPU ███████████
+
+fraction=0.1  iterations=3  - first GPU win: 50K
+       n   CPU (med)   GPU (med)   speedup  chart
+--------  ----------  ----------  --------  ------------------------
+      1K     0.26 ms     5.04 ms     0.05×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+      2K     1.09 ms     4.71 ms     0.23×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+      5K     1.26 ms     4.80 ms     0.26×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+     10K     1.33 ms     5.72 ms     0.23×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+     25K     3.31 ms     6.55 ms     0.51×  CPU ▒▒▒▒▒▒▒▒▒▒
+     50K     8.19 ms     8.04 ms     1.02×  GPU  ◀ crossover
+    100K    14.35 ms    16.86 ms     0.85×  CPU ▒▒▒
+    250K    58.75 ms    43.92 ms     1.34×  GPU ██
+    500K   113.73 ms    86.19 ms     1.32×  GPU ██
+      1M   304.22 ms   212.73 ms     1.43×  GPU ██
+
+fraction=0.3  iterations=3  - first GPU win: 50K
+       n   CPU (med)   GPU (med)   speedup  chart
+--------  ----------  ----------  --------  ------------------------
+      1K     0.51 ms     4.96 ms     0.10×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+      2K     1.33 ms     4.70 ms     0.28×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+      5K     1.80 ms     5.71 ms     0.31×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒
+     10K     2.77 ms     6.09 ms     0.45×  CPU ▒▒▒▒▒▒▒▒▒▒▒
+     25K     5.73 ms     7.33 ms     0.78×  CPU ▒▒▒▒
+     50K    15.03 ms     9.70 ms     1.55×  GPU ███  ◀ crossover
+    100K    27.16 ms    23.23 ms     1.17×  GPU █
+    250K    96.33 ms    49.14 ms     1.96×  GPU █████
+    500K   201.04 ms   113.25 ms     1.77×  GPU ████
+      1M   673.32 ms   192.87 ms     3.49×  GPU ████████████
+
+fraction=0.5  iterations=3  - first GPU win: 25K
+       n   CPU (med)   GPU (med)   speedup  chart
+--------  ----------  ----------  --------  ------------------------
+      1K     0.80 ms     4.57 ms     0.17×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+      2K     1.34 ms     5.03 ms     0.27×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+      5K     2.43 ms     5.95 ms     0.41×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒
+     10K     4.66 ms     6.31 ms     0.74×  CPU ▒▒▒▒▒
+     25K     9.19 ms     7.37 ms     1.25×  GPU █  ◀ crossover
+     50K    23.77 ms    12.99 ms     1.83×  GPU ████
+    100K    52.40 ms    24.62 ms     2.13×  GPU ██████
+    250K   123.11 ms    55.82 ms     2.21×  GPU ██████
+    500K   394.26 ms   139.10 ms     2.83×  GPU █████████
+      1M  1118.35 ms   236.47 ms     4.73×  GPU ███████████████████</code></pre>
+</details>
+</div>
+<div class="section level2">
+<h2 id="end-to-end-gpu-fit">End-to-End GPU Fit<a class="anchor" aria-label="anchor" href="#end-to-end-gpu-fit"></a>
+</h2>
+<p>Recorded wall-clock timings for the complete Rust GPU workload:</p>
+<table class="table">
+<thead><tr class="header">
+<th align="right">n</th>
+<th align="right">Mean</th>
+<th align="right">Median</th>
+<th align="right">Minimum</th>
+<th align="right">Maximum</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">1 000</td>
+<td align="right">6.091 ms</td>
+<td align="right">6.512 ms</td>
+<td align="right">4.710 ms</td>
+<td align="right">7.170 ms</td>
+</tr>
+<tr class="even">
+<td align="right">5 000</td>
+<td align="right">5.162 ms</td>
+<td align="right">5.136 ms</td>
+<td align="right">4.344 ms</td>
+<td align="right">5.957 ms</td>
+</tr>
+<tr class="odd">
+<td align="right">10 000</td>
+<td align="right">6.548 ms</td>
+<td align="right">6.606 ms</td>
+<td align="right">4.904 ms</td>
+<td align="right">8.548 ms</td>
+</tr>
+<tr class="even">
+<td align="right">50 000</td>
+<td align="right">7.565 ms</td>
+<td align="right">7.376 ms</td>
+<td align="right">7.172 ms</td>
+<td align="right">8.352 ms</td>
+</tr>
+<tr class="odd">
+<td align="right">100 000</td>
+<td align="right">14.170 ms</td>
+<td align="right">14.396 ms</td>
+<td align="right">12.213 ms</td>
+<td align="right">16.029 ms</td>
+</tr>
+<tr class="even">
+<td align="right">500 000</td>
+<td align="right">63.544 ms</td>
+<td align="right">63.831 ms</td>
+<td align="right">61.600 ms</td>
+<td align="right">64.527 ms</td>
+</tr>
+<tr class="odd">
+<td align="right">1 000 000</td>
+<td align="right">141.224 ms</td>
+<td align="right">141.413 ms</td>
+<td align="right">137.718 ms</td>
+<td align="right">143.109 ms</td>
+</tr>
+</tbody>
+</table>
+<p>Small workloads have a substantial fixed setup cost. Beyond those
+sizes, runtime grows with the amount of fitting work.</p>
+</div>
+<div class="section level2">
+<h2 id="hostdevice-transfer-overhead">Host/Device Transfer Overhead<a class="anchor" aria-label="anchor" href="#hostdevice-transfer-overhead"></a>
+</h2>
+<p>Mean transfer latencies and effective bandwidth from the isolated
+transfer benchmark. Round-trip bandwidth uses the combined
+uploaded/downloaded bytes divided by mean round-trip time:</p>
+<p>Transfer measurements used an <strong>Intel Arc 140V integrated GPU
+(16 GB)</strong> with the <strong>Vulkan</strong> backend.</p>
+<table class="table">
+<thead><tr class="header">
+<th align="right">n</th>
+<th align="right">Upload</th>
+<th align="right">Download</th>
+<th align="right">Round trip</th>
+<th align="right">Effective bandwidth</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="right">1 000</td>
+<td align="right">0.361 ms</td>
+<td align="right">0.399 ms</td>
+<td align="right">0.760 ms</td>
+<td align="right">0.026 GB/s</td>
+</tr>
+<tr class="even">
+<td align="right">5 000</td>
+<td align="right">0.404 ms</td>
+<td align="right">0.403 ms</td>
+<td align="right">0.807 ms</td>
+<td align="right">0.124 GB/s</td>
+</tr>
+<tr class="odd">
+<td align="right">10 000</td>
+<td align="right">0.440 ms</td>
+<td align="right">0.506 ms</td>
+<td align="right">0.946 ms</td>
+<td align="right">0.212 GB/s</td>
+</tr>
+<tr class="even">
+<td align="right">50 000</td>
+<td align="right">0.426 ms</td>
+<td align="right">0.326 ms</td>
+<td align="right">0.751 ms</td>
+<td align="right">1.331 GB/s</td>
+</tr>
+<tr class="odd">
+<td align="right">100 000</td>
+<td align="right">0.730 ms</td>
+<td align="right">0.853 ms</td>
+<td align="right">1.583 ms</td>
+<td align="right">1.263 GB/s</td>
+</tr>
+<tr class="even">
+<td align="right">500 000</td>
+<td align="right">1.922 ms</td>
+<td align="right">2.212 ms</td>
+<td align="right">4.134 ms</td>
+<td align="right">2.419 GB/s</td>
+</tr>
+<tr class="odd">
+<td align="right">1 000 000</td>
+<td align="right">3.662 ms</td>
+<td align="right">4.295 ms</td>
+<td align="right">7.957 ms</td>
+<td align="right">2.514 GB/s</td>
+</tr>
+</tbody>
+</table>
+<p>Fixed transfer latency dominates the smaller buffers; effective
+bandwidth reaches approximately 2.5 GB/s for the largest recorded
+transfer. These measurements isolate transfer operations, so they should
+not be subtracted directly from timings collected by a different fit
+benchmark.</p>
+<p>The transfer-fraction report uses
+<code>rfastlowess_parallel.json</code>, which is a <strong>CPU</strong>
+reference, not an end-to-end GPU measurement. Its 216.4% fraction and
+negative kernel time are therefore not valid GPU timing results and are
+omitted here.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

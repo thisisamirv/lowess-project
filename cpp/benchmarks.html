@@ -103,51 +103,245 @@ $(document).ready(function(){initNavTree('benchmarks.html',''); initResizable();
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><h1>Benchmarks</h1>
-<h2>CPU Benchmarks</h2>
-<p>Speedup relative to R's <code>stats::lowess</code> (higher is better):</p>
+<p>These measurements compare the R binding and Rust GPU backend; they are shared reference results, not separately measured timings for each binding. Timings depend on hardware, drivers, thread availability, and workload; crossover points are observations from this run, not universal thresholds.</p>
+<h2>R and CPU Comparison</h2>
+<div class="image">
+<object type="image/svg+xml" data="benchmark_comparison.svg" width="100%" style="pointer-events: none;"></object>
+<div class="caption">
+Runtime and speedup comparison of stats::lowess with serial and parallel rfastlowess across benchmark categories</div></div>
+<p>The plot and table use <b>mean</b> CPU timings. Parentheses show speedup relative to <code>stats::lowess</code>; values above 1 indicate faster execution than R.</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Category   </th><th class="markdownTableHeadNone">R baseline   </th><th class="markdownTableHeadNone">Serial   </th><th class="markdownTableHeadNone">Parallel    </th></tr>
+<th class="markdownTableHeadNone">Scenario   </th><th class="markdownTableHeadRight"><code>stats::lowess</code>   </th><th class="markdownTableHeadRight">rfastlowess (serial)   </th><th class="markdownTableHeadRight">rfastlowess (parallel)    </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>Clustered</b>   </td><td class="markdownTableBodyNone">1.88 ms   </td><td class="markdownTableBodyNone">0.8×   </td><td class="markdownTableBodyNone"><b>2.1×</b>    </td></tr>
+<td class="markdownTableBodyNone">clustered   </td><td class="markdownTableBodyRight">2.34 ms   </td><td class="markdownTableBodyRight">2.15 ms (1.1×)   </td><td class="markdownTableBodyRight">1.07 ms (2.2×)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><b>Constant Y</b>   </td><td class="markdownTableBodyNone">1.50 ms   </td><td class="markdownTableBodyNone">0.7×   </td><td class="markdownTableBodyNone"><b>2.0×</b>    </td></tr>
+<td class="markdownTableBodyNone">constant_y   </td><td class="markdownTableBodyRight">1.62 ms   </td><td class="markdownTableBodyRight">2.12 ms (0.8×)   </td><td class="markdownTableBodyRight">0.76 ms (2.1×)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>Extreme Outliers</b>   </td><td class="markdownTableBodyNone">5.32 ms   </td><td class="markdownTableBodyNone">0.9×   </td><td class="markdownTableBodyNone"><b>2.0×</b>    </td></tr>
+<td class="markdownTableBodyNone">extreme_outliers   </td><td class="markdownTableBodyRight">6.34 ms   </td><td class="markdownTableBodyRight">6.35 ms (1.0×)   </td><td class="markdownTableBodyRight">2.91 ms (2.2×)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><b>Financial</b> (500–5K)   </td><td class="markdownTableBodyNone">0.60 ms   </td><td class="markdownTableBodyNone">1.0×   </td><td class="markdownTableBodyNone"><b>1.3×</b>    </td></tr>
+<td class="markdownTableBodyNone">financial_1000   </td><td class="markdownTableBodyRight">0.26 ms   </td><td class="markdownTableBodyRight">0.22 ms (1.2×)   </td><td class="markdownTableBodyRight">0.22 ms (1.2×)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>Fraction</b> (0.05–0.67)   </td><td class="markdownTableBodyNone">3.24 ms   </td><td class="markdownTableBodyNone">0.9×   </td><td class="markdownTableBodyNone"><b>2.4×</b>    </td></tr>
+<td class="markdownTableBodyNone">financial_500   </td><td class="markdownTableBodyRight">0.22 ms   </td><td class="markdownTableBodyRight">0.14 ms (1.6×)   </td><td class="markdownTableBodyRight">0.15 ms (1.5×)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><b>Genomic</b> (1K–100K)   </td><td class="markdownTableBodyNone">8.50 ms   </td><td class="markdownTableBodyNone">1.0×   </td><td class="markdownTableBodyNone"><b>1.9×</b>    </td></tr>
+<td class="markdownTableBodyNone">financial_5000   </td><td class="markdownTableBodyRight">1.12 ms   </td><td class="markdownTableBodyRight">0.92 ms (1.2×)   </td><td class="markdownTableBodyRight">0.79 ms (1.4×)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>High Noise</b>   </td><td class="markdownTableBodyNone">6.98 ms   </td><td class="markdownTableBodyNone">0.9×   </td><td class="markdownTableBodyNone"><b>3.0×</b>    </td></tr>
+<td class="markdownTableBodyNone">fraction_0.05   </td><td class="markdownTableBodyRight">0.97 ms   </td><td class="markdownTableBodyRight">0.76 ms (1.3×)   </td><td class="markdownTableBodyRight">0.93 ms (1.1×)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><b>Iterations</b> (0–10)   </td><td class="markdownTableBodyNone">2.28 ms   </td><td class="markdownTableBodyNone">0.8×   </td><td class="markdownTableBodyNone"><b>1.7×</b>    </td></tr>
+<td class="markdownTableBodyNone">fraction_0.1   </td><td class="markdownTableBodyRight">1.67 ms   </td><td class="markdownTableBodyRight">1.39 ms (1.2×)   </td><td class="markdownTableBodyRight">1.05 ms (1.6×)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>Large</b> (50K, delta=0)   </td><td class="markdownTableBodyNone">10157.00 ms   </td><td class="markdownTableBodyNone">1.6×   </td><td class="markdownTableBodyNone"><b>7.3×</b>    </td></tr>
+<td class="markdownTableBodyNone">fraction_0.2   </td><td class="markdownTableBodyRight">2.58 ms   </td><td class="markdownTableBodyRight">2.28 ms (1.1×)   </td><td class="markdownTableBodyRight">1.20 ms (2.1×)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><b>Large</b> (50K, delta=auto)   </td><td class="markdownTableBodyNone">11.48 ms   </td><td class="markdownTableBodyNone">0.8×   </td><td class="markdownTableBodyNone"><b>2.0×</b>    </td></tr>
+<td class="markdownTableBodyNone">fraction_0.3   </td><td class="markdownTableBodyRight">3.65 ms   </td><td class="markdownTableBodyRight">3.20 ms (1.1×)   </td><td class="markdownTableBodyRight">1.28 ms (2.9×)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>Large</b> (50K, 10 iter)   </td><td class="markdownTableBodyNone">37167.03 ms   </td><td class="markdownTableBodyNone">2.7×   </td><td class="markdownTableBodyNone"><b>9.8×</b>    </td></tr>
+<td class="markdownTableBodyNone">fraction_0.5   </td><td class="markdownTableBodyRight">4.97 ms   </td><td class="markdownTableBodyRight">4.98 ms (1.0×)   </td><td class="markdownTableBodyRight">1.87 ms (2.7×)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><b>Large</b> (20K, fraction=0.67)   </td><td class="markdownTableBodyNone">10900.56 ms   </td><td class="markdownTableBodyNone">2.3×   </td><td class="markdownTableBodyNone"><b>12.2×</b>    </td></tr>
+<td class="markdownTableBodyNone">fraction_0.67   </td><td class="markdownTableBodyRight">6.07 ms   </td><td class="markdownTableBodyRight">6.73 ms (0.9×)   </td><td class="markdownTableBodyRight">1.84 ms (3.3×)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>Scale</b> (1K–10K)   </td><td class="markdownTableBodyNone">1.36 ms   </td><td class="markdownTableBodyNone">1.0×   </td><td class="markdownTableBodyNone"><b>1.4×</b>    </td></tr>
+<td class="markdownTableBodyNone">genomic_1000   </td><td class="markdownTableBodyRight">0.23 ms   </td><td class="markdownTableBodyRight">0.28 ms (0.8×)   </td><td class="markdownTableBodyRight">0.34 ms (0.7×)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><b>Scientific</b> (500–5K)   </td><td class="markdownTableBodyNone">0.87 ms   </td><td class="markdownTableBodyNone">1.3×   </td><td class="markdownTableBodyNone"><b>1.4×</b>   </td></tr>
+<td class="markdownTableBodyNone">genomic_100000   </td><td class="markdownTableBodyRight">32.71 ms   </td><td class="markdownTableBodyRight">25.84 ms (1.3×)   </td><td class="markdownTableBodyRight">8.76 ms (3.7×)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">genomic_5000   </td><td class="markdownTableBodyRight">1.42 ms   </td><td class="markdownTableBodyRight">1.57 ms (0.9×)   </td><td class="markdownTableBodyRight">1.10 ms (1.3×)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">high_noise   </td><td class="markdownTableBodyRight">8.01 ms   </td><td class="markdownTableBodyRight">7.46 ms (1.1×)   </td><td class="markdownTableBodyRight">2.33 ms (3.4×)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">iterations_0   </td><td class="markdownTableBodyRight">0.48 ms   </td><td class="markdownTableBodyRight">0.50 ms (1.0×)   </td><td class="markdownTableBodyRight">0.36 ms (1.3×)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">iterations_1   </td><td class="markdownTableBodyRight">1.31 ms   </td><td class="markdownTableBodyRight">1.47 ms (0.9×)   </td><td class="markdownTableBodyRight">0.60 ms (2.2×)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">iterations_10   </td><td class="markdownTableBodyRight">7.29 ms   </td><td class="markdownTableBodyRight">5.96 ms (1.2×)   </td><td class="markdownTableBodyRight">2.63 ms (2.8×)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">iterations_2   </td><td class="markdownTableBodyRight">1.95 ms   </td><td class="markdownTableBodyRight">2.09 ms (0.9×)   </td><td class="markdownTableBodyRight">1.07 ms (1.8×)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">iterations_3   </td><td class="markdownTableBodyRight">2.57 ms   </td><td class="markdownTableBodyRight">2.19 ms (1.2×)   </td><td class="markdownTableBodyRight">1.10 ms (2.3×)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">iterations_5   </td><td class="markdownTableBodyRight">3.37 ms   </td><td class="markdownTableBodyRight">3.33 ms (1.0×)   </td><td class="markdownTableBodyRight">1.62 ms (2.1×)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">large_delta_0   </td><td class="markdownTableBodyRight">10 067.77 ms   </td><td class="markdownTableBodyRight">5 279.61 ms (1.9×)   </td><td class="markdownTableBodyRight">1 434.48 ms (7.0×)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">large_delta_0.1   </td><td class="markdownTableBodyRight">11.90 ms   </td><td class="markdownTableBodyRight">12.68 ms (0.9×)   </td><td class="markdownTableBodyRight">5.05 ms (2.4×)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">large_high_fraction   </td><td class="markdownTableBodyRight">9 434.85 ms   </td><td class="markdownTableBodyRight">4 940.71 ms (1.9×)   </td><td class="markdownTableBodyRight">1 216.33 ms (7.8×)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">large_high_iter   </td><td class="markdownTableBodyRight">31 189.44 ms   </td><td class="markdownTableBodyRight">14 409.17 ms (2.2×)   </td><td class="markdownTableBodyRight">4 475.26 ms (7.0×)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">scale_1000   </td><td class="markdownTableBodyRight">0.38 ms   </td><td class="markdownTableBodyRight">0.36 ms (1.1×)   </td><td class="markdownTableBodyRight">0.35 ms (1.1×)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">scale_10000   </td><td class="markdownTableBodyRight">2.69 ms   </td><td class="markdownTableBodyRight">2.59 ms (1.0×)   </td><td class="markdownTableBodyRight">1.51 ms (1.8×)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">scale_5000   </td><td class="markdownTableBodyRight">1.82 ms   </td><td class="markdownTableBodyRight">1.43 ms (1.3×)   </td><td class="markdownTableBodyRight">0.99 ms (1.8×)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">scientific_1000   </td><td class="markdownTableBodyRight">0.42 ms   </td><td class="markdownTableBodyRight">0.60 ms (0.7×)   </td><td class="markdownTableBodyRight">0.50 ms (0.8×)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">scientific_500   </td><td class="markdownTableBodyRight">0.29 ms   </td><td class="markdownTableBodyRight">0.25 ms (1.2×)   </td><td class="markdownTableBodyRight">0.30 ms (1.0×)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">scientific_5000   </td><td class="markdownTableBodyRight">1.92 ms   </td><td class="markdownTableBodyRight">1.88 ms (1.0×)   </td><td class="markdownTableBodyRight">1.35 ms (1.4×)   </td></tr>
 </table>
-<p><em>The R column shows average time across scenarios in multi-scenario categories. Speedups are averages across the same range.</em></p>
-<hr  />
-<h2>GPU Backend</h2>
-<p>For large batch datasets the GPU backend outperforms CPU-parallel execution. The crossover depends on <code>fraction × n</code>:</p>
+<p>At small sizes, fixed per-call overhead can dominate, and parallel execution is not always faster. The large wide-window workload reaches <b>7.8×</b> parallel speedup; the high-iteration workload reaches <b>2.2×</b> serial speedup. Allowing default <code>delta</code> reduces the reference workload from approximately 10.07 s to 11.90 ms.</p>
+<h2>CPU-Parallel versus GPU</h2>
+<p>The first measured input size where GPU median time is below CPU-parallel median time:</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Scenario   </th><th class="markdownTableHeadNone">CPU-Parallel   </th><th class="markdownTableHeadNone">GPU   </th><th class="markdownTableHeadNone">Speedup    </th></tr>
+<th class="markdownTableHeadRight">Fraction   </th><th class="markdownTableHeadRight">0 robustness iterations   </th><th class="markdownTableHeadRight">3 robustness iterations    </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">n = 1M, fraction = 0.5   </td><td class="markdownTableBodyNone">1.24 s   </td><td class="markdownTableBodyNone">187 ms   </td><td class="markdownTableBodyNone"><b>6.6×</b>   </td></tr>
+<td class="markdownTableBodyRight">0.1   </td><td class="markdownTableBodyRight">50 000   </td><td class="markdownTableBodyRight">50 000    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyRight">0.3   </td><td class="markdownTableBodyRight">50 000   </td><td class="markdownTableBodyRight">50 000    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyRight">0.5   </td><td class="markdownTableBodyRight">25 000   </td><td class="markdownTableBodyRight">25 000   </td></tr>
 </table>
-<p>At <code>fraction = 0.5</code>, GPU overtakes CPU around n ≥ 50K; at smaller fractions, around n ≥ 100K–250K. See the benchmarks README in the source repository for the full sweep and transfer-overhead breakdown. </p>
+<p>Selected median timings, with GPU speedup defined as CPU-parallel time divided by GPU time:</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadRight">n   </th><th class="markdownTableHeadRight">Fraction   </th><th class="markdownTableHeadRight">Iterations   </th><th class="markdownTableHeadRight">CPU-parallel   </th><th class="markdownTableHeadRight">GPU   </th><th class="markdownTableHeadRight">GPU speedup    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyRight">10 000   </td><td class="markdownTableBodyRight">0.5   </td><td class="markdownTableBodyRight">3   </td><td class="markdownTableBodyRight">4.66 ms   </td><td class="markdownTableBodyRight">6.31 ms   </td><td class="markdownTableBodyRight">0.74×    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyRight">50 000   </td><td class="markdownTableBodyRight">0.5   </td><td class="markdownTableBodyRight">0   </td><td class="markdownTableBodyRight">7.69 ms   </td><td class="markdownTableBodyRight">2.64 ms   </td><td class="markdownTableBodyRight">2.92×    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyRight">100 000   </td><td class="markdownTableBodyRight">0.5   </td><td class="markdownTableBodyRight">3   </td><td class="markdownTableBodyRight">52.40 ms   </td><td class="markdownTableBodyRight">24.62 ms   </td><td class="markdownTableBodyRight">2.13×    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyRight">250 000   </td><td class="markdownTableBodyRight">0.3   </td><td class="markdownTableBodyRight">3   </td><td class="markdownTableBodyRight">96.33 ms   </td><td class="markdownTableBodyRight">49.14 ms   </td><td class="markdownTableBodyRight">1.96×    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyRight">1 000 000   </td><td class="markdownTableBodyRight">0.5   </td><td class="markdownTableBodyRight">3   </td><td class="markdownTableBodyRight">1 118.35 ms   </td><td class="markdownTableBodyRight">236.47 ms   </td><td class="markdownTableBodyRight">4.73×   </td></tr>
+</table>
+<p>The GPU is slower for the selected 10 000-point case, but approximately <b>4.7× faster</b> for the million-point case. Wider windows increase per-query work and can make GPU execution worthwhile at smaller input sizes.</p>
+<p>The crossover is the <b>first sampled GPU win</b>, not a guarantee that every larger input favors the GPU. At fraction 0.1, CPU wins again at 100K for both iteration counts.</p>
+<details >
+<summary >
+Full crossover sweep with text charts</summary>
+<p></p>
+<p></p>
+<div class="fragment"><div class="line">fraction=0.1  iterations=0  - first GPU win: 50K</div>
+<div class="line">       n   CPU (med)   GPU (med)   speedup  chart</div>
+<div class="line">--------  ----------  ----------  --------  ------------------------</div>
+<div class="line">      1K     0.06 ms     1.08 ms     0.06×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">      2K     0.27 ms     0.97 ms     0.27×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">      5K     0.21 ms     0.87 ms     0.24×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">     10K     0.31 ms     1.73 ms     0.18×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">     25K     0.78 ms     2.03 ms     0.38×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">     50K     2.78 ms     2.20 ms     1.26×  GPU █  ◀ crossover</div>
+<div class="line">    100K     5.52 ms     6.71 ms     0.82×  CPU ▒▒▒▒</div>
+<div class="line">    250K    23.10 ms    15.10 ms     1.53×  GPU ███</div>
+<div class="line">    500K    42.44 ms    35.62 ms     1.19×  GPU █</div>
+<div class="line">      1M    89.78 ms    62.94 ms     1.43×  GPU ██</div>
+<div class="line"> </div>
+<div class="line">fraction=0.3  iterations=0  - first GPU win: 50K</div>
+<div class="line">       n   CPU (med)   GPU (med)   speedup  chart</div>
+<div class="line">--------  ----------  ----------  --------  ------------------------</div>
+<div class="line">      1K     0.11 ms     0.74 ms     0.15×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">      2K     0.30 ms     0.78 ms     0.38×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">      5K     0.36 ms     0.83 ms     0.43×  CPU ▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">     10K     0.68 ms     1.48 ms     0.46×  CPU ▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">     25K     1.60 ms     1.83 ms     0.88×  CPU ▒▒</div>
+<div class="line">     50K     5.14 ms     2.40 ms     2.14×  GPU ██████  ◀ crossover</div>
+<div class="line">    100K     9.33 ms     5.69 ms     1.64×  GPU ███</div>
+<div class="line">    250K    30.04 ms    16.16 ms     1.86×  GPU ████</div>
+<div class="line">    500K    58.62 ms    34.27 ms     1.71×  GPU ████</div>
+<div class="line">      1M   126.25 ms    69.38 ms     1.82×  GPU ████</div>
+<div class="line"> </div>
+<div class="line">fraction=0.5  iterations=0  - first GPU win: 25K</div>
+<div class="line">       n   CPU (med)   GPU (med)   speedup  chart</div>
+<div class="line">--------  ----------  ----------  --------  ------------------------</div>
+<div class="line">      1K     0.23 ms     0.92 ms     0.25×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">      2K     0.30 ms     0.86 ms     0.35×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">      5K     0.51 ms     1.56 ms     0.32×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">     10K     1.10 ms     1.46 ms     0.75×  CPU ▒▒▒▒▒</div>
+<div class="line">     25K     2.36 ms     1.85 ms     1.27×  GPU █  ◀ crossover</div>
+<div class="line">     50K     7.69 ms     2.64 ms     2.92×  GPU ██████████</div>
+<div class="line">    100K    15.81 ms     5.31 ms     2.98×  GPU ██████████</div>
+<div class="line">    250K    37.61 ms    17.10 ms     2.20×  GPU ██████</div>
+<div class="line">    500K    80.02 ms    35.82 ms     2.23×  GPU ██████</div>
+<div class="line">      1M   231.02 ms    70.12 ms     3.29×  GPU ███████████</div>
+<div class="line"> </div>
+<div class="line">fraction=0.1  iterations=3  - first GPU win: 50K</div>
+<div class="line">       n   CPU (med)   GPU (med)   speedup  chart</div>
+<div class="line">--------  ----------  ----------  --------  ------------------------</div>
+<div class="line">      1K     0.26 ms     5.04 ms     0.05×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">      2K     1.09 ms     4.71 ms     0.23×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">      5K     1.26 ms     4.80 ms     0.26×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">     10K     1.33 ms     5.72 ms     0.23×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">     25K     3.31 ms     6.55 ms     0.51×  CPU ▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">     50K     8.19 ms     8.04 ms     1.02×  GPU  ◀ crossover</div>
+<div class="line">    100K    14.35 ms    16.86 ms     0.85×  CPU ▒▒▒</div>
+<div class="line">    250K    58.75 ms    43.92 ms     1.34×  GPU ██</div>
+<div class="line">    500K   113.73 ms    86.19 ms     1.32×  GPU ██</div>
+<div class="line">      1M   304.22 ms   212.73 ms     1.43×  GPU ██</div>
+<div class="line"> </div>
+<div class="line">fraction=0.3  iterations=3  - first GPU win: 50K</div>
+<div class="line">       n   CPU (med)   GPU (med)   speedup  chart</div>
+<div class="line">--------  ----------  ----------  --------  ------------------------</div>
+<div class="line">      1K     0.51 ms     4.96 ms     0.10×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">      2K     1.33 ms     4.70 ms     0.28×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">      5K     1.80 ms     5.71 ms     0.31×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">     10K     2.77 ms     6.09 ms     0.45×  CPU ▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">     25K     5.73 ms     7.33 ms     0.78×  CPU ▒▒▒▒</div>
+<div class="line">     50K    15.03 ms     9.70 ms     1.55×  GPU ███  ◀ crossover</div>
+<div class="line">    100K    27.16 ms    23.23 ms     1.17×  GPU █</div>
+<div class="line">    250K    96.33 ms    49.14 ms     1.96×  GPU █████</div>
+<div class="line">    500K   201.04 ms   113.25 ms     1.77×  GPU ████</div>
+<div class="line">      1M   673.32 ms   192.87 ms     3.49×  GPU ████████████</div>
+<div class="line"> </div>
+<div class="line">fraction=0.5  iterations=3  - first GPU win: 25K</div>
+<div class="line">       n   CPU (med)   GPU (med)   speedup  chart</div>
+<div class="line">--------  ----------  ----------  --------  ------------------------</div>
+<div class="line">      1K     0.80 ms     4.57 ms     0.17×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">      2K     1.34 ms     5.03 ms     0.27×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">      5K     2.43 ms     5.95 ms     0.41×  CPU ▒▒▒▒▒▒▒▒▒▒▒▒▒</div>
+<div class="line">     10K     4.66 ms     6.31 ms     0.74×  CPU ▒▒▒▒▒</div>
+<div class="line">     25K     9.19 ms     7.37 ms     1.25×  GPU █  ◀ crossover</div>
+<div class="line">     50K    23.77 ms    12.99 ms     1.83×  GPU ████</div>
+<div class="line">    100K    52.40 ms    24.62 ms     2.13×  GPU ██████</div>
+<div class="line">    250K   123.11 ms    55.82 ms     2.21×  GPU ██████</div>
+<div class="line">    500K   394.26 ms   139.10 ms     2.83×  GPU █████████</div>
+<div class="line">      1M  1118.35 ms   236.47 ms     4.73×  GPU ███████████████████</div>
+</div><!-- fragment --><p></p>
+</details>
+<h2>End-to-End GPU Fit</h2>
+<p>Recorded wall-clock timings for the complete Rust GPU workload:</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadRight">n   </th><th class="markdownTableHeadRight">Mean   </th><th class="markdownTableHeadRight">Median   </th><th class="markdownTableHeadRight">Minimum   </th><th class="markdownTableHeadRight">Maximum    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyRight">1 000   </td><td class="markdownTableBodyRight">6.091 ms   </td><td class="markdownTableBodyRight">6.512 ms   </td><td class="markdownTableBodyRight">4.710 ms   </td><td class="markdownTableBodyRight">7.170 ms    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyRight">5 000   </td><td class="markdownTableBodyRight">5.162 ms   </td><td class="markdownTableBodyRight">5.136 ms   </td><td class="markdownTableBodyRight">4.344 ms   </td><td class="markdownTableBodyRight">5.957 ms    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyRight">10 000   </td><td class="markdownTableBodyRight">6.548 ms   </td><td class="markdownTableBodyRight">6.606 ms   </td><td class="markdownTableBodyRight">4.904 ms   </td><td class="markdownTableBodyRight">8.548 ms    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyRight">50 000   </td><td class="markdownTableBodyRight">7.565 ms   </td><td class="markdownTableBodyRight">7.376 ms   </td><td class="markdownTableBodyRight">7.172 ms   </td><td class="markdownTableBodyRight">8.352 ms    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyRight">100 000   </td><td class="markdownTableBodyRight">14.170 ms   </td><td class="markdownTableBodyRight">14.396 ms   </td><td class="markdownTableBodyRight">12.213 ms   </td><td class="markdownTableBodyRight">16.029 ms    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyRight">500 000   </td><td class="markdownTableBodyRight">63.544 ms   </td><td class="markdownTableBodyRight">63.831 ms   </td><td class="markdownTableBodyRight">61.600 ms   </td><td class="markdownTableBodyRight">64.527 ms    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyRight">1 000 000   </td><td class="markdownTableBodyRight">141.224 ms   </td><td class="markdownTableBodyRight">141.413 ms   </td><td class="markdownTableBodyRight">137.718 ms   </td><td class="markdownTableBodyRight">143.109 ms   </td></tr>
+</table>
+<p>Small workloads have a substantial fixed setup cost. Beyond those sizes, runtime grows with the amount of fitting work.</p>
+<h2>Host/Device Transfer Overhead</h2>
+<p>Mean transfer latencies and effective bandwidth from the isolated transfer benchmark. Round-trip bandwidth uses the combined uploaded/downloaded bytes divided by mean round-trip time:</p>
+<p>Transfer measurements used an <b>Intel Arc 140V integrated GPU (16 GB)</b> with the <b>Vulkan</b> backend.</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadRight">n   </th><th class="markdownTableHeadRight">Upload   </th><th class="markdownTableHeadRight">Download   </th><th class="markdownTableHeadRight">Round trip   </th><th class="markdownTableHeadRight">Effective bandwidth    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyRight">1 000   </td><td class="markdownTableBodyRight">0.361 ms   </td><td class="markdownTableBodyRight">0.399 ms   </td><td class="markdownTableBodyRight">0.760 ms   </td><td class="markdownTableBodyRight">0.026 GB/s    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyRight">5 000   </td><td class="markdownTableBodyRight">0.404 ms   </td><td class="markdownTableBodyRight">0.403 ms   </td><td class="markdownTableBodyRight">0.807 ms   </td><td class="markdownTableBodyRight">0.124 GB/s    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyRight">10 000   </td><td class="markdownTableBodyRight">0.440 ms   </td><td class="markdownTableBodyRight">0.506 ms   </td><td class="markdownTableBodyRight">0.946 ms   </td><td class="markdownTableBodyRight">0.212 GB/s    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyRight">50 000   </td><td class="markdownTableBodyRight">0.426 ms   </td><td class="markdownTableBodyRight">0.326 ms   </td><td class="markdownTableBodyRight">0.751 ms   </td><td class="markdownTableBodyRight">1.331 GB/s    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyRight">100 000   </td><td class="markdownTableBodyRight">0.730 ms   </td><td class="markdownTableBodyRight">0.853 ms   </td><td class="markdownTableBodyRight">1.583 ms   </td><td class="markdownTableBodyRight">1.263 GB/s    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyRight">500 000   </td><td class="markdownTableBodyRight">1.922 ms   </td><td class="markdownTableBodyRight">2.212 ms   </td><td class="markdownTableBodyRight">4.134 ms   </td><td class="markdownTableBodyRight">2.419 GB/s    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyRight">1 000 000   </td><td class="markdownTableBodyRight">3.662 ms   </td><td class="markdownTableBodyRight">4.295 ms   </td><td class="markdownTableBodyRight">7.957 ms   </td><td class="markdownTableBodyRight">2.514 GB/s   </td></tr>
+</table>
+<p>Fixed transfer latency dominates the smaller buffers; effective bandwidth reaches approximately 2.5 GB/s for the largest recorded transfer. These measurements isolate transfer operations, so they should not be subtracted directly from timings collected by a different fit benchmark.</p>
+<p>The transfer-fraction report uses <code>rfastlowess_parallel.json</code>, which is a <b>CPU</b> reference, not an end-to-end GPU measurement. Its 216.4% fraction and negative kernel time are therefore not valid GPU timing results and are omitted here. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

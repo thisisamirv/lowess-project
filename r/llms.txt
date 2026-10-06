@@ -62,12 +62,15 @@ Read more about how LOWESS works in the
 
 ### Speed
 
-The `lowess` project beats the competition in terms of speed, especially
-with multi-threaded parallel execution. It is on average **200-327x
-faster** than Python’s `statsmodels.lowess`, and **up to 12x faster**
-than R’s `lowess` with parallel execution (averaging ~3.6x);
-single-threaded performance is comparable to R’s `lowess` on typical
-inputs, pulling ahead by 1.6-2.7x at scale.
+It is on average **200-327x faster** than Python’s `statsmodels.lowess`
+and up to **7.8× faster than base R’s
+[`stats::lowess`](https://rdrr.io/r/stats/lowess.html)** on a tested
+large, wide-window workload. GPU `fastLowess` first beats CPU-parallel
+execution at **25K–50K points**, depending on smoothing fraction, and
+reaches **4.7× speedup over parallel `fastLowess` CPU execution** at 1M
+points in the tested workload. Small workloads can favor CPU because of
+GPU overhead; results vary by workload and hardware. See the Benchmarks
+page for details.
 
 For more details on the performance comparison, see the
 [Benchmarks](https://thisisamirv.github.io/lowess-project/r/articles/benchmarks.html)

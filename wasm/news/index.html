@@ -100,9 +100,6 @@
 <li>Fixed fraction-1 global fits ignoring configured robustness iterations; they now reweight observations and report iterations used.</li>
 <li>Fixed Batch cross-validation candidate fits ignoring <code dir="auto">custom_weights</code>; K-fold CV now rejects more folds than observations instead of returning zero scores.</li>
 <li>Fixed Streaming and Online accepting invalid <code dir="auto">auto_converge</code> tolerances; Online also rejects invalid explicit <code dir="auto">delta</code> values while retaining NaN as its default sentinel.</li>
-<li>Fixed GPU Batch fits misaligning fitted values with unsorted inputs; results now preserve input and requested sorted order.</li>
-<li>Fixed GPU Batch silently ignoring <code dir="auto">custom_weights</code>; GPU fit and CV candidate kernels now apply them directly.</li>
-<li>Reduced GPU adapter buffer requirements by using per-compute-pipeline resource layouts.</li>
 <li>Fixed Online incremental mode accepting positive <code dir="auto">delta</code> and <code dir="auto">auto_converge</code> settings it cannot use; unsupported combinations now error.</li>
 <li>Fixed grouped intervals discarding distinct confidence and prediction levels; each requested coverage is now applied independently.</li>
 <li>Fixed <code dir="auto">OnlineLowess</code> ignoring the <code dir="auto">outputs</code> option.</li>

@@ -140,7 +140,7 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <hr  />
 <h2>Why this package?</h2>
 <h3>Speed</h3>
-<p>The <code>lowess</code> project beats the competition in terms of speed, especially with multi-threaded parallel execution. It is on average <b>200-327x faster</b> than Python's <code>statsmodels.lowess</code>, and <b>up to 12x faster</b> than R's <code>lowess</code> with parallel execution (averaging ~3.6x); single-threaded performance is comparable to R's <code>lowess</code> on typical inputs, pulling ahead by 1.6-2.7x at scale.</p>
+<p>It is on average <b>200-327x faster</b> than Python's <code>statsmodels.lowess</code> and up to <b>7.8× faster than base R's <code>stats::lowess</code></b> on a tested large, wide-window workload. GPU <code>fastLowess</code> first beats CPU-parallel execution at <b>25K–50K points</b>, depending on smoothing fraction, and reaches <b>4.7× speedup over parallel <code>fastLowess</code> CPU execution</b> at 1M points in the tested workload. Small workloads can favor CPU because of GPU overhead; results vary by workload and hardware. See the Benchmarks page for details.</p>
 <p>For more details on the performance comparison, see the <a href="https://thisisamirv.github.io/lowess-project/cpp/benchmarks.html">Benchmarks</a> page.</p>
 <h3>Robustness</h3>
 <p>This implementation is <em>more robust</em> than R's <code>lowess</code> and Python's <code>statsmodels</code> due to two key design choices:</p>

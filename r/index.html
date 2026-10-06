@@ -124,7 +124,7 @@
 <div class="section level3">
 <h3 id="speed">Speed<a class="anchor" aria-label="anchor" href="#speed"></a>
 </h3>
-<p>The <code>lowess</code> project beats the competition in terms of speed, especially with multi-threaded parallel execution. It is on average <strong>200-327x faster</strong> than Python’s <code>statsmodels.lowess</code>, and <strong>up to 12x faster</strong> than R’s <code>lowess</code> with parallel execution (averaging ~3.6x); single-threaded performance is comparable to R’s <code>lowess</code> on typical inputs, pulling ahead by 1.6-2.7x at scale.</p>
+<p>It is on average <strong>200-327x faster</strong> than Python’s <code>statsmodels.lowess</code> and up to <strong>7.8× faster than base R’s <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess</a></code></strong> on a tested large, wide-window workload. GPU <code>fastLowess</code> first beats CPU-parallel execution at <strong>25K–50K points</strong>, depending on smoothing fraction, and reaches <strong>4.7× speedup over parallel <code>fastLowess</code> CPU execution</strong> at 1M points in the tested workload. Small workloads can favor CPU because of GPU overhead; results vary by workload and hardware. See the Benchmarks page for details.</p>
 <p>For more details on the performance comparison, see the <a href="https://thisisamirv.github.io/lowess-project/r/articles/benchmarks.html">Benchmarks</a> page.</p>
 </div>
 <div class="section level3">

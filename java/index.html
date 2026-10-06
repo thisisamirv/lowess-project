@@ -300,7 +300,7 @@
 <div class="sect2">
 <h3 id="speed"><a class="anchor" href="#speed"></a>Speed</h3>
 <div class="paragraph">
-<p>The <code>lowess</code> project beats the competition in terms of speed, especially with multi-threaded parallel execution. It is on average <strong>200-327x faster</strong> than Python&#8217;s <code>statsmodels.lowess</code>, and <strong>up to 12x faster</strong> than R&#8217;s <code>lowess</code> with parallel execution (averaging ~3.6x); single-threaded performance is comparable to R&#8217;s <code>lowess</code> on typical inputs, pulling ahead by 1.6-2.7x at scale.</p>
+<p>It is on average <strong>200-327x faster</strong> than Python&#8217;s <code>statsmodels.lowess</code> and up to <strong>7.8× faster than base R&#8217;s <code>stats::lowess</code></strong> on a tested large, wide-window workload. GPU <code>fastLowess</code> first beats CPU-parallel execution at <strong>25K–50K points</strong>, depending on smoothing fraction, and reaches <strong>4.7× speedup over parallel <code>fastLowess</code> CPU execution</strong> at 1M points in the tested workload. Small workloads can favor CPU because of GPU overhead; results vary by workload and hardware. See the Benchmarks page for details.</p>
 </div>
 <div class="paragraph">
 <p>For more details on the performance comparison, see the <a href="https://thisisamirv.github.io/lowess-project/java/benchmarks/">Benchmarks</a> page.</p>
