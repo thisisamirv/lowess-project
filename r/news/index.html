@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastlowess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">4.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">5.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -35,9 +35,9 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="rfastlowess-development-version">rfastlowess (development version)<a class="anchor" aria-label="anchor" href="#rfastlowess-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="5.0.0" id="rfastlowess-500">rfastlowess 5.0.0<a class="anchor" aria-label="anchor" href="#rfastlowess-500"></a></h2>
 <div class="section level3">
-<h3 id="added-development-version">Added<a class="anchor" aria-label="anchor" href="#added-development-version"></a></h3>
+<h3 id="added-5-0-0">Added<a class="anchor" aria-label="anchor" href="#added-5-0-0"></a></h3>
 <ul><li>Added prebuilt GPU library release jobs and installer selection for Linux ARM64, musl/Alpine x86_64 and ARM64, and Windows ARM64.</li>
 <li>Enabled the optional wgpu DirectX 12 backend for GPU-enabled Windows builds. DXC is loaded dynamically with an FXC fallback, avoiding eager imports of <code>dxcompiler.dll</code> and <code>dxil.dll</code>.</li>
 <li>Added GLES for Android GPU builds with a target-scoped <code>wgpu</code> feature; Windows continues to omit the GLES-only loader imports.</li>
@@ -47,14 +47,14 @@
 <li>Added an “Alternative Software” vignette comparing <code>rfastlowess</code> with <code><a href="https://rdrr.io/r/stats/lowess.html" class="external-link">stats::lowess()</a></code>.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="changed-development-version">Changed<a class="anchor" aria-label="anchor" href="#changed-development-version"></a></h3>
+<h3 id="changed-5-0-0">Changed<a class="anchor" aria-label="anchor" href="#changed-5-0-0"></a></h3>
 <ul><li>Clarified that Batch <code>residual_sd</code> is <code>1.4826 * MAD</code>, while Streaming reports the cumulative sample standard deviation of emitted residuals.</li>
 <li>Breaking change: replaced individual <code>return_*</code> arguments with grouped <code>outputs</code>, and replaced <code><a href="../reference/Lowess.html">Lowess()</a></code>’s four <code>cv_*</code> arguments with <code>cv = cv_opts(...)</code>.</li>
 <li>Breaking change: replaced <code>confidence_intervals</code>/<code>prediction_intervals</code> (and <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code>’s <code>confidence_level</code>/<code>prediction_level</code>) with <code>intervals = intervals_opts(confidence, prediction, bootstrap)</code>, and moved the cross-validation seed from <code>cv_opts(seed = ...)</code> to a shared <code>seed</code> argument.</li>
 <li>Represent unavailable diagnostic metrics as R <code>NA</code> rather than generic <code>NaN</code> values.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="fixed-development-version">Fixed<a class="anchor" aria-label="anchor" href="#fixed-development-version"></a></h3>
+<h3 id="fixed-5-0-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-5-0-0"></a></h3>
 <ul><li>Fixed CPU Gaussian standard errors for fitted and queried values to use the full unbounded kernel support.</li>
 <li>Made even-sample medians and mean-absolute residual scaling overflow-resistant for large finite values, and centered Batch/Streaming R-squared accumulation to preserve one-ULP response variation at large offsets.</li>
 <li>Made Batch RMSE, MAE, and R-squared reductions scale-safe for large finite values, preserved bisquare downweighting when tuned scales exceed the numeric range, and normalized custom weights before summation in local and all-tied fits.</li>
