@@ -43,8 +43,11 @@ OnlineOutput = _core.OnlineOutput
 PredictOutput = _core.PredictOutput
 StreamingLowess = _core.StreamingLowess
 
-from ._gpu_installer import gpu_available, install_gpu
-from ._lowess import Lowess
+_gpu_installer = import_module("._gpu_installer", __name__)
+gpu_available = _gpu_installer.gpu_available
+install_gpu = _gpu_installer.install_gpu
+_lowess = import_module("._lowess", __name__)
+Lowess = _lowess.Lowess
 
 __all__ = [
     "Diagnostics",
