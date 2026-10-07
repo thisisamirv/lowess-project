@@ -61,7 +61,7 @@ console.log(version());
 ```
 
 ```output
-4.1.0
+5.0.0
 ```
 
 For a browser build (`--target web`), initialize WebAssembly first:

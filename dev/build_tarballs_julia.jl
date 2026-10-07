@@ -7,7 +7,7 @@ version = v"1.3.0"
 
 # Update the commit hash when releasing a new version
 sources = [
-    GitSource("https://github.com/thisisamirv/lowess-project.git", "2b139502903cdd5e325aa3171e8a121a0ca3d2c6"),
+    GitSource("https://github.com/thisisamirv/lowess-project.git", "9d66fcda0e8e8935dae9378b17e96247ea1de8d9"),
 ]
 
 # Build script
@@ -17,6 +17,10 @@ cd $WORKSPACE/srcdir/lowess-project/bindings/julia
 export RUSTFLAGS="-C linker=${CC}"
 if [[ "${target}" == *-linux-* ]]; then
 	RUSTFLAGS="${RUSTFLAGS} -C link-arg=-fuse-ld=bfd"
+fi
+if [[ "${rust_target}" == *-linux-musl* ]]; then
+    # Musl targets default to a fully static CRT, which does not support cdylib.
+    RUSTFLAGS="${RUSTFLAGS} -C target-feature=-crt-static"
 fi
 # Build the release library
 cargo build --release --target ${rust_target} --target-dir target

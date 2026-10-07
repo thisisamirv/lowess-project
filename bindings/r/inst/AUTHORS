@@ -88,7 +88,7 @@ Package: cbindgen (0.29.4)
 Authors: Emilio Cobos Álvarez <emilio@crisal.io>, Jeff Muizelaar <jmuizelaar@mozilla.com>, Kartikaya Gupta <kats@mozilla.com>, Ryan Hunt <rhunt@eqrion.net>
 License: MPL-2.0
 ----------------------------------------
-Package: cc (1.5.1)
+Package: cc (1.6.0)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -300,7 +300,7 @@ Package: khronos_api (3.1.0)
 Authors: Brendan Zabarauskas <bjzaba@yahoo.com.au>, Corey Richardson, Arseny Kapoulkine, Pierre Krieger <pierre.krieger1708@gmail.com>
 License: Apache-2.0
 ----------------------------------------
-Package: libc (0.2.189)
+Package: libc (0.2.190)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -348,23 +348,23 @@ Package: naga-types (30.0.1)
 Authors: gfx-rs developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: napi (3.13.0)
+Package: napi (3.14.1)
 Authors: Nathan Sobo <nathan@github.com>, Yinan Long <lynweklm@gmail.com>
 License: MIT
 ----------------------------------------
-Package: napi-build (2.5.0)
+Package: napi-build (2.6.0)
 Authors: LongYinan <lynweklm@gmail.com>
 License: MIT
 ----------------------------------------
-Package: napi-derive (3.6.9)
+Package: napi-derive (3.6.11)
 Authors: LongYinan <lynweklm@gmail.com>, Forehalo <forehalo@gmail.com>
 License: MIT
 ----------------------------------------
-Package: napi-derive-backend (6.1.4)
+Package: napi-derive-backend (6.1.5)
 Authors: 
 License: MIT
 ----------------------------------------
-Package: napi-sys (3.3.2)
+Package: napi-sys (3.4.0)
 Authors: LongYinan <lynweklm@gmail.com>
 License: MIT
 ----------------------------------------
@@ -400,7 +400,7 @@ Package: numpy (0.29.0)
 Authors: The rust-numpy Project Developers, PyO3 Project and Contributors <https://github.com/PyO3>
 License: BSD-2-Clause
 ----------------------------------------
-Package: objc2 (0.6.4)
+Package: objc2 (0.6.5)
 Authors: Mads Marquart <mads@marquart.dk>
 License: MIT
 ----------------------------------------
@@ -488,23 +488,23 @@ Package: profiling (1.0.18)
 Authors: Philip Degarmo <aclysma@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: pyo3 (0.29.2)
+Package: pyo3 (0.29.3)
 Authors: PyO3 Project and Contributors <https://github.com/PyO3>
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: pyo3-build-config (0.29.2)
+Package: pyo3-build-config (0.29.3)
 Authors: PyO3 Project and Contributors <https://github.com/PyO3>
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: pyo3-ffi (0.29.2)
+Package: pyo3-ffi (0.29.3)
 Authors: PyO3 Project and Contributors <https://github.com/PyO3>
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: pyo3-macros (0.29.2)
+Package: pyo3-macros (0.29.3)
 Authors: PyO3 Project and Contributors <https://github.com/PyO3>
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: pyo3-macros-backend (0.29.2)
+Package: pyo3-macros-backend (0.29.3)
 Authors: PyO3 Project and Contributors <https://github.com/PyO3>
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -660,7 +660,7 @@ Package: thiserror-impl (2.0.21)
 Authors: David Tolnay <dtolnay@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: tokio (1.53.1)
+Package: tokio (1.53.2)
 Authors: Tokio Contributors <team@tokio.rs>
 License: MIT
 ----------------------------------------
@@ -756,7 +756,7 @@ Package: wgpu-core-deps-apple (30.0.1)
 Authors: gfx-rs developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: wgpu-core-deps-emscripten (30.0.0)
+Package: wgpu-core-deps-emscripten (30.0.1)
 Authors: gfx-rs developers
 License: MIT OR Apache-2.0
 ----------------------------------------

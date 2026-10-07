@@ -1,6 +1,6 @@
 Package: rfastlowess
 Title: High-Performance LOWESS Smoothing for R
-Version: 4.1.0
+Version: 5.0.0
 Authors@R: c(
     person("Amir", "Valizadeh", email = "thisisamirv@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-5983-8527")),
     person("Aleksei", "Chirkunov", role = "rev", comment = "Reviewed the package for rOpenSci (GitHub: @alexzerg), see <https://github.com/ropensci/software-review/issues/769>"),

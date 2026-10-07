@@ -388,7 +388,7 @@ dependencies = [
 
 [[package]]
 name = "fastLowess"
-version = "4.1.0"
+version = "5.0.0"
 dependencies = [
  "approx",
  "bytemuck",
@@ -403,7 +403,7 @@ dependencies = [
 
 [[package]]
 name = "fastLowess-py"
-version = "4.1.0"
+version = "5.0.0"
 dependencies = [
  "fastLowess",
  "numpy",
@@ -412,7 +412,7 @@ dependencies = [
 
 [[package]]
 name = "fastlowess-cpp"
-version = "4.1.0"
+version = "5.0.0"
 dependencies = [
  "cbindgen",
  "fastLowess",
@@ -421,7 +421,7 @@ dependencies = [
 
 [[package]]
 name = "fastlowess-go"
-version = "4.1.0"
+version = "5.0.0"
 dependencies = [
  "cbindgen",
  "fastLowess",
@@ -430,7 +430,7 @@ dependencies = [
 
 [[package]]
 name = "fastlowess-java"
-version = "4.1.0"
+version = "5.0.0"
 dependencies = [
  "fastLowess",
  "jni",
@@ -438,14 +438,14 @@ dependencies = [
 
 [[package]]
 name = "fastlowess-jl"
-version = "4.1.0"
+version = "5.0.0"
 dependencies = [
  "fastLowess",
 ]
 
 [[package]]
 name = "fastlowess-node"
-version = "4.1.0"
+version = "5.0.0"
 dependencies = [
  "fastLowess",
  "napi",
@@ -455,7 +455,7 @@ dependencies = [
 
 [[package]]
 name = "fastlowess-wasm"
-version = "4.1.0"
+version = "5.0.0"
 dependencies = [
  "console_error_panic_hook",
  "fastLowess",
@@ -847,7 +847,7 @@ checksum = "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
 
 [[package]]
 name = "lowess"
-version = "4.1.0"
+version = "5.0.0"
 dependencies = [
  "approx",
  "ndarray",

@@ -45,7 +45,7 @@ import (
  "log"
  "math"
 
- "github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v4"
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v5"
 )
 
 func main() {
@@ -126,7 +126,7 @@ import (
  "log"
  "math"
 
- "github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v4"
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v5"
 )
 
 func main() {
@@ -205,7 +205,7 @@ import (
  "log"
  "math"
 
- "github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v4"
+ "github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v5"
 )
 
 func main() {

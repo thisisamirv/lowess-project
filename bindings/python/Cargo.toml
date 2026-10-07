@@ -1,6 +1,6 @@
 [package]
 name = "fastLowess-py"
-version = "4.1.0"
+version = "5.0.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -13,7 +13,7 @@ keywords = ["lowess", "smoothing", "statistics", "regression", "bioinformatics"]
 categories = ["science", "algorithms"]
 
 [dependencies]
-fastLowess = { path = "../../crates/fastLowess", version = "4.1", features = [
+fastLowess = { path = "../../crates/fastLowess", version = "5.0", features = [
     "dev",
     "cpu",
 ] }

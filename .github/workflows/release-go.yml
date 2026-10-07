@@ -244,10 +244,20 @@ jobs:
     if: needs.validate-release.outputs.published != 'true'
     runs-on: ubuntu-latest
     steps:
+      - name: Require Go module release token
+        env:
+          GO_MODULE_RELEASE_TOKEN: ${{ secrets.GO_MODULE_RELEASE_TOKEN }}
+        run: |
+          if [ -z "$GO_MODULE_RELEASE_TOKEN" ]; then
+            echo "::error::Configure GO_MODULE_RELEASE_TOKEN with Contents: write and Workflows: write permissions to publish the nested Go module tag."
+            exit 1
+          fi
+
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.inputs.commit || github.sha }}
           fetch-depth: 0
+          token: ${{ secrets.GO_MODULE_RELEASE_TOKEN }}
 
       - uses: actions/setup-go@v7
         with:

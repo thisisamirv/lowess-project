@@ -312,7 +312,8 @@ jobs:
           cargo about generate \
             --manifest-path bindings/cpp/Cargo.toml \
             --locked \
-            bindings/cpp/about.hbs \
+            --config dev/about.toml \
+            dev/about.hbs \
             --output-file release-packages/THIRD_PARTY_LICENSES.html
 
       - name: Download platform packages

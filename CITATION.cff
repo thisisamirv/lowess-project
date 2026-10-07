@@ -26,7 +26,7 @@ keywords:
   - go
   - java
 date-released: "2026-01-01"
-version: "4.1.0"
+version: "5.0.0"
 references:
   - type: article
     authors:

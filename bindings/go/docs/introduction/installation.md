@@ -31,7 +31,7 @@ Starting with the next bundled Go release, the module includes the matching nati
 From your application's Go module:
 
 ```sh
-go get github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v4@latest
+go get github.com/thisisamirv/lowess-project/bindings/go/fastlowess/v5@latest
 CGO_ENABLED=1 go build ./...
 ```
 

@@ -67,7 +67,7 @@ function requireNative() {
   // fastlowess versioned GPU override
   if (!process.env.NAPI_RS_NATIVE_LIBRARY_PATH) {
         try {
-            const gpuBinding = require('./fastlowess.gpu-v4.1.0.node')
+            const gpuBinding = require('./fastlowess.gpu-v5.0.0.node')
             if (typeof gpuBinding.gpu_enabled === 'function' && gpuBinding.gpu_enabled()) {
                 return gpuBinding
             }

@@ -5,7 +5,7 @@
 
 This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md).
 
-## [Unreleased]
+## [5.0.0]
 
 ### Added
 
