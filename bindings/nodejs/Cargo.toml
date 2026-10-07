@@ -20,11 +20,11 @@ fastLowess = { path = "../../crates/fastLowess", version = "4.1", features = [
     "dev",
     "cpu",
 ] }
-napi = { version = "3.12", features = ["napi4"] }
+napi = { version = "3.14", features = ["napi4"] }
 napi-derive = "3.6"
 
 [build-dependencies]
-napi-build = "2.4"
+napi-build = "2.6"
 
 [features]
 default = []

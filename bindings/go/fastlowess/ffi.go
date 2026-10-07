@@ -1,6 +1,7 @@
 package fastlowess
 
 /*
+#cgo CFLAGS: -I${SRCDIR}/../include
 #include <stdlib.h>
 #if defined(__linux__)
 #include <features.h>
