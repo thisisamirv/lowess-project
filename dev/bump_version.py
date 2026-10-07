@@ -12,10 +12,10 @@ suffix (go.mod files, doc snippets, README/docs badges, the doc-snippet
 runner) whenever a major version bump changes it -- see
 https://go.dev/ref/mod#major-version-suffixes.
 
-Does NOT touch: CHANGELOG.md (write that by hand), NEWS.md/docs-site content
-(maintain those separately), or the
-Spack recipe's `version()`/`sha256` block and the conda-forge feedstock -- those
-require a published release tarball to hash, so release-cpp.yml/release-conda.yml
+Does NOT touch: CHANGELOG.md (write that by hand), NEWS.md/docs-site release-note
+content (maintain those separately; only recognized release headings are bumped),
+or the Spack recipe's `version()`/`sha256` block and the conda-forge feedstock --
+those require a published release tarball to hash, so release-cpp.yml/release-conda.yml
 update them after the fact, not before.
 
 Usage:
@@ -27,12 +27,22 @@ from __future__ import annotations
 
 import argparse
 import re
+import subprocess
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 VERSION_RE = re.compile(r"^\d+\.\d+\.\d+$")
+NEWS_UNRELEASED_HEADING_RE = re.compile(
+    r"(?P<prefix>(?:#{1,6}|={1,6})[ \t]+)(?P<open>\\?\[)Unreleased"
+    r"(?P<close>\\?\])(?P<suffix>[ \t]*)",
+    re.IGNORECASE,
+)
+NEWS_DEVELOPMENT_HEADING_RE = re.compile(
+    r"(?P<prefix>#{1,6}[ \t]+)(?P<package>.+?) \(development version\)",
+    re.IGNORECASE,
+)
 
 # Go requires any module tagged v2.0.0+ to end its module path with /vN, or
 # the Go toolchain (and pkg.go.dev) silently ignores those tags and falls
@@ -137,6 +147,68 @@ def _replace_literal_all(
     verb = "Would update" if dry_run else "Updated"
     print(f"  {verb} ({count}x): {rel}")
     return True
+
+
+def update_news_headings(new_version: str, dry_run: bool) -> bool:
+    """Version the current release heading in every NEWS.md and NEWS.adoc."""
+    tracked_files = (
+        subprocess.run(
+            ["git", "ls-files", "-z"],
+            cwd=REPO_ROOT,
+            check=True,
+            stdout=subprocess.PIPE,
+        )
+        .stdout.decode("utf-8")
+        .split("\0")
+    )
+    news_files = [
+        REPO_ROOT / relative_path
+        for relative_path in tracked_files
+        if relative_path
+        and Path(relative_path).name.lower() in {"news.md", "news.adoc"}
+    ]
+
+    all_ok = True
+    for path in sorted(news_files, key=lambda item: item.as_posix().casefold()):
+        with path.open("r", encoding="utf-8", newline="") as stream:
+            lines = stream.readlines()
+
+        updated_lines: list[str] = []
+        matches = 0
+        for line in lines:
+            content = line.rstrip("\r\n")
+            ending = line[len(content) :]
+            match = NEWS_UNRELEASED_HEADING_RE.fullmatch(content)
+            if match is not None:
+                content = (
+                    f"{match.group('prefix')}{match.group('open')}{new_version}"
+                    f"{match.group('close')}{match.group('suffix')}"
+                )
+                matches += 1
+            else:
+                match = NEWS_DEVELOPMENT_HEADING_RE.fullmatch(content)
+                if match is not None:
+                    content = (
+                        f"{match.group('prefix')}{match.group('package')} {new_version}"
+                    )
+                    matches += 1
+            updated_lines.append(content + ending)
+
+        rel = path.relative_to(REPO_ROOT)
+        if matches != 1:
+            print(
+                f"  WARNING: expected one Unreleased/development heading in {rel}, found {matches}"
+            )
+            all_ok = False
+            continue
+
+        if not dry_run:
+            with path.open("w", encoding="utf-8", newline="") as stream:
+                stream.writelines(updated_lines)
+        verb = "Would update" if dry_run else "Updated"
+        print(f"  {verb} release heading: {rel}")
+
+    return all_ok
 
 
 def _current_go_module_suffix() -> str:
@@ -392,6 +464,24 @@ def build_targets(
             1,
         )
     )
+    targets.append(
+        (
+            "bindings/cpp/vcpkg/fastlowess/vcpkg.json",
+            package_json_version_pattern,
+            f'"version": "{new_version}"',
+            1,
+        )
+    )
+    targets.append(
+        (
+            "bindings/cpp/vcpkg/fastlowess/CMakeLists.txt",
+            re.compile(
+                r"project\(fastlowess-vcpkg VERSION \d+\.\d+\.\d+ LANGUAGES CXX\)"
+            ),
+            f"project(fastlowess-vcpkg VERSION {new_version} LANGUAGES CXX)",
+            1,
+        )
+    )
 
     targets.append(
         (
@@ -483,6 +573,7 @@ def main() -> int:
         all_ok = all_ok and ok
 
     all_ok = update_cpp_version_header(new_version, args.dry_run) and all_ok
+    all_ok = update_news_headings(new_version, args.dry_run) and all_ok
 
     print()
     all_ok = apply_go_module_suffix(major, args.dry_run) and all_ok
@@ -497,7 +588,10 @@ def main() -> int:
 
     print(f"Done{' (dry run)' if args.dry_run else ''}. Next steps:")
     print("  1. Add a new section to CHANGELOG.md for this version.")
-    print("  2. Update each binding's NEWS.md from CHANGELOG.md.")
+    print(
+        "  2. Update NEWS release-note content from CHANGELOG.md "
+        "(headings are bumped automatically)."
+    )
     return 0
 
 

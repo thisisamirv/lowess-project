@@ -1,21 +1,21 @@
 # LOWESS for vcpkg
 
-The `fastlowess` overlay port provides Rust-backed C++17 LOWESS smoothing with batch, streaming, and online adapters. It installs a checksum-pinned CPU library from the published `v4.1.0` release and exposes the CMake target `fastlowess::fastlowess`. Rust and Cargo are not required to install or consume this port.
+The `fastlwoess` overlay port provides Rust-backed C++17 LOWESS smoothing with batch, streaming, and online adapters. It installs a SHA512-verified prebuilt CPU library from the matching upstream release and exposes the CMake target `fastlowess::fastlowess`. Rust and Cargo are not required to install or consume this port.
 
-This port is available as a repository overlay. It is not yet part of vcpkg's curated registry.
+Use this port as a repository overlay. Its supported targets are limited to those accepted by the portfile and manifest and for which the matching upstream release publishes a binary.
 
 ## Supported Configuration
 
 | Setting | Support |
 | --- | --- |
-| Target triplets | Windows: `x64-windows`, `x64-windows-release`, `arm64-windows`; Linux: `x64-linux-dynamic`, `arm64-linux-dynamic`; macOS: `x64-osx-dynamic`, `arm64-osx-dynamic` |
-| Linux libc | Triplet names containing `musl` select musl artifacts; other Linux triplets select glibc artifacts |
+| Target triplets | Windows x64/ARM64, Linux x64/ARM64, and macOS x64/ARM64 |
+| Linux libc | glibc and musl |
 | Library linkage | Shared library only |
 | Windows runtime | Dynamic CRT |
 | Backend | CPU |
-| Consumer configurations | Debug and Release, both using the upstream Release library |
+| Consumer configurations | Debug and Release, both using the upstream prebuilt library |
 
-Static linkage, static CRT, 32-bit and ARMv7 targets, MinGW, UWP, Android, iOS, GPU builds, and other operating systems are not supported. The standard Linux and macOS triplets that default to static linkage are excluded; use dynamic-linkage triplets. The manifest also excludes unvalidated architectures.
+Static linkage, static CRT, 32-bit and ARMv7 targets, MinGW, UWP, Android, iOS, GPU builds, and other operating systems are not supported at this moment. Linux and macOS require dynamic-linkage triplets. The manifest and available release binaries are authoritative; do not assume a triplet is supported just because its architecture is listed above.
 
 ## Requirements
 
@@ -23,7 +23,7 @@ Static linkage, static CRT, 32-bit and ARMv7 targets, MinGW, UWP, Android, iOS, 
 - An existing [vcpkg installation](https://learn.microsoft.com/en-us/vcpkg/get_started/get-started-packaging), with `VCPKG_ROOT` set to its directory.
 - CMake for C++ consumers.
 
-The tagged release did not publish Windows import libraries. The port uses the MSVC library manager to generate them from the DLL's verified export list. Native binaries are not rebuilt or renamed.
+When a Windows release does not include an import library, the port uses the MSVC library manager to generate one from the verified export list. The upstream native binaries are not rebuilt or renamed.
 
 ## Installation
 
@@ -52,7 +52,7 @@ For example, configure a Windows application with vcpkg's toolchain and the trip
 cmake -S . -B build "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows
 ```
 
-On Linux or macOS, use the same form with the matching dynamic triplet, such as `x64-linux-dynamic` or `arm64-osx-dynamic`.
+On Linux or macOS, use the same form with a matching dynamic triplet. For musl, the portfile, triplet, and release binary must all target the same musl environment.
 
 In your application's CMake project:
 
@@ -61,9 +61,9 @@ find_package(fastlowess CONFIG REQUIRED)
 target_link_libraries(my_app PRIVATE fastlowess::fastlowess)
 ```
 
-The target supplies the installed include directory, C++17 requirement, and native library. All consumer configurations map to the published Release artifact. Include `<fastlowess.hpp>` for the C++ interface. Its matching generated ABI header, `fastlowess.h`, is bundled with the port because the release archive omitted it. On Windows, deploy the matching `fastlowess-win32-*.dll` beside the application or make it available on `PATH`; Unix consumers use the installed `.so` or `.dylib`.
+The target supplies the installed include directory, C++17 requirement, and native library. All consumer configurations map to the selected prebuilt artifact. Include `<fastlowess.hpp>` for the C++ interface; the port installs the matching generated ABI header alongside it. On Windows, make the installed DLL available to the application through its executable directory or `PATH`. On Unix-like systems, ensure the platform loader can find the installed shared library.
 
-On Windows, the native DLL uses the release MSVC runtime. C++ wrapper objects own their C++ allocations, while Rust-owned buffers are released through the DLL's FFI functions. The port declares `VCPKG_POLICY_ONLY_RELEASE_CRT`; it does not disable CRT-linkage checks. A matching Visual C++ runtime must be available on deployment machines.
+On Windows, the native DLL uses the MSVC runtime. C++ wrapper objects own their C++ allocations, while Rust-owned buffers are released through the DLL's FFI functions. The port declares `VCPKG_POLICY_ONLY_RELEASE_CRT`; it does not disable CRT-linkage checks. A matching Visual C++ runtime must be available on deployment machines.
 
 See the [C++ documentation](https://thisisamirv.github.io/lowess-project/cpp/) for API details and smoothing examples.
 
@@ -96,7 +96,7 @@ cmake --build target/vcpkg-consumer-linux
 ctest --test-dir target/vcpkg-consumer-linux --output-on-failure
 ```
 
-The prebuilt port passed vcpkg post-build validation and Debug/Release consumer tests on Windows x64, and passed vcpkg post-build validation plus the Linux x64 dynamic-triplet consumer smoke test. Other listed architecture artifacts are built by the upstream release workflow but have not been tested locally in this environment.
+To validate an update, install the port for each supported triplet, then build and run the consumer in Debug and Release where the toolchain supports both configurations. Include at least one linear-fit case and verify the duplicate-include behavior. Record which operating systems, architectures, libc variants, compilers, and configurations were actually tested; do not infer test coverage from artifact availability.
 
 ### clangd
 
@@ -113,9 +113,7 @@ Restart clangd after first configuration if cached diagnostics remain. Build dir
 - `fastlowess/vcpkg.json` declares package metadata and supported triplets.
 - `fastlowess/portfile.cmake` downloads the SHA512-pinned platform library and matching source archive and installs the package through a thin CMake wrapper.
 - `fastlowess/fastlowess.def` records the verified DLL export names used to generate the import library.
-- `fastlowess/fastlowess.h` was generated from the exact `v4.1.0` source build with cbindgen. It must be updated alongside the binary and wrapper when their ABI changes.
-- The v4.1.0 installed copyright notice includes the upstream license texts and discloses that exact Rust dependency provenance is unavailable. Future C++ release archives include `THIRD_PARTY_LICENSES.html`, generated from the committed workspace lockfile.
+- `fastlowess/fastlowess.h` is the generated ABI header. Update it alongside the binary and wrapper when their ABI changes.
+- Upstream release archives include `THIRD_PARTY_LICENSES.html`, generated from the committed workspace lockfile using `dev/about.toml` and `dev/about.hbs`. The report documents third-party Rust dependency licenses and provenance. When updating the port, make the report available with the installed copyright materials alongside the upstream MIT and Apache license texts.
 
-For a version update, refresh the manifest, binary/source checksums, export definition, ABI header, and wrapper project version together, then repeat consumer tests. Do not expand supported triplets without testing them. Offline and vcpkg download-only operation have not been validated.
-
-The `v4.1.0` release does not publish the Cargo lockfile used for its prebuilt binaries, so exact Rust dependency-version provenance cannot be reconstructed; a newly generated report cannot establish the licenses of those existing binaries. New C++ releases use the committed workspace lockfile and bundle the corresponding cargo-about report. Prebuilt-artifact and licensing acceptance remain subject to the [vcpkg maintainer guide](https://learn.microsoft.com/en-us/vcpkg/contributing/maintainer-guide).
+For each release update, refresh the manifest, binary/source checksums, supported triplet logic, export definition, ABI header, and wrapper project version together. Confirm that the source archive contains the matching dependency license report, install it with the copyright materials, and repeat consumer tests for every supported triplet. Do not expand supported triplets without testing them. Offline and vcpkg download-only operation have not been validated. Follow the [vcpkg maintainer guide](https://learn.microsoft.com/en-us/vcpkg/contributing/maintainer-guide) for package acceptance requirements.
