@@ -68,7 +68,7 @@ jobs:
           fi
 
   build-and-upload:
-    name: Build ${{ matrix.os }}${{ matrix.container && ' (musl)' || '' }}
+    name: Build ${{ matrix.os }}${{ (matrix.container || matrix.musl_docker) && ' (musl)' || '' }}
     needs: validate-release
     if: needs.validate-release.outputs.published != 'true'
     runs-on: ${{ matrix.os }}
@@ -93,9 +93,9 @@ jobs:
             cargo_target: ""
             target_dir: target/release-c
           - os: ubuntu-24.04-arm
-            container: "alpine:latest"
             asset_name: libfastlowess_go-linux-arm64-musl.a
             native_dir: linux_arm64_musl
+            musl_docker: true
             cargo_target: ""
             target_dir: target/release-c
           - os: macos-15-intel
@@ -132,7 +132,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - uses: actions/setup-go@v7
-        if: ${{ !matrix.container }}
+        if: ${{ !matrix.container && !matrix.musl_docker }}
         with:
           go-version: "1.23.x"
           cache: false
@@ -163,10 +163,12 @@ jobs:
           # Linker for this target comes from the repo's root .cargo/config.toml.
 
       - name: Build Go native library
+        if: ${{ !matrix.musl_docker }}
         working-directory: bindings/go
         run: cargo build --locked --profile release-c --lib ${{ matrix.cargo_target }}
 
       - name: Test standalone Go consumer
+        if: ${{ !matrix.musl_docker }}
         shell: bash
         run: |
           set -euo pipefail
@@ -189,6 +191,34 @@ jobs:
           else
             go test ./...
           fi
+
+      - name: Build and test ARM64 musl Go consumer in Alpine
+        if: matrix.musl_docker
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --platform linux/arm64 \
+            -v "$GITHUB_WORKSPACE:/work" -w /work \
+            rust:alpine sh -ec '
+              apk add --no-cache build-base curl bash git go
+              cargo build --locked --profile release-c --lib \
+                --manifest-path bindings/go/Cargo.toml
+
+              staging="$(mktemp -d)"
+              cp -R bindings/go/fastlowess "$staging/fastlowess"
+              cp -R bindings/go/tests "$staging/tests"
+              mkdir -p "$staging/fastlowess/include" \
+                "$staging/fastlowess/native/linux_arm64_musl"
+              cp bindings/go/include/fastlowess_go.h \
+                "$staging/fastlowess/include/"
+              cp target/release-c/libfastlowess_go.a \
+                "$staging/fastlowess/native/linux_arm64_musl/"
+              export GOWORK=off CGO_ENABLED=1
+              unset CGO_CFLAGS CGO_LDFLAGS GOFLAGS
+              cd "$staging/tests"
+              go test -tags=musl ./...
+            '
+          sudo chown -R "$(id -u):$(id -g)" target/release-c
 
       - name: Stage module native files
         shell: bash
