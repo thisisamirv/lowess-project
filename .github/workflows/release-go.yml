@@ -93,10 +93,11 @@ jobs:
             cargo_target: ""
             target_dir: target/release-c
           - os: ubuntu-24.04-arm
+            container: "alpine:latest"
             asset_name: libfastlowess_go-linux-arm64-musl.a
             native_dir: linux_arm64_musl
-            cargo_target: "--target aarch64-unknown-linux-musl"
-            target_dir: target/aarch64-unknown-linux-musl/release-c
+            cargo_target: ""
+            target_dir: target/release-c
           - os: macos-15-intel
             asset_name: libfastlowess_go-macos-x64.a
             native_dir: darwin_amd64
@@ -135,15 +136,6 @@ jobs:
         with:
           go-version: "1.23.x"
           cache: false
-
-      - name: Install musl toolchain + target (Linux aarch64 musl)
-        if: matrix.cargo_target == '--target aarch64-unknown-linux-musl'
-        run: |
-          rustup target add aarch64-unknown-linux-musl
-          sudo apt-get update
-          sudo apt-get install -y musl-tools
-          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=musl-gcc" >> "$GITHUB_ENV"
-          echo "CC_aarch64_unknown_linux_musl=musl-gcc" >> "$GITHUB_ENV"
 
       - name: Install Rust GNU target (Windows x64)
         if: matrix.os == 'windows-latest'
@@ -190,8 +182,6 @@ jobs:
           if [ "${{ matrix.os }}" = "windows-11-arm" ]; then
             export CC=aarch64-w64-mingw32-clang
             export GOOS=windows GOARCH=arm64
-          elif [ "${{ matrix.cargo_target }}" = "--target aarch64-unknown-linux-musl" ]; then
-            export CC=musl-gcc
           fi
           cd "$staging/tests"
           if [[ "${{ matrix.native_dir }}" = *_musl ]]; then
