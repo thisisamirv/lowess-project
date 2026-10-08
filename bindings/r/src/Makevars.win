@@ -5,13 +5,10 @@ RUST_TARGET := $(if $(CARGO_BUILD_TARGET),$(CARGO_BUILD_TARGET),x86_64-pc-window
 LIBDIR = $(TARGET_DIR)/$(RUST_TARGET)/release
 STATLIB = $(LIBDIR)/librfastlowess.a
 
-# gnullvm: skip --whole-archive to avoid lld duplicate-symbol crashes from
-# per-crate raw-dylib stubs; entrypoint.c refs the extendr init symbol directly.
-ifneq ($(findstring gnullvm,$(RUST_TARGET)),)
+# entrypoint.c references the required Rust registration symbols directly.
+# Normal archive extraction also avoids unused GPU raw-dylib stubs (e.g.
+# dxcompiler.dll and mrmsupport.dll) becoming eager DLL imports.
 WHOLE_ARCHIVE_LIBS = -lrfastlowess
-else
-WHOLE_ARCHIVE_LIBS = -Wl,--whole-archive -lrfastlowess -Wl,--no-whole-archive
-endif
 PKG_LIBS = -L$(LIBDIR) $(WHOLE_ARCHIVE_LIBS) -Wl,--allow-multiple-definition -lws2_32 -luserenv -ladvapi32 -lbcrypt -lncrypt -lntdll -Wl,--export-all-symbols -Wl,--strip-all
 
 # Set WITH_GPU=1 in the environment (e.g. R CMD INSTALL invocation) to build
