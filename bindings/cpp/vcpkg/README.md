@@ -9,13 +9,13 @@ Use this port as a repository overlay. Its supported targets are limited to thos
 | Setting | Support |
 | --- | --- |
 | Target triplets | Windows x64/ARM64, Linux x64/ARM64, and macOS x64/ARM64 |
-| Linux libc | glibc and musl |
+| Linux libc | glibc only |
 | Library linkage | Shared library only |
 | Windows runtime | Dynamic CRT |
 | Backend | CPU |
 | Consumer configurations | Debug and Release, both using the upstream prebuilt library |
 
-Static linkage, static CRT, 32-bit and ARMv7 targets, MinGW, UWP, Android, iOS, GPU builds, and other operating systems are not supported at this moment. Linux and macOS require dynamic-linkage triplets. The manifest and available release binaries are authoritative; do not assume a triplet is supported just because its architecture is listed above.
+Static linkage, static CRT, musl, 32-bit and ARMv7 targets, MinGW, UWP, Android, iOS, GPU builds, and other operating systems are not supported by this curated port. Linux and macOS require dynamic-linkage triplets. The Linux target compiler is checked for glibc during configuration, so custom triplet names cannot silently select an incompatible binary. Use an overlay port for musl. The manifest and available release binaries are authoritative; do not assume a triplet is supported just because its architecture is listed above.
 
 ## Requirements
 
@@ -52,7 +52,7 @@ For example, configure a Windows application with vcpkg's toolchain and the trip
 cmake -S . -B build "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows
 ```
 
-On Linux or macOS, use the same form with a matching dynamic triplet. For musl, the portfile, triplet, and release binary must all target the same musl environment.
+On Linux or macOS, use the same form with a matching dynamic triplet. The curated Linux port supports glibc only; use an overlay port to select a musl release binary.
 
 In your application's CMake project:
 
@@ -85,7 +85,7 @@ ctest --test-dir "$repo/target/vcpkg-consumer" -C Release --output-on-failure
 
 If installation used `--x-install-root`, set `VCPKG_INSTALLED_DIR` to that same directory instead of `$vcpkg/installed`.
 
-For Linux or macOS, use the matching dynamic triplet. For example, on Linux:
+For Linux or macOS, use the matching dynamic triplet. For example, on glibc Linux:
 
 ```sh
 cmake -S bindings/cpp/vcpkg/test-project -B target/vcpkg-consumer-linux \
