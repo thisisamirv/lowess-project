@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Restrict the curated vcpkg Linux package to glibc and verify the target libc during CMake configuration; musl users must use an overlay.
 
+### Fixed
+
+**Monorepo:**
+
+- Kept the C++ Spack archive URL stable and made release updates recognize multiline version declarations without duplicating them.
+
 ## 5.0.0
 
 ### Added

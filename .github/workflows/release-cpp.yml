@@ -389,16 +389,42 @@ jobs:
           VERSION: ${{ steps.meta.outputs.version }}
           SHA256: ${{ steps.meta.outputs.sha256 }}
           PACKAGE_FILE: bindings/cpp/spack/package.py
-        run: |
-          if grep -qE "version\(\"${VERSION}\"" "$PACKAGE_FILE"; then
-            # Refresh the sha256 of an already-present version() line in place.
-            sed -i -E "s/version\(\"${VERSION}\", sha256=\"[0-9a-f]+\"\)/version(\"${VERSION}\", sha256=\"${SHA256}\")/" "$PACKAGE_FILE"
-          else
-            # Insert a new version() line right after the anchor comment,
-            # keeping Spack's newest-first convention.
-            sed -i "/# spack-release job on every release; keep newest first\\./a\\    version(\"${VERSION}\", sha256=\"${SHA256}\")" "$PACKAGE_FILE"
-          fi
-          echo "Updated $PACKAGE_FILE with version $VERSION"
+        run: |4
+            python - <<'PY'
+            import os
+            import re
+            from pathlib import Path
+
+            package_file = Path(os.environ["PACKAGE_FILE"])
+            version = os.environ["VERSION"]
+            sha256 = os.environ["SHA256"]
+            contents = package_file.read_text(encoding="utf-8")
+            version_pattern = re.compile(
+              rf'(?m)^[ \t]*version\(\s*["\']{re.escape(version)}["\']'
+              r'\s*,\s*sha256=["\'][0-9a-fA-F]+["\']\s*,?\s*\)'
+            )
+            matches = list(version_pattern.finditer(contents))
+            declaration = f'version("{version}", sha256="{sha256}")'
+
+            if matches:
+              updated = []
+              previous_end = 0
+              for index, match in enumerate(matches):
+                updated.append(contents[previous_end : match.start()])
+                if index == 0:
+                  updated.append(f"    {declaration}")
+                previous_end = match.end()
+              updated.append(contents[previous_end:])
+              contents = "".join(updated)
+            else:
+              anchor = "# spack-release job on every release; keep newest first."
+              if anchor not in contents:
+                raise SystemExit(f"Could not find version insertion point in {package_file}")
+              contents = contents.replace(anchor, f'{anchor}\n    {declaration}', 1)
+
+            package_file.write_text(contents, encoding="utf-8")
+            PY
+            echo "Updated $PACKAGE_FILE with version $VERSION"
 
       - name: Commit updated recipe
         run: |
