@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+**Monorepo:**
+
+- Updated `dev/bump_version.py` to set `CITATION.cff`'s release date to the date the script runs.
+
 **C++:**
 
 - Restrict the curated vcpkg Linux package to glibc and verify the target libc during CMake configuration; musl users must use an overlay.
@@ -17,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 **Monorepo:**
+
+- Fixed license and ORCID ID in `CITATION.cff`.
+
+**C++:**
 
 - Kept the C++ Spack archive URL stable and made release updates recognize multiline version declarations without duplicating them.
 

@@ -7,8 +7,10 @@ authors:
   - family-names: "Valizadeh"
     given-names: "Amir"
     email: "thisisamirv@gmail.com"
-    orcid: "https://orcid.org/0000-0000-0000-0000"
-license: "MIT OR Apache-2.0"
+    orcid: "https://orcid.org/0000-0001-5983-8527"
+license:
+  - Apache-2.0
+  - MIT
 repository-code: "https://github.com/thisisamirv/lowess-project"
 url: "https://thisisamirv.github.io/lowess-project/"
 keywords:
@@ -25,7 +27,7 @@ keywords:
   - cpp
   - go
   - java
-date-released: "2026-01-01"
+date-released: "2026-10-07"
 version: "5.0.0"
 references:
   - type: article
