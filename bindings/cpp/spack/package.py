@@ -1,7 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-# ruff: noqa: UP006
+# ruff: noqa: F403, F405, UP006
 # isort: skip_file
 
 import os
