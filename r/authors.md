@@ -142,7 +142,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Emilio Cobos Álvarez <emilio@crisal.io>, Jeff Muizelaar <jmuizelaar@mozilla.com>, Kartikaya Gupta <kats@mozilla.com>, Ryan Hunt <rhunt@eqrion.net>
     License: MPL-2.0
     ----------------------------------------
-    Package: cc (1.6.0)
+    Package: cc (1.9.0)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -174,7 +174,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: combine (4.6.8)
+    Package: combine (4.6.9)
     Authors: Markus Westerlind <marwes91@gmail.com>
     License: MIT
     ----------------------------------------
@@ -218,11 +218,11 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Slint Developers <info@slint.dev>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: either (1.18.0)
+    Package: either (1.19.0)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: equivalent (1.0.2)
+    Package: equivalent (1.0.3)
     Authors:
     License: Apache-2.0 OR MIT
     ----------------------------------------
@@ -234,7 +234,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Stjepan Glavina <stjepang@gmail.com>
     License: Apache-2.0 OR MIT
     ----------------------------------------
-    Package: find-msvc-tools (0.1.14)
+    Package: find-msvc-tools (0.1.15)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -354,7 +354,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Brendan Zabarauskas <bjzaba@yahoo.com.au>, Corey Richardson, Arseny Kapoulkine, Pierre Krieger <pierre.krieger1708@gmail.com>
     License: Apache-2.0
     ----------------------------------------
-    Package: libc (0.2.190)
+    Package: libc (0.2.191)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -370,7 +370,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Dan Gohman <dev@sunfishcode.online>
     License: Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT
     ----------------------------------------
-    Package: litrs (1.0.0)
+    Package: litrs (1.0.1)
     Authors: Lukas Kalbertodt <lukas.kalbertodt@gmail.com>
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -402,7 +402,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: gfx-rs developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: napi (3.14.1)
+    Package: napi (3.14.2)
     Authors: Nathan Sobo <nathan@github.com>, Yinan Long <lynweklm@gmail.com>
     License: MIT
     ----------------------------------------
@@ -410,7 +410,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: LongYinan <lynweklm@gmail.com>
     License: MIT
     ----------------------------------------
-    Package: napi-derive (3.6.11)
+    Package: napi-derive (3.6.12)
     Authors: LongYinan <lynweklm@gmail.com>, Forehalo <forehalo@gmail.com>
     License: MIT
     ----------------------------------------
@@ -450,7 +450,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: The Rust Project Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: numpy (0.29.0)
+    Package: numpy (0.30.0)
     Authors: The rust-numpy Project Developers, PyO3 Project and Contributors <https://github.com/PyO3>
     License: BSD-2-Clause
     ----------------------------------------
@@ -542,23 +542,23 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Philip Degarmo <aclysma@gmail.com>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: pyo3 (0.29.3)
+    Package: pyo3 (0.30.1)
     Authors: PyO3 Project and Contributors <https://github.com/PyO3>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: pyo3-build-config (0.29.3)
+    Package: pyo3-build-config (0.30.1)
     Authors: PyO3 Project and Contributors <https://github.com/PyO3>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: pyo3-ffi (0.29.3)
+    Package: pyo3-ffi (0.30.1)
     Authors: PyO3 Project and Contributors <https://github.com/PyO3>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: pyo3-macros (0.29.3)
+    Package: pyo3-macros (0.30.1)
     Authors: PyO3 Project and Contributors <https://github.com/PyO3>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: pyo3-macros-backend (0.29.3)
+    Package: pyo3-macros-backend (0.30.1)
     Authors: PyO3 Project and Contributors <https://github.com/PyO3>
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -646,11 +646,11 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: serde_json (1.0.151)
-    Authors: Erick Tryzelaar <erick.tryzelaar@gmail.com>, David Tolnay <dtolnay@gmail.com>
+    Package: serde_json (1.0.154)
+    Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: serde_spanned (1.1.1)
+    Package: serde_spanned (1.1.2)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -674,7 +674,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Orson Peters <orsonpeters@gmail.com>
     License: Zlib
     ----------------------------------------
-    Package: smallvec (1.16.2)
+    Package: smallvec (1.16.3)
     Authors: The Servo Project Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -714,7 +714,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: David Tolnay <dtolnay@gmail.com>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: tokio (1.53.2)
+    Package: tokio (1.54.1)
     Authors: Tokio Contributors <team@tokio.rs>
     License: MIT
     ----------------------------------------
@@ -726,15 +726,15 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: toml_parser (1.1.3+spec-1.1.0)
+    Package: toml_parser (1.1.5+spec-1.1.0)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: toml_writer (1.1.2+spec-1.1.0)
+    Package: toml_writer (1.1.3+spec-1.1.0)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: unicode-ident (1.0.26)
+    Package: unicode-ident (1.0.27)
     Authors: David Tolnay <dtolnay@gmail.com>
     License: (MIT OR Apache-2.0) AND Unicode-3.0
     ----------------------------------------
@@ -890,11 +890,11 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Vladimir Matveev <vmatveev@citrine.cc>
     License: MIT
     ----------------------------------------
-    Package: zerocopy (0.8.59)
+    Package: zerocopy (0.8.63)
     Authors:
     License: BSD-2-Clause OR Apache-2.0 OR MIT
     ----------------------------------------
-    Package: zerocopy-derive (0.8.59)
+    Package: zerocopy-derive (0.8.63)
     Authors:
     License: BSD-2-Clause OR Apache-2.0 OR MIT
     ----------------------------------------
