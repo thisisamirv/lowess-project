@@ -183,8 +183,10 @@ dev:
 	@ls -lh $(R_DIR)/$(R_PKG_TARBALL) || true
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript \
 	  -e "library(pkgstats); library(pkgcheck)" \
-	  -e "token <- Sys.getenv('GITHUB_TOKEN', ''); if (nzchar(token) && !nzchar(Sys.getenv('GITHUB_PAT', ''))) Sys.setenv(GITHUB_PAT = token)" \
-	  -e "tryCatch(pkgcheck(use_cache = TRUE), error = function(err) { msg <- conditionMessage(err); if (grepl('GitHub API error|rate limit exceeded|timeout|could not resolve host', msg, ignore.case = TRUE) || grepl('could not find function', msg, fixed = TRUE) || grepl('differing number of rows', msg, fixed = TRUE)) { message('Skipping pkgcheck due to known incompatibility or network failure: ', msg); return(invisible(NULL)) }; stop(err) })"
+	  -e "Sys.setenv(GH_VALIDATE_TOKENS = 'off')" \
+	  -e "pat <- Sys.getenv('GITHUB_PAT', ''); if (grepl('^ghs_', pat)) Sys.unsetenv('GITHUB_PAT')" \
+	  -e "token <- Sys.getenv('GITHUB_TOKEN', ''); if (nzchar(token) && !grepl('^ghs_', token) && !nzchar(Sys.getenv('GITHUB_PAT', ''))) Sys.setenv(GITHUB_PAT = token)" \
+	  -e "tryCatch(pkgcheck(use_cache = TRUE), error = function(err) { msg <- conditionMessage(err); if (grepl('GitHub API error|rate limit exceeded|timeout|could not resolve host|Invalid GitHub PAT format', msg, ignore.case = TRUE) || grepl('could not find function', msg, fixed = TRUE) || grepl('differing number of rows', msg, fixed = TRUE)) { message('Skipping pkgcheck due to known incompatibility or network failure: ', msg); return(invisible(NULL)) }; stop(err) })"
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (r)..."
 	@$(PYTHON) dev/check_links.py --lang r

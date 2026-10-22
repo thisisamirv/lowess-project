@@ -14,7 +14,10 @@ env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  # Actions GITHUB_TOKEN is a ghs_* installation token; older gh hard-errors on
+  # format validation (r-lib/gh#231). Prefer warning/off over aborting pkgcheck.
   GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+  GH_VALIDATE_TOKENS: off
 
 jobs:
   cmd-check:
@@ -183,7 +186,8 @@ jobs:
             # (ropensci-review-tools/srr#71 — "differing number of rows: 10, 9").
             if (
               grepl("could not find function", msg, fixed = TRUE) ||
-              grepl("differing number of rows", msg, fixed = TRUE)
+              grepl("differing number of rows", msg, fixed = TRUE) ||
+              grepl("Invalid GitHub PAT format", msg, fixed = TRUE)
             ) {
               message("Skipping pkgcheck due to upstream tool incompatibility: ", msg)
             } else {
