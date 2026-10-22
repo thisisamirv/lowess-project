@@ -1,12 +1,10 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-# ruff: noqa: F403, F405, UP006
 # isort: skip_file
 
 import os
 import textwrap
-from typing import ClassVar, List  # noqa: UP035
 
 from spack.package import *
 from spack_repo.builtin.build_systems.cargo import CargoPackage
@@ -26,11 +24,11 @@ class FastlowessCpp(CargoPackage):
     git = "https://github.com/thisisamirv/lowess-project.git"
 
     test_requires_compiler = True
-    sanity_check_is_file: ClassVar[List[str]] = [
+    sanity_check_is_file = (
         join_path("include", "fastlowess.hpp"),
         join_path("include", "fastlowess.h"),
-    ]
-    sanity_check_is_dir: ClassVar[List[str]] = ["include", "lib"]
+    )
+    sanity_check_is_dir = ("include", "lib")
 
     maintainers("thisisamirv")
 
