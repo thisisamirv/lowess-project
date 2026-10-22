@@ -10,15 +10,15 @@
         "docs:preview": "astro preview"
     },
     "devDependencies": {
-        "@astrojs/markdown-remark": "^7.3.2",
-        "@astrojs/starlight": "^0.42.5",
-        "astro": "^7.3.6",
+        "@astrojs/markdown-remark": "^7.3.4",
+        "@astrojs/starlight": "^0.42.6",
+        "astro": "^7.4.2",
         "katex": "^0.19.0",
-        "oxlint": "^1.87.0",
+        "oxlint": "^1.89.0",
         "rehype-katex": "^7.0.1",
         "remark-math": "^6.0.0",
         "typedoc": "^0.28.20",
-        "typedoc-plugin-markdown": "^4.13.1"
+        "typedoc-plugin-markdown": "^4.14.1"
     },
     "license": "MIT OR Apache-2.0"
 }

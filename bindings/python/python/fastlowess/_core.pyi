@@ -3,10 +3,10 @@
 # pylint: disable=unnecessary-ellipsis,unused-argument
 
 from collections.abc import Mapping, Sequence
+from typing import Self
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
-from typing_extensions import Self
 
 class Diagnostics:
     """Diagnostic statistics for LOWESS fit quality."""

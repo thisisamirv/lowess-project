@@ -13,10 +13,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Monorepo:**
 
 - Updated `dev/bump_version.py` to set `CITATION.cff`'s release date to the date the script runs.
+- Bumped the pinned `golangci-lint` install-script version from `v2.14.0` to `v2.15.0`.
+- Bumped the Hugo docs build from `v0.167.0` to `v0.168.0`.
 
 **C++:**
 
 - Restrict the curated vcpkg Linux package to glibc and verify the target libc during CMake configuration; musl users must use an overlay.
+
+**Java:**
+
+- Bumped `central-publishing-maven-plugin.version` to v0.12.0.
+
+**Node.js:**
+
+- Bumped `astrojs/markdown-remark` to v7.3.4, `astrojs/starlight` to v0.42.6, `napi-rs/cli` to v3.10.9, `astro` to v7.4.2, `oxlint` to v1.89.0, and `typedoc-plugin-markdown` to v4.14.1.
+
+**Python:**
+
+- Bumped `pyo3` and `numpy` to v0.30.
+
+**R:**
+
+- Bumped `roxygen2` to v8.1.1.
+
+**WASM:**
+
+- Bumped `astrojs/markdown-remark` to v7.3.4, `astrojs/starlight` to v0.42.6, `astro` to v7.4.2, `oxlint` to v1.89.0, and `typedoc-plugin-markdown` to v4.14.1.
 
 ### Fixed
 
