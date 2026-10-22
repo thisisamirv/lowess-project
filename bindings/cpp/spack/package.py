@@ -1,7 +1,6 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-# isort: skip_file
 
 import os
 import textwrap
@@ -36,7 +35,10 @@ class FastlowessCpp(CargoPackage):
 
     # version() lines below are appended/updated by release-cpp.yml's
     # spack-release job on every release; keep newest first.
-    version("5.0.0", sha256="5aaddb050b08d9efa5493c4181dc2d59d02c5a87320dd95b415b726df1884007")
+    version(
+        "5.0.0",
+        sha256="5aaddb050b08d9efa5493c4181dc2d59d02c5a87320dd95b415b726df1884007",
+    )
     version(
         "4.1.0",
         sha256="ec0e99ac8f53ad80105eb47891569298e1e02d4068b6be89ab248e56cddbc8fa",
@@ -97,7 +99,8 @@ class FastlowessCpp(CargoPackage):
         """Compile and run a linear fit against the installed C++ library."""
         source = "fastlowess_spack_smoke.cpp"
         with open(source, "w", encoding="utf-8") as stream:
-            stream.write(textwrap.dedent("""\
+            stream.write(
+                textwrap.dedent("""\
                 #include <fastlowess.hpp>
                 #include <cmath>
                 #include <vector>
@@ -120,7 +123,8 @@ class FastlowessCpp(CargoPackage):
                     }
                     return 0;
                 }
-                """))
+                """)
+            )
 
         cxx = which(os.environ["CXX"])
         windows = self.spec.satisfies("platform=windows")

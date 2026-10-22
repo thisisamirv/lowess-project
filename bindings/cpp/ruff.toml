@@ -1,0 +1,6 @@
+# Spack packages require `from spack.package import *` (F403/F405).
+# "I" is Ruff's equivalent of `# isort: skip_file` (star-import order).
+# Keep ignores here — do not put `# noqa` in package.py (Spack review).
+# Config lives outside the gitignored `spack/` directory so it can be committed.
+[lint.per-file-ignores]
+"spack/package.py" = ["F403", "F405", "I"]
