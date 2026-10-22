@@ -177,7 +177,8 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          # Astro 7 requires Node >=22.23.4; bare "22" can resolve to a cached 22.23.3.
+          node-version: "22.23.4"
 
       - name: Install dependencies
         run: npm install
@@ -259,7 +260,8 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          # Astro 7 requires Node >=22.23.4; bare "22" can resolve to a cached 22.23.3.
+          node-version: "22.23.4"
 
       - name: Build WASM
         run: wasm-pack build --target nodejs --release

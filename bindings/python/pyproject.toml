@@ -46,5 +46,8 @@ python-source = "python"
 module-name = "fastlowess._core"
 exclude = ["docs/**", "examples/**", "tests/**", "target/**", ".github/**"]
 
+[tool.ruff]
+target-version = "py38"
+
 [tool.pyright]
 reportMissingModuleSource = "none"
