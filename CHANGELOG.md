@@ -45,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Monorepo:**
 
 - Fixed license and ORCID ID in `CITATION.cff`.
-- Pinned Node.js to `22.23.4` in the Starlight docs jobs so Astro 7's `>=22.23.4` engine check does not fail on a cached `22.23.3`.
+- Pinned Node.js to `22.23.4` in the Starlight docs jobs and Node.js/WASM CI so Astro 7's `>=22.23.4` engine check does not fail on a cached `22.23.3`.
 - Hardened the R `pkgcheck` CI job against the upstream `srr` category-table mismatch (`differing number of rows: 10, 9` after the networks standards landed; ropensci-review-tools/srr#71) by installing current `srr` from r-universe and skipping that known load failure.
 
 **C++:**
