@@ -11,9 +11,9 @@
     },
     "devDependencies": {
         "@astrojs/markdown-remark": "^7.3.4",
-        "@astrojs/starlight": "^0.42.6",
+        "@astrojs/starlight": "^0.42.7",
         "astro": "^7.4.2",
-        "katex": "^0.19.0",
+        "katex": "^0.19.1",
         "oxlint": "^1.89.0",
         "rehype-katex": "^7.0.1",
         "remark-math": "^6.0.0",
