@@ -36,6 +36,18 @@ fn to_py_invalid_arg_error(e: impl Display) -> PyErr {
     to_py_error(binding_support::BindingError::invalid_arg(e.to_string()))
 }
 
+fn mutex_poison_err(err: &impl Display) -> PyErr {
+    to_py_error(binding_support::BindingError::runtime(
+        binding_support::mutex_poisoned_message(&err.to_string()),
+    ))
+}
+
+fn already_closed_err(name: &str) -> PyErr {
+    to_py_error(binding_support::BindingError::runtime(format!(
+        "{name} has already been closed"
+    )))
+}
+
 fn check_keys(group: &Bound<'_, PyDict>, allowed: &[&str], name: &str) -> PyResult<()> {
     for key in group.keys() {
         let key: String = key.extract().map_err(to_py_invalid_arg_error)?;
@@ -485,6 +497,25 @@ impl PyLowessResult {
         Ok(PyPredictOutput { inner: output })
     }
 
+    /// Drop retained predict state early. Idempotent; GC still finalizes the rest.
+    fn close(&mut self) {
+        self.inner.fit_state = None;
+    }
+
+    fn __enter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
+        slf
+    }
+
+    #[pyo3(signature = (_exc_type=None, _exc_value=None, _traceback=None))]
+    fn __exit__(
+        &mut self,
+        _exc_type: Option<&Bound<'_, PyAny>>,
+        _exc_value: Option<&Bound<'_, PyAny>>,
+        _traceback: Option<&Bound<'_, PyAny>>,
+    ) {
+        self.close();
+    }
+
     fn __repr__(&self) -> String {
         format!(
             "LowessResult(n={}, fraction_used={:.4})",
@@ -501,7 +532,7 @@ impl PyLowessResult {
 /// Streaming LOWESS processor for incremental chunk-based smoothing.
 #[pyclass(name = "StreamingLowess")]
 pub struct PyStreamingLowess {
-    inner: Mutex<ParallelStreamingLowess<f64>>,
+    inner: Mutex<Option<ParallelStreamingLowess<f64>>>,
 }
 
 #[pymethods]
@@ -597,7 +628,7 @@ impl PyStreamingLowess {
         let processor = binding_support::map_lowess_result(builder.adapter(Streaming).build())
             .map_err(to_py_error)?;
         Ok(PyStreamingLowess {
-            inner: Mutex::new(processor),
+            inner: Mutex::new(Some(processor)),
         })
     }
 
@@ -612,15 +643,12 @@ impl PyStreamingLowess {
         let y_vec = array_like_to_vec(py, y)?;
 
         let result = py.detach(move || {
-            self.inner
-                .lock()
-                .map_err(|e| {
-                    to_py_error(binding_support::BindingError::runtime(
-                        binding_support::mutex_poisoned_message(&e.to_string()),
-                    ))
-                })?
-                .process_chunk(&x_vec, &y_vec)
-                .map_err(|e| to_py_error(binding_support::BindingError::runtime(e.to_string())))
+            let mut guard = self.inner.lock().map_err(|e| mutex_poison_err(&e))?;
+            let model = guard
+                .as_mut()
+                .ok_or_else(|| already_closed_err("StreamingLowess"))?;
+            binding_support::map_lowess_result(model.process_chunk(&x_vec, &y_vec))
+                .map_err(to_py_error)
         })?;
 
         Ok(PyLowessResult { inner: result })
@@ -629,18 +657,35 @@ impl PyStreamingLowess {
     /// Finalize smoothing and return remaining buffered data.
     fn finalize(&self, py: Python<'_>) -> PyResult<PyLowessResult> {
         let result = py.detach(move || {
-            self.inner
-                .lock()
-                .map_err(|e| {
-                    to_py_error(binding_support::BindingError::runtime(
-                        binding_support::mutex_poisoned_message(&e.to_string()),
-                    ))
-                })?
-                .finalize()
-                .map_err(|e| to_py_error(binding_support::BindingError::runtime(e.to_string())))
+            let mut guard = self.inner.lock().map_err(|e| mutex_poison_err(&e))?;
+            let model = guard
+                .as_mut()
+                .ok_or_else(|| already_closed_err("StreamingLowess"))?;
+            binding_support::map_lowess_result(model.finalize()).map_err(to_py_error)
         })?;
 
         Ok(PyLowessResult { inner: result })
+    }
+
+    /// Release native streaming state early. Idempotent.
+    fn close(&self) {
+        if let Ok(mut guard) = self.inner.lock() {
+            guard.take();
+        }
+    }
+
+    fn __enter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
+        slf
+    }
+
+    #[pyo3(signature = (_exc_type=None, _exc_value=None, _traceback=None))]
+    fn __exit__(
+        &self,
+        _exc_type: Option<&Bound<'_, PyAny>>,
+        _exc_value: Option<&Bound<'_, PyAny>>,
+        _traceback: Option<&Bound<'_, PyAny>>,
+    ) {
+        self.close();
     }
 }
 
@@ -687,10 +732,35 @@ impl PyOnlineOutput {
     }
 }
 
+/// Result of [`OnlineLowess.add_point`](PyOnlineLowess::add_point).
+#[pyclass(name = "AddPointResult", from_py_object)]
+#[derive(Clone)]
+pub struct PyAddPointResult {
+    /// `"filling"`, `"ready"`, or `"dropped"`.
+    #[pyo3(get)]
+    pub status: String,
+    /// Smoothed output when `status` is `"ready"`; otherwise `None`.
+    #[pyo3(get)]
+    pub point: Option<PyOnlineOutput>,
+}
+
+#[pymethods]
+impl PyAddPointResult {
+    fn __repr__(&self) -> String {
+        match &self.point {
+            Some(point) => format!(
+                "AddPointResult(status={:?}, point=OnlineOutput(y={:.4}))",
+                self.status, point.y
+            ),
+            None => format!("AddPointResult(status={:?}, point=None)", self.status),
+        }
+    }
+}
+
 /// Online LOWESS processor for real-time data streams.
 #[pyclass(name = "OnlineLowess")]
 pub struct PyOnlineLowess {
-    inner: Mutex<ParallelOnlineLowess<f64>>,
+    inner: Mutex<Option<ParallelOnlineLowess<f64>>>,
 }
 
 #[pymethods]
@@ -779,35 +849,71 @@ impl PyOnlineLowess {
         let processor = binding_support::map_lowess_result(builder.adapter(Online).build())
             .map_err(to_py_error)?;
         Ok(PyOnlineLowess {
-            inner: Mutex::new(processor),
+            inner: Mutex::new(Some(processor)),
         })
     }
 
-    /// Add a single point and return its smoothed value, or None if the window
-    /// is still filling up.
-    fn add_point(&self, py: Python<'_>, x: f64, y: f64) -> PyResult<Option<PyOnlineOutput>> {
+    /// Add a single point.
+    ///
+    /// Returns status `"filling"` while fewer than `min_points` finite
+    /// observations have been accepted, `"ready"` once smoothing begins
+    /// (`point` holds the output), or `"dropped"` when `missing = "drop"`
+    /// ignores a non-finite `x` or `y`.
+    fn add_point(&self, py: Python<'_>, x: f64, y: f64) -> PyResult<PyAddPointResult> {
+        let dropped_candidate = !(x.is_finite() && y.is_finite());
         let result = py.detach(move || {
-            let mut inner = self.inner.lock().map_err(|e| {
-                to_py_error(binding_support::BindingError::runtime(
-                    binding_support::mutex_poisoned_message(&e.to_string()),
-                ))
-            })?;
-            inner
-                .add_point(x, y)
-                .map_err(|e| to_py_error(binding_support::BindingError::invalid_arg(e.to_string())))
+            let mut guard = self.inner.lock().map_err(|e| mutex_poison_err(&e))?;
+            let model = guard
+                .as_mut()
+                .ok_or_else(|| already_closed_err("OnlineLowess"))?;
+            binding_support::map_lowess_result(model.add_point(x, y)).map_err(to_py_error)
         })?;
-        Ok(result.map(|o| PyOnlineOutput {
-            y: o.y,
-            standard_error: o.standard_error,
-            residual: o.residual,
-            robustness_weight: o.robustness_weight,
-            iterations_used: o.iterations_used,
-            derivative: o.derivative,
-            confidence_lower: o.confidence_lower,
-            confidence_upper: o.confidence_upper,
-            prediction_lower: o.prediction_lower,
-            prediction_upper: o.prediction_upper,
-        }))
+        Ok(match result {
+            Some(o) => PyAddPointResult {
+                status: "ready".to_owned(),
+                point: Some(PyOnlineOutput {
+                    y: o.y,
+                    standard_error: o.standard_error,
+                    residual: o.residual,
+                    robustness_weight: o.robustness_weight,
+                    iterations_used: o.iterations_used,
+                    derivative: o.derivative,
+                    confidence_lower: o.confidence_lower,
+                    confidence_upper: o.confidence_upper,
+                    prediction_lower: o.prediction_lower,
+                    prediction_upper: o.prediction_upper,
+                }),
+            },
+            None if dropped_candidate => PyAddPointResult {
+                status: "dropped".to_owned(),
+                point: None,
+            },
+            None => PyAddPointResult {
+                status: "filling".to_owned(),
+                point: None,
+            },
+        })
+    }
+
+    /// Release native online state early. Idempotent.
+    fn close(&self) {
+        if let Ok(mut guard) = self.inner.lock() {
+            guard.take();
+        }
+    }
+
+    fn __enter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
+        slf
+    }
+
+    #[pyo3(signature = (_exc_type=None, _exc_value=None, _traceback=None))]
+    fn __exit__(
+        &self,
+        _exc_type: Option<&Bound<'_, PyAny>>,
+        _exc_value: Option<&Bound<'_, PyAny>>,
+        _traceback: Option<&Bound<'_, PyAny>>,
+    ) {
+        self.close();
     }
 }
 
@@ -1005,6 +1111,7 @@ fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyPredictOutput>()?;
     m.add_class::<PyDiagnostics>()?;
     m.add_class::<PyOnlineOutput>()?;
+    m.add_class::<PyAddPointResult>()?;
     m.add_class::<PyLowess>()?;
     m.add_class::<PyStreamingLowess>()?;
     m.add_class::<PyOnlineLowess>()?;

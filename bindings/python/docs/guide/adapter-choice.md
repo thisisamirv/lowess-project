@@ -160,8 +160,8 @@ model = fl.OnlineLowess(
 shown = 0
 for xi, yi in zip(x, y):
     result = model.add_point(float(xi), float(yi))
-    if result is not None:
-        print(result.y)
+    if result.status == "ready":
+        print(result.point.y)
         shown += 1
         if shown >= 5:
             break

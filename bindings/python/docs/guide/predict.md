@@ -12,7 +12,7 @@ Out-of-sample prediction is available in **Batch** mode only. Streaming and Onli
 
 It reuses `fit()`'s own (possibly `delta`-interpolated) smoothed curve for its `y` output — so predicting at a training `x` always exactly reproduces that point's `fit()` output, regardless of `delta`. A fresh local fit is only run when `"derivative"`, `"se"` (or an interval level), or `max_neighbor_distance` needs the actual regression slope or standard error.
 
-Requires `retain_model=True` on the constructor before `fit()`, otherwise `predict()` raises `LowessError`.
+Requires `retain_model=True` on the constructor before `fit()`, otherwise `predict()` raises `ValueError` or `RuntimeError`.
 
 ---
 
@@ -49,7 +49,7 @@ Behavior for query points outside `[min(x_train), max(x_train)]`:
 | --- | --- |
 | `"clamp"` (default) | Clamps the query to the nearest boundary window |
 | `"linear"` | Linearly extrapolates from the nearest boundary point's local fit and slope |
-| `"error"` | Fails the whole call with `LowessError` |
+| `"error"` | Fails the whole call with `ValueError` or `RuntimeError` |
 
 ### max_extrapolation_distance
 

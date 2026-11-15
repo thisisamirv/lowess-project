@@ -151,7 +151,9 @@ print("Streaming CI present:", stream.process_chunk(x, y).confidence_lower is no
 online = fl.OnlineLowess(min_points=5, update_mode="full", intervals=intervals, seed=42)
 last = None
 for xi, yi in zip(x[:12], y[:12]):
-    last = online.add_point(xi, yi) or last
+    result = online.add_point(xi, yi)
+    if result.status == "ready":
+        last = result.point
 print("Online PI present:", last.prediction_lower is not None)
 :::
 

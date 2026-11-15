@@ -3,7 +3,8 @@
 # pylint: disable=unnecessary-ellipsis,unused-argument
 
 from collections.abc import Mapping, Sequence
-from typing import Self
+from types import TracebackType
+from typing import Literal, Self
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -40,7 +41,7 @@ class Diagnostics:
         """Batch: robust residual scale estimate (1.4826 * MAD); Streaming: cumulative sample SD of emitted residuals."""
 
 class OnlineOutput:
-    """Result from a single add_point() call."""
+    """Result from a single add_point() call when status is ``"ready"``."""
 
     @property
     def y(self) -> float:
@@ -81,6 +82,17 @@ class OnlineOutput:
     @property
     def prediction_upper(self) -> float | None:
         """Upper prediction interval bound for the latest point (None if not requested)."""
+
+class AddPointResult:
+    """Result of ``OnlineLowess.add_point()``."""
+
+    @property
+    def status(self) -> Literal["filling", "ready", "dropped"]:
+        """``"filling"``, ``"ready"``, or ``"dropped"``."""
+
+    @property
+    def point(self) -> OnlineOutput | None:
+        """Smoothed output when ``status`` is ``"ready"``; otherwise ``None``."""
 
 class LowessResult:
     """Result from LOWESS smoothing."""
@@ -158,6 +170,17 @@ class LowessResult:
         ``intervals`` accepts ``confidence``, ``prediction``, and ``bootstrap``; ``seed``
         controls prediction-time bootstrap draws.
         """
+
+    def close(self) -> None:
+        """Drop retained predict state early. Idempotent."""
+
+    def __enter__(self) -> Self: ...
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None: ...
 
 class PredictOutput:
     """Result from `LowessResult.predict()`."""
@@ -265,6 +288,16 @@ class StreamingLowess:
     ) -> None: ...
     def process_chunk(self, x: ArrayLike, y: ArrayLike) -> LowessResult: ...
     def finalize(self) -> LowessResult: ...
+    def close(self) -> None:
+        """Release native streaming state early. Idempotent."""
+
+    def __enter__(self) -> Self: ...
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None: ...
 
 class OnlineLowess:
     """Online LOWESS processor for real-time data streams."""
@@ -289,7 +322,19 @@ class OnlineLowess:
         zero_weight_fallback: str = "use_local_mean",
         missing: str = "error",
     ) -> None: ...
-    def add_point(self, x: float, y: float) -> OnlineOutput | None: ...
+    def add_point(self, x: float, y: float) -> AddPointResult:
+        """Add a point; ``status`` is ``"filling"``, ``"ready"``, or ``"dropped"``."""
+
+    def close(self) -> None:
+        """Release native online state early. Idempotent."""
+
+    def __enter__(self) -> Self: ...
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None: ...
 
 def gpu_enabled() -> bool:
     """True if this extension was built with the `gpu` Cargo feature enabled."""

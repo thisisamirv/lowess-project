@@ -399,13 +399,22 @@ class TestOnlineLowess:
             online.add_point(float(x_value), float(y_value))
 
     def test_online_missing_drop_ignores_nan_point(self):
-        """Test online with missing="drop" ignores non-finite points."""
+        """Test online with missing="drop" distinguishes drop from filling."""
         online = fastlowess.OnlineLowess(
-            fraction=0.5, window_capacity=10, missing="drop"
+            fraction=0.5, window_capacity=10, min_points=3, missing="drop"
         )
 
-        result = online.add_point(1.0, float("nan"))
-        assert result is None
+        filling = online.add_point(0.0, 0.0)
+        assert filling.status == "filling"
+        assert filling.point is None
+
+        dropped = online.add_point(1.0, float("nan"))
+        assert dropped.status == "dropped"
+        assert dropped.point is None
+
+        still_filling = online.add_point(2.0, 4.0)
+        assert still_filling.status == "filling"
+        assert still_filling.point is None
 
     def test_online_basic(self):
         """Test basic online smoothing."""
@@ -417,8 +426,8 @@ class TestOnlineLowess:
         results = []
         for x_value, y_value in zip(x, y):
             result = online.add_point(float(x_value), float(y_value))
-            if result is not None:
-                results.append(result)
+            if result.status == "ready":
+                results.append(result.point)
 
         assert len(results) > 0
 
@@ -433,8 +442,8 @@ class TestOnlineLowess:
         results = []
         for x_value, y_value in zip(x, y):
             result = online.add_point(float(x_value), float(y_value))
-            if result is not None:
-                results.append(result)
+            if result.status == "ready":
+                results.append(result.point)
 
         assert len(results) > 0
 
@@ -446,7 +455,7 @@ class TestOnlineLowess:
         online = fastlowess.OnlineLowess(fraction=0.5, window_capacity=10, min_points=3)
         results = [online.add_point(xi, yi) for xi, yi in zip(x, y)]
 
-        assert any(r is not None for r in results)
+        assert any(r.status == "ready" for r in results)
 
     def test_online_return_se_and_intervals_requires_full_mode(self):
         """Test online return_se/CI/PI require update_mode="full"."""
@@ -472,8 +481,8 @@ class TestOnlineLowess:
         results = []
         for x_value, y_value in zip(x, y):
             result = online.add_point(float(x_value), float(y_value))
-            if result is not None:
-                results.append(result)
+            if result.status == "ready":
+                results.append(result.point)
 
         assert len(results) > 0
         last = results[-1]
@@ -713,7 +722,7 @@ class TestErrorHandling:
                 seed=0,
             )
             points = [online.add_point(float(a), float(b)) for a, b in zip(x, y)]
-            last = [p for p in points if p is not None][-1]
+            last = [p.point for p in points if p.status == "ready"][-1]
             return last.confidence_lower, last.prediction_upper
 
         first = last_bounds()

@@ -3,6 +3,18 @@
 
 This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md).
 
+## Unreleased
+
+### Changed
+
+* Breaking change: `OnlineLowess.add_point` returns `AddPointResult` with `status` of `"filling"` / `"ready"` / `"dropped"` instead of `OnlineOutput | None`.
+
+### Fixed
+
+* Distinguishing Online `add_point` filling vs `missing="drop"` via ternary `status`.
+* Adding idempotent `close()` / context-manager support on `OnlineLowess`, `StreamingLowess`, and `LowessResult` (clears retained predict state).
+* Mapping Streaming/Online failures via `map_lowess_result` so InvalidArg vs Runtime categories match Batch/`predict`.
+
 ## [5.0.0]
 
 ### Added

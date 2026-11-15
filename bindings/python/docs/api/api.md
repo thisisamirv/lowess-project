@@ -245,6 +245,8 @@ Per-observation weights, passed to `fit()` rather than the constructor.
 | `diagnostics` | `Diagnostics \| None` | Fit metrics (if `"diagnostics"` was requested) |
 | `derivative` | `ndarray \| None` | Per-point local fit derivative/slope (if `"derivative"` was requested) |
 
+`LowessResult.close()` drops retained predict state early (idempotent). Prefer `with result:` when `retain_model=True`.
+
 ### `Diagnostics`
 
 | Field | Type | Description |
@@ -261,7 +263,7 @@ Per-observation weights, passed to `fit()` rather than the constructor.
 
 ### `LowessResult.predict(new_x, ...) -> PredictOutput`
 
-Evaluates the fitted model at out-of-sample query points. Requires `retain_model=True` on the constructor before `fit()`, otherwise raises `LowessError`.
+Evaluates the fitted model at out-of-sample query points. Requires `retain_model=True` on the constructor before `fit()`, otherwise raises `ValueError` or `RuntimeError`.
 
 ## Example
 

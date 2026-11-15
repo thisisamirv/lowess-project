@@ -36,6 +36,7 @@ def _load_core():
 
 
 _core = _load_core()
+AddPointResult = _core.AddPointResult
 Diagnostics = _core.Diagnostics
 LowessResult = _core.LowessResult
 OnlineLowess = _core.OnlineLowess
@@ -50,6 +51,7 @@ _lowess = import_module("._lowess", __name__)
 Lowess = _lowess.Lowess
 
 __all__ = [
+    "AddPointResult",
     "Diagnostics",
     "Lowess",
     "LowessResult",

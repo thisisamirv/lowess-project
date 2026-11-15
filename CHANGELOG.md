@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Python:**
 
+- Breaking change: `OnlineLowess.add_point` returns `AddPointResult` with `status` of `"filling"` / `"ready"` / `"dropped"` instead of `OnlineOutput | None`.
 - Bumped `pyo3` and `numpy` to v0.30.
 
 **R:**
@@ -95,6 +96,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Distinguish online `missing="drop"` (`status: "dropped"`) from a still-filling window (`status: "filling"`); `add_point` returns `{ status, point }`.
 - Add idempotent `close()` / `Symbol.dispose` on `OnlineLowess`, `StreamingLowess`, and `LowessResult` (clears retained predict state).
 - Align `fit_async` custom-weights with sync `fit`, categorize Online errors via `map_lowess_result`, and restore `installGpu` TypeScript declarations after N-API generation.
+
+**Python:**
+
+- Distinguish online `missing="drop"` (`status: "dropped"`) from a still-filling window (`status: "filling"`); `add_point` returns `AddPointResult`.
+- Add idempotent `close()` / context-manager support on `OnlineLowess`, `StreamingLowess`, and `LowessResult` (clears retained predict state).
+- Map Streaming/Online failures via `map_lowess_result` so InvalidArg vs Runtime categories match Batch/`predict`.
 
 **WASM:**
 
