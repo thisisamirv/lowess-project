@@ -1,5 +1,8 @@
 #include <stddef.h>
 
+#ifndef FASTLOWESS_GO_H
+#define FASTLOWESS_GO_H
+
 typedef struct fastlowess_GoLowess fastlowess_GoLowess;
 
 typedef struct fastlowess_GoOnlineLowess fastlowess_GoOnlineLowess;
@@ -14,7 +17,8 @@ typedef struct fastlowess_GoStreamingLowess fastlowess_GoStreamingLowess;
  */
 typedef struct fastlowess_GoLowessResult {
   /**
-   * x values, in the same order as the input (length = n)
+   * x values (length = n). Same order as the input unless `return_sorted` was set,
+   * in which case ascending by x.
    */
   double *x;
   /**
@@ -137,7 +141,16 @@ typedef struct fastlowess_GoPredictResult {
   char *error;
 } fastlowess_GoPredictResult;
 
+/**
+ * Per-point result from an online update, passed across the FFI boundary.
+ *
+ * Non-computed optional fields use NaN (floats) or -1 (`iterations_used`).
+ * Smoothed fields are undefined unless `has_value` is 1.
+ */
 typedef struct fastlowess_GoOnlineOutput {
+  /**
+   * 1 = window ready; 0 = still filling; -1 = dropped under missing="drop".
+   */
   int has_value;
   double y;
   double standard_error;
@@ -164,9 +177,23 @@ typedef struct fastlowess_GoOnlineOutput {
    * Upper prediction interval bound for the latest point (NaN if not computed)
    */
   double prediction_upper;
+  /**
+   * Error message (NULL if no error)
+   */
   char *error;
 } fastlowess_GoOnlineOutput;
 
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
+/**
+ * Thread-local last-error message from the most recent failed constructor on this OS thread.
+ *
+ * The returned pointer is owned by the library and remains valid only until the next call that
+ * sets or clears the last-error slot on this thread. Callers must read it on the same OS thread
+ * as the failing call. Returns null when no error is stored.
+ */
 const char *go_last_error_message(void);
 
 /**
@@ -227,7 +254,8 @@ void go_lowess_set_bootstrap(struct fastlowess_GoLowess *ptr, size_t n_boot);
  *
  * # Safety
  * `ptr` must be a valid GoLowess pointer. `x_values` and `y_values` must be
- * valid arrays of length `n`. `custom_weights` is optional: pass null and 0 to omit.
+ * valid arrays of length `n`. `custom_weights` is optional: pass null and 0 to
+ * omit; when non-null, `custom_weights_len` must equal `n`.
  */
 struct fastlowess_GoLowessResult go_lowess_fit(struct fastlowess_GoLowess *ptr,
                                                const double *x_values,
@@ -249,7 +277,8 @@ void go_lowess_free(struct fastlowess_GoLowess *ptr);
  * points not in the training set.
  *
  * # Safety
- * `handle` must be a valid pointer returned via `GoLowessResult::predict_handle`.
+ * `handle` must be a valid pointer obtained via `go_lowess_take_predict_handle`
+ * (or still owned in a result that has not been freed).
  * `new_x` must be a valid array of length `new_x_len`. `extrapolation` must be a
  * valid null-terminated string or null (defaults to "clamp").
  */
@@ -385,10 +414,13 @@ struct fastlowess_GoOnlineOutput go_online_add_point(struct fastlowess_GoOnlineL
                                                      double y);
 
 /**
- * Free the error string in a GoOnlineOutput (call only when error != NULL).
+ * Free heap-owned fields in a `GoOnlineOutput` (currently the error string).
+ *
+ * Safe to call when `error` is null. Freed pointers are nulled so a second call
+ * is a no-op.
  *
  * # Safety
- * `output` must be a valid pointer and `output->error` must have been allocated by Rust.
+ * `output` must be a valid pointer to a `GoOnlineOutput`, or null.
  */
 void go_online_free_output(struct fastlowess_GoOnlineOutput *output);
 
@@ -418,6 +450,12 @@ struct fastlowess_GoPredictHandle *go_lowess_take_predict_handle(struct fastlowe
  * nulled so a second call is a no-op.
  *
  * # Safety
- * `result` must be a valid pointer to a GoLowessResult struct.
+ * `result` must be a valid pointer to a `GoLowessResult`, or null.
  */
 void go_lowess_free_result(struct fastlowess_GoLowessResult *result);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif  // __cplusplus
+
+#endif  /* FASTLOWESS_GO_H */

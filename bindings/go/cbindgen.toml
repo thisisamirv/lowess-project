@@ -1,6 +1,8 @@
 no_includes = true
 language = "C"
 header = "#include <stddef.h>"
+include_guard = "FASTLOWESS_GO_H"
+cpp_compat = true
 usize_is_size_t = true
 
 [parse]

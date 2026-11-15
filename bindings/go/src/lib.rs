@@ -88,6 +88,11 @@ where
     }
 }
 
+/// Thread-local last-error message from the most recent failed constructor on this OS thread.
+///
+/// The returned pointer is owned by the library and remains valid only until the next call that
+/// sets or clears the last-error slot on this thread. Callers must read it on the same OS thread
+/// as the failing call. Returns null when no error is stored.
 #[unsafe(no_mangle)]
 pub extern "C" fn go_last_error_message() -> *const c_char {
     GO_LAST_ERROR.with(|slot| {
@@ -139,15 +144,13 @@ pub static FASTLOWESS_GO_GPU_BUILD_MARKER: &[u8] = b"fastlowess-go-gpu|abi-v4|wi
 #[unsafe(no_mangle)]
 pub static FASTLOWESS_GO_GPU_BUILD_MARKER: &[u8] = b"fastlowess-go-gpu|abi-v4|windows-arm64";
 
-// Per-point result from an online update, passed across the FFI boundary.
-// has_value:
-//   1  = window ready; smoothed fields are valid
-//   0  = window still filling (smoothed fields undefined)
-//  -1  = point dropped under missing="drop" (smoothed fields undefined)
-// Non-computed optional fields use f64::NAN (for floats) or -1 (for int).
-// error = NULL if no error, otherwise points to a null-terminated error string.
+/// Per-point result from an online update, passed across the FFI boundary.
+///
+/// Non-computed optional fields use NaN (floats) or -1 (`iterations_used`).
+/// Smoothed fields are undefined unless `has_value` is 1.
 #[repr(C)]
 pub struct GoOnlineOutput {
+    /// 1 = window ready; 0 = still filling; -1 = dropped under missing="drop".
     pub has_value: c_int,
     pub y: c_double,
     pub standard_error: c_double,
@@ -164,14 +167,16 @@ pub struct GoOnlineOutput {
     pub prediction_lower: c_double,
     /// Upper prediction interval bound for the latest point (NaN if not computed)
     pub prediction_upper: c_double,
-    pub error: *mut c_char, // NULL if no error
+    /// Error message (NULL if no error)
+    pub error: *mut c_char,
 }
 
 /// Result struct that can be passed across FFI boundary.
 /// All arrays are allocated by Rust and must be freed by Rust.
 #[repr(C)]
 pub struct GoLowessResult {
-    /// x values, in the same order as the input (length = n)
+    /// x values (length = n). Same order as the input unless `return_sorted` was set,
+    /// in which case ascending by x.
     pub x: *mut c_double,
     /// Smoothed y values (length = n)
     pub y: *mut c_double,
@@ -513,7 +518,8 @@ pub unsafe extern "C" fn go_lowess_set_bootstrap(ptr: *mut GoLowess, n_boot: usi
 ///
 /// # Safety
 /// `ptr` must be a valid GoLowess pointer. `x_values` and `y_values` must be
-/// valid arrays of length `n`. `custom_weights` is optional: pass null and 0 to omit.
+/// valid arrays of length `n`. `custom_weights` is optional: pass null and 0 to
+/// omit; when non-null, `custom_weights_len` must equal `n`.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn go_lowess_fit(
     ptr: *mut GoLowess,
@@ -632,7 +638,8 @@ fn predict_error_result(msg: &str) -> GoPredictResult {
 /// points not in the training set.
 ///
 /// # Safety
-/// `handle` must be a valid pointer returned via `GoLowessResult::predict_handle`.
+/// `handle` must be a valid pointer obtained via `go_lowess_take_predict_handle`
+/// (or still owned in a result that has not been freed).
 /// `new_x` must be a valid array of length `new_x_len`. `extrapolation` must be a
 /// valid null-terminated string or null (defaults to "clamp").
 #[unsafe(no_mangle)]
@@ -1136,10 +1143,13 @@ pub unsafe extern "C" fn go_online_add_point(
     }
 }
 
-/// Free the error string in a GoOnlineOutput (call only when error != NULL).
+/// Free heap-owned fields in a `GoOnlineOutput` (currently the error string).
+///
+/// Safe to call when `error` is null. Freed pointers are nulled so a second call
+/// is a no-op.
 ///
 /// # Safety
-/// `output` must be a valid pointer and `output->error` must have been allocated by Rust.
+/// `output` must be a valid pointer to a `GoOnlineOutput`, or null.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn go_online_free_output(output: *mut GoOnlineOutput) {
     with_panic_void(|| {
@@ -1190,7 +1200,7 @@ pub unsafe extern "C" fn go_lowess_take_predict_handle(
 /// nulled so a second call is a no-op.
 ///
 /// # Safety
-/// `result` must be a valid pointer to a GoLowessResult struct.
+/// `result` must be a valid pointer to a `GoLowessResult`, or null.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn go_lowess_free_result(result: *mut GoLowessResult) {
     with_panic_void(|| {
