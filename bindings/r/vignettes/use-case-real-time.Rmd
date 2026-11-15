@@ -31,7 +31,8 @@ immediately.
 `window_capacity = 25` limits the internal buffer to the 25 most recent
 observations; each `add_point()` call costs O(window) rather than growing with
 total history. `min_points = 5` suppresses output until the window holds enough
-points for a stable fit — calls made before that threshold return `NULL`.
+points for a stable fit — calls made before that threshold return
+`status = "filling"`.
 `update_mode = "incremental"` re-fits only the most recent point rather than the
 full window, halving typical latency at a modest accuracy cost.
 
@@ -53,8 +54,10 @@ for (i in 0:99) {
     yi <- 20.0 + 5.0 * sin(i / 10.0) + sin(i * 1.7) * 0.5
 
     result <- add_point(model, i, yi)
-    if (!is.null(result)) {
-        if (count < 5) cat(sprintf("Time %d: smoothed = %.4f\n", i, result$y))
+    if (identical(result$status, "ready")) {
+        if (count < 5) {
+            cat(sprintf("Time %d: smoothed = %.4f\n", i, result$point$y))
+        }
         count <- count + 1
     }
 }

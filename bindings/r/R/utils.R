@@ -77,6 +77,13 @@ validate_numeric_vector <- function(value, name) {
     }
 }
 
+validate_scalar_numeric <- function(value, name) {
+    validate_numeric_vector(value, name)
+    if (length(value) != 1L) {
+        stop(sprintf("%s must be a single numeric value", name), call. = FALSE)
+    }
+}
+
 validate_named_options <- function(options, valid, name) {
     if (!is.list(options)) {
         stop(sprintf("`%s` must be a named list", name), call. = FALSE)

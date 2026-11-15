@@ -190,15 +190,15 @@ fit.Lowess <- function(model, x, y, custom_weights = NULL, ...) {
 #' predict(model, c(2.5, 7.5))
 #' @export
 predict.Lowess <- function(
-    object,
-    new_x,
-    outputs = NULL,
-    intervals = NULL,
-    seed = NULL,
-    extrapolation = "clamp",
-    max_extrapolation_distance = NULL,
-    max_neighbor_distance = NULL,
-    ...
+  object,
+  new_x,
+  outputs = NULL,
+  intervals = NULL,
+  seed = NULL,
+  extrapolation = "clamp",
+  max_extrapolation_distance = NULL,
+  max_neighbor_distance = NULL,
+  ...
 ) {
     if (...length() > 0L) {
         stop("unused arguments (...)")
@@ -278,8 +278,9 @@ finalize.StreamingLowess <- function(model, ...) {
 #' @param x A single numeric x value.
 #' @param y A single numeric y value.
 #' @param ... Must be empty.
-#' @return An online result list, or \code{NULL} if fewer than
-#'   \code{min_points} have been added.
+#' @return A list with \code{status} (\code{"filling"}, \code{"ready"}, or
+#'   \code{"dropped"}) and \code{point} (an online-output list when ready;
+#'   otherwise \code{NULL}).
 #' @examples
 #' model <- OnlineLowess(fraction = 0.2, window_capacity = 20L, min_points = 2L)
 #' invisible(add_point(model, 1.0, 0.5))
@@ -293,7 +294,47 @@ add_point.OnlineLowess <- function(model, x, y, ...) {
     if (...length() > 0L) {
         stop("unused arguments (...)")
     }
-    validate_numeric_vector(x, "x")
-    validate_numeric_vector(y, "y")
+    validate_scalar_numeric(x, "x")
+    validate_scalar_numeric(y, "y")
     model$handle$add_point(as.double(x), as.double(y))
+}
+
+#' Release native resources held by a LOWESS model
+#'
+#' S3 methods for base \code{\link[base]{close}}. For \code{Lowess}, clears
+#' retained predict state early. For \code{StreamingLowess} and
+#' \code{OnlineLowess}, releases the native adapter. Safe to call multiple
+#' times.
+#'
+#' @param con A \code{Lowess}, \code{StreamingLowess}, or \code{OnlineLowess}
+#'   object.
+#' @param ... Must be empty.
+#' @return \code{NULL}, invisibly.
+#' @export
+close.Lowess <- function(con, ...) {
+    if (...length() > 0L) {
+        stop("unused arguments (...)")
+    }
+    con$handle$close()
+    invisible(NULL)
+}
+
+#' @rdname close.Lowess
+#' @export
+close.StreamingLowess <- function(con, ...) {
+    if (...length() > 0L) {
+        stop("unused arguments (...)")
+    }
+    con$handle$close()
+    invisible(NULL)
+}
+
+#' @rdname close.Lowess
+#' @export
+close.OnlineLowess <- function(con, ...) {
+    if (...length() > 0L) {
+        stop("unused arguments (...)")
+    }
+    con$handle$close()
+    invisible(NULL)
 }

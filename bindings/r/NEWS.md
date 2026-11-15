@@ -1,6 +1,19 @@
 <!-- markdownlint-disable MD024 MD025 MD041 -->
 This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md).
 
+## Unreleased
+
+### Changed
+
+* Breaking change: `add_point()` returns a list with `status` of `"filling"` / `"ready"` / `"dropped"` and `point` instead of an online-output list or `NULL`.
+
+### Fixed
+
+* Distinguishing Online `add_point` filling vs `missing="drop"` via ternary `status`.
+* Adding idempotent `close()` on `Lowess`, `StreamingLowess`, and `OnlineLowess` (clears retained predict state / releases native adapters).
+* Mapping fit/stream/online/`predict` failures via `map_lowess_result` so InvalidArg vs Runtime categories are preserved.
+* Requiring length-1 numeric `x`/`y` in `add_point()`.
+
 ## rfastlowess 5.0.0
 
 ### Added

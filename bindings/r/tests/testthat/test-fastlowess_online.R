@@ -2,6 +2,11 @@
 #' @srrstats {G5.8} Edge cases: min data, window > data.
 #' @srrstats {RE4.0} Robustness iterations tested.
 #' @srrstats {G5.6, G5.6a} Parameter recovery in online full mode.
+
+ready_points <- function(results) {
+    Filter(function(r) identical(r$status, "ready"), results)
+}
+
 test_that("OnlineLowess basic functionality works", {
     set.seed(42)
     x <- as.double(1:100)
@@ -14,7 +19,7 @@ test_that("OnlineLowess basic functionality works", {
     )
     results <- lapply(seq_along(x), function(i) add_point(ol, x[[i]], y[[i]]))
 
-    expect_false(all(vapply(results, is.null, logical(1))))
+    expect_gt(length(ready_points(results)), 0)
 })
 
 test_that("OnlineLowess window capacity works", {
@@ -40,8 +45,8 @@ test_that("OnlineLowess window capacity works", {
         function(i) add_point(ol_large, x[[i]], y[[i]])
     )
 
-    expect_false(all(vapply(results_small, is.null, logical(1))))
-    expect_false(all(vapply(results_large, is.null, logical(1))))
+    expect_gt(length(ready_points(results_small)), 0)
+    expect_gt(length(ready_points(results_large)), 0)
 })
 
 test_that("OnlineLowess min_points parameter works", {
@@ -56,10 +61,9 @@ test_that("OnlineLowess min_points parameter works", {
     )
     results <- lapply(seq_along(x), function(i) add_point(ol, x[[i]], y[[i]]))
 
-    # Results before min_points should be NULL
-    expect_null(results[[1]])
-    # At least some results should be non-NULL
-    expect_false(all(vapply(results, is.null, logical(1))))
+    expect_identical(results[[1]]$status, "filling")
+    expect_null(results[[1]]$point)
+    expect_gt(length(ready_points(results)), 0)
 })
 
 test_that("OnlineLowess update modes work", {
@@ -87,8 +91,8 @@ test_that("OnlineLowess update modes work", {
         function(i) add_point(ol_incr, x[[i]], y[[i]])
     )
 
-    expect_false(all(vapply(results_full, is.null, logical(1))))
-    expect_false(all(vapply(results_incr, is.null, logical(1))))
+    expect_gt(length(ready_points(results_full)), 0)
+    expect_gt(length(ready_points(results_incr)), 0)
 })
 
 test_that("OnlineLowess handles edge cases", {
@@ -101,7 +105,7 @@ test_that("OnlineLowess handles edge cases", {
         min_points = 3
     )
     results <- lapply(seq_along(x), function(i) add_point(ol, x[[i]], y[[i]]))
-    expect_false(all(vapply(results, is.null, logical(1))))
+    expect_gt(length(ready_points(results)), 0)
 
     # Window larger than data
     ol2 <- OnlineLowess(
@@ -113,7 +117,7 @@ test_that("OnlineLowess handles edge cases", {
         seq_along(x),
         function(i) add_point(ol2, x[[i]], y[[i]])
     )
-    expect_false(all(vapply(results2, is.null, logical(1))))
+    expect_gt(length(ready_points(results2)), 0)
 })
 
 test_that("OnlineLowess robustness works", {
@@ -143,8 +147,8 @@ test_that("OnlineLowess robustness works", {
         function(i) add_point(ol_robust, x[[i]], y[[i]])
     )
 
-    expect_false(all(vapply(results_no_robust, is.null, logical(1))))
-    expect_false(all(vapply(results_robust, is.null, logical(1))))
+    expect_gt(length(ready_points(results_no_robust)), 0)
+    expect_gt(length(ready_points(results_robust)), 0)
 })
 
 test_that("G5.6 OnlineLowess full mode recovers a noiseless signal", {
@@ -166,7 +170,9 @@ test_that("G5.6 OnlineLowess full mode recovers a noiseless signal", {
     )
     yhat_full <- vapply(
         out_full,
-        function(r) if (is.null(r)) NA_real_ else r$y,
+        function(r) {
+            if (identical(r$status, "ready")) r$point$y else NA_real_
+        },
         numeric(1)
     )
     valid <- !is.na(yhat_full)
@@ -200,15 +206,25 @@ test_that("G5.6 OnlineLowess full mode recovers a noiseless signal", {
     )
 })
 
-test_that("OnlineLowess missing = \"drop\" ignores non-finite point", {
+test_that("OnlineLowess missing = \"drop\" distinguishes drop from filling", {
     ol <- OnlineLowess(
         fraction = 0.5,
         window_capacity = 10,
+        min_points = 3,
         missing = "drop"
     )
 
-    result <- add_point(ol, 1.0, NaN)
-    expect_null(result)
+    filling <- add_point(ol, 0.0, 0.0)
+    expect_identical(filling$status, "filling")
+    expect_null(filling$point)
+
+    dropped <- add_point(ol, 1.0, NaN)
+    expect_identical(dropped$status, "dropped")
+    expect_null(dropped$point)
+
+    still_filling <- add_point(ol, 2.0, 4.0)
+    expect_identical(still_filling$status, "filling")
+    expect_null(still_filling$point)
 })
 
 test_that("OnlineLowess return_se/ci/pi requires full mode", {
@@ -236,10 +252,10 @@ test_that("OnlineLowess return_se/ci/pi work", {
         intervals = intervals_opts(confidence = 0.95, prediction = 0.95)
     )
     results <- lapply(seq_along(x), function(i) add_point(ol, x[[i]], y[[i]]))
-    non_null <- Filter(Negate(is.null), results)
+    ready <- ready_points(results)
 
-    expect_gt(length(non_null), 0)
-    last <- non_null[[length(non_null)]]
+    expect_gt(length(ready), 0)
+    last <- ready[[length(ready)]]$point
     expect_false(is.null(last$standard_error))
     expect_false(is.null(last$confidence_lower))
     expect_false(is.null(last$confidence_upper))
@@ -262,12 +278,18 @@ test_that("OnlineLowess bootstrap intervals are reproducible with a seed", {
             seed = 5
         )
         res <- lapply(seq_along(x), function(i) add_point(ol, x[[i]], y[[i]]))
-        Filter(Negate(is.null), res)
+        ready_points(res)
     }
     r1 <- run()
     r2 <- run()
-    last1 <- r1[[length(r1)]]
-    last2 <- r2[[length(r2)]]
+    last1 <- r1[[length(r1)]]$point
+    last2 <- r2[[length(r2)]]$point
     expect_false(is.null(last1$confidence_lower))
     expect_identical(last1$confidence_lower, last2$confidence_lower)
+})
+
+test_that("add_point rejects non-scalar x/y", {
+    ol <- OnlineLowess(fraction = 0.5, window_capacity = 10)
+    expect_error(add_point(ol, c(1, 2), 3), "single numeric")
+    expect_error(add_point(ol, 1, c(2, 3)), "single numeric")
 })

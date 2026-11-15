@@ -159,8 +159,8 @@ model <- OnlineLowess(
 shown <- 0
 for (i in seq_along(x)) {
     result <- add_point(model, x[i], y[i])
-    if (!is.null(result) && shown < 5) {
-        cat("Current smoothed value:", result$y, "\n")
+    if (identical(result$status, "ready") && shown < 5) {
+        cat("Current smoothed value:", result$point$y, "\n")
         shown <- shown + 1
     }
 }

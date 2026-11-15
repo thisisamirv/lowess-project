@@ -7,14 +7,14 @@ NULL
 RLowess <- new.env(parent = emptyenv())
 
 RLowess$new <- function(
-    fraction, iterations, delta, weight_function,
-    robustness_method, scaling_method, boundary_policy,
-    confidence_intervals, prediction_intervals, bootstrap,
-    return_diagnostics, return_residuals,
-    return_robustness_weights, return_derivative, zero_weight_fallback,
-    auto_converge, cv_fractions, cv_method, cv_k, parallel,
-    seed, return_se, return_sorted, backend, missing,
-    retain_model
+  fraction, iterations, delta, weight_function,
+  robustness_method, scaling_method, boundary_policy,
+  confidence_intervals, prediction_intervals, bootstrap,
+  return_diagnostics, return_residuals,
+  return_robustness_weights, return_derivative, zero_weight_fallback,
+  auto_converge, cv_fractions, cv_method, cv_k, parallel,
+  seed, return_se, return_sorted, backend, missing,
+  retain_model
 ) {
     .Call(
         wrap__RLowess__new, fraction, iterations, delta, weight_function,
@@ -37,6 +37,10 @@ RLowess$predict <- function(new_x, return_se, confidence_level, prediction_level
     .Call(wrap__RLowess__predict, self, new_x, return_se, confidence_level, prediction_level, return_derivative, extrapolation, max_extrapolation_distance, max_neighbor_distance, bootstrap, seed)
 }
 
+RLowess$close <- function() {
+    .Call(wrap__RLowess__close, self)
+}
+
 #' @export
 `$.RLowess` <- function(self, name) {
     func <- RLowess[[name]]
@@ -50,13 +54,13 @@ RLowess$predict <- function(new_x, return_se, confidence_level, prediction_level
 RStreamingLowess <- new.env(parent = emptyenv())
 
 RStreamingLowess$new <- function(
-    fraction, chunk_size, overlap, iterations,
-    weight_function, robustness_method,
-    scaling_method, boundary_policy, zero_weight_fallback, auto_converge,
-    return_diagnostics, return_residuals, return_robustness_weights,
-    return_derivative, return_se, confidence_intervals, prediction_intervals,
-    bootstrap, seed, merge_strategy, parallel,
-    delta, missing
+  fraction, chunk_size, overlap, iterations,
+  weight_function, robustness_method,
+  scaling_method, boundary_policy, zero_weight_fallback, auto_converge,
+  return_diagnostics, return_residuals, return_robustness_weights,
+  return_derivative, return_se, confidence_intervals, prediction_intervals,
+  bootstrap, seed, merge_strategy, parallel,
+  delta, missing
 ) {
     .Call(
         wrap__RStreamingLowess__new, fraction, chunk_size, overlap, iterations,
@@ -77,6 +81,10 @@ RStreamingLowess$finalize <- function() {
     .Call(wrap__RStreamingLowess__finalize, self)
 }
 
+RStreamingLowess$close <- function() {
+    .Call(wrap__RStreamingLowess__close, self)
+}
+
 #' @export
 `$.RStreamingLowess` <- function(self, name) {
     func <- RStreamingLowess[[name]]
@@ -90,12 +98,12 @@ RStreamingLowess$finalize <- function() {
 ROnlineLowess <- new.env(parent = emptyenv())
 
 ROnlineLowess$new <- function(
-    fraction, window_capacity, min_points, iterations,
-    weight_function, robustness_method,
-    scaling_method, boundary_policy, zero_weight_fallback, update_mode,
-    auto_converge, return_robustness_weights, return_derivative,
-    return_se, confidence_intervals, prediction_intervals,
-    bootstrap, seed, delta, missing
+  fraction, window_capacity, min_points, iterations,
+  weight_function, robustness_method,
+  scaling_method, boundary_policy, zero_weight_fallback, update_mode,
+  auto_converge, return_robustness_weights, return_derivative,
+  return_se, confidence_intervals, prediction_intervals,
+  bootstrap, seed, delta, missing
 ) {
     .Call(
         wrap__ROnlineLowess__new, fraction, window_capacity, min_points,
@@ -109,6 +117,10 @@ ROnlineLowess$new <- function(
 
 ROnlineLowess$add_point <- function(x, y) {
     .Call(wrap__ROnlineLowess__add_point, self, x, y)
+}
+
+ROnlineLowess$close <- function() {
+    .Call(wrap__ROnlineLowess__close, self)
 }
 
 #' @export

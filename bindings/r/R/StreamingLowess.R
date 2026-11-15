@@ -55,24 +55,24 @@
 #' finalize(model)
 #' @export
 StreamingLowess <- function(
-    fraction = 0.67,
-    ...,
-    iterations = 3L,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    delta = NULL,
-    zero_weight_fallback = "use_local_mean",
-    boundary_policy = "extend",
-    scaling_method = "mad",
-    auto_converge = NULL,
-    missing = "error",
-    chunk_size = 5000L,
-    overlap = NULL,
-    merge_strategy = "weighted_average",
-    parallel = TRUE,
-    outputs = NULL,
-    intervals = NULL,
-    seed = NULL
+  fraction = 0.67,
+  ...,
+  iterations = 3L,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  delta = NULL,
+  zero_weight_fallback = "use_local_mean",
+  boundary_policy = "extend",
+  scaling_method = "mad",
+  auto_converge = NULL,
+  missing = "error",
+  chunk_size = 5000L,
+  overlap = NULL,
+  merge_strategy = "weighted_average",
+  parallel = TRUE,
+  outputs = NULL,
+  intervals = NULL,
+  seed = NULL
 ) {
     reject_extra_positional_args(sys.call(), "fraction")
     if (...length() > 0L) {

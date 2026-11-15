@@ -60,7 +60,8 @@ test_that("OnlineLowess rejects invalid inputs", {
     # add_point accepts scalar values
     ol <- OnlineLowess(fraction = 0.5)
     result <- add_point(ol, 1.0, 2.0)
-    expect_true(is.null(result) || is.numeric(result))
+    expect_true(is.list(result))
+    expect_true(result$status %in% c("filling", "ready", "dropped"))
 })
 
 test_that("StreamingLowess rejects invalid inputs", {

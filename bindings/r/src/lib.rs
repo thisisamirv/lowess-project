@@ -31,8 +31,16 @@ fn map_invalid_arg<T, E: ToString>(result: std::result::Result<T, E>) -> Result<
     shared_parse::map_invalid_arg(result).map_err(to_r_error)
 }
 
-fn map_runtime<T, E: ToString>(result: std::result::Result<T, E>) -> Result<T> {
-    shared_parse::map_runtime(result).map_err(to_r_error)
+fn map_lowess_err<T>(
+    result: std::result::Result<T, fastLowess::prelude::LowessError>,
+) -> Result<T> {
+    shared_parse::map_lowess_result(result).map_err(to_r_error)
+}
+
+fn already_closed_err(name: &str) -> Error {
+    to_r_error(shared_parse::BindingError::runtime(format!(
+        "{name} has already been closed"
+    )))
 }
 
 fn require_positive_usize(name: &str, value: i32) -> Result<usize> {
@@ -198,10 +206,15 @@ impl RLowess {
             NotNull(w) => Some(w),
             Null => None,
         };
-        let model = map_runtime(shared_parse::build_batch(self.builder.clone(), cw))?;
-        let result = map_runtime(model.fit(x, y))?;
+        let model = shared_parse::build_batch(self.builder.clone(), cw).map_err(to_r_error)?;
+        let result = map_lowess_err(model.fit(x, y))?;
         *self.predict_state.borrow_mut() = result.fit_state.clone();
         lowess_result_to_list(result)
+    }
+
+    /// Drop retained predict state early. Idempotent.
+    fn close(&self) {
+        *self.predict_state.borrow_mut() = None;
     }
 
     /// Evaluate the fitted model at out-of-sample query points not in the training set.
@@ -230,7 +243,7 @@ impl RLowess {
                 "predict() requires retain_model = TRUE and a prior call to fit()".to_string(),
             )));
         };
-        let output = map_invalid_arg(shared_parse::run_predict_state_with_bootstrap(
+        let output = shared_parse::run_predict_state_with_bootstrap(
             state,
             new_x,
             shared_parse::PredictOptionSet {
@@ -244,7 +257,8 @@ impl RLowess {
             },
             bootstrap,
             seed,
-        ))?;
+        )
+        .map_err(to_r_error)?;
 
         let mut list_items: Vec<(&str, Robj)> = vec![("y", output.y.into_robj())];
         if let Some(se) = output.standard_errors {
@@ -275,7 +289,7 @@ impl RLowess {
 
 #[extendr]
 pub struct RStreamingLowess {
-    inner: fastLowess::internals::adapters::streaming::ParallelStreamingLowess<f64>,
+    inner: Option<fastLowess::internals::adapters::streaming::ParallelStreamingLowess<f64>>,
 }
 
 #[extendr]
@@ -357,23 +371,37 @@ impl RStreamingLowess {
         };
         let builder = apply_bootstrap_and_seed(builder, bootstrap, seed);
 
-        let model = map_runtime(shared_parse::build_streaming(
+        let model = shared_parse::build_streaming(
             builder,
             Some(chunk_size),
             overlap_size,
             Some(merge_strategy),
-        ))?;
-        Ok(Self { inner: model })
+        )
+        .map_err(to_r_error)?;
+        Ok(Self { inner: Some(model) })
     }
 
     fn process_chunk(&mut self, x: &[f64], y: &[f64]) -> Result<List> {
-        let result = map_runtime(self.inner.process_chunk(x, y))?;
+        let model = self
+            .inner
+            .as_mut()
+            .ok_or_else(|| already_closed_err("StreamingLowess"))?;
+        let result = map_lowess_err(model.process_chunk(x, y))?;
         lowess_result_to_list(result)
     }
 
     fn finalize(&mut self) -> Result<List> {
-        let result = map_runtime(self.inner.finalize())?;
+        let model = self
+            .inner
+            .as_mut()
+            .ok_or_else(|| already_closed_err("StreamingLowess"))?;
+        let result = map_lowess_err(model.finalize())?;
         lowess_result_to_list(result)
+    }
+
+    /// Release native streaming state early. Idempotent.
+    fn close(&mut self) {
+        self.inner.take();
     }
 }
 
@@ -383,7 +411,7 @@ impl RStreamingLowess {
 
 #[extendr]
 pub struct ROnlineLowess {
-    inner: fastLowess::internals::adapters::online::ParallelOnlineLowess<f64>,
+    inner: Option<fastLowess::internals::adapters::online::ParallelOnlineLowess<f64>>,
 }
 
 #[extendr]
@@ -459,20 +487,29 @@ impl ROnlineLowess {
         };
         let builder = apply_bootstrap_and_seed(builder, bootstrap, seed);
 
-        let model = map_runtime(shared_parse::build_online(
+        let model = shared_parse::build_online(
             builder,
             Some(window_capacity),
             Some(min_points),
             Some(update_mode),
-        ))?;
-        Ok(Self { inner: model })
+        )
+        .map_err(to_r_error)?;
+        Ok(Self { inner: Some(model) })
     }
 
-    fn add_point(&mut self, x: f64, y: f64) -> Result<Nullable<List>> {
-        let output = map_runtime(self.inner.add_point(x, y))?;
+    /// Add a single point.
+    ///
+    /// Returns a list with `status` (`"filling"`, `"ready"`, or `"dropped"`)
+    /// and `point` (an online-output list when ready; otherwise `NULL`).
+    fn add_point(&mut self, x: f64, y: f64) -> Result<List> {
+        let dropped_candidate = !(x.is_finite() && y.is_finite());
+        let model = self
+            .inner
+            .as_mut()
+            .ok_or_else(|| already_closed_err("OnlineLowess"))?;
+        let output = map_lowess_err(model.add_point(x, y))?;
 
         match output {
-            None => Ok(Null),
             Some(o) => {
                 let mut items: Vec<(&str, Robj)> = vec![("y", o.y.into_robj())];
                 if let Some(se) = o.standard_error {
@@ -502,9 +539,25 @@ impl ROnlineLowess {
                 if let Some(iters) = o.iterations_used {
                     items.push(("iterations_used", (iters as i32).into_robj()));
                 }
-                Ok(NotNull(List::from_pairs(items)))
+                Ok(List::from_pairs(vec![
+                    ("status", "ready".into_robj()),
+                    ("point", List::from_pairs(items).into_robj()),
+                ]))
             }
+            None if dropped_candidate => Ok(List::from_pairs(vec![
+                ("status", "dropped".into_robj()),
+                ("point", Robj::from(NULL)),
+            ])),
+            None => Ok(List::from_pairs(vec![
+                ("status", "filling".into_robj()),
+                ("point", Robj::from(NULL)),
+            ])),
         }
+    }
+
+    /// Release native online state early. Idempotent.
+    fn close(&mut self) {
+        self.inner.take();
     }
 }
 

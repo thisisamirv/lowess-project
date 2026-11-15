@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **R:**
 
+- Breaking change: `add_point()` returns a list with `status` of `"filling"` / `"ready"` / `"dropped"` and `point` instead of an online-output list or `NULL`.
 - Bumped `roxygen2` to v8.1.1.
 
 **WASM:**
@@ -102,6 +103,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Distinguish online `missing="drop"` (`status: "dropped"`) from a still-filling window (`status: "filling"`); `add_point` returns `AddPointResult`.
 - Add idempotent `close()` / context-manager support on `OnlineLowess`, `StreamingLowess`, and `LowessResult` (clears retained predict state).
 - Map Streaming/Online failures via `map_lowess_result` so InvalidArg vs Runtime categories match Batch/`predict`.
+
+**R:**
+
+- Distinguish online `missing="drop"` (`status: "dropped"`) from a still-filling window (`status: "filling"`); `add_point` returns `list(status, point)`.
+- Add idempotent `close()` on `Lowess`, `StreamingLowess`, and `OnlineLowess` (clears retained predict state / releases native adapters).
+- Map fit/stream/online/`predict` failures via `map_lowess_result` and require length-1 numeric `x`/`y` in `add_point()`.
 
 **WASM:**
 

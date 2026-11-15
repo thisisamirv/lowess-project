@@ -107,24 +107,24 @@
 #' lines(x, result$y, col = "red")
 #' @export
 Lowess <- function(
-    fraction = 0.67,
-    ...,
-    iterations = 3L,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    delta = NULL,
-    zero_weight_fallback = "use_local_mean",
-    boundary_policy = "extend",
-    scaling_method = "mad",
-    auto_converge = NULL,
-    missing = "error",
-    parallel = TRUE,
-    backend = "cpu",
-    outputs = NULL,
-    intervals = NULL,
-    cv = NULL,
-    seed = NULL,
-    retain_model = FALSE
+  fraction = 0.67,
+  ...,
+  iterations = 3L,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  delta = NULL,
+  zero_weight_fallback = "use_local_mean",
+  boundary_policy = "extend",
+  scaling_method = "mad",
+  auto_converge = NULL,
+  missing = "error",
+  parallel = TRUE,
+  backend = "cpu",
+  outputs = NULL,
+  intervals = NULL,
+  cv = NULL,
+  seed = NULL,
+  retain_model = FALSE
 ) {
     reject_extra_positional_args(sys.call(), "fraction")
     if (...length() > 0L) {
@@ -221,9 +221,9 @@ cv_opts <- function(method = "kfold", k = 5L, fractions) {
 #' )
 #' @export
 intervals_opts <- function(
-    confidence = NULL,
-    prediction = NULL,
-    bootstrap = 0L
+  confidence = NULL,
+  prediction = NULL,
+  bootstrap = 0L
 ) {
     validate_optional_count(bootstrap, "bootstrap")
     structure(

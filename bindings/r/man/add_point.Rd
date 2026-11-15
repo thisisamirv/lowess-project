@@ -19,8 +19,9 @@ add_point(model, ...)
 \item{y}{A single numeric y value.}
 }
 \value{
-An online result list, or \code{NULL} if fewer than
-\code{min_points} have been added.
+A list with \code{status} (\code{"filling"}, \code{"ready"}, or
+\code{"dropped"}) and \code{point} (an online-output list when ready;
+otherwise \code{NULL}).
 }
 \description{
 Add a single point to an online LOWESS model

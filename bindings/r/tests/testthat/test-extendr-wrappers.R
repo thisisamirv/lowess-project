@@ -138,12 +138,12 @@ test_that("ROnlineLowess generated accessors dispatch add_point", {
     result_dollar <- handle_dollar$add_point(11.0, cos(11.0))
     result_bracket <- handle_bracket[["add_point"]](11.0, cos(11.0))
 
-    # Both should return the same type (list or NULL)
-    expect_identical(is.null(result_dollar), is.null(result_bracket))
-    if (!is.null(result_dollar)) {
-        expect_type(result_dollar, "list")
-        expect_type(result_bracket, "list")
-        expect_true("y" %in% names(result_dollar))
-        expect_true("y" %in% names(result_bracket))
+    expect_identical(result_dollar$status, result_bracket$status)
+    expect_type(result_dollar, "list")
+    expect_type(result_bracket, "list")
+    expect_true("status" %in% names(result_dollar))
+    if (identical(result_dollar$status, "ready")) {
+        expect_true("y" %in% names(result_dollar$point))
+        expect_true("y" %in% names(result_bracket$point))
     }
 })
