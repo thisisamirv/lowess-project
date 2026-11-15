@@ -16,19 +16,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bumped the pinned `golangci-lint` install-script version from `v2.14.0` to `v2.15.0`.
 - Bumped the Hugo docs build from `v0.167.0` to `v0.168.0`.
 
+**Rust:**
+
+- Bumped the KaTeX CDN assets in the `lowess` and `fastLowess` docs headers from `0.19.0` to `0.19.1` and refreshed their SRI hashes.
+- Bumped `napi` to v3.16 and `napi-derive` to v3.7.
+
 **C++:**
 
 - Restrict the curated vcpkg Linux package to glibc and verify the target libc during CMake configuration; musl users must use an overlay.
 - Breaking change: rename the public C ABI from `cpp_*` to `fastlowess_*`.
 - Publish separate Windows MSVC Debug and Release C++ shared libraries for vcpkg; replace `VCPKG_POLICY_ONLY_RELEASE_CRT` with `VCPKG_POLICY_SKIP_CRT_LINKAGE_CHECK` (Rust MSVC stdlib is always `/MD`).
+- Bump the C++ binding package version to 5.1.0.
 
 **Java:**
 
 - Bumped `central-publishing-maven-plugin.version` to v0.12.0.
+- Bumped `maven-enforcer-plugin` to v3.7.0 and `maven-surefire-plugin` to v3.6.1.
 
 **Node.js:**
 
-- Bumped `astrojs/markdown-remark` to v7.3.4, `astrojs/starlight` to v0.42.6, `napi-rs/cli` to v3.10.9, `astro` to v7.4.2, `oxlint` to v1.89.0, and `typedoc-plugin-markdown` to v4.14.1.
+- Bumped `astrojs/markdown-remark` to v7.3.9, `astrojs/starlight` to v0.43.1, `napi-rs/cli` to v3.10.12, `astro` to v7.4.12, `katex` to v0.19.1, `oxlint` to v1.93.0, and `typedoc-plugin-markdown` to v4.14.1.
 
 **Python:**
 
@@ -40,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **WASM:**
 
-- Bumped `astrojs/markdown-remark` to v7.3.4, `astrojs/starlight` to v0.42.6, `astro` to v7.4.2, `oxlint` to v1.89.0, and `typedoc-plugin-markdown` to v4.14.1.
+- Bumped `astrojs/markdown-remark` to v7.3.9, `astrojs/starlight` to v0.43.1, `astro` to v7.4.12, `katex` to v0.19.1, `oxlint` to v1.93.0, and `typedoc-plugin-markdown` to v4.14.1.
 
 ### Fixed
 
