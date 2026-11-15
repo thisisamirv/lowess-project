@@ -110,7 +110,7 @@ function find_library()
     # Option 1: Check environment variable (PRIORITY)
     if haskey(ENV, "FASTLOWESS_LIB")
         lib = ENV["FASTLOWESS_LIB"]
-        @info "Using library from FASTLOWESS_LIB: $lib"
+        @debug "Using library from FASTLOWESS_LIB: $lib"
         return lib
     end
 
@@ -119,7 +119,7 @@ function find_library()
         try
             if hasproperty(fastlowess_jll, :libfastlowess_jl)
                 lib = fastlowess_jll.libfastlowess_jl
-                @info "Using fastlowess_jll library: $lib"
+                @debug "Using fastlowess_jll library: $lib"
                 return lib
             end
         catch e
@@ -148,7 +148,7 @@ function find_library()
 
     for path ∈ candidates
         if isfile(path)
-            @info "Using local library: $path"
+            @debug "Using local library: $path"
             return path
         end
     end
@@ -394,7 +394,7 @@ end
 # C FFI result struct for predict() (must match Rust definition).
 struct CJlPredictResult
     y::Ptr{Cdouble}
-    n::Culong
+    n::Csize_t
     standard_errors::Ptr{Cdouble}
     confidence_lower::Ptr{Cdouble}
     confidence_upper::Ptr{Cdouble}
@@ -448,6 +448,7 @@ mutable struct PredictModel
                         (Ptr{Cvoid},),
                         x.handle,
                     )
+                    x.handle = C_NULL
                 end
             end,
             obj,
@@ -493,70 +494,65 @@ function predict(
         )
     end
 
-    c_result = GC.@preserve model new_x ccall(
-        (:jl_predict, libfastlowess),
-        CJlPredictResult,
-        (
-            Ptr{Cvoid},
-            Ptr{Cdouble},
-            Culong,
-            Cint,
-            Cdouble,
-            Cdouble,
-            Cint,
-            Cstring,
-            Cdouble,
-            Cdouble,
-            Culong,
-            UInt64,
-            Cint,
+    c_result = Ref(
+        GC.@preserve model new_x ccall(
+            (:jl_predict, libfastlowess),
+            CJlPredictResult,
+            (
+                Ptr{Cvoid},
+                Ptr{Cdouble},
+                Csize_t,
+                Cint,
+                Cdouble,
+                Cdouble,
+                Cint,
+                Cstring,
+                Cdouble,
+                Cdouble,
+                Csize_t,
+                UInt64,
+                Cint,
+            ),
+            model.handle,
+            pointer(new_x),
+            Csize_t(length(new_x)),
+            Cint(flags.se),
+            iv.confidence,
+            iv.prediction,
+            Cint(flags.derivative),
+            extrapolation,
+            (max_extrapolation_distance === nothing ? NaN : max_extrapolation_distance),
+            (max_neighbor_distance === nothing ? NaN : max_neighbor_distance),
+            Csize_t(iv.bootstrap),
+            seed_value,
+            has_seed,
         ),
-        model.handle,
-        pointer(new_x),
-        Culong(length(new_x)),
-        Cint(flags.se),
-        iv.confidence,
-        iv.prediction,
-        Cint(flags.derivative),
-        extrapolation,
-        (max_extrapolation_distance === nothing ? NaN : max_extrapolation_distance),
-        (max_neighbor_distance === nothing ? NaN : max_neighbor_distance),
-        Culong(iv.bootstrap),
-        seed_value,
-        has_seed,
     )
 
-    if c_result.error != C_NULL
-        error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
+    try
+        if c_result[].error != C_NULL
+            error_msg = unsafe_string(Ptr{UInt8}(c_result[].error))
+            error("fastlowess error: $error_msg")
+        end
+
+        n = Int(c_result[].n)
+        return PredictResult(
+            ptr_to_vector(c_result[].y, n),
+            ptr_to_vector(c_result[].standard_errors, n),
+            ptr_to_vector(c_result[].confidence_lower, n),
+            ptr_to_vector(c_result[].confidence_upper, n),
+            ptr_to_vector(c_result[].prediction_lower, n),
+            ptr_to_vector(c_result[].prediction_upper, n),
+            ptr_to_vector(c_result[].derivative, n),
+        )
+    finally
         ccall(
             (:jl_predict_free_result, libfastlowess),
             Cvoid,
             (Ptr{CJlPredictResult},),
-            Ref(c_result),
+            c_result,
         )
-        error("fastlowess error: $error_msg")
     end
-
-    n = Int(c_result.n)
-
-    result = PredictResult(
-        ptr_to_vector(c_result.y, n),
-        ptr_to_vector(c_result.standard_errors, n),
-        ptr_to_vector(c_result.confidence_lower, n),
-        ptr_to_vector(c_result.confidence_upper, n),
-        ptr_to_vector(c_result.prediction_lower, n),
-        ptr_to_vector(c_result.prediction_upper, n),
-        ptr_to_vector(c_result.derivative, n),
-    )
-
-    ccall(
-        (:jl_predict_free_result, libfastlowess),
-        Cvoid,
-        (Ptr{CJlPredictResult},),
-        Ref(c_result),
-    )
-
-    return result
 end
 
 """
@@ -652,7 +648,7 @@ end
 struct CJlLowessResult
     x::Ptr{Cdouble}
     y::Ptr{Cdouble}
-    n::Culong
+    n::Csize_t
     standard_errors::Ptr{Cdouble}
     confidence_lower::Ptr{Cdouble}
     confidence_upper::Ptr{Cdouble}
@@ -662,7 +658,7 @@ struct CJlLowessResult
     robustness_weights::Ptr{Cdouble}
     derivative::Ptr{Cdouble}
     cv_scores::Ptr{Cdouble}
-    cv_scores_len::Culong
+    cv_scores_len::Csize_t
     fraction_used::Cdouble
     iterations_used::Cint
     rmse::Cdouble
@@ -684,103 +680,95 @@ function ptr_to_vector(ptr::Ptr{Cdouble}, n::Int)
 end
 
 function convert_result(c_result::CJlLowessResult)
-    # Check for error
-    if c_result.error != Ptr{Cchar}(C_NULL)
-        error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
-        # Free the result before throwing
+    r = Ref(c_result)
+    try
+        cr = r[]
+        if cr.error != Ptr{Cchar}(C_NULL)
+            error_msg = unsafe_string(Ptr{UInt8}(cr.error))
+            error("fastlowess error: $error_msg")
+        end
+
+        n = Int(cr.n)
+
+        x = ptr_to_vector(cr.x, n)
+        y = ptr_to_vector(cr.y, n)
+        if x === nothing || y === nothing
+            error("fastlowess error: result arrays are null")
+        end
+
+        x = x::Vector{Float64}
+        y = y::Vector{Float64}
+
+        standard_errors = ptr_to_vector(cr.standard_errors, n)
+        confidence_lower = ptr_to_vector(cr.confidence_lower, n)
+        confidence_upper = ptr_to_vector(cr.confidence_upper, n)
+        prediction_lower = ptr_to_vector(cr.prediction_lower, n)
+        prediction_upper = ptr_to_vector(cr.prediction_upper, n)
+        residuals = ptr_to_vector(cr.residuals, n)
+        robustness_weights = ptr_to_vector(cr.robustness_weights, n)
+        derivative = ptr_to_vector(cr.derivative, n)
+        cv_scores = ptr_to_vector(cr.cv_scores, Int(cr.cv_scores_len))
+
+        diagnostics = if !isnan(cr.rmse)
+            Diagnostics(
+                cr.rmse,
+                cr.mae,
+                cr.r_squared,
+                isnan(cr.aic) ? nothing : cr.aic,
+                isnan(cr.aicc) ? nothing : cr.aicc,
+                isnan(cr.effective_df) ? nothing : cr.effective_df,
+                cr.residual_sd,
+            )
+        else
+            nothing
+        end
+
+        # Take ownership before free_result so the handle is not double-freed
+        # on success, and is still freed by free_result on error paths.
+        handle = ccall(
+            (:jl_lowess_take_predict_handle, libfastlowess),
+            Ptr{Cvoid},
+            (Ptr{CJlLowessResult},),
+            r,
+        )
+        predict_model = handle == C_NULL ? nothing : PredictModel(handle)
+
+        return LowessResult(
+            x,
+            y,
+            standard_errors,
+            confidence_lower,
+            confidence_upper,
+            prediction_lower,
+            prediction_upper,
+            residuals,
+            robustness_weights,
+            derivative,
+            cv_scores,
+            cr.fraction_used,
+            cr.iterations_used == -1 ? nothing : Int(cr.iterations_used),
+            diagnostics,
+            predict_model,
+        )
+    finally
         ccall(
             (:jl_lowess_free_result, libfastlowess),
             Cvoid,
             (Ptr{CJlLowessResult},),
-            Ref(c_result),
+            r,
         )
-        error("fastlowess error: $error_msg")
     end
-
-    n = Int(c_result.n)
-
-    # Extract arrays
-    x = ptr_to_vector(c_result.x, n)
-    y = ptr_to_vector(c_result.y, n)
-
-    if x === nothing || y === nothing
-        ccall(
-            (:jl_lowess_free_result, libfastlowess),
-            Cvoid,
-            (Ptr{CJlLowessResult},),
-            Ref(c_result),
-        )
-        error("fastlowess error: result arrays are null")
-    end
-
-    x = x::Vector{Float64}
-    y = y::Vector{Float64}
-
-    standard_errors = ptr_to_vector(c_result.standard_errors, n)
-    confidence_lower = ptr_to_vector(c_result.confidence_lower, n)
-    confidence_upper = ptr_to_vector(c_result.confidence_upper, n)
-    prediction_lower = ptr_to_vector(c_result.prediction_lower, n)
-    prediction_upper = ptr_to_vector(c_result.prediction_upper, n)
-    residuals = ptr_to_vector(c_result.residuals, n)
-    robustness_weights = ptr_to_vector(c_result.robustness_weights, n)
-    derivative = ptr_to_vector(c_result.derivative, n)
-    cv_scores = ptr_to_vector(c_result.cv_scores, Int(c_result.cv_scores_len))
-
-    # Extract diagnostics
-    diagnostics = if !isnan(c_result.rmse)
-        Diagnostics(
-            c_result.rmse,
-            c_result.mae,
-            c_result.r_squared,
-            isnan(c_result.aic) ? nothing : c_result.aic,
-            isnan(c_result.aicc) ? nothing : c_result.aicc,
-            isnan(c_result.effective_df) ? nothing : c_result.effective_df,
-            c_result.residual_sd,
-        )
-    else
-        nothing
-    end
-
-    predict_model = if c_result.predict_handle != C_NULL
-        PredictModel(c_result.predict_handle)
-    else
-        nothing
-    end
-
-    result = LowessResult(
-        x,
-        y,
-        standard_errors,
-        confidence_lower,
-        confidence_upper,
-        prediction_lower,
-        prediction_upper,
-        residuals,
-        robustness_weights,
-        derivative,
-        cv_scores,
-        c_result.fraction_used,
-        c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),
-        diagnostics,
-        predict_model,
-    )
-
-    # Free the C result
-    ccall(
-        (:jl_lowess_free_result, libfastlowess),
-        Cvoid,
-        (Ptr{CJlLowessResult},),
-        Ref(c_result),
-    )
-
-    return result
 end
 
 """
 	Base.append!(a::LowessResult, b::LowessResult) -> LowessResult
 
-	Append the results from `b` to `a`. This modifies `a` in place. Per-point
-	optional fields must be present in both results or neither.
+Append the per-point results from `b` to `a` in place. Per-point optional fields
+must be present in both results or neither.
+
+Results that carry fit-global state (`cv_scores`, `diagnostics`, or
+`predict_model`) cannot be appended — those fields are not defined for
+concatenated streaming chunks.
 """
 const _APPENDABLE_RESULT_FIELDS = (
     :standard_errors,
@@ -794,6 +782,14 @@ const _APPENDABLE_RESULT_FIELDS = (
 )
 
 function Base.append!(a::LowessResult, b::LowessResult)
+    for field ∈ (:cv_scores, :diagnostics, :predict_model)
+        getfield(a, field) === nothing && getfield(b, field) === nothing || throw(
+            ArgumentError(
+                "cannot append results that include $field; append only streaming-style per-point outputs",
+            ),
+        )
+    end
+
     for field ∈ _APPENDABLE_RESULT_FIELDS
         left = getfield(a, field)
         right = getfield(b, field)
@@ -809,9 +805,6 @@ function Base.append!(a::LowessResult, b::LowessResult)
         values = getfield(a, field)
         values === nothing || append!(values, getfield(b, field))
     end
-
-    # Update fraction_used and iterations_used if they differ?
-    # Streaming usually keeps them constant. We'll keep a's values.
 
     return a
 end
@@ -943,14 +936,14 @@ mutable struct Lowess
                 Cstring,
                 Cdouble,
                 Cdouble,
-                Culong,
+                Csize_t,
                 Cint,
                 Cint,
                 Cint,
                 Cstring,
                 Cdouble,
                 Ptr{Cdouble},
-                Culong,
+                Csize_t,
                 Cstring,
                 Cint,
                 Cint,
@@ -972,14 +965,14 @@ mutable struct Lowess
             boundary_policy,
             iv.confidence,
             iv.prediction,
-            Culong(iv.bootstrap),
+            Csize_t(iv.bootstrap),
             Cint(flags.diagnostics),
             Cint(flags.residuals),
             Cint(flags.weights),
             zero_weight_fallback,
             auto_converge,
             cv_ptr,
-            Culong(cv_len),
+            Csize_t(cv_len),
             cv_options.method,
             Cint(cv_options.k),
             Cint(parallel),
@@ -1000,7 +993,12 @@ mutable struct Lowess
 
         obj = new(handle)
         finalizer(
-            x -> ccall((:jl_lowess_free, libfastlowess), Cvoid, (Ptr{Cvoid},), x.handle),
+            x -> begin
+                if x.handle != C_NULL
+                    ccall((:jl_lowess_free, libfastlowess), Cvoid, (Ptr{Cvoid},), x.handle)
+                    x.handle = C_NULL
+                end
+            end,
             obj,
         )
         return obj
@@ -1037,13 +1035,13 @@ function fit(
     c_result = GC.@preserve l x y custom_weights ccall(
         (:jl_lowess_fit, libfastlowess),
         CJlLowessResult,
-        (Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong, Ptr{Cdouble}, Culong),
+        (Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Csize_t, Ptr{Cdouble}, Csize_t),
         l.handle,
         x,
         y,
-        Culong(n),
+        Csize_t(n),
         (custom_weights !== nothing ? pointer(custom_weights) : Ptr{Cdouble}(C_NULL)),
-        Culong(custom_weights !== nothing ? length(custom_weights) : 0),
+        Csize_t(custom_weights !== nothing ? length(custom_weights) : 0),
     )
 
     return convert_result(c_result)
@@ -1130,7 +1128,7 @@ mutable struct StreamingLowess
                 Cint,
                 Cdouble,
                 Cdouble,
-                Culong,
+                Csize_t,
                 UInt64,
                 Cint,
             ),
@@ -1155,7 +1153,7 @@ mutable struct StreamingLowess
             Cint(flags.se),
             iv.confidence,
             iv.prediction,
-            Culong(iv.bootstrap),
+            Csize_t(iv.bootstrap),
             seed_value,
             has_seed,
         )
@@ -1167,12 +1165,17 @@ mutable struct StreamingLowess
 
         obj = new(handle, ReentrantLock())
         finalizer(
-            x -> ccall(
-                (:jl_streaming_lowess_free, libfastlowess),
-                Cvoid,
-                (Ptr{Cvoid},),
-                x.handle,
-            ),
+            x -> begin
+                if x.handle != C_NULL
+                    ccall(
+                        (:jl_streaming_lowess_free, libfastlowess),
+                        Cvoid,
+                        (Ptr{Cvoid},),
+                        x.handle,
+                    )
+                    x.handle = C_NULL
+                end
+            end,
             obj,
         )
         return obj
@@ -1194,11 +1197,11 @@ function process_chunk(s::StreamingLowess, x::Vector{Float64}, y::Vector{Float64
         GC.@preserve s x y ccall(
             (:jl_streaming_lowess_process_chunk, libfastlowess),
             CJlLowessResult,
-            (Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
+            (Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Csize_t),
             s.handle,
             x,
             y,
-            Culong(n),
+            Csize_t(n),
         )
     end
 
@@ -1244,8 +1247,8 @@ Stateful online LOWESS smoother.
   `"derivative"`, and `"se"`.
 - `zero_weight_fallback::String = "use_local_mean"`: Zero weight handling. See `Lowess` for a description of each option.
 - `missing::String = "error"`: Policy for non-finite (NaN/Inf) `x`/`y` values passed
-  to `add_point`. `"error"` (default) raises, `"drop"` silently ignores the point
-  (returns `nothing` instead of adding it to the window).
+  to `add_point`. `"error"` (default) raises, `"drop"` ignores the point and
+  returns `:dropped` instead of adding it to the window.
 - `intervals = nothing`: Grouped interval options, e.g.
   `(confidence=0.95, prediction=0.95, bootstrap=200)`, for the latest point of each
   window. Requires `update_mode = "full"`.
@@ -1303,7 +1306,7 @@ mutable struct OnlineLowess
                 Cint,
                 Cdouble,
                 Cdouble,
-                Culong,
+                Csize_t,
                 UInt64,
                 Cint,
             ),
@@ -1325,7 +1328,7 @@ mutable struct OnlineLowess
             Cint(flags.se),
             iv.confidence,
             iv.prediction,
-            Culong(iv.bootstrap),
+            Csize_t(iv.bootstrap),
             seed_value,
             has_seed,
         )
@@ -1337,12 +1340,17 @@ mutable struct OnlineLowess
 
         obj = new(handle, ReentrantLock())
         finalizer(
-            x -> ccall(
-                (:jl_online_lowess_free, libfastlowess),
-                Cvoid,
-                (Ptr{Cvoid},),
-                x.handle,
-            ),
+            x -> begin
+                if x.handle != C_NULL
+                    ccall(
+                        (:jl_online_lowess_free, libfastlowess),
+                        Cvoid,
+                        (Ptr{Cvoid},),
+                        x.handle,
+                    )
+                    x.handle = C_NULL
+                end
+            end,
             obj,
         )
         return obj
@@ -1350,51 +1358,61 @@ mutable struct OnlineLowess
 end
 
 """
-	add_point(o::OnlineLowess, x, y) -> Union{OnlineOutput, Nothing}
+	add_point(o::OnlineLowess, x, y) -> Union{OnlineOutput, Nothing, Symbol}
 
 Add a single point to the online processor and return its smoothed value.
-Returns `nothing` while the window is still filling (fewer than `min_points`
-have been seen), and an `OnlineOutput` once smoothing begins.
+
+Returns:
+- an `OnlineOutput` once the window has at least `min_points` finite observations
+- `nothing` while the window is still filling
+- `:dropped` when `missing = "drop"` and `x` or `y` is non-finite
 """
 function add_point(o::OnlineLowess, x::Float64, y::Float64)
-    c_result = lock(o.lock) do
-        GC.@preserve o ccall(
-            (:jl_online_lowess_add_point, libfastlowess),
-            CJlOnlineOutput,
-            (Ptr{Cvoid}, Cdouble, Cdouble),
-            o.handle,
-            x,
-            y,
-        )
-    end
+    c_result = Ref(
+        lock(o.lock) do
+            GC.@preserve o ccall(
+                (:jl_online_lowess_add_point, libfastlowess),
+                CJlOnlineOutput,
+                (Ptr{Cvoid}, Cdouble, Cdouble),
+                o.handle,
+                x,
+                y,
+            )
+        end,
+    )
 
-    if c_result.error != Ptr{Cchar}(C_NULL)
-        error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
+    try
+        if c_result[].error != Ptr{Cchar}(C_NULL)
+            error_msg = unsafe_string(Ptr{UInt8}(c_result[].error))
+            error("fastlowess error: $error_msg")
+        end
+
+        if c_result[].has_value == 0
+            return nothing
+        elseif c_result[].has_value < 0
+            return :dropped
+        end
+
+        return OnlineOutput(
+            c_result[].y,
+            isnan(c_result[].standard_error) ? nothing : c_result[].standard_error,
+            isnan(c_result[].residual) ? nothing : c_result[].residual,
+            isnan(c_result[].robustness_weight) ? nothing : c_result[].robustness_weight,
+            c_result[].iterations_used == -1 ? nothing : Int(c_result[].iterations_used),
+            isnan(c_result[].derivative) ? nothing : c_result[].derivative,
+            isnan(c_result[].confidence_lower) ? nothing : c_result[].confidence_lower,
+            isnan(c_result[].confidence_upper) ? nothing : c_result[].confidence_upper,
+            isnan(c_result[].prediction_lower) ? nothing : c_result[].prediction_lower,
+            isnan(c_result[].prediction_upper) ? nothing : c_result[].prediction_upper,
+        )
+    finally
         ccall(
             (:jl_online_free_output, libfastlowess),
             Cvoid,
             (Ptr{CJlOnlineOutput},),
-            Ref(c_result),
+            c_result,
         )
-        error("fastlowess error: $error_msg")
     end
-
-    if c_result.has_value == 0
-        return nothing
-    end
-
-    return OnlineOutput(
-        c_result.y,
-        isnan(c_result.standard_error) ? nothing : c_result.standard_error,
-        isnan(c_result.residual) ? nothing : c_result.residual,
-        isnan(c_result.robustness_weight) ? nothing : c_result.robustness_weight,
-        c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),
-        isnan(c_result.derivative) ? nothing : c_result.derivative,
-        isnan(c_result.confidence_lower) ? nothing : c_result.confidence_lower,
-        isnan(c_result.confidence_upper) ? nothing : c_result.confidence_upper,
-        isnan(c_result.prediction_lower) ? nothing : c_result.prediction_lower,
-        isnan(c_result.prediction_upper) ? nothing : c_result.prediction_upper,
-    )
 end
 
 end # module FastLOWESS

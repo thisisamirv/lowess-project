@@ -61,6 +61,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Kept the C++ Spack archive URL stable and made release updates recognize multiline version declarations without duplicating them.
 
+**Julia:**
+
+- Use `usize` / `Csize_t` for FFI length and count fields so Windows LLP64 no longer truncates large `Culong` lengths.
+- Free C results with `try`/`finally`, take `predict_handle` ownership via `jl_lowess_take_predict_handle` before `free_result`, and null finalizer handles after free.
+- Distinguish online `missing="drop"` (`:dropped` / `has_value = -1`) from a still-filling window (`nothing` / `has_value = 0`).
+- Reject `append!` of results that carry `cv_scores`, `diagnostics`, or `predict_model`.
+- Demote library-discovery `@info` logs to `@debug`.
+- Document `jl_lowess_set_cv_seed` as a constructor-only ABI stub (`seed` on `jl_lowess_new`).
+
 ## 5.0.0
 
 ### Added

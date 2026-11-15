@@ -345,7 +345,7 @@ using FastLOWESS
             results = [add_point(online, xi, yi) for (xi, yi) ∈ zip(x, y)]
 
             @test any(r !== nothing for r ∈ results)
-            @test all(r === nothing || r isa OnlineOutput for r ∈ results)
+            @test all(r === nothing || r === :dropped || r isa OnlineOutput for r ∈ results)
         end
 
         @testset "with noise" begin
@@ -355,7 +355,7 @@ using FastLOWESS
 
             online = OnlineLowess(fraction = 0.3, window_capacity = 20, min_points = 5)
             results =
-                filter(!isnothing, [add_point(online, xi, yi) for (xi, yi) ∈ zip(x, y)])
+                filter(r -> r isa OnlineOutput, [add_point(online, xi, yi) for (xi, yi) ∈ zip(x, y)])
 
             @test length(results) > 0
         end
@@ -366,7 +366,7 @@ using FastLOWESS
 
             o1 = OnlineLowess(fraction = 0.3, window_capacity = 50, update_mode = "full")
             results_full =
-                filter(!isnothing, [add_point(o1, xi, yi) for (xi, yi) ∈ zip(x, y)])
+                filter(r -> r isa OnlineOutput, [add_point(o1, xi, yi) for (xi, yi) ∈ zip(x, y)])
 
             o2 = OnlineLowess(
                 fraction = 0.3,
@@ -374,7 +374,7 @@ using FastLOWESS
                 update_mode = "incremental",
             )
             results_inc =
-                filter(!isnothing, [add_point(o2, xi, yi) for (xi, yi) ∈ zip(x, y)])
+                filter(r -> r isa OnlineOutput, [add_point(o2, xi, yi) for (xi, yi) ∈ zip(x, y)])
 
             @test length(results_full) > 0
             @test length(results_inc) > 0
@@ -383,7 +383,8 @@ using FastLOWESS
         @testset "missing = \"drop\" ignores non-finite point" begin
             online = OnlineLowess(fraction = 0.5, window_capacity = 10, missing = "drop")
             result = add_point(online, 1.0, NaN)
-            @test result === nothing
+            @test result === :dropped
+            @test add_point(online, 1.0, 2.0) === nothing  # still filling
         end
 
         @testset "return_se and confidence/prediction intervals require full mode" begin
@@ -408,7 +409,7 @@ using FastLOWESS
                 intervals = (confidence = 0.95, prediction = 0.95),
             )
             results =
-                filter(!isnothing, [add_point(online, xi, yi) for (xi, yi) ∈ zip(x, y)])
+                filter(r -> r isa OnlineOutput, [add_point(online, xi, yi) for (xi, yi) ∈ zip(x, y)])
 
             @test length(results) > 0
             last_result = results[end]
@@ -432,7 +433,7 @@ using FastLOWESS
                     seed = 0,
                 )
                 last = filter(
-                    !isnothing,
+                    r -> r isa OnlineOutput,
                     [add_point(online, xi, yi) for (xi, yi) ∈ zip(x, y)],
                 )[end]
                 (last.confidence_lower, last.prediction_upper)
@@ -474,6 +475,14 @@ using FastLOWESS
         append!(first, matching)
         @test length(first.x) == 2length(x)
         @test length(first.residuals) == length(first.x)
+
+        with_diagnostics = fit(Lowess(outputs = ["diagnostics"]), x, y)
+        @test_throws ArgumentError append!(
+            fit(Lowess(outputs = ["diagnostics"]), x, y),
+            with_diagnostics,
+        )
+        with_model = fit(Lowess(retain_model = true), x, y)
+        @test_throws ArgumentError append!(fit(Lowess(retain_model = true), x, y), with_model)
     end
 
     @testset "Result Fields" begin

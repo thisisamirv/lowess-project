@@ -111,6 +111,8 @@ _julia_checks_internal:
 		(echo "Error: jl_online_lowess_new not exported"; exit 1)
 	@$(JL_EXPORT_SCAN) 2>/dev/null | grep -q jl_lowess_free_result || \
 		(echo "Error: jl_lowess_free_result not exported"; exit 1)
+	@$(JL_EXPORT_SCAN) 2>/dev/null | grep -q jl_lowess_take_predict_handle || \
+		(echo "Error: jl_lowess_take_predict_handle not exported"; exit 1)
 	@echo "All exports verified!"
 	@echo "=============================================================================="
 	@echo "5b. ABI size check (limit: 5 MB)..."
