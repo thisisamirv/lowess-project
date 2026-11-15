@@ -5,12 +5,19 @@
 
 This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md).
 
-## [5.1.0]
+## Unreleased
 
 ### Changed
 
+* `OnlineOutput` now distinguishes a still-filling window from a point dropped under `missing = "drop"` via `OnlinePointStatus` (`status()` / `dropped()`). `has_value()` remains true only when a smoothed estimate is ready.
 * Breaking change: renamed the public C ABI from the generic `cpp_*` prefix to `fastlowess_*` (for example `fastlowess_lowess_new`, `fastlowess_version`) so symbols do not collide with other bindings.
 * Windows MSVC releases now publish separate Debug and Release shared libraries for vcpkg consumers (both use `/MD` because the Rust MSVC standard library does).
+
+### Fixed
+
+* Fixed retained-model `predict_handle` ownership so `free_result` no longer leaks the handle; C++ takes ownership via `fastlowess_lowess_take_predict_handle`.
+* `LowessOptions::custom_weights` are now applied by `Lowess::fit` when the fit-argument weights are empty; length mismatches are rejected before the native call.
+* Bounds-check `LowessResult::x_value` / `y_value`.
 
 ## [5.0.0]
 

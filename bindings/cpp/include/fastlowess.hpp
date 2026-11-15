@@ -277,17 +277,40 @@ struct OnlineOptions {
   std::string update_mode = "incremental";
 };
 
+/// Outcome of `OnlineLowess::add_point`.
+enum class OnlinePointStatus : std::int8_t {
+  Filling = 0,  ///< Window still has fewer than min_points finite observations.
+  Ready = 1,    ///< Smoothed fields are valid for the latest point.
+  Dropped = -1, ///< Point ignored under missing = "drop".
+};
+
+inline OnlinePointStatus onlinePointStatusFromRaw(int has_value) {
+  if (has_value == 1) {
+    return OnlinePointStatus::Ready;
+  }
+  if (has_value < 0) {
+    return OnlinePointStatus::Dropped;
+  }
+  return OnlinePointStatus::Filling;
+}
+
 /**
  * @brief Result of a single online update step.
  *
- * Call has_value() to check if the window is ready.  When false, the window
- * is still filling and no smoothed estimate is available yet.  All optional
- * fields are NaN when not computed.
+ * Call `status()` / `has_value()` / `dropped()` to distinguish a ready
+ * estimate, a still-filling window, and a point dropped under
+ * `missing = "drop"`. All optional fields are NaN when not computed.
  */
 class OnlineOutput {
 public:
   /// True when the window has enough points to produce a smoothed estimate.
-  bool has_value() const { return has_value_; }
+  bool has_value() const { return status_ == OnlinePointStatus::Ready; }
+
+  /// True when `missing = "drop"` ignored a non-finite point.
+  bool dropped() const { return status_ == OnlinePointStatus::Dropped; }
+
+  /// Detailed outcome of the latest `add_point` call.
+  OnlinePointStatus status() const { return status_; }
 
   /// Smoothed value for the latest point (valid only when has_value() == true).
   double y() const { return y_; }
@@ -326,10 +349,9 @@ public:
 private:
   friend class OnlineLowess;
   template <typename U> friend class Expected;
-  OnlineOutput() =
-      default; ///< Constructs an empty (has_value==false) instance.
+  OnlineOutput() = default; ///< Constructs an empty (Filling) instance.
   explicit OnlineOutput(const fastlowess_CppOnlineOutput &raw)
-      : has_value_(raw.has_value != 0), y_(raw.y),
+      : status_(onlinePointStatusFromRaw(raw.has_value)), y_(raw.y),
         standard_error_(raw.standard_error), residual_(raw.residual),
         robustness_weight_(raw.robustness_weight),
         iterations_used_(raw.iterations_used), derivative_(raw.derivative),
@@ -338,8 +360,8 @@ private:
         prediction_lower_(raw.prediction_lower),
         prediction_upper_(raw.prediction_upper) {}
 
-  bool has_value_ = false;
-  double y_ = 0.0;
+  OnlinePointStatus status_ = OnlinePointStatus::Filling;
+  double y_ = std::numeric_limits<double>::quiet_NaN();
   double standard_error_ = std::numeric_limits<double>::quiet_NaN();
   double residual_ = std::numeric_limits<double>::quiet_NaN();
   double robustness_weight_ = std::numeric_limits<double>::quiet_NaN();
@@ -628,10 +650,20 @@ public:
   }
 
   /// Access x value at index
-  double x_value(size_t index) const { return result_.x[index]; }
+  double x_value(size_t index) const {
+    if (result_.x == nullptr || index >= size()) {
+      throw std::out_of_range("LOWESS x index out of range");
+    }
+    return result_.x[index];
+  }
 
   /// Access smoothed y value at index
-  double y_value(size_t index) const { return result_.y[index]; }
+  double y_value(size_t index) const {
+    if (result_.y == nullptr || index >= size()) {
+      throw std::out_of_range("LOWESS y index out of range");
+    }
+    return result_.y[index];
+  }
 
   /// Get x values as vector
   std::vector<double> x_vector() const {
@@ -744,9 +776,7 @@ public:
   /// Transfers ownership: subsequent calls return an invalid (empty)
   /// `PredictModel`. Check `PredictModel::valid()` before use.
   PredictModel predict_model() {
-    auto *handle = result_.predict_handle;
-    result_.predict_handle = nullptr;
-    return PredictModel(handle);
+    return PredictModel(fastlowess_lowess_take_predict_handle(&result_));
   }
 
 private:
@@ -763,13 +793,7 @@ private:
     return result;
   }
 
-  void release() noexcept {
-    if (result_.predict_handle != nullptr) {
-      fastlowess_predict_handle_free(result_.predict_handle);
-      result_.predict_handle = nullptr;
-    }
-    fastlowess_lowess_free_result(&result_);
-  }
+  void release() noexcept { fastlowess_lowess_free_result(&result_); }
 
   fastlowess_CppLowessResult result_ = {};
 };
@@ -784,6 +808,7 @@ public:
         options.outputs,
         {"diagnostics", "residuals", "weights", "derivative", "se", "sorted"},
         "Lowess");
+    custom_weights_ = options.custom_weights;
     ptr_ = fastlowess_lowess_new(
         options.fraction, options.iterations, options.delta,
         options.weight_function.c_str(), options.robustness_method.c_str(),
@@ -835,9 +860,12 @@ public:
     return *this;
   }
 
+  // NOLINTBEGIN(bugprone-easily-swappable-parameters): intentional (x, y,
+  // weights) API
   Expected<LowessResult> fit(const std::vector<double> &x_values,
                              const std::vector<double> &y_values,
                              const std::vector<double> &custom_weights = {}) {
+    // NOLINTEND(bugprone-easily-swappable-parameters)
     if (x_values.size() != y_values.size()) {
       return Expected<LowessResult>::make_error(
           "x and y must have the same length");
@@ -846,12 +874,18 @@ public:
       return Expected<LowessResult>::make_error(
           "Input arrays must not be empty");
     }
+    const std::vector<double> &weights =
+        custom_weights.empty() ? custom_weights_ : custom_weights;
+    if (!weights.empty() && weights.size() != y_values.size()) {
+      return Expected<LowessResult>::make_error(
+          "custom_weights length must match y length");
+    }
 
     auto result =
         fastlowess_lowess_fit(ptr_, x_values.data(), y_values.data(),
-                       static_cast<size_t>(x_values.size()),
-                       custom_weights.empty() ? nullptr : custom_weights.data(),
-                       static_cast<size_t>(custom_weights.size()));
+                              static_cast<size_t>(x_values.size()),
+                              weights.empty() ? nullptr : weights.data(),
+                              static_cast<size_t>(weights.size()));
 
     if (result.error != nullptr) {
       const std::string error_msg(result.error);
@@ -864,6 +898,7 @@ public:
 
 private:
   fastlowess_CppLowess *ptr_ = nullptr;
+  std::vector<double> custom_weights_;
 };
 
 /**
@@ -923,8 +958,9 @@ public:
       return Expected<LowessResult>::make_error("x and y length mismatch");
     }
 
-    auto result = fastlowess_streaming_process(ptr_, x_values.data(), y_values.data(),
-                                        static_cast<size_t>(x_values.size()));
+    auto result =
+        fastlowess_streaming_process(ptr_, x_values.data(), y_values.data(),
+                                     static_cast<size_t>(x_values.size()));
 
     if (result.error != nullptr) {
       const std::string error_msg(result.error);
@@ -1017,8 +1053,9 @@ public:
   /**
    * @brief Add a single point and return the smoothed value.
    *
-   * Returns an OnlineOutput. Call has_value() to check if the window is ready.
-   * When false, the window is still filling.
+   * Returns an OnlineOutput. Use `has_value()` / `status()` / `dropped()` to
+   * distinguish a ready estimate, a still-filling window, and a point dropped
+   * under `missing = "drop"`.
    */
   Expected<OnlineOutput> add_point(double x, double y) {
     auto raw = fastlowess_online_add_point(ptr_, x, y);
@@ -1134,8 +1171,8 @@ inline bool gpuLibraryEnabled(const std::string &path) {
   if (library == nullptr) {
     return false;
   }
-  const auto gpu_enabled =
-      reinterpret_cast<GpuEnabledFunction>(dlsym(library, "fastlowess_gpu_enabled"));
+  const auto gpu_enabled = reinterpret_cast<GpuEnabledFunction>(
+      dlsym(library, "fastlowess_gpu_enabled"));
   const bool enabled = gpu_enabled != nullptr && gpu_enabled() != 0;
   dlclose(library);
 #endif

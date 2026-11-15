@@ -8,6 +8,7 @@ EXPORTS
     fastlowess_lowess_new
     fastlowess_lowess_set_bootstrap
     fastlowess_lowess_set_seed
+    fastlowess_lowess_take_predict_handle
     fastlowess_online_add_point
     fastlowess_online_free
     fastlowess_online_free_output

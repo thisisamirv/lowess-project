@@ -1,2 +1,9 @@
+# Fragment 1: apply to all files under bindings/cpp (including .hpp).
 CompileFlags:
-  Add: [-std=c++17]
+  Add: [-std=c++17, /std:c++17]
+---
+# Fragment 2: treat the generated C ABI header as C++ for clangd.
+If:
+  PathMatch: 'include/fastlowess\.h'
+CompileFlags:
+  Add: [-x, c++]

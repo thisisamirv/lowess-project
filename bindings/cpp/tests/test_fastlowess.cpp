@@ -943,6 +943,15 @@ void testOnlineMissingDropIgnoresNonFinitePoint() {
   const auto result = online_lowess.add_point(1.0, std::nan("")).value();
   assertTrue(!result.has_value(),
              "missing=drop should ignore the non-finite point");
+  assertTrue(result.dropped(),
+             "missing=drop should report OnlinePointStatus::Dropped");
+  assertTrue(result.status() == fastlowess::OnlinePointStatus::Dropped,
+             "missing=drop status should be Dropped");
+  const auto filling =
+      online_lowess.add_point(k_linear_intercept, k_online_return_se_test_y)
+          .value();
+  assertTrue(filling.status() == fastlowess::OnlinePointStatus::Filling,
+             "finite point after drop should still be Filling");
 }
 
 void testStreamingReturnSeAndIntervals() {
@@ -1098,7 +1107,8 @@ int main() {
   std::fflush(stderr);
   std::cout << std::unitbuf;
   try {
-    assertTrue(std::string(fastlowess_version()) == FASTLOWESS_CPP_VERSION_STRING,
+    assertTrue(std::string(fastlowess_version()) ==
+                   FASTLOWESS_CPP_VERSION_STRING,
                "Test library version should match its generated headers");
     testBasicSmooth();
     testBasicSmoothSerial();

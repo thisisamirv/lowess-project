@@ -86,6 +86,11 @@ where
     }
 }
 
+/// Thread-local last-error message from the most recent failed constructor on this OS thread.
+///
+/// The returned pointer is owned by the library and remains valid only until the next call that
+/// sets or clears the last-error slot on this thread. Callers must read it on the same OS thread
+/// as the failing call. Returns null when no error is stored.
 #[unsafe(no_mangle)]
 pub extern "C" fn fastlowess_last_error_message() -> *const c_char {
     CPP_LAST_ERROR.with(|slot| {
@@ -109,13 +114,13 @@ pub extern "C" fn fastlowess_version() -> *const c_char {
     concat!(env!("CARGO_PKG_VERSION"), "\0").as_ptr() as *const c_char
 }
 
-// Per-point result from an online update, passed across the FFI boundary.
-// has_value = 1 means the window is ready and smoothed is valid; 0 means the
-// window is still filling (caller should treat it as no output yet).
-// Non-computed optional fields use f64::NAN (for floats) or -1 (for int).
-// error = NULL if no error, otherwise points to a null-terminated error string.
+/// Per-point result from an online update, passed across the FFI boundary.
+///
+/// Non-computed optional fields use NaN (floats) or -1 (`iterations_used`).
+/// Smoothed fields are undefined unless `has_value` is 1.
 #[repr(C)]
 pub struct CppOnlineOutput {
+    /// 1 = window ready; 0 = still filling; -1 = dropped under missing="drop".
     pub has_value: c_int,
     pub y: c_double,
     pub standard_error: c_double,
@@ -139,7 +144,8 @@ pub struct CppOnlineOutput {
 /// All arrays are allocated by Rust and must be freed by Rust.
 #[repr(C)]
 pub struct CppLowessResult {
-    /// x values, in the same order as the input (length = n)
+    /// x values (length = n). Same order as the input unless `return_sorted` was set,
+    /// in which case ascending by x.
     pub x: *mut c_double,
     /// Smoothed y values (length = n)
     pub y: *mut c_double,
@@ -182,7 +188,10 @@ pub struct CppLowessResult {
     pub residual_sd: c_double,
 
     /// Opaque handle for `fastlowess_predict()`, non-NULL only if `retain_model` was set to 1.
-    /// Must eventually be freed via `fastlowess_predict_handle_free`.
+    ///
+    /// Ownership: callers that keep the handle must call `fastlowess_lowess_take_predict_handle`
+    /// before `fastlowess_lowess_free_result`. Otherwise `fastlowess_lowess_free_result` frees it.
+    /// Taken handles must eventually be freed via `fastlowess_predict_handle_free`.
     pub predict_handle: *mut CppPredictHandle,
 
     /// Error message (NULL if no error)
@@ -478,7 +487,8 @@ pub unsafe extern "C" fn fastlowess_lowess_set_bootstrap(ptr: *mut CppLowess, n_
 ///
 /// # Safety
 /// `ptr` must be a valid CppLowess pointer. `x_values` and `y_values` must be
-/// valid arrays of length `n`. `custom_weights` is optional: pass null and 0 to omit.
+/// valid arrays of length `n`. `custom_weights` is optional: pass null and 0 to
+/// omit; when non-null, `custom_weights_len` must equal `n`.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn fastlowess_lowess_fit(
     ptr: *mut CppLowess,
@@ -597,7 +607,8 @@ fn predict_error_result(msg: &str) -> CppPredictResult {
 /// points not in the training set.
 ///
 /// # Safety
-/// `handle` must be a valid pointer returned via `CppLowessResult::predict_handle`.
+/// `handle` must be a valid pointer obtained via `fastlowess_lowess_take_predict_handle`
+/// (or still owned in a result that has not been freed).
 /// `new_x` must be a valid array of length `new_x_len`. `extrapolation` must be a
 /// valid null-terminated string or null (defaults to "clamp").
 #[unsafe(no_mangle)]
@@ -669,8 +680,10 @@ pub unsafe extern "C" fn fastlowess_predict(
 
 /// Free a CppPredictResult's heap-allocated buffers.
 ///
+/// Freed pointers are nulled so a second call is a no-op.
+///
 /// # Safety
-/// `result` must be a valid pointer to a CppPredictResult struct.
+/// `result` must be a valid pointer to a CppPredictResult struct, or null.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn fastlowess_predict_free_result(result: *mut CppPredictResult) {
     with_panic_void(|| {
@@ -680,13 +693,22 @@ pub unsafe extern "C" fn fastlowess_predict_free_result(result: *mut CppPredictR
         let r = &mut *result;
         let n = r.n;
         shared_parse::free_raw_f64_buffer(r.y, n);
+        r.y = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.standard_errors, n);
+        r.standard_errors = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.confidence_lower, n);
+        r.confidence_lower = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.confidence_upper, n);
+        r.confidence_upper = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.prediction_lower, n);
+        r.prediction_lower = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.prediction_upper, n);
+        r.prediction_upper = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.derivative, n);
+        r.derivative = ptr::null_mut();
+        r.n = 0;
         shared_parse::free_raw_c_string(r.error);
+        r.error = ptr::null_mut();
     });
 }
 
@@ -1025,7 +1047,8 @@ pub unsafe extern "C" fn fastlowess_online_new(
 }
 
 /// Add a single point to the model and return its smoothed value.
-/// `has_value = 0` in the result means the window is still filling.
+/// `has_value` is `1` when ready, `0` while the window is still filling, and
+/// `-1` when the point was dropped under `missing = "drop"`.
 ///
 /// # Safety
 /// `ptr` must be a valid `CppOnlineLowess` pointer.
@@ -1047,11 +1070,15 @@ pub unsafe extern "C" fn fastlowess_online_add_point(
             return make_error(shared_parse::MODEL_POINTER_IS_NULL);
         }
         let lowess = unsafe { &mut *ptr };
+        let dropped_candidate = !(x.is_finite() && y.is_finite());
 
         if let Some(model) = &mut lowess.model {
             match model.add_point(x, y) {
                 Err(e) => make_error(&e.to_string()),
-                Ok(None) => CppOnlineOutput::default(),
+                Ok(None) => CppOnlineOutput {
+                    has_value: if dropped_candidate { -1 } else { 0 },
+                    ..CppOnlineOutput::default()
+                },
                 Ok(Some(o)) => {
                     let (standard_error, residual, robustness_weight, iterations_used) =
                         shared_parse::extract_online_output(&o);
@@ -1080,10 +1107,13 @@ pub unsafe extern "C" fn fastlowess_online_add_point(
     }
 }
 
-/// Free the error string in a CppOnlineOutput (call only when error != NULL).
+/// Free heap-owned fields in a `CppOnlineOutput` (currently the error string).
+///
+/// Safe to call when `error` is null. Freed pointers are nulled so a second call
+/// is a no-op.
 ///
 /// # Safety
-/// `output` must be a valid pointer and `output->error` must have been allocated by Rust.
+/// `output` must be a valid pointer to a `CppOnlineOutput`, or null.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn fastlowess_online_free_output(output: *mut CppOnlineOutput) {
     with_panic_void(|| {
@@ -1108,10 +1138,33 @@ pub unsafe extern "C" fn fastlowess_online_free(ptr: *mut CppOnlineLowess) {
     });
 }
 
-/// Free a CppLowessResult.
+/// Take ownership of `predict_handle`, nulling it in `result` so
+/// `fastlowess_lowess_free_result` will not free it. The returned pointer must be freed
+/// with `fastlowess_predict_handle_free` (or transferred into a C++ `PredictModel`).
 ///
 /// # Safety
-/// `result` must be a valid pointer to a CppLowessResult struct.
+/// `result` must be a valid pointer to a `CppLowessResult`, or null.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn fastlowess_lowess_take_predict_handle(
+    result: *mut CppLowessResult,
+) -> *mut CppPredictHandle {
+    if result.is_null() {
+        return ptr::null_mut();
+    }
+    let res = &mut *result;
+    let handle = res.predict_handle;
+    res.predict_handle = ptr::null_mut();
+    handle
+}
+
+/// Free a CppLowessResult.
+///
+/// Also frees `predict_handle` if it is still non-null. Callers that keep the
+/// handle must call `fastlowess_lowess_take_predict_handle` first. Freed pointers are
+/// nulled so a second call is a no-op.
+///
+/// # Safety
+/// `result` must be a valid pointer to a `CppLowessResult`, or null.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn fastlowess_lowess_free_result(result: *mut CppLowessResult) {
     with_panic_void(|| {
@@ -1124,16 +1177,34 @@ pub unsafe extern "C" fn fastlowess_lowess_free_result(result: *mut CppLowessRes
         let cv_n = r.cv_scores_len;
 
         shared_parse::free_raw_f64_buffer(r.x, n);
+        r.x = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.y, n);
+        r.y = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.standard_errors, n);
+        r.standard_errors = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.confidence_lower, n);
+        r.confidence_lower = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.confidence_upper, n);
+        r.confidence_upper = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.prediction_lower, n);
+        r.prediction_lower = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.prediction_upper, n);
+        r.prediction_upper = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.residuals, n);
+        r.residuals = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.robustness_weights, n);
+        r.robustness_weights = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.derivative, n);
+        r.derivative = ptr::null_mut();
         shared_parse::free_raw_f64_buffer(r.cv_scores, cv_n);
+        r.cv_scores = ptr::null_mut();
+        r.cv_scores_len = 0;
+        r.n = 0;
+        if !r.predict_handle.is_null() {
+            let _ = Box::from_raw(r.predict_handle);
+            r.predict_handle = ptr::null_mut();
+        }
         shared_parse::free_raw_c_string(r.error);
+        r.error = ptr::null_mut();
     });
 }
