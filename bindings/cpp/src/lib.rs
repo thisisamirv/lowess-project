@@ -87,7 +87,7 @@ where
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn cpp_last_error_message() -> *const c_char {
+pub extern "C" fn fastlowess_last_error_message() -> *const c_char {
     CPP_LAST_ERROR.with(|slot| {
         if let Some(msg) = slot.borrow().as_ref() {
             msg.as_ptr()
@@ -99,13 +99,13 @@ pub extern "C" fn cpp_last_error_message() -> *const c_char {
 
 /// Returns 1 if this library was built with the `gpu` Cargo feature enabled, 0 otherwise.
 #[unsafe(no_mangle)]
-pub extern "C" fn cpp_gpu_enabled() -> c_int {
+pub extern "C" fn fastlowess_gpu_enabled() -> c_int {
     cfg!(feature = "gpu") as c_int
 }
 
 /// Returns the crate version as a static, null-terminated C string.
 #[unsafe(no_mangle)]
-pub extern "C" fn cpp_version() -> *const c_char {
+pub extern "C" fn fastlowess_version() -> *const c_char {
     concat!(env!("CARGO_PKG_VERSION"), "\0").as_ptr() as *const c_char
 }
 
@@ -181,8 +181,8 @@ pub struct CppLowessResult {
     pub effective_df: c_double,
     pub residual_sd: c_double,
 
-    /// Opaque handle for `cpp_predict()`, non-NULL only if `retain_model` was set to 1.
-    /// Must eventually be freed via `cpp_predict_handle_free`.
+    /// Opaque handle for `fastlowess_predict()`, non-NULL only if `retain_model` was set to 1.
+    /// Must eventually be freed via `fastlowess_predict_handle_free`.
     pub predict_handle: *mut CppPredictHandle,
 
     /// Error message (NULL if no error)
@@ -304,8 +304,8 @@ pub struct CppOnlineLowess {
     model: Option<ParallelOnlineLowess<f64>>,
 }
 
-// Opaque handle retained by `cpp_lowess_fit` (in `CppLowessResult::predict_handle`, if
-// `retain_model` was set to 1), enabling `cpp_predict()`. Wraps just the lightweight
+// Opaque handle retained by `fastlowess_lowess_fit` (in `CppLowessResult::predict_handle`, if
+// `retain_model` was set to 1), enabling `fastlowess_predict()`. Wraps just the lightweight
 // `Arc<PredictState<f64>>` extracted from the fitted model, not the whole result.
 pub struct CppPredictHandle {
     state: Arc<shared_parse::PredictState<f64>>,
@@ -321,7 +321,7 @@ fn setter_unsupported_eager_lifecycle(name: &str) {
 /// # Safety
 /// Pointers must be valid null-terminated strings or null. Arrays must be valid.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_lowess_new(
+pub unsafe extern "C" fn fastlowess_lowess_new(
     fraction: c_double,
     iterations: c_int,
     delta: c_double,
@@ -453,7 +453,7 @@ pub unsafe extern "C" fn cpp_lowess_new(
 /// # Safety
 /// ptr must be valid.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_lowess_set_seed(ptr: *mut CppLowess, seed: u64) {
+pub unsafe extern "C" fn fastlowess_lowess_set_seed(ptr: *mut CppLowess, seed: u64) {
     with_panic_void(|| {
         if !ptr.is_null() {
             unsafe { (*ptr).seed = Some(seed) };
@@ -464,9 +464,9 @@ pub unsafe extern "C" fn cpp_lowess_set_seed(ptr: *mut CppLowess, seed: u64) {
 /// Configure residual-bootstrap refits for Batch intervals.
 ///
 /// # Safety
-/// `ptr` must be a valid pointer returned by `cpp_lowess_new`, or null.
+/// `ptr` must be a valid pointer returned by `fastlowess_lowess_new`, or null.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_lowess_set_bootstrap(ptr: *mut CppLowess, n_boot: usize) {
+pub unsafe extern "C" fn fastlowess_lowess_set_bootstrap(ptr: *mut CppLowess, n_boot: usize) {
     with_panic_void(|| {
         if !ptr.is_null() {
             unsafe { (*ptr).bootstrap = (n_boot > 0).then_some(n_boot) };
@@ -480,7 +480,7 @@ pub unsafe extern "C" fn cpp_lowess_set_bootstrap(ptr: *mut CppLowess, n_boot: u
 /// `ptr` must be a valid CppLowess pointer. `x_values` and `y_values` must be
 /// valid arrays of length `n`. `custom_weights` is optional: pass null and 0 to omit.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_lowess_fit(
+pub unsafe extern "C" fn fastlowess_lowess_fit(
     ptr: *mut CppLowess,
     x_values: *const c_double,
     y_values: *const c_double,
@@ -536,9 +536,9 @@ pub unsafe extern "C" fn cpp_lowess_fit(
 /// Free batch model.
 ///
 /// # Safety
-/// `ptr` must be a valid pointer returned by `cpp_lowess_new` or null.
+/// `ptr` must be a valid pointer returned by `fastlowess_lowess_new` or null.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_lowess_free(ptr: *mut CppLowess) {
+pub unsafe extern "C" fn fastlowess_lowess_free(ptr: *mut CppLowess) {
     with_panic_void(|| {
         if !ptr.is_null() {
             let _ = Box::from_raw(ptr);
@@ -546,8 +546,8 @@ pub unsafe extern "C" fn cpp_lowess_free(ptr: *mut CppLowess) {
     });
 }
 
-/// Result of `cpp_predict()`. All arrays are allocated by Rust and must be freed via
-/// `cpp_predict_free_result`.
+/// Result of `fastlowess_predict()`. All arrays are allocated by Rust and must be freed via
+/// `fastlowess_predict_free_result`.
 #[repr(C)]
 pub struct CppPredictResult {
     /// Predicted y values, one per query point (length = n)
@@ -602,7 +602,7 @@ fn predict_error_result(msg: &str) -> CppPredictResult {
 /// valid null-terminated string or null (defaults to "clamp").
 #[unsafe(no_mangle)]
 #[allow(clippy::too_many_arguments)]
-pub unsafe extern "C" fn cpp_predict(
+pub unsafe extern "C" fn fastlowess_predict(
     handle: *mut CppPredictHandle,
     new_x: *const c_double,
     new_x_len: usize,
@@ -672,7 +672,7 @@ pub unsafe extern "C" fn cpp_predict(
 /// # Safety
 /// `result` must be a valid pointer to a CppPredictResult struct.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_predict_free_result(result: *mut CppPredictResult) {
+pub unsafe extern "C" fn fastlowess_predict_free_result(result: *mut CppPredictResult) {
     with_panic_void(|| {
         if result.is_null() {
             return;
@@ -695,7 +695,7 @@ pub unsafe extern "C" fn cpp_predict_free_result(result: *mut CppPredictResult) 
 /// # Safety
 /// `ptr` must be a valid pointer returned via `CppLowessResult::predict_handle`, or null.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_predict_handle_free(ptr: *mut CppPredictHandle) {
+pub unsafe extern "C" fn fastlowess_predict_handle_free(ptr: *mut CppPredictHandle) {
     with_panic_void(|| {
         if !ptr.is_null() {
             let _ = Box::from_raw(ptr);
@@ -708,7 +708,7 @@ pub unsafe extern "C" fn cpp_predict_handle_free(ptr: *mut CppPredictHandle) {
 /// # Safety
 /// Pointers must be valid null-terminated strings or null.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_streaming_new(
+pub unsafe extern "C" fn fastlowess_streaming_new(
     fraction: c_double,
     iterations: c_int,
     delta: c_double,
@@ -834,7 +834,7 @@ pub unsafe extern "C" fn cpp_streaming_new(
 /// `ptr` must be valid. `x_values` and `y_values` must be valid arrays of
 /// length `n`.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_streaming_process(
+pub unsafe extern "C" fn fastlowess_streaming_process(
     ptr: *mut CppStreamingLowess,
     x_values: *const c_double,
     y_values: *const c_double,
@@ -867,7 +867,7 @@ pub unsafe extern "C" fn cpp_streaming_process(
 /// # Safety
 /// `ptr` must be valid.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_streaming_finalize(ptr: *mut CppStreamingLowess) -> CppLowessResult {
+pub unsafe extern "C" fn fastlowess_streaming_finalize(ptr: *mut CppStreamingLowess) -> CppLowessResult {
     with_panic_result(|| {
         if ptr.is_null() {
             return error_result(shared_parse::MODEL_POINTER_IS_NULL);
@@ -889,7 +889,7 @@ pub unsafe extern "C" fn cpp_streaming_finalize(ptr: *mut CppStreamingLowess) ->
 /// # Safety
 /// `ptr` must be valid or null.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_streaming_free(ptr: *mut CppStreamingLowess) {
+pub unsafe extern "C" fn fastlowess_streaming_free(ptr: *mut CppStreamingLowess) {
     with_panic_void(|| {
         if !ptr.is_null() {
             let _ = Box::from_raw(ptr);
@@ -902,7 +902,7 @@ pub unsafe extern "C" fn cpp_streaming_free(ptr: *mut CppStreamingLowess) {
 /// # Safety
 /// Pointers must be valid null-terminated strings or null.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_online_new(
+pub unsafe extern "C" fn fastlowess_online_new(
     fraction: c_double,
     iterations: c_int,
     delta: c_double,
@@ -1030,7 +1030,7 @@ pub unsafe extern "C" fn cpp_online_new(
 /// # Safety
 /// `ptr` must be a valid `CppOnlineLowess` pointer.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_online_add_point(
+pub unsafe extern "C" fn fastlowess_online_add_point(
     ptr: *mut CppOnlineLowess,
     x: c_double,
     y: c_double,
@@ -1085,7 +1085,7 @@ pub unsafe extern "C" fn cpp_online_add_point(
 /// # Safety
 /// `output` must be a valid pointer and `output->error` must have been allocated by Rust.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_online_free_output(output: *mut CppOnlineOutput) {
+pub unsafe extern "C" fn fastlowess_online_free_output(output: *mut CppOnlineOutput) {
     with_panic_void(|| {
         if !output.is_null() {
             let out = unsafe { &mut *output };
@@ -1100,7 +1100,7 @@ pub unsafe extern "C" fn cpp_online_free_output(output: *mut CppOnlineOutput) {
 /// # Safety
 /// `ptr` must be valid or null.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_online_free(ptr: *mut CppOnlineLowess) {
+pub unsafe extern "C" fn fastlowess_online_free(ptr: *mut CppOnlineLowess) {
     with_panic_void(|| {
         if !ptr.is_null() {
             let _ = Box::from_raw(ptr);
@@ -1113,7 +1113,7 @@ pub unsafe extern "C" fn cpp_online_free(ptr: *mut CppOnlineLowess) {
 /// # Safety
 /// `result` must be a valid pointer to a CppLowessResult struct.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_lowess_free_result(result: *mut CppLowessResult) {
+pub unsafe extern "C" fn fastlowess_lowess_free_result(result: *mut CppLowessResult) {
     with_panic_void(|| {
         if result.is_null() {
             return;

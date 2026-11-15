@@ -8,6 +8,9 @@ parse_deps = false
 
 [export]
 include = ["CppLowessResult"]
+# Prefix applies to generated C types (e.g. fastlowess_CppLowess). Exported
+# function names already use the fastlowess_ ABI prefix in Rust, and
+# renaming_overrides_prefixing keeps cbindgen from doubling that prefix.
 prefix = "fastlowess_"
 renaming_overrides_prefixing = true
 

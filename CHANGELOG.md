@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **C++:**
 
 - Restrict the curated vcpkg Linux package to glibc and verify the target libc during CMake configuration; musl users must use an overlay.
+- Breaking change: rename the public C ABI from `cpp_*` to `fastlowess_*`.
+- Publish separate Windows MSVC Debug and Release C++ shared libraries for vcpkg; replace `VCPKG_POLICY_ONLY_RELEASE_CRT` with `VCPKG_POLICY_SKIP_CRT_LINKAGE_CHECK` (Rust MSVC stdlib is always `/MD`).
 
 **Java:**
 

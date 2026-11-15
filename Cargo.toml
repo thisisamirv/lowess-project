@@ -30,6 +30,11 @@ codegen-units = 1
 inherits = "release"
 panic = "abort"
 
+# Matching Debug profile for Windows MSVC vcpkg consumers.
+[profile.debug-c]
+inherits = "dev"
+panic = "abort"
+
 # Override registry versions with local workspace crates during development.
 # Bindings declare versioned dependencies (e.g. fastLowess = { version = "1.3" })
 # so that published packages resolve correctly; the patch below ensures the local

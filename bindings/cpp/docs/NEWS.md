@@ -5,6 +5,13 @@
 
 This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md).
 
+## [5.1.0]
+
+### Changed
+
+* Breaking change: renamed the public C ABI from the generic `cpp_*` prefix to `fastlowess_*` (for example `fastlowess_lowess_new`, `fastlowess_version`) so symbols do not collide with other bindings.
+* Windows MSVC releases now publish separate Debug and Release shared libraries for vcpkg consumers (both use `/MD` because the Rust MSVC standard library does).
+
 ## [5.0.0]
 
 ### Added

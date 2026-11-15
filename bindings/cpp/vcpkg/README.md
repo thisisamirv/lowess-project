@@ -11,9 +11,9 @@ Use this port as a repository overlay. Its supported targets are limited to thos
 | Target triplets | Windows x64/ARM64, Linux x64/ARM64, and macOS x64/ARM64 |
 | Linux libc | glibc only |
 | Library linkage | Shared library only |
-| Windows runtime | Dynamic CRT |
+| Windows runtime | Dynamic CRT (`/MD`; Rust MSVC stdlib has no `/MDd` build) |
 | Backend | CPU |
-| Consumer configurations | Debug and Release, both using the upstream prebuilt library |
+| Consumer configurations | Separate Windows Debug/Release DLLs (optimization and symbols); Unix installs the release shared library into both configs |
 
 Static linkage, static CRT, musl, 32-bit and ARMv7 targets, MinGW, UWP, Android, iOS, GPU builds, and other operating systems are not supported by this curated port. Linux and macOS require dynamic-linkage triplets. The Linux target compiler is checked for glibc during configuration, so custom triplet names cannot silently select an incompatible binary. Use an overlay port for musl. The manifest and available release binaries are authoritative; do not assume a triplet is supported just because its architecture is listed above.
 
@@ -61,9 +61,9 @@ find_package(unofficial-fastlowess CONFIG REQUIRED)
 target_link_libraries(my_app PRIVATE unofficial::fastlowess::fastlowess)
 ```
 
-The target supplies the installed include directory, C++17 requirement, and native library. All consumer configurations map to the selected prebuilt artifact. Include `<fastlowess.hpp>` for the C++ interface; the port installs the matching generated ABI header alongside it. On Windows, make the installed DLL available to the application through its executable directory or `PATH`. On Unix-like systems, ensure the platform loader can find the installed shared library.
+The target supplies the installed include directory, C++17 requirement, and native library. On Windows, Debug and Release consumers link the matching configuration DLL. Include `<fastlowess.hpp>` for the C++ interface; the port installs the matching generated ABI header alongside it. On Windows, make the installed DLL available to the application through its executable directory or `PATH`. On Unix-like systems, ensure the platform loader can find the installed shared library.
 
-On Windows, the native DLL uses the MSVC runtime. C++ wrapper objects own their C++ allocations, while Rust-owned buffers are released through the DLL's FFI functions. The port declares `VCPKG_POLICY_ONLY_RELEASE_CRT`; it does not disable CRT-linkage checks. A matching Visual C++ runtime must be available on deployment machines.
+On Windows, both Debug and Release DLLs use the MSVC release dynamic runtime (`/MD`) because the Rust standard library is built that way; the port skips vcpkg's CRT linkage check for the same reason as `rerun-sdk`. C++ wrapper objects own their C++ allocations, while Rust-owned buffers are released through the DLL's FFI functions. A matching Visual C++ runtime must be available on deployment machines.
 
 See the [C++ documentation](https://thisisamirv.github.io/lowess-project/cpp/) for API details and smoothing examples.
 

@@ -122,7 +122,7 @@ inline void validateOutputs(const std::vector<std::string> &outputs,
 }
 
 [[noreturn]] inline void throwInitializationError(const char *fallback) {
-  if (const char *message = cpp_last_error_message()) {
+  if (const char *message = fastlowess_last_error_message()) {
     throw LowessError(message);
   }
   throw LowessError(fallback);
@@ -427,7 +427,7 @@ public:
   explicit PredictResult(const fastlowess_CppPredictResult &c_result)
       : result_(c_result) {}
 
-  ~PredictResult() { cpp_predict_free_result(&result_); }
+  ~PredictResult() { fastlowess_predict_free_result(&result_); }
 
   // Move-only
   PredictResult(const PredictResult &) = delete;
@@ -439,7 +439,7 @@ public:
 
   PredictResult &operator=(PredictResult &&other) noexcept {
     if (this != &other) {
-      cpp_predict_free_result(&result_);
+      fastlowess_predict_free_result(&result_);
       result_ = other.result_;
       other.result_ = fastlowess_CppPredictResult{};
     }
@@ -538,7 +538,7 @@ public:
 
   ~PredictModel() {
     if (ptr_ != nullptr) {
-      cpp_predict_handle_free(ptr_);
+      fastlowess_predict_handle_free(ptr_);
     }
   }
 
@@ -554,7 +554,7 @@ public:
   PredictModel &operator=(PredictModel &&other) noexcept {
     if (this != &other) {
       if (ptr_ != nullptr) {
-        cpp_predict_handle_free(ptr_);
+        fastlowess_predict_handle_free(ptr_);
       }
       ptr_ = other.ptr_;
       other.ptr_ = nullptr;
@@ -570,7 +570,7 @@ public:
   PredictResult predict(const std::vector<double> &new_x,
                         const PredictOptions &options = {}) const {
     validateOutputs(options.outputs, {"se", "derivative"}, "Predict");
-    const auto result = cpp_predict(
+    const auto result = fastlowess_predict(
         ptr_, new_x.data(), static_cast<size_t>(new_x.size()),
         hasOutput(options.outputs, "se") ? 1 : 0, options.intervals.confidence,
         options.intervals.prediction,
@@ -765,10 +765,10 @@ private:
 
   void release() noexcept {
     if (result_.predict_handle != nullptr) {
-      cpp_predict_handle_free(result_.predict_handle);
+      fastlowess_predict_handle_free(result_.predict_handle);
       result_.predict_handle = nullptr;
     }
-    cpp_lowess_free_result(&result_);
+    fastlowess_lowess_free_result(&result_);
   }
 
   fastlowess_CppLowessResult result_ = {};
@@ -784,7 +784,7 @@ public:
         options.outputs,
         {"diagnostics", "residuals", "weights", "derivative", "se", "sorted"},
         "Lowess");
-    ptr_ = cpp_lowess_new(
+    ptr_ = fastlowess_lowess_new(
         options.fraction, options.iterations, options.delta,
         options.weight_function.c_str(), options.robustness_method.c_str(),
         options.scaling_method.c_str(), options.boundary_policy.c_str(),
@@ -804,16 +804,16 @@ public:
       throwInitializationError("Failed to initialize Lowess");
     }
     if (options.seed.has_value()) {
-      cpp_lowess_set_seed(ptr_, *options.seed);
+      fastlowess_lowess_set_seed(ptr_, *options.seed);
     }
     if (options.intervals.bootstrap > 0) {
-      cpp_lowess_set_bootstrap(ptr_, options.intervals.bootstrap);
+      fastlowess_lowess_set_bootstrap(ptr_, options.intervals.bootstrap);
     }
   }
 
   ~Lowess() {
     if (ptr_ != nullptr) {
-      cpp_lowess_free(ptr_);
+      fastlowess_lowess_free(ptr_);
     }
   }
 
@@ -827,7 +827,7 @@ public:
   Lowess &operator=(Lowess &&other) noexcept {
     if (this != &other) {
       if (ptr_ != nullptr) {
-        cpp_lowess_free(ptr_);
+        fastlowess_lowess_free(ptr_);
       }
       ptr_ = other.ptr_;
       other.ptr_ = nullptr;
@@ -848,14 +848,14 @@ public:
     }
 
     auto result =
-        cpp_lowess_fit(ptr_, x_values.data(), y_values.data(),
+        fastlowess_lowess_fit(ptr_, x_values.data(), y_values.data(),
                        static_cast<size_t>(x_values.size()),
                        custom_weights.empty() ? nullptr : custom_weights.data(),
                        static_cast<size_t>(custom_weights.size()));
 
     if (result.error != nullptr) {
       const std::string error_msg(result.error);
-      cpp_lowess_free_result(&result);
+      fastlowess_lowess_free_result(&result);
       return Expected<LowessResult>::make_error(error_msg);
     }
 
@@ -873,7 +873,7 @@ class StreamingLowess {
 public:
   explicit StreamingLowess(const StreamingOptions &options = {}) {
     validate_options(options);
-    ptr_ = cpp_streaming_new(
+    ptr_ = fastlowess_streaming_new(
         options.fraction, options.iterations, options.delta,
         options.weight_function.c_str(), options.robustness_method.c_str(),
         options.scaling_method.c_str(), options.boundary_policy.c_str(),
@@ -894,7 +894,7 @@ public:
 
   ~StreamingLowess() {
     if (ptr_ != nullptr) {
-      cpp_streaming_free(ptr_);
+      fastlowess_streaming_free(ptr_);
     }
   }
 
@@ -906,7 +906,7 @@ public:
   StreamingLowess &operator=(StreamingLowess &&other) noexcept {
     if (this != &other) {
       if (ptr_ != nullptr) {
-        cpp_streaming_free(ptr_);
+        fastlowess_streaming_free(ptr_);
       }
       ptr_ = other.ptr_;
       other.ptr_ = nullptr;
@@ -923,12 +923,12 @@ public:
       return Expected<LowessResult>::make_error("x and y length mismatch");
     }
 
-    auto result = cpp_streaming_process(ptr_, x_values.data(), y_values.data(),
+    auto result = fastlowess_streaming_process(ptr_, x_values.data(), y_values.data(),
                                         static_cast<size_t>(x_values.size()));
 
     if (result.error != nullptr) {
       const std::string error_msg(result.error);
-      cpp_lowess_free_result(&result);
+      fastlowess_lowess_free_result(&result);
       return Expected<LowessResult>::make_error(error_msg);
     }
     return Expected<LowessResult>(LowessResult(result));
@@ -940,10 +940,10 @@ public:
     }
     expect_finalized_ = true;
 
-    auto result = cpp_streaming_finalize(ptr_);
+    auto result = fastlowess_streaming_finalize(ptr_);
     if (result.error != nullptr) {
       const std::string error_msg(result.error);
-      cpp_lowess_free_result(&result);
+      fastlowess_lowess_free_result(&result);
       return Expected<LowessResult>::make_error(error_msg);
     }
     return Expected<LowessResult>(LowessResult(result));
@@ -975,7 +975,7 @@ public:
   explicit OnlineLowess(const OnlineOptions &options = {}) {
     validateOutputs(options.outputs, {"weights", "derivative", "se"},
                     "OnlineLowess");
-    ptr_ = cpp_online_new(
+    ptr_ = fastlowess_online_new(
         options.fraction, options.iterations, options.delta,
         options.weight_function.c_str(), options.robustness_method.c_str(),
         options.scaling_method.c_str(), options.boundary_policy.c_str(),
@@ -994,7 +994,7 @@ public:
 
   ~OnlineLowess() {
     if (ptr_ != nullptr) {
-      cpp_online_free(ptr_);
+      fastlowess_online_free(ptr_);
     }
   }
 
@@ -1006,7 +1006,7 @@ public:
   OnlineLowess &operator=(OnlineLowess &&other) noexcept {
     if (this != &other) {
       if (ptr_ != nullptr) {
-        cpp_online_free(ptr_);
+        fastlowess_online_free(ptr_);
       }
       ptr_ = other.ptr_;
       other.ptr_ = nullptr;
@@ -1021,11 +1021,11 @@ public:
    * When false, the window is still filling.
    */
   Expected<OnlineOutput> add_point(double x, double y) {
-    auto raw = cpp_online_add_point(ptr_, x, y);
+    auto raw = fastlowess_online_add_point(ptr_, x, y);
 
     if (raw.error != nullptr) {
       const std::string error_msg(raw.error);
-      cpp_online_free_output(&raw);
+      fastlowess_online_free_output(&raw);
       return Expected<OnlineOutput>::make_error(error_msg);
     }
     return Expected<OnlineOutput>(OnlineOutput(raw));
@@ -1126,7 +1126,7 @@ inline bool gpuLibraryEnabled(const std::string &path) {
     return false;
   }
   const auto gpu_enabled = reinterpret_cast<GpuEnabledFunction>(
-      GetProcAddress(library, "cpp_gpu_enabled"));
+      GetProcAddress(library, "fastlowess_gpu_enabled"));
   const bool enabled = gpu_enabled != nullptr && gpu_enabled() != 0;
   FreeLibrary(library);
 #else
@@ -1135,7 +1135,7 @@ inline bool gpuLibraryEnabled(const std::string &path) {
     return false;
   }
   const auto gpu_enabled =
-      reinterpret_cast<GpuEnabledFunction>(dlsym(library, "cpp_gpu_enabled"));
+      reinterpret_cast<GpuEnabledFunction>(dlsym(library, "fastlowess_gpu_enabled"));
   const bool enabled = gpu_enabled != nullptr && gpu_enabled() != 0;
   dlclose(library);
 #endif
@@ -1228,7 +1228,7 @@ inline bool runProcess(const std::vector<std::string> &arguments) {
 
 /// True if the currently loaded fastlowess_cpp library was built with the
 /// GPU backend enabled.
-inline bool available() { return cpp_gpu_enabled() != 0; }
+inline bool available() { return fastlowess_gpu_enabled() != 0; }
 
 /**
  * @brief Install the GPU-enabled fastlowess_cpp library for this platform.
@@ -1316,7 +1316,7 @@ inline bool install(bool yes = false, const std::string &local_path = "") {
     return false;
   }
 
-  const std::string version = cpp_version();
+  const std::string version = fastlowess_version();
   const std::string asset = "libfastlowess_cpp-gpu-v" + version + "-" +
                             *platform + "-" + *architecture + "." +
                             detail::libraryExt();

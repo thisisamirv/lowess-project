@@ -1098,7 +1098,7 @@ int main() {
   std::fflush(stderr);
   std::cout << std::unitbuf;
   try {
-    assertTrue(std::string(cpp_version()) == FASTLOWESS_CPP_VERSION_STRING,
+    assertTrue(std::string(fastlowess_version()) == FASTLOWESS_CPP_VERSION_STRING,
                "Test library version should match its generated headers");
     testBasicSmooth();
     testBasicSmoothSerial();

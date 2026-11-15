@@ -118,14 +118,24 @@ jobs:
             platform_dir: windows-x64-msvc
             import_library_asset_name: fastlowess-win32-x64.lib
             windows_toolchain: msvc
-            target_dir: target/release
+            cargo_profile: "--profile release-c"
+            target_dir: target/release-c
+          - os: windows-latest
+            artifact_name: fastlowess.dll
+            asset_name: fastlowess-win32-x64-debug.dll
+            platform_dir: windows-x64-msvc-debug
+            import_library_asset_name: fastlowess-win32-x64-debug.lib
+            windows_toolchain: msvc
+            cargo_profile: "--profile debug-c"
+            target_dir: target/debug-c
           - os: windows-latest
             artifact_name: fastlowess.dll
             asset_name: fastlowess-win32-x64-gnu.dll
             platform_dir: windows-x64-gnu
             import_library_asset_name: libfastlowess-win32-x64-gnu.dll.a
             windows_toolchain: gnu
-            target_dir: target/x86_64-pc-windows-gnu/release
+            cargo_profile: "--profile release-c"
+            target_dir: target/x86_64-pc-windows-gnu/release-c
             cargo_target: "--target x86_64-pc-windows-gnu"
             rust_target: x86_64-pc-windows-gnu
           - os: windows-11-arm
@@ -134,7 +144,16 @@ jobs:
             platform_dir: windows-arm64
             import_library_asset_name: fastlowess-win32-arm64.lib
             windows_toolchain: msvc
-            target_dir: target/release
+            cargo_profile: "--profile release-c"
+            target_dir: target/release-c
+          - os: windows-11-arm
+            artifact_name: fastlowess.dll
+            asset_name: fastlowess-win32-arm64-debug.dll
+            platform_dir: windows-arm64-debug
+            import_library_asset_name: fastlowess-win32-arm64-debug.lib
+            windows_toolchain: msvc
+            cargo_profile: "--profile debug-c"
+            target_dir: target/debug-c
           - os: macos-15-intel
             artifact_name: libfastlowess.dylib
             asset_name: libfastlowess-macos-x64.dylib
@@ -244,7 +263,11 @@ jobs:
 
       - name: Build C++ Library
         working-directory: bindings/cpp
-        run: cargo build --locked --release --lib ${{ matrix.cargo_target }}
+        shell: bash
+        run: |
+          PROFILE="${{ matrix.cargo_profile }}"
+          PROFILE="${PROFILE:---release}"
+          cargo build --locked ${PROFILE} --lib ${{ matrix.cargo_target }}
 
       - name: Prepare Assets (iOS static library)
         if: matrix.static_library == true
@@ -349,7 +372,7 @@ jobs:
             tar -tf "$archive" | grep -Fxq THIRD_PARTY_LICENSES.html
             package_count=$((package_count + 1))
           done
-          test "$package_count" -eq 18
+          test "$package_count" -eq 20
 
       - name: Upload platform archives to release
         uses: softprops/action-gh-release@v3
