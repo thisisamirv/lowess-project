@@ -37,14 +37,14 @@ try (OnlineLowess model = new OnlineLowess(options)) {
 
 *Methods:*
 
-==== `addPoint(double x, double y) Optional<PointResult>`
+==== `addPoint(double x, double y) AddPointResult`
 
-Adds a single point to the sliding window and returns the smoothed value for that point, or `Optional.empty()` while the window is still filling up (fewer than `minPoints` seen so far). Once the window reaches `windowCapacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `updateMode` controls how much work each call does: `"incremental"` re-fits only the newest point, while `"full"` re-smooths the entire window for a more accurate but slower result.
+Adds a single point to the sliding window. Returns an `AddPointResult` whose `status()` is `FILLING` while fewer than `minPoints` finite observations have been accepted, `READY` once smoothing begins (`point()` holds the `PointResult`), or `DROPPED` when `missing = "drop"` ignores a non-finite input. Once the window reaches `windowCapacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `updateMode` controls how much work each call does: `"incremental"` re-fits only the newest point, while `"full"` re-smooths the entire window for a more accurate but slower result.
 
 [source,java]
 ----
-Optional<PointResult> result = model.addPoint(x, y);
-result.ifPresent(r -> System.out.println(r.y()));
+AddPointResult result = model.addPoint(x, y);
+result.point().ifPresent(r -> System.out.println(r.y()));
 ----
 
 * `OnlineLowess.close()` releases native resources. Safe to call multiple times. Implements `AutoCloseable`.
@@ -178,7 +178,7 @@ Policy for handling a non-finite (NaN/Infinity) `x` or `y` value passed to `addP
 |Option |Behavior
 
 |`"error"` (default) |Throw
-|`"drop"` |Silently ignore the point — `addPoint` returns `Optional.empty()` instead of adding it to the window
+|`"drop"` |Silently ignore the point — `addPoint` returns status `DROPPED` instead of adding it to the window
 |===
 
 === windowCapacity
@@ -187,7 +187,7 @@ Maximum number of most recent points kept in the sliding window; older points ar
 
 === minPoints
 
-Minimum number of points required before smoothing starts. `addPoint` returns `Optional.empty()` until the window reaches this size.
+Minimum number of points required before smoothing starts. `addPoint` returns status `FILLING` until the window reaches this size.
 
 === updateMode
 
@@ -225,7 +225,7 @@ Seeds bootstrap draws. Each full-update window restarts from the same seed. It d
 
 === `PointResult`
 
-Returned by `addPoint` once the window has enough points (`Optional.empty()` until then).
+Returned in `AddPointResult.point()` once the window has enough points (`status` is `FILLING` or `DROPPED` otherwise).
 
 [cols="1,1,1",options="header"]
 |===
@@ -247,11 +247,9 @@ There is no diagnostics accessor or `"diagnostics"` output for `OnlineLowess`: `
 
 [source,java]
 ----
+import fastlowess.AddPointResult;
 import fastlowess.OnlineLowess;
 import fastlowess.OnlineOptions;
-import fastlowess.PointResult;
-
-import java.util.Optional;
 
 public class Example {
     public static void main(String[] args) {
@@ -270,14 +268,14 @@ public class Example {
                 .build();
 
         try (OnlineLowess model = new OnlineLowess(options)) {
-            Optional<PointResult> r1 = model.addPoint(x[0], y[0]);
-            System.out.println(r1.isPresent());
+            AddPointResult r1 = model.addPoint(x[0], y[0]);
+            System.out.println(r1.isReady());
 
-            Optional<PointResult> r2 = model.addPoint(x[1], y[1]);
-            System.out.println(r2.isPresent());
+            AddPointResult r2 = model.addPoint(x[1], y[1]);
+            System.out.println(r2.isReady());
 
-            Optional<PointResult> r3 = model.addPoint(x[2], y[2]);
-            r3.ifPresent(r -> System.out.println(r.y()));
+            AddPointResult r3 = model.addPoint(x[2], y[2]);
+            r3.point().ifPresent(r -> System.out.println(r.y()));
         }
     }
 }

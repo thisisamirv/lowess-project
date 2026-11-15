@@ -12,17 +12,15 @@ When data arrives continuously—from sensors, logs, or streaming pipelines—yo
 
 For true real-time applications where each point must be processed immediately.
 
-`windowCapacity = 25` limits the internal buffer to the 25 most recent observations; each `addPoint` call costs O(window) rather than growing with total history. `minPoints = 5` suppresses output until the window holds enough points for a stable fit — calls made before that threshold return `Optional.empty()`. `updateMode = "incremental"` re-fits only the most recent point rather than the full window, halving typical latency at a modest accuracy cost.
+`windowCapacity = 25` limits the internal buffer to the 25 most recent observations; each `addPoint` call costs O(window) rather than growing with total history. `minPoints = 5` suppresses output until the window holds enough points for a stable fit — calls made before that threshold return status `FILLING`. `updateMode = "incremental"` re-fits only the most recent point rather than the full window, halving typical latency at a modest accuracy cost.
 
 === Sensor Data Example
 
 [source,java]
 ----
+import fastlowess.AddPointResult;
 import fastlowess.OnlineLowess;
 import fastlowess.OnlineOptions;
-import fastlowess.PointResult;
-
-import java.util.Optional;
 
 public class Example {
     public static void main(String[] args) {
@@ -39,10 +37,10 @@ public class Example {
                 double xi = i;
                 double yi = 20.0 + 5.0 * Math.sin(xi / 10.0) + Math.sin(xi * 1.7) * 0.5;
 
-                Optional<PointResult> res = model.addPoint(xi, yi);
-                if (res.isPresent()) {
+                AddPointResult res = model.addPoint(xi, yi);
+                if (res.isReady()) {
                     if (count < 5) {
-                        System.out.printf("Time %s: smoothed = %.4f%n", xi, res.get().y());
+                        System.out.printf("Time %s: smoothed = %.4f%n", xi, res.point().orElseThrow().y());
                     }
                     count++;
                 }

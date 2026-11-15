@@ -6,7 +6,8 @@ package fastlowess;
  */
 final class NativeOnlineOutput {
 
-    final boolean hasValue;
+    /** 1 = ready, 0 = filling, -1 = dropped under {@code missing = "drop"}. */
+    final int hasValue;
     final double y;
     final double standardError;
     final double residual;
@@ -20,7 +21,7 @@ final class NativeOnlineOutput {
 
     @SuppressWarnings("unused") // called by JNI
     NativeOnlineOutput(
-            boolean hasValue,
+            int hasValue,
             double y,
             double standardError,
             double residual,

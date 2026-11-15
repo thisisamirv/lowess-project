@@ -9,7 +9,7 @@ import java.util.Optional;
  */
 public final class OnlineLowess implements AutoCloseable {
 
-    private long handle;
+    private final NativeHandles.Owned nativeHandle;
 
     /**
      * Creates a new online model from the given options.
@@ -19,7 +19,7 @@ public final class OnlineLowess implements AutoCloseable {
     public OnlineLowess(OnlineOptions options) {
         Options c = options.common;
         Long seed = c.seed;
-        this.handle = NativeBridge.onlineNew(
+        long handle = NativeBridge.onlineNew(
                 c.fraction,
                 c.iterations,
                 c.delta,
@@ -41,34 +41,41 @@ public final class OnlineLowess implements AutoCloseable {
                 c.intervals.bootstrap,
                 seed == null ? 0L : seed,
                 seed != null);
+        this.nativeHandle = new NativeHandles.Owned(handle, NativeBridge::onlineFree);
     }
 
     /**
-     * Adds a point to the model, returning a smoothed output once at least
-     * {@code minPoints} have been seen, or {@link Optional#empty()} otherwise.
+     * Adds a point to the model.
+     *
+     * <p>
+     * {@link OnlinePointStatus#FILLING} while fewer than {@code minPoints}
+     * finite observations have been accepted;
+     * {@link OnlinePointStatus#READY} once smoothing begins (see
+     * {@link AddPointResult#point()});
+     * {@link OnlinePointStatus#DROPPED} when {@code missing = "drop"} ignores a
+     * non-finite {@code x} or {@code y}.
      *
      * @param x the x value
      * @param y the y value
-     * @return the smoothed output, or {@link Optional#empty()} if not enough
-     * points have been seen yet
+     * @return status and optional smoothed output
      */
-    public synchronized Optional<PointResult> addPoint(double x, double y) {
+    public synchronized AddPointResult addPoint(double x, double y) {
         checkOpen();
-        NativeOnlineOutput o = NativeBridge.onlineAddPoint(handle, x, y);
-        return o.hasValue ? Optional.of(PointResult.fromNative(o)) : Optional.empty();
+        NativeOnlineOutput o = NativeBridge.onlineAddPoint(nativeHandle.get(), x, y);
+        OnlinePointStatus status = OnlinePointStatus.fromNative(o.hasValue);
+        return new AddPointResult(
+                status,
+                status.isReady() ? Optional.of(PointResult.fromNative(o)) : Optional.empty());
     }
 
     private void checkOpen() {
-        if (handle == 0) {
+        if (!nativeHandle.isOpen()) {
             throw new IllegalStateException("OnlineLowess has already been closed");
         }
     }
 
     @Override
     public synchronized void close() {
-        if (handle != 0) {
-            NativeBridge.onlineFree(handle);
-            handle = 0;
-        }
+        nativeHandle.close();
     }
 }

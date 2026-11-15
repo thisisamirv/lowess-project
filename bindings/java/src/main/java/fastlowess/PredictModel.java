@@ -8,14 +8,15 @@ package fastlowess;
  *
  * <p>
  * Operations on one instance are synchronized; each instance wraps a native
- * handle that must be freed.
+ * handle that must be freed via {@link #close()} or {@link Result#close()}. A
+ * {@link java.lang.ref.Cleaner} is registered as a safety net.
  */
 public final class PredictModel implements AutoCloseable {
 
-    private long handle;
+    private final NativeHandles.Owned nativeHandle;
 
     PredictModel(long handle) {
-        this.handle = handle;
+        this.nativeHandle = new NativeHandles.Owned(handle, NativeBridge::predictHandleFree);
     }
 
     /**
@@ -39,10 +40,11 @@ public final class PredictModel implements AutoCloseable {
      */
     public synchronized PredictResult predict(double[] newX, PredictOptions options) {
         checkOpen();
+        Inputs.requireQueryX(newX);
         IntervalsOptions iv = options.intervals();
         Long seed = options.seed();
         NativePredictResult r = NativeBridge.predict(
-                handle,
+                nativeHandle.get(),
                 newX,
                 options.outputs().contains("se"),
                 iv.confidence,
@@ -58,16 +60,13 @@ public final class PredictModel implements AutoCloseable {
     }
 
     private void checkOpen() {
-        if (handle == 0) {
+        if (!nativeHandle.isOpen()) {
             throw new IllegalStateException("PredictModel has already been closed");
         }
     }
 
     @Override
     public synchronized void close() {
-        if (handle != 0) {
-            NativeBridge.predictHandleFree(handle);
-            handle = 0;
-        }
+        nativeHandle.close();
     }
 }

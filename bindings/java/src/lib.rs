@@ -36,7 +36,8 @@ const PREDICT_RESULT_CLASS: &JNIStr = jni_str!("fastlowess/NativePredictResult")
 const RESULT_CTOR_SIG: MethodSignature<'static, 'static> =
     jni_sig!("([D[D[D[D[D[D[D[D[D[D[DDIDDDDDDDZJ)V");
 // Keep in sync with NativeOnlineOutput's constructor parameter list.
-const ONLINE_OUTPUT_CTOR_SIG: MethodSignature<'static, 'static> = jni_sig!("(ZDDDDIDDDDD)V");
+// has_value is int: 1 ready, 0 filling, -1 dropped under missing="drop".
+const ONLINE_OUTPUT_CTOR_SIG: MethodSignature<'static, 'static> = jni_sig!("(IDDDDIDDDDD)V");
 // Keep in sync with NativePredictResult's constructor parameter list.
 const PREDICT_RESULT_CTOR_SIG: MethodSignature<'static, 'static> = jni_sig!("([D[D[D[D[D[D[D)V");
 
@@ -783,6 +784,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineAddPoint<'local>(
             return Err(shared_parse::MODEL_POINTER_IS_NULL.into());
         }
         let online = unsafe { &mut *(handle as *mut JavaOnlineLowess) };
+        let dropped_candidate = !(x.is_finite() && y.is_finite());
         let point = online.model.add_point(x, y).map_err(|e| e.to_string())?;
 
         let (
@@ -799,7 +801,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineAddPoint<'local>(
             prediction_upper,
         ) = match point {
             None => (
-                false,
+                if dropped_candidate { -1 } else { 0 },
                 f64::NAN,
                 f64::NAN,
                 f64::NAN,
@@ -815,7 +817,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineAddPoint<'local>(
                 let (se, res, rw, iters) = shared_parse::extract_online_output(&o);
                 let deriv = o.derivative.unwrap_or(f64::NAN);
                 (
-                    true,
+                    1,
                     o.y,
                     se,
                     res,
@@ -835,7 +837,7 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineAddPoint<'local>(
             class,
             ONLINE_OUTPUT_CTOR_SIG,
             &[
-                JValue::Bool(has_value as jboolean),
+                JValue::Int(has_value),
                 JValue::Double(y_val),
                 JValue::Double(standard_error),
                 JValue::Double(residual),

@@ -272,7 +272,7 @@ One seed shared by k-fold CV shuffling and fit-time residual bootstrap. It does 
 
 _See: xref:../guide/predict.adoc[Predict]_
 
-Retains the fitted model's training data, populating `Result.predictModel()` with an `Optional<PredictModel>` usable to evaluate the fit at out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
+Retains the fitted model's training data, populating `Result.predictModel()` with an `Optional<PredictModel>` usable to evaluate the fit at out-of-sample query points not in the training set. Close the `Result` (or the nested `PredictModel`) to free the native handle. `false` (default) — no extra memory/copy cost unless requested.
 
 === customWeights
 

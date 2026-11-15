@@ -231,25 +231,24 @@ class LowessTest {
         double[] y = wavy(x);
         double[] newX = {2.5, 10.5, 20.5};
 
-        try (Lowess model = new Lowess(Options.builder().retainModel(true).build())) {
-            Result result = model.fit(x, y);
-            try (PredictModel predictModel = result.predictModel().orElseThrow()) {
-                PredictResult analytic = predictModel.predict(newX, PredictOptions.builder()
-                        .outputs("se", "derivative")
-                        .intervals(IntervalsOptions.builder().confidence(0.95).prediction(0.95).build())
-                        .build());
-                assertEquals(newX.length, analytic.standardErrors().orElseThrow().length);
-                assertEquals(newX.length, analytic.derivative().orElseThrow().length);
-                assertEquals(newX.length, analytic.predictionLower().orElseThrow().length);
+        try (Lowess model = new Lowess(Options.builder().retainModel(true).build());
+                Result result = model.fit(x, y);
+                PredictModel predictModel = result.predictModel().orElseThrow()) {
+            PredictResult analytic = predictModel.predict(newX, PredictOptions.builder()
+                    .outputs("se", "derivative")
+                    .intervals(IntervalsOptions.builder().confidence(0.95).prediction(0.95).build())
+                    .build());
+            assertEquals(newX.length, analytic.standardErrors().orElseThrow().length);
+            assertEquals(newX.length, analytic.derivative().orElseThrow().length);
+            assertEquals(newX.length, analytic.predictionLower().orElseThrow().length);
 
-                PredictOptions bootstrap = PredictOptions.builder()
-                        .intervals(IntervalsOptions.builder().confidence(0.95).bootstrap(20).build())
-                        .seed(7)
-                        .build();
-                double[] first = predictModel.predict(newX, bootstrap).confidenceLower().orElseThrow();
-                double[] second = predictModel.predict(newX, bootstrap).confidenceLower().orElseThrow();
-                assertArrayEquals(first, second);
-            }
+            PredictOptions bootstrap = PredictOptions.builder()
+                    .intervals(IntervalsOptions.builder().confidence(0.95).bootstrap(20).build())
+                    .seed(7)
+                    .build();
+            double[] first = predictModel.predict(newX, bootstrap).confidenceLower().orElseThrow();
+            double[] second = predictModel.predict(newX, bootstrap).confidenceLower().orElseThrow();
+            assertArrayEquals(first, second);
         }
     }
 }

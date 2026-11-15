@@ -889,7 +889,9 @@ pub unsafe extern "C" fn fastlowess_streaming_process(
 /// # Safety
 /// `ptr` must be valid.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn fastlowess_streaming_finalize(ptr: *mut CppStreamingLowess) -> CppLowessResult {
+pub unsafe extern "C" fn fastlowess_streaming_finalize(
+    ptr: *mut CppStreamingLowess,
+) -> CppLowessResult {
     with_panic_result(|| {
         if ptr.is_null() {
             return error_result(shared_parse::MODEL_POINTER_IS_NULL);

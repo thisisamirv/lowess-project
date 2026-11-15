@@ -248,7 +248,7 @@ public class Example {
                 .minPoints(5).updateMode("full").intervals(intervals).seed(42L).build())) {
             PointResult last = null;
             for (int i = 0; i < 12; i++) {
-                last = online.addPoint(x[i], y[i]).orElse(last);
+                last = online.addPoint(x[i], y[i]).point().orElse(last);
             }
             System.out.println("Online PI present: " + last.predictionLower().isPresent());
         }

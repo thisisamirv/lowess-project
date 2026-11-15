@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Java:**
 
+- Breaking change: `OnlineLowess.addPoint` returns `AddPointResult` with `OnlinePointStatus` (`FILLING` / `READY` / `DROPPED`) instead of a bare `Optional<PointResult>`.
 - Bumped `central-publishing-maven-plugin.version` to v0.12.0.
 - Bumped `maven-enforcer-plugin` to v3.7.0 and `maven-surefire-plugin` to v3.6.1.
 
@@ -60,6 +61,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **C++:**
 
 - Kept the C++ Spack archive URL stable and made release updates recognize multiline version declarations without duplicating them.
+- Take `predict_handle` ownership via `fastlowess_lowess_take_predict_handle`; `fastlowess_lowess_free_result` frees any remaining handle and nulls freed buffers.
+- Distinguish online `missing="drop"` (`OnlinePointStatus::Dropped` / `has_value = -1`) from a still-filling window (`Filling` / `has_value = 0`); `OnlineOutput::has_value()` is true only when ready.
+- Honor `LowessOptions::custom_weights` in `Lowess::fit` when the fit-argument weights are empty, and reject length mismatches before FFI.
+- Bounds-check `LowessResult::x_value` / `y_value`.
+
+**Go:**
+
+- Take `predict_handle` ownership via `go_lowess_take_predict_handle`; `go_lowess_free_result` frees any remaining handle and nulls freed buffers.
+- Keep slice inputs alive across cgo calls, `defer` native result frees, and make `Close`/finalizer races safe with an atomic pointer swap.
+- Distinguish online `missing="drop"` (`AddPointDropped` / `has_value = -1`) from a still-filling window (`AddPointFilling` / `has_value = 0`); `AddPoint` now returns `AddPointStatus`.
+- Reject negative Streaming/Online `iterations` instead of casting them to a huge `usize`.
+
+**Java:**
+
+- Distinguish online `missing="drop"` (`OnlinePointStatus.DROPPED` / `has_value = -1`) from a still-filling window (`FILLING` / `has_value = 0`); `addPoint` returns `AddPointResult`.
+- Close retained `PredictModel` handles through `Result` (`AutoCloseable`) with take-once ownership and a `Cleaner` safety net on native-owning types.
+- Validate equal `x`/`y` lengths and `customWeights` against `y` before JNI.
 
 **Julia:**
 
@@ -69,20 +87,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reject `append!` of results that carry `cv_scores`, `diagnostics`, or `predict_model`.
 - Demote library-discovery `@info` logs to `@debug`.
 - Document `jl_lowess_set_cv_seed` as a constructor-only ABI stub (`seed` on `jl_lowess_new`).
-
-**Go:**
-
-- Take `predict_handle` ownership via `go_lowess_take_predict_handle`; `go_lowess_free_result` frees any remaining handle and nulls freed buffers.
-- Keep slice inputs alive across cgo calls, `defer` native result frees, and make `Close`/finalizer races safe with an atomic pointer swap.
-- Distinguish online `missing="drop"` (`AddPointDropped` / `has_value = -1`) from a still-filling window (`AddPointFilling` / `has_value = 0`); `AddPoint` now returns `AddPointStatus`.
-- Reject negative Streaming/Online `iterations` instead of casting them to a huge `usize`.
-
-**C++:**
-
-- Take `predict_handle` ownership via `fastlowess_lowess_take_predict_handle`; `fastlowess_lowess_free_result` frees any remaining handle and nulls freed buffers.
-- Distinguish online `missing="drop"` (`OnlinePointStatus::Dropped` / `has_value = -1`) from a still-filling window (`Filling` / `has_value = 0`); `OnlineOutput::has_value()` is true only when ready.
-- Honor `LowessOptions::custom_weights` in `Lowess::fit` when the fit-argument weights are empty, and reject length mismatches before FFI.
-- Bounds-check `LowessResult::x_value` / `y_value`.
 
 ## 5.0.0
 

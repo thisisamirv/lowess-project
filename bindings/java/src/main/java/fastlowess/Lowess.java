@@ -6,7 +6,7 @@ package fastlowess;
  */
 public final class Lowess implements AutoCloseable {
 
-    private long handle;
+    private final NativeHandles.Owned nativeHandle;
 
     /**
      * Creates a new batch model from the given options.
@@ -17,7 +17,7 @@ public final class Lowess implements AutoCloseable {
         IntervalsOptions iv = options.intervals;
         CVOptions cv = options.cv;
         Long seed = options.seed;
-        this.handle = NativeBridge.lowessNew(
+        long handle = NativeBridge.lowessNew(
                 options.fraction,
                 options.iterations,
                 options.delta,
@@ -45,6 +45,7 @@ public final class Lowess implements AutoCloseable {
                 options.backend,
                 options.missing,
                 options.retainModel);
+        this.nativeHandle = new NativeHandles.Owned(handle, NativeBridge::lowessFree);
     }
 
     /**
@@ -52,7 +53,8 @@ public final class Lowess implements AutoCloseable {
      *
      * @param x the x values
      * @param y the y values
-     * @return the fit result
+     * @return the fit result (close it, or close {@link Result#predictModel()},
+     * when {@code retainModel} was set)
      */
     public synchronized Result fit(double[] x, double[] y) {
         return fit(x, y, null);
@@ -65,28 +67,25 @@ public final class Lowess implements AutoCloseable {
      * @param y the y values
      * @param customWeights non-negative per-observation weights, or
      * {@code null}
-     * @return the fit result
+     * @return the fit result (close it, or close {@link Result#predictModel()},
+     * when {@code retainModel} was set)
      */
     public synchronized Result fit(double[] x, double[] y, double[] customWeights) {
         checkOpen();
-        if (customWeights != null && customWeights.length != x.length) {
-            throw new IllegalArgumentException("customWeights must match x and y length");
-        }
-        NativeResult r = NativeBridge.lowessFit(handle, x, y, customWeights);
+        Inputs.requireXy(x, y);
+        Inputs.requireCustomWeights(customWeights, y.length);
+        NativeResult r = NativeBridge.lowessFit(nativeHandle.get(), x, y, customWeights);
         return Result.fromNative(r);
     }
 
     private void checkOpen() {
-        if (handle == 0) {
+        if (!nativeHandle.isOpen()) {
             throw new IllegalStateException("Lowess has already been closed");
         }
     }
 
     @Override
     public synchronized void close() {
-        if (handle != 0) {
-            NativeBridge.lowessFree(handle);
-            handle = 0;
-        }
+        nativeHandle.close();
     }
 }

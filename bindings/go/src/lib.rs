@@ -823,11 +823,10 @@ pub unsafe extern "C" fn go_streaming_new(
             Err(e) => return null_with_error(&e),
         };
 
-        let iterations =
-            match shared_parse::require_non_negative_usize("iterations", iterations) {
-                Ok(v) => v,
-                Err(e) => return null_with_error(&e),
-            };
+        let iterations = match shared_parse::require_non_negative_usize("iterations", iterations) {
+            Ok(v) => v,
+            Err(e) => return null_with_error(&e),
+        };
 
         let builder = match shared_parse::apply_builder_options(
             LowessBuilder::<f64>::new(),
@@ -1021,11 +1020,10 @@ pub unsafe extern "C" fn go_online_new(
             Ok(v) => v,
             Err(e) => return null_with_error(&e),
         };
-        let iterations =
-            match shared_parse::require_non_negative_usize("iterations", iterations) {
-                Ok(v) => v,
-                Err(e) => return null_with_error(&e),
-            };
+        let iterations = match shared_parse::require_non_negative_usize("iterations", iterations) {
+            Ok(v) => v,
+            Err(e) => return null_with_error(&e),
+        };
 
         let builder = match shared_parse::apply_builder_options(
             LowessBuilder::<f64>::new(),

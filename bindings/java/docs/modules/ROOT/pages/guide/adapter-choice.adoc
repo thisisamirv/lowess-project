@@ -200,11 +200,9 @@ Incremental updates with a sliding window for real-time data.
 
 [source,java]
 ----
+import fastlowess.AddPointResult;
 import fastlowess.OnlineLowess;
 import fastlowess.OnlineOptions;
-import fastlowess.PointResult;
-
-import java.util.Optional;
 
 public class Example {
     public static void main(String[] args) {
@@ -226,9 +224,9 @@ public class Example {
         try (OnlineLowess model = new OnlineLowess(options)) {
             int shown = 0;
             for (int i = 0; i < n && shown < 5; i++) {
-                Optional<PointResult> result = model.addPoint(x[i], y[i]);
-                if (result.isPresent()) {
-                    System.out.println(result.get().y());
+                AddPointResult result = model.addPoint(x[i], y[i]);
+                if (result.isReady()) {
+                    System.out.println(result.point().orElseThrow().y());
                     shown++;
                 }
             }

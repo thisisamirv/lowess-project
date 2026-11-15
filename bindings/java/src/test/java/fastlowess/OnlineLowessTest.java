@@ -3,6 +3,7 @@ package fastlowess;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
@@ -21,8 +22,8 @@ class OnlineLowessTest {
         try (OnlineLowess model = new OnlineLowess(OnlineOptions.builder().minPoints(5).build())) {
             boolean sawValue = false;
             for (int i = 0; i < 20; i++) {
-                Optional<PointResult> point = model.addPoint(i, i * 2.0);
-                if (point.isPresent()) {
+                AddPointResult point = model.addPoint(i, i * 2.0);
+                if (point.isReady()) {
                     sawValue = true;
                 }
             }
@@ -31,11 +32,24 @@ class OnlineLowessTest {
     }
 
     @Test
-    void missingDropIgnoresNonFinitePoint() {
+    void missingDropReportsDroppedDistinctFromFilling() {
         try (OnlineLowess model = new OnlineLowess(
-                OnlineOptions.builder().fraction(0.5).windowCapacity(10).missing("drop").build())) {
-            Optional<PointResult> point = model.addPoint(1.0, Double.NaN);
-            assertTrue(point.isEmpty(), "expected non-finite point to be ignored under missing=drop");
+                OnlineOptions.builder()
+                        .fraction(0.5)
+                        .windowCapacity(10)
+                        .minPoints(5)
+                        .missing("drop")
+                        .build())) {
+            AddPointResult filling = model.addPoint(0.0, 0.0);
+            assertEquals(OnlinePointStatus.FILLING, filling.status());
+            assertTrue(filling.point().isEmpty());
+
+            AddPointResult dropped = model.addPoint(1.0, Double.NaN);
+            assertEquals(OnlinePointStatus.DROPPED, dropped.status());
+            assertTrue(dropped.point().isEmpty());
+
+            AddPointResult stillFilling = model.addPoint(2.0, 4.0);
+            assertEquals(OnlinePointStatus.FILLING, stillFilling.status());
         }
     }
 
@@ -59,9 +73,9 @@ class OnlineLowessTest {
                         .build())) {
             Optional<PointResult> last = Optional.empty();
             for (int i = 0; i < 10; i++) {
-                Optional<PointResult> point = model.addPoint(i, i * 2.0);
-                if (point.isPresent()) {
-                    last = point;
+                AddPointResult point = model.addPoint(i, i * 2.0);
+                if (point.isReady()) {
+                    last = point.point();
                 }
             }
             assertTrue(last.isPresent(), "expected at least one point result");
@@ -90,9 +104,9 @@ class OnlineLowessTest {
                             .build())) {
                 Optional<PointResult> last = Optional.empty();
                 for (int i = 0; i < 12; i++) {
-                    Optional<PointResult> point = model.addPoint(i * 0.1, Math.sin(i * 0.1) + 0.1 * Math.cos(7 * i));
-                    if (point.isPresent()) {
-                        last = point;
+                    AddPointResult point = model.addPoint(i * 0.1, Math.sin(i * 0.1) + 0.1 * Math.cos(7 * i));
+                    if (point.isReady()) {
+                        last = point.point();
                     }
                 }
                 PointResult result = last.orElseThrow();

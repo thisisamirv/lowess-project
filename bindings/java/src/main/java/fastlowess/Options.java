@@ -316,7 +316,8 @@ public final class Options {
         /**
          * Retains the fitted model's training data, enabling
          * {@link Result#predictModel()} for out-of-sample prediction (default
-         * {@code false}).
+         * {@code false}). When {@code true}, close the {@link Result} or the
+         * nested {@link PredictModel} to free the native handle.
          *
          * @param retainModel whether to retain the fitted model
          * @return this builder, for chaining

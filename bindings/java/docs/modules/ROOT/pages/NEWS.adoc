@@ -2,6 +2,18 @@
 
 This changelog includes end-user changes only. For internal development notes, see the link:https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md[repository changelog].
 
+== Unreleased
+
+=== Changed
+
+* Breaking change: `OnlineLowess.addPoint` returns `AddPointResult` with `OnlinePointStatus` (`FILLING` / `READY` / `DROPPED`) instead of a bare `Optional<PointResult>`.
+
+=== Fixed
+
+* Distinguishing Online `addPoint` filling vs `missing="drop"` via `OnlinePointStatus` / `AddPointResult`.
+* Closing retained `PredictModel` handles through `Result` (`AutoCloseable`) with take-once ownership and a `Cleaner` safety net on native-owning types.
+* Validating equal `x`/`y` lengths and `customWeights` against `y` before JNI.
+
 == [5.0.0]
 
 === Added
