@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **WASM:**
 
+- Breaking change: `OnlineLowess.add_point` returns `{ status, point }` with `status` of `"filling"` / `"ready"` / `"dropped"` instead of `OnlineOutput | null`.
 - Bumped `astrojs/markdown-remark` to v7.3.9, `astrojs/starlight` to v0.43.1, `astro` to v7.4.12, `katex` to v0.19.1, `oxlint` to v1.93.0, and `typedoc-plugin-markdown` to v4.14.1.
 
 ### Fixed
@@ -94,6 +95,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Distinguish online `missing="drop"` (`status: "dropped"`) from a still-filling window (`status: "filling"`); `add_point` returns `{ status, point }`.
 - Add idempotent `close()` / `Symbol.dispose` on `OnlineLowess`, `StreamingLowess`, and `LowessResult` (clears retained predict state).
 - Align `fit_async` custom-weights with sync `fit`, categorize Online errors via `map_lowess_result`, and restore `installGpu` TypeScript declarations after N-API generation.
+
+**WASM:**
+
+- Distinguish online `missing="drop"` (`status: "dropped"`) from a still-filling window (`status: "filling"`); `add_point` returns `{ status, point }`.
+- Add idempotent `close()` on `OnlineLowess`, `StreamingLowess`, and `LowessResult` (clears retained predict state).
+- Preserve binding error categories on thrown JS `Error`s and map Online/fit/stream failures via `map_lowess_result`.
 
 ## 5.0.0
 

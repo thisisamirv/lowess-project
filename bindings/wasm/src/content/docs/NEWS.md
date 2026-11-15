@@ -6,6 +6,18 @@ title: News
 
 This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md).
 
+## Unreleased
+
+### Changed
+
+* Breaking change: `OnlineLowess.add_point` returns `{ status, point }` with `status` of `"filling"` / `"ready"` / `"dropped"` instead of `OnlineOutput | null`.
+
+### Fixed
+
+* Distinguishing Online `add_point` filling vs `missing="drop"` via ternary `status`.
+* Adding idempotent `close()` on `OnlineLowess`, `StreamingLowess`, and `LowessResult` (clears retained predict state).
+* Preserving binding error categories on thrown JS `Error`s (`code: "InvalidArg"` / `"Runtime"`) and mapping Online/fit/stream failures via `map_lowess_result`.
+
 ## [5.0.0]
 
 ### Added

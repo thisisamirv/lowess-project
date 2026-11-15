@@ -114,8 +114,34 @@ export interface PredictOutput {
 }
 
 export interface LowessResult {
+    /** Release the WASM result allocation. */
+    free(): void;
+    /** Drop retained predict state early. Idempotent; `free()` still releases the rest. */
+    close(): void;
+    readonly x: Float64Array;
+    readonly y: Float64Array;
+    readonly residuals: Float64Array | undefined;
+    readonly standard_errors: Float64Array | undefined;
+    readonly confidence_lower: Float64Array | undefined;
+    readonly confidence_upper: Float64Array | undefined;
+    readonly prediction_lower: Float64Array | undefined;
+    readonly prediction_upper: Float64Array | undefined;
+    readonly robustness_weights: Float64Array | undefined;
+    readonly derivative: Float64Array | undefined;
+    readonly diagnostics: Diagnostics | undefined;
+    readonly cv_scores: Float64Array | undefined;
+    readonly fraction_used: number;
+    readonly iterations_used: number | undefined;
     /** Evaluate the fitted model at out-of-sample query points. Requires `retain_model: true`. */
     predict(newX: Float64Array, options?: PredictOptions): PredictOutput;
+}
+
+/** Result of `OnlineLowess.add_point()`. */
+export interface AddPointResult {
+    /** `"filling"`, `"ready"`, or `"dropped"`. */
+    status: "filling" | "ready" | "dropped";
+    /** Smoothed output when `status` is `"ready"`; otherwise `null`. */
+    point: OnlineOutput | null;
 }
 
 /** Configuration options for streaming LOWESS smoothing. A subset of `SmoothOptions`: cross-validation and the `sorted` output have no equivalent here. */
@@ -211,6 +237,8 @@ export class Lowess {
 /** Streaming LOWESS smoother for large datasets. */
 export class StreamingLowess {
     free(): void;
+    /** Release native streaming state early. Idempotent. */
+    close(): void;
     constructor(options?: StreamingSmoothOptions, streamingOpts?: StreamingOptions);
     /** Process a chunk of data. */
     process_chunk(x: Float64Array, y: Float64Array): LowessResult;
@@ -221,9 +249,16 @@ export class StreamingLowess {
 /** Online LOWESS smoother for real-time data. */
 export class OnlineLowess {
     free(): void;
+    /** Release native online state early. Idempotent. */
+    close(): void;
     constructor(options?: OnlineSmoothOptions, onlineOpts?: OnlineOptions);
-    /** Add a single point and get the smoothed output (or null if not enough points yet). */
-    add_point(x: number, y: number): OnlineOutput | null;
+    /**
+     * Add a single point.
+     * Returns status `"filling"` while fewer than `min_points` finite observations
+     * have been accepted, `"ready"` once smoothing begins (`point` holds the output),
+     * or `"dropped"` when `missing = "drop"` ignores a non-finite `x` or `y`.
+     */
+    add_point(x: number, y: number): AddPointResult;
 }
 
 /** Result from a single online update step. */
@@ -250,15 +285,25 @@ use ::fastLowess::prelude::IntervalsBuilder;
 use ::fastLowess::prelude::LowessResult as InnerLowessResult;
 
 fn to_js_error(err: shared_parse::BindingError) -> JsValue {
-    JsValue::from_str(&err.message)
+    let error = js_sys::Error::new(&err.message);
+    let code = match err.category {
+        shared_parse::BindingErrorCategory::InvalidArg => "InvalidArg",
+        shared_parse::BindingErrorCategory::Runtime => "Runtime",
+    };
+    let _ = Reflect::set(&error, &JsValue::from_str("code"), &JsValue::from_str(code));
+    error.into()
+}
+
+fn map_binding<T>(result: Result<T, shared_parse::BindingError>) -> Result<T, JsValue> {
+    result.map_err(to_js_error)
 }
 
 fn map_invalid_arg<T, E: ToString>(result: Result<T, E>) -> Result<T, JsValue> {
     shared_parse::map_invalid_arg(result).map_err(to_js_error)
 }
 
-fn map_runtime<T, E: ToString>(result: Result<T, E>) -> Result<T, JsValue> {
-    shared_parse::map_runtime(result).map_err(to_js_error)
+fn map_lowess_err<T>(result: Result<T, ::fastLowess::prelude::LowessError>) -> Result<T, JsValue> {
+    shared_parse::map_lowess_result(result).map_err(to_js_error)
 }
 
 fn has_output(outputs: Option<&Vec<String>>, name: &str) -> bool {
@@ -613,6 +658,12 @@ impl LowessResult {
         self.inner.iterations_used.map(|i| i as u32)
     }
 
+    /// Drop retained predict state early. Idempotent; `free()` still releases the rest.
+    #[wasm_bindgen(skip_typescript)]
+    pub fn close(&mut self) {
+        self.inner.fit_state = None;
+    }
+
     /// Evaluate the fitted model at out-of-sample query points not in the training set.
     ///
     /// Requires `retain_model: true` to have been set on the builder before `fit()`.
@@ -662,7 +713,7 @@ impl LowessResult {
             opts.seed,
         )
         .map_err(to_js_error)?;
-        let output = map_invalid_arg(query.call(&self.inner, &new_x_vec))?;
+        let output = map_lowess_err(query.call(&self.inner, &new_x_vec))?;
         Ok(PredictOutput { inner: output })
     }
 }
@@ -936,8 +987,8 @@ fn smooth(
     let x_vec = x.to_vec();
     let y_vec = y.to_vec();
 
-    let model = map_runtime(shared_parse::build_batch(builder, custom_weights))?;
-    let result = map_runtime(model.fit(&x_vec, &y_vec))?;
+    let model = map_binding(shared_parse::build_batch(builder, custom_weights))?;
+    let result = map_lowess_err(model.fit(&x_vec, &y_vec))?;
 
     Ok(LowessResult { inner: result })
 }
@@ -945,7 +996,7 @@ fn smooth(
 // Streaming LOWESS smoother.
 #[wasm_bindgen(skip_typescript)]
 pub struct StreamingLowess {
-    inner: ParallelStreamingLowess<f64>,
+    inner: Option<ParallelStreamingLowess<f64>>,
 }
 
 #[wasm_bindgen]
@@ -1002,14 +1053,20 @@ impl StreamingLowess {
                 (None, None, None)
             };
 
-        let model = map_runtime(shared_parse::build_streaming(
+        let model = map_binding(shared_parse::build_streaming(
             builder,
             chunk_size,
             overlap,
             merge_strategy.as_deref(),
         ))?;
 
-        Ok(StreamingLowess { inner: model })
+        Ok(StreamingLowess { inner: Some(model) })
+    }
+
+    fn model_mut(&mut self) -> Result<&mut ParallelStreamingLowess<f64>, JsValue> {
+        self.inner
+            .as_mut()
+            .ok_or_else(|| js_sys::Error::new("StreamingLowess has already been closed").into())
     }
 
     #[wasm_bindgen(js_name = process_chunk, skip_typescript)]
@@ -1020,21 +1077,28 @@ impl StreamingLowess {
     ) -> Result<LowessResult, JsValue> {
         let x_vec = x.to_vec();
         let y_vec = y.to_vec();
-        let result: InnerLowessResult<f64> = map_runtime(self.inner.process_chunk(&x_vec, &y_vec))?;
+        let result: InnerLowessResult<f64> =
+            map_lowess_err(self.model_mut()?.process_chunk(&x_vec, &y_vec))?;
         Ok(LowessResult { inner: result })
     }
 
     #[wasm_bindgen(skip_typescript)]
     pub fn finalize(&mut self) -> Result<LowessResult, JsValue> {
-        let result: InnerLowessResult<f64> = map_runtime(self.inner.finalize())?;
+        let result: InnerLowessResult<f64> = map_lowess_err(self.model_mut()?.finalize())?;
         Ok(LowessResult { inner: result })
+    }
+
+    /// Release native streaming state early. Idempotent.
+    #[wasm_bindgen(skip_typescript)]
+    pub fn close(&mut self) {
+        self.inner.take();
     }
 }
 
 // Online LOWESS smoother.
 #[wasm_bindgen(skip_typescript)]
 pub struct OnlineLowess {
-    inner: ParallelOnlineLowess<f64>,
+    inner: Option<ParallelOnlineLowess<f64>>,
 }
 
 #[wasm_bindgen]
@@ -1090,33 +1154,74 @@ impl OnlineLowess {
                 (None, None, None)
             };
 
-        let model = map_runtime(shared_parse::build_online(
+        let model = map_binding(shared_parse::build_online(
             builder,
             window_capacity,
             min_points,
             update_mode.as_deref(),
         ))?;
 
-        Ok(OnlineLowess { inner: model })
+        Ok(OnlineLowess { inner: Some(model) })
+    }
+
+    fn model_mut(&mut self) -> Result<&mut ParallelOnlineLowess<f64>, JsValue> {
+        self.inner
+            .as_mut()
+            .ok_or_else(|| js_sys::Error::new("OnlineLowess has already been closed").into())
     }
 
     #[wasm_bindgen(js_name = "add_point", skip_typescript)]
     pub fn add_point(&mut self, x: f64, y: f64) -> Result<JsValue, JsValue> {
-        let output = map_invalid_arg(self.inner.add_point(x, y))?;
-        Ok(match output {
-            Some(o) => JsValue::from(OnlineOutput {
-                y: o.y,
-                standard_error: o.standard_error,
-                residual: o.residual,
-                robustness_weight: o.robustness_weight,
-                iterations_used: o.iterations_used,
-                derivative: o.derivative,
-                confidence_lower: o.confidence_lower,
-                confidence_upper: o.confidence_upper,
-                prediction_lower: o.prediction_lower,
-                prediction_upper: o.prediction_upper,
-            }),
-            None => JsValue::null(),
-        })
+        let dropped_candidate = !(x.is_finite() && y.is_finite());
+        let output = map_lowess_err(self.model_mut()?.add_point(x, y))?;
+        let obj = Object::new();
+        match output {
+            Some(o) => {
+                Reflect::set(
+                    &obj,
+                    &JsValue::from_str("status"),
+                    &JsValue::from_str("ready"),
+                )?;
+                Reflect::set(
+                    &obj,
+                    &JsValue::from_str("point"),
+                    &JsValue::from(OnlineOutput {
+                        y: o.y,
+                        standard_error: o.standard_error,
+                        residual: o.residual,
+                        robustness_weight: o.robustness_weight,
+                        iterations_used: o.iterations_used,
+                        derivative: o.derivative,
+                        confidence_lower: o.confidence_lower,
+                        confidence_upper: o.confidence_upper,
+                        prediction_lower: o.prediction_lower,
+                        prediction_upper: o.prediction_upper,
+                    }),
+                )?;
+            }
+            None if dropped_candidate => {
+                Reflect::set(
+                    &obj,
+                    &JsValue::from_str("status"),
+                    &JsValue::from_str("dropped"),
+                )?;
+                Reflect::set(&obj, &JsValue::from_str("point"), &JsValue::null())?;
+            }
+            None => {
+                Reflect::set(
+                    &obj,
+                    &JsValue::from_str("status"),
+                    &JsValue::from_str("filling"),
+                )?;
+                Reflect::set(&obj, &JsValue::from_str("point"), &JsValue::null())?;
+            }
+        }
+        Ok(obj.into())
+    }
+
+    /// Release native online state early. Idempotent.
+    #[wasm_bindgen(skip_typescript)]
+    pub fn close(&mut self) {
+        self.inner.take();
     }
 }

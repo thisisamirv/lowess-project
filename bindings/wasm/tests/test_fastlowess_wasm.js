@@ -155,8 +155,8 @@ test('WASM online smoothing', () => {
     let lastSmoothed;
     for (let i = 0; i < 10; i++) {
         const res = online.add_point(i, i * 2);
-        if (res !== undefined && res !== null) {
-            lastSmoothed = res.y;
+        if (res.status === 'ready') {
+            lastSmoothed = res.point.y;
         }
     }
 
@@ -274,16 +274,25 @@ test('WASM streaming missing: "drop" removes non-finite rows', () => {
     assert.strictEqual(resultLen + finalLen, x.length - 1);
 });
 
-test('WASM online missing: "drop" ignores non-finite point', () => {
+test('WASM online missing: "drop" reports dropped distinct from filling', () => {
     const online = new fastlowess.OnlineLowess({
         fraction: 0.5,
         missing: 'drop'
     }, {
-        window_capacity: 10
+        window_capacity: 10,
+        min_points: 5
     });
 
-    const res = online.add_point(1, NaN);
-    assert.ok(res === undefined || res === null);
+    const filling = online.add_point(0, 0);
+    assert.strictEqual(filling.status, 'filling');
+    assert.strictEqual(filling.point, null);
+
+    const dropped = online.add_point(1, NaN);
+    assert.strictEqual(dropped.status, 'dropped');
+    assert.strictEqual(dropped.point, null);
+
+    const stillFilling = online.add_point(2, 4);
+    assert.strictEqual(stillFilling.status, 'filling');
 });
 
 test('WASM streaming: return_se and grouped intervals', () => {
@@ -336,8 +345,8 @@ test('WASM online: return_se and grouped intervals', () => {
     let last = null;
     for (let i = 0; i < 10; i++) {
         const res = online.add_point(i, i * 2);
-        if (res !== null && res !== undefined) {
-            last = res;
+        if (res.status === 'ready') {
+            last = res.point;
         }
     }
 
@@ -422,7 +431,10 @@ test('WASM online: seeded bootstrap intervals require update_mode "full"', () =>
         );
         let last = null;
         for (let i = 0; i < x.length; i++) {
-            last = online.add_point(x[i], y[i]) ?? last;
+            const res = online.add_point(x[i], y[i]);
+            if (res.status === 'ready') {
+                last = res.point;
+            }
         }
         return [last.confidence_lower, last.prediction_upper];
     });
@@ -458,7 +470,10 @@ test('WASM online: outputs option is applied', () => {
     );
     let last = null;
     for (let i = 0; i < 6; i++) {
-        last = online.add_point(i, i * 2) ?? last;
+        const res = online.add_point(i, i * 2);
+        if (res.status === 'ready') {
+            last = res.point;
+        }
     }
     assert.ok(last.derivative !== undefined);
     assert.ok(last.robustness_weight !== undefined);

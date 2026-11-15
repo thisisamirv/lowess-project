@@ -155,8 +155,8 @@ const online = new OnlineLowess(
 let shown = 0;
 for (let i = 0; i < x.length && shown < 5; i++) {
     const result = online.add_point(x[i], y[i]);
-    if (result !== null) {
-        console.log(result.y);
+    if (result.status === 'ready') {
+        console.log(result.point.y);
         shown++;
     }
 }
