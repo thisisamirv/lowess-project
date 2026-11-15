@@ -26,7 +26,7 @@ const online = new OnlineLowess({ fraction: 0.5 }, { window_capacity: 50, min_po
 // Feed enough points to pass min_points threshold
 for (let i = 0; i < 4; i++) {
     const result = online.add_point(i, Math.sin(i * 0.5));
-    if (result !== null) console.log("Online smoothed at x=" + i + ":", result.y.toFixed(4));
+    if (result.status === 'ready') console.log("Online smoothed at x=" + i + ":", result.point.y.toFixed(4));
 }
 ```
 
@@ -40,7 +40,7 @@ Online smoothed at x=3: 0.9975
 
 #### `add_point(x, y)`
 
-Adds a single point to the sliding window and returns the smoothed value for that point, or `null` while the window is still filling up (fewer than `min_points` seen so far). Once the window reaches `window_capacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `update_mode` controls how much work each call does: `"incremental"` re-fits only the newest point, while `"full"` re-smooths the entire window for a more accurate but slower result.
+Adds a single point to the sliding window. Returns `{ status, point }` where `status` is `"filling"` while fewer than `min_points` finite observations have been accepted, `"ready"` once smoothing begins (`point` holds the `OnlineOutput`), or `"dropped"` when `missing = "drop"` ignores a non-finite input. Once the window reaches `window_capacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `update_mode` controls how much work each call does: `"incremental"` re-fits only the newest point, while `"full"` re-smooths the entire window for a more accurate but slower result.
 
 ```javascript
 const { OnlineLowess } = require('fastlowess');
@@ -51,13 +51,13 @@ const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const online = new OnlineLowess({ fraction: 0.5 }, { window_capacity: 50, min_points: 3 });
 
-// Returns null until min_points (3) are reached
-online.add_point(x[0], y[0]);  // null
-online.add_point(x[1], y[1]);  // null
+// status is "filling" until min_points (3) are reached
+online.add_point(x[0], y[0]);  // { status: "filling", point: null }
+online.add_point(x[1], y[1]);  // { status: "filling", point: null }
 
-// Returns OnlineOutput once enough points are available
+// status is "ready" once enough points are available
 const result = online.add_point(x[2], y[2]);
-console.log("Smoothed y:", result.y);
+console.log("Smoothed y:", result.point.y);
 ```
 
 ```output
@@ -179,7 +179,7 @@ Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `add_point
 | Option | Behavior |
 | --- | --- |
 | `"error"` (default) | Throw an error |
-| `"drop"` | Silently ignore the point — `add_point` returns `null` instead of adding it to the window |
+| `"drop"` | Silently ignore the point — `add_point` returns `status: "dropped"` instead of adding it to the window |
 
 ### window_capacity
 
@@ -187,7 +187,7 @@ Maximum number of most recent points kept in the sliding window; older points ar
 
 ### min_points
 
-Minimum number of points required before smoothing starts. `add_point()` returns `null` until the window reaches this size.
+Minimum number of points required before smoothing starts. `add_point()` returns `status: "filling"` until the window reaches this size.
 
 ### update_mode
 
@@ -226,7 +226,7 @@ Seeds bootstrap draws. Each full-update window restarts from the same seed. It d
 
 ### `OnlineOutput`
 
-Returned by `add_point()` once the window has enough points (`null` until then).
+Returned in `point` once the window has enough points (`status` is `"filling"` or `"dropped"` otherwise).
 
 | Field | Type | Description |
 | --- | --- | --- |

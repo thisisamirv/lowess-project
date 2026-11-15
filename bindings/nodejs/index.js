@@ -71,15 +71,15 @@ const isMuslFromChildProcess = () => {
 function requireNative() {
   // fastlowess versioned GPU override
   if (!process.env.NAPI_RS_NATIVE_LIBRARY_PATH) {
-        try {
-            const gpuBinding = require('./fastlowess.gpu-v5.0.0.node')
-            if (typeof gpuBinding.gpu_enabled === 'function' && gpuBinding.gpu_enabled()) {
-                return gpuBinding
-            }
-        } catch (e) {
-            if (e.code !== 'MODULE_NOT_FOUND') loadErrors.push(e)
-        }
+    try {
+      const gpuBinding = require('./fastlowess.gpu-v5.0.0.node')
+      if (typeof gpuBinding.gpu_enabled === 'function' && gpuBinding.gpu_enabled()) {
+        return gpuBinding
+      }
+    } catch (e) {
+      if (e.code !== 'MODULE_NOT_FOUND') loadErrors.push(e)
     }
+  }
   if (process.env.NAPI_RS_NATIVE_LIBRARY_PATH) {
     try {
       const overrideBinding = require(process.env.NAPI_RS_NATIVE_LIBRARY_PATH)
@@ -604,9 +604,9 @@ if (
 ) {
   throw new Error(
     'Unsupported WASI flavor "' +
-      __napiWasiFlavor +
-      '". Available flavors: ' +
-      __napiWasiFlavors.join(', '),
+    __napiWasiFlavor +
+    '". Available flavors: ' +
+    __napiWasiFlavors.join(', '),
   )
 }
 const forceWasiError = process.env.NAPI_RS_FORCE_WASI === 'error'
@@ -736,8 +736,8 @@ if (!nativeBinding) {
   if (loadErrors.length > 0) {
     const error = new Error(
       `Cannot find native binding. ` +
-        `npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). ` +
-        'Please try `npm i` again after removing both package-lock.json and node_modules directory.',
+      `npm has a bug related to optional dependencies (https://github.com/npm/cli/issues/4828). ` +
+      'Please try `npm i` again after removing both package-lock.json and node_modules directory.',
     )
     // assign instead of the `new Error(message, { cause })` options form,
     // which Node < 16.9 silently ignores
@@ -854,3 +854,18 @@ module.exports.StreamingLowess = nativeBinding.StreamingLowess
 module.exports.gpu_enabled = nativeBinding.gpu_enabled
 
 module.exports.installGpu = require('./gpu-installer.js').installGpu
+
+// fastlowess Symbol.dispose hooks
+function __fastlowessAttachDispose(ctor) {
+  if (!ctor || !ctor.prototype || typeof ctor.prototype.close !== 'function') {
+    return
+  }
+  if (typeof Symbol !== 'undefined' && Symbol.dispose && !ctor.prototype[Symbol.dispose]) {
+    ctor.prototype[Symbol.dispose] = function () {
+      this.close()
+    }
+  }
+}
+__fastlowessAttachDispose(module.exports.OnlineLowess)
+__fastlowessAttachDispose(module.exports.StreamingLowess)
+__fastlowessAttachDispose(module.exports.LowessResult)

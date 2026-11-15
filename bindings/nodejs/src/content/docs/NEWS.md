@@ -6,6 +6,18 @@ title: News
 
 This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md).
 
+## Unreleased
+
+### Changed
+
+* Breaking change: `OnlineLowess.add_point` returns `{ status, point }` with `status` of `"filling"` / `"ready"` / `"dropped"` instead of `OnlineOutput | null`.
+
+### Fixed
+
+* Distinguishing Online `add_point` filling vs `missing="drop"` via ternary `status`.
+* Adding idempotent `close()` (and `Symbol.dispose`) on `OnlineLowess`, `StreamingLowess`, and `LowessResult` (clears retained predict state).
+* Aligning `fit_async` custom-weights with sync `fit`, categorizing Online errors via `map_lowess_result`, and restoring `installGpu` TypeScript declarations after N-API generation.
+
 ## [5.0.0]
 
 ### Added

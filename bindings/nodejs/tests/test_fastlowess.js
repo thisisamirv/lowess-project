@@ -150,8 +150,8 @@ test('online smoothing', () => {
     for (let i = 0; i < 10; i++) {
         const res = online.add_point(i, i * 2);
 
-        if (res !== null) {
-            lastVal = res.y;
+        if (res.status === 'ready') {
+            lastVal = res.point.y;
         }
     }
 
@@ -352,16 +352,25 @@ test('streaming missing: "drop" removes non-finite rows', () => {
     assert.strictEqual(result.y.length + finalResult.y.length, x.length - 1);
 });
 
-test('online missing: "drop" ignores non-finite point', () => {
+test('online missing: "drop" reports dropped distinct from filling', () => {
     const online = new fastlowess.OnlineLowess({
         fraction: 0.5,
         missing: 'drop'
     }, {
-        window_capacity: 10
+        window_capacity: 10,
+        min_points: 5
     });
 
-    const res = online.add_point(1, NaN);
-    assert.strictEqual(res, null);
+    const filling = online.add_point(0, 0);
+    assert.strictEqual(filling.status, 'filling');
+    assert.strictEqual(filling.point, null);
+
+    const dropped = online.add_point(1, NaN);
+    assert.strictEqual(dropped.status, 'dropped');
+    assert.strictEqual(dropped.point, null);
+
+    const stillFilling = online.add_point(2, 4);
+    assert.strictEqual(stillFilling.status, 'filling');
 });
 
 test('streaming: return_se and grouped intervals', () => {
@@ -414,8 +423,8 @@ test('online: return_se and grouped intervals', () => {
     let last = null;
     for (let i = 0; i < 10; i++) {
         const res = online.add_point(i, i * 2);
-        if (res !== null) {
-            last = res;
+        if (res.status === 'ready') {
+            last = res.point;
         }
     }
 
@@ -499,7 +508,10 @@ test('online: seeded bootstrap intervals require update_mode "full"', () => {
         );
         let last = null;
         for (let i = 0; i < x.length; i++) {
-            last = online.add_point(x[i], y[i]) ?? last;
+            const res = online.add_point(x[i], y[i]);
+            if (res.status === 'ready') {
+                last = res.point;
+            }
         }
         return [last.confidence_lower, last.prediction_upper];
     });

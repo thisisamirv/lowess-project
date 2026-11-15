@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Node.js:**
 
+- Breaking change: `OnlineLowess.add_point` returns `{ status, point }` with `status` of `"filling"` / `"ready"` / `"dropped"` instead of `OnlineOutput | null`.
 - Bumped `astrojs/markdown-remark` to v7.3.9, `astrojs/starlight` to v0.43.1, `napi-rs/cli` to v3.10.12, `astro` to v7.4.12, `katex` to v0.19.1, `oxlint` to v1.93.0, and `typedoc-plugin-markdown` to v4.14.1.
 
 **Python:**
@@ -87,6 +88,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reject `append!` of results that carry `cv_scores`, `diagnostics`, or `predict_model`.
 - Demote library-discovery `@info` logs to `@debug`.
 - Document `jl_lowess_set_cv_seed` as a constructor-only ABI stub (`seed` on `jl_lowess_new`).
+
+**Node.js:**
+
+- Distinguish online `missing="drop"` (`status: "dropped"`) from a still-filling window (`status: "filling"`); `add_point` returns `{ status, point }`.
+- Add idempotent `close()` / `Symbol.dispose` on `OnlineLowess`, `StreamingLowess`, and `LowessResult` (clears retained predict state).
+- Align `fit_async` custom-weights with sync `fit`, categorize Online errors via `map_lowess_result`, and restore `installGpu` TypeScript declarations after N-API generation.
 
 ## 5.0.0
 

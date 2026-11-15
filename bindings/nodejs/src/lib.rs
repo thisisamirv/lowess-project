@@ -181,6 +181,12 @@ impl LowessResult {
         self.inner.iterations_used.map(|i| i as u32)
     }
 
+    /// Drop retained predict state early. Idempotent; GC still finalizes the rest.
+    #[napi]
+    pub fn close(&mut self) {
+        self.inner.fit_state = None;
+    }
+
     /// Evaluate the fitted model at out-of-sample query points not in the training set.
     ///
     /// Requires `retain_model: true` to have been set on the builder before `fit()`.
@@ -513,9 +519,18 @@ pub struct OnlineSmoothOptions {
     pub intervals: Option<IntervalsOptions>,
     /// JavaScript safe-integer bootstrap seed; each full-update window restarts from it. Default: None.
     pub seed: Option<f64>,
-    /// Policy for non-finite (NaN/Inf) `x`/`y` values passed to `addPoint` ("error", "drop"). Default: "error".
+    /// Policy for non-finite (NaN/Inf) `x`/`y` values passed to `add_point` ("error", "drop"). Default: "error".
     #[napi(js_name = "missing")]
     pub missing: Option<String>,
+}
+
+/// Result of [`OnlineLowess::add_point`].
+#[napi(object)]
+pub struct AddPointResult {
+    /// `"filling"`, `"ready"`, or `"dropped"`.
+    pub status: String,
+    /// Smoothed output when `status` is `"ready"`; otherwise `null`.
+    pub point: Option<OnlineOutput>,
 }
 
 /// Build a `LowessBuilder` from Batch options, applying every field.
@@ -685,17 +700,16 @@ impl Lowess {
         y: Float64Array,
         custom_weights: Option<Float64Array>,
     ) -> Result<AsyncTask<LowessTask>> {
-        let mut builder = self.create_builder()?;
-        if let Some(cw) = custom_weights {
-            builder = builder.custom_weights(cw.as_ref().to_vec());
-        }
+        let builder = self.create_builder()?;
         let x_vec = x.as_ref().to_vec();
         let y_vec = y.as_ref().to_vec();
+        let custom_weights = custom_weights.map(|cw| cw.as_ref().to_vec());
 
         Ok(AsyncTask::new(LowessTask {
             builder,
             x: x_vec,
             y: y_vec,
+            custom_weights,
         }))
     }
 
@@ -708,6 +722,7 @@ pub struct LowessTask {
     builder: LowessBuilder<f64>,
     x: Vec<f64>,
     y: Vec<f64>,
+    custom_weights: Option<Vec<f64>>,
 }
 
 impl Task for LowessTask {
@@ -715,7 +730,10 @@ impl Task for LowessTask {
     type JsValue = LowessResult;
 
     fn compute(&mut self) -> Result<Self::Output> {
-        let model = map_runtime(binding_support::build_batch(self.builder.clone(), None))?;
+        let model = map_runtime(binding_support::build_batch(
+            self.builder.clone(),
+            self.custom_weights.clone(),
+        ))?;
         map_runtime(model.fit(&self.x, &self.y))
     }
 
@@ -740,7 +758,7 @@ pub struct StreamingOptions {
 /// Streaming LOWESS smoother for large datasets.
 #[napi]
 pub struct StreamingLowess {
-    inner: ParallelStreamingLowess<f64>,
+    inner: Option<ParallelStreamingLowess<f64>>,
 }
 
 #[napi]
@@ -769,22 +787,37 @@ impl StreamingLowess {
             merge_strategy.as_deref(),
         ))?;
 
-        Ok(StreamingLowess { inner: model })
+        Ok(StreamingLowess { inner: Some(model) })
+    }
+
+    fn model_mut(&mut self) -> Result<&mut ParallelStreamingLowess<f64>> {
+        self.inner.as_mut().ok_or_else(|| {
+            Error::new(
+                Status::GenericFailure,
+                "StreamingLowess has already been closed",
+            )
+        })
     }
 
     /// Process a chunk of data.
     #[napi(js_name = "process_chunk")]
     pub fn process_chunk(&mut self, x: Float64Array, y: Float64Array) -> Result<LowessResult> {
         let result: InnerLowessResult<f64> =
-            map_runtime(self.inner.process_chunk(x.as_ref(), y.as_ref()))?;
+            map_runtime(self.model_mut()?.process_chunk(x.as_ref(), y.as_ref()))?;
         Ok(LowessResult { inner: result })
     }
 
     /// Finalize the stream and return remaining data.
     #[napi]
     pub fn finalize(&mut self) -> Result<LowessResult> {
-        let result: InnerLowessResult<f64> = map_runtime(self.inner.finalize())?;
+        let result: InnerLowessResult<f64> = map_runtime(self.model_mut()?.finalize())?;
         Ok(LowessResult { inner: result })
+    }
+
+    /// Release native streaming state early. Idempotent.
+    #[napi]
+    pub fn close(&mut self) {
+        self.inner.take();
     }
 }
 
@@ -838,7 +871,7 @@ pub struct OnlineOutput {
 /// Online LOWESS smoother for real-time data.
 #[napi]
 pub struct OnlineLowess {
-    inner: ParallelOnlineLowess<f64>,
+    inner: Option<ParallelOnlineLowess<f64>>,
 }
 
 #[napi]
@@ -867,26 +900,59 @@ impl OnlineLowess {
             update_mode.as_deref(),
         ))?;
 
-        Ok(OnlineLowess { inner: model })
+        Ok(OnlineLowess { inner: Some(model) })
     }
 
-    /// Add a single point and get the smoothed value if enough points are available.
+    fn model_mut(&mut self) -> Result<&mut ParallelOnlineLowess<f64>> {
+        self.inner.as_mut().ok_or_else(|| {
+            Error::new(
+                Status::GenericFailure,
+                "OnlineLowess has already been closed",
+            )
+        })
+    }
+
+    /// Add a single point.
+    ///
+    /// Returns status `"filling"` while fewer than `min_points` finite
+    /// observations have been accepted, `"ready"` once smoothing begins
+    /// (`point` holds the output), or `"dropped"` when `missing = "drop"`
+    /// ignores a non-finite `x` or `y`.
     #[napi(js_name = "add_point")]
-    pub fn add_point(&mut self, x: f64, y: f64) -> Result<Option<OnlineOutput>> {
-        let output = self.inner.add_point(x, y).map_err(|e| {
-            to_napi_error(binding_support::BindingError::invalid_arg(e.to_string()))
-        })?;
-        Ok(output.map(|o| OnlineOutput {
-            y: o.y,
-            standard_error: o.standard_error,
-            residual: o.residual,
-            robustness_weight: o.robustness_weight,
-            iterations_used: o.iterations_used.map(|i| i as u32),
-            derivative: o.derivative,
-            confidence_lower: o.confidence_lower,
-            confidence_upper: o.confidence_upper,
-            prediction_lower: o.prediction_lower,
-            prediction_upper: o.prediction_upper,
-        }))
+    pub fn add_point(&mut self, x: f64, y: f64) -> Result<AddPointResult> {
+        let dropped_candidate = !(x.is_finite() && y.is_finite());
+        let output = binding_support::map_lowess_result(self.model_mut()?.add_point(x, y))
+            .map_err(to_napi_error)?;
+        Ok(match output {
+            Some(o) => AddPointResult {
+                status: "ready".to_string(),
+                point: Some(OnlineOutput {
+                    y: o.y,
+                    standard_error: o.standard_error,
+                    residual: o.residual,
+                    robustness_weight: o.robustness_weight,
+                    iterations_used: o.iterations_used.map(|i| i as u32),
+                    derivative: o.derivative,
+                    confidence_lower: o.confidence_lower,
+                    confidence_upper: o.confidence_upper,
+                    prediction_lower: o.prediction_lower,
+                    prediction_upper: o.prediction_upper,
+                }),
+            },
+            None if dropped_candidate => AddPointResult {
+                status: "dropped".to_string(),
+                point: None,
+            },
+            None => AddPointResult {
+                status: "filling".to_string(),
+                point: None,
+            },
+        })
+    }
+
+    /// Release native online state early. Idempotent.
+    #[napi]
+    pub fn close(&mut self) {
+        self.inner.take();
     }
 }

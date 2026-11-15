@@ -49,6 +49,8 @@ export declare class LowessResult {
   get fraction_used(): number
   /** Get the number of iterations performed. */
   get iterations_used(): number | null
+  /** Drop retained predict state early. Idempotent; GC still finalizes the rest. */
+  close(): void
   /**
    * Evaluate the fitted model at out-of-sample query points not in the training set.
    *
@@ -57,12 +59,29 @@ export declare class LowessResult {
   predict(newX: Float64Array, options?: PredictOptions | undefined | null): PredictOutput
 }
 
+/** Result of `OnlineLowess.add_point()`. */
+export interface AddPointResult {
+  /** `"filling"`, `"ready"`, or `"dropped"`. */
+  status: 'filling' | 'ready' | 'dropped'
+  /** Smoothed output when `status` is `"ready"`; otherwise `null`. */
+  point?: OnlineOutput
+}
+
 /** Online LOWESS smoother for real-time data. */
 export declare class OnlineLowess {
   /** Create a new online LOWESS smoother. */
   constructor(options?: OnlineSmoothOptions | undefined | null, onlineOpts?: OnlineOptions | undefined | null)
-  /** Add a single point and get the smoothed value if enough points are available. */
-  add_point(x: number, y: number): OnlineOutput | null
+  /**
+   * Add a single point.
+   *
+   * Returns status `"filling"` while fewer than `min_points` finite
+   * observations have been accepted, `"ready"` once smoothing begins
+   * (`point` holds the output), or `"dropped"` when `missing = "drop"`
+   * ignores a non-finite `x` or `y`.
+   */
+  add_point(x: number, y: number): AddPointResult
+  /** Release native online state early. Idempotent. */
+  close(): void
 }
 
 /** Result of `LowessResult.predict()`. */
@@ -91,6 +110,8 @@ export declare class StreamingLowess {
   process_chunk(x: Float64Array, y: Float64Array): LowessResult
   /** Finalize the stream and return remaining data. */
   finalize(): LowessResult
+  /** Release native streaming state early. Idempotent. */
+  close(): void
 }
 
 /** Grouped cross-validation configuration. Seed k-fold shuffling with the outer `seed`. */
@@ -207,9 +228,12 @@ export interface OnlineSmoothOptions {
   intervals?: IntervalsOptions
   /** JavaScript safe-integer bootstrap seed; each full-update window restarts from it. Default: None. */
   seed?: number
-  /** Policy for non-finite (NaN/Inf) `x`/`y` values passed to `addPoint` ("error", "drop"). Default: "error". */
+  /** Policy for non-finite (NaN/Inf) `x`/`y` values passed to `add_point` ("error", "drop"). Default: "error". */
   missing?: string
 }
+
+/** Download or install a prebuilt GPU-enabled native addon sidecar. */
+export declare function installGpu(options?: { yes?: boolean; localPath?: string }): Promise<void>
 
 /** Options for `LowessResult.predict()`. */
 export interface PredictOptions {
