@@ -37,6 +37,7 @@ use crate::math::scaling::ScalingMethod;
 use crate::primitives::buffer::{OnlineBuffer, VecExt};
 use crate::primitives::errors::LowessError;
 use crate::primitives::policies::{MissingPolicy, UpdateMode};
+use crate::primitives::sorting::sort_by_x;
 
 // Builder for online LOWESS processor.
 #[derive(Debug, Clone)]
@@ -166,9 +167,14 @@ impl<T: Float> OnlineLowessBuilder<T> {
         // Validate iterations
         Validator::validate_iterations(self.iterations)?;
 
-        // NaN is the documented sentinel for Online's default (disabled) delta.
+        // Default delta is 0.0 (fit every point). Explicit NaN is rejected by
+        // validate_delta; callers who need "disabled skipping" should use 0.0.
         if !self.delta.is_nan() {
             Validator::validate_delta(self.delta)?;
+        } else {
+            return Err(LowessError::InvalidDelta(
+                self.delta.to_f64().unwrap_or(f64::NAN),
+            ));
         }
         if self.update_mode != UpdateMode::Full && self.delta > T::zero() {
             return Err(LowessError::UnsupportedFeature {
@@ -247,6 +253,53 @@ pub struct OnlineOutput<T> {
     pub derivative: Option<T>,
 }
 
+/// Outcome of [`OnlineLowess::add_point`].
+///
+/// Distinguishes a still-warming window from a point ignored under
+/// [`MissingPolicy::Drop`], which both previously collapsed to `None`.
+#[derive(Debug, Clone, PartialEq)]
+pub enum AddPointResult<T> {
+    /// Fewer than `min_points` finite observations are in the window yet.
+    Filling,
+    /// The point was ignored under `MissingPolicy::Drop`.
+    Dropped,
+    /// Smoothed estimate for the newly accepted point.
+    Ready(OnlineOutput<T>),
+}
+
+impl<T> AddPointResult<T> {
+    /// Returns a reference to the ready output, if any.
+    pub fn as_ready(&self) -> Option<&OnlineOutput<T>> {
+        match self {
+            Self::Ready(output) => Some(output),
+            _ => None,
+        }
+    }
+
+    /// Consumes `self` and returns the ready output, if any.
+    pub fn ready(self) -> Option<OnlineOutput<T>> {
+        match self {
+            Self::Ready(output) => Some(output),
+            _ => None,
+        }
+    }
+
+    /// `true` when a smoothed estimate is available.
+    pub fn is_ready(&self) -> bool {
+        matches!(self, Self::Ready(_))
+    }
+
+    /// `true` while the window is still filling.
+    pub fn is_filling(&self) -> bool {
+        matches!(self, Self::Filling)
+    }
+
+    /// `true` when the point was dropped under `missing = "drop"`.
+    pub fn is_dropped(&self) -> bool {
+        matches!(self, Self::Dropped)
+    }
+}
+
 pub struct OnlineLowess<T: Float> {
     config: OnlineLowessBuilder<T>,
     window_x: VecDeque<T>,
@@ -257,7 +310,7 @@ pub struct OnlineLowess<T: Float> {
 
 impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
     // Add a new point and get its smoothed value.
-    pub fn add_point(&mut self, x: T, y: T) -> Result<Option<OnlineOutput<T>>, LowessError> {
+    pub fn add_point(&mut self, x: T, y: T) -> Result<AddPointResult<T>, LowessError> {
         // Validate new point according to the configured missing-value policy
         match self.config.missing {
             MissingPolicy::Error => {
@@ -266,7 +319,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
             }
             MissingPolicy::Drop => {
                 if !x.is_finite() || !y.is_finite() {
-                    return Ok(None);
+                    return Ok(AddPointResult::Dropped);
                 }
             }
         }
@@ -283,16 +336,31 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
 
         // Check if we have enough points
         if self.window_x.len() < self.config.min_points {
-            return Ok(None);
+            return Ok(AddPointResult::Filling);
         }
 
         // Convert window to vectors for smoothing using scratch buffers
-        self.buffer.clear(); // Clear buffers
+        self.buffer.clear();
         self.buffer.scratch_x.extend(self.window_x.iter().copied());
         self.buffer.scratch_y.extend(self.window_y.iter().copied());
 
-        let x_vec = &*self.buffer.scratch_x;
-        let y_vec = &*self.buffer.scratch_y;
+        // Executor/kernel/windowing require ascending x. Sort a working copy and
+        // map the chronologically newest point (original index n-1) into sorted
+        // order so Incremental/Full both evaluate that same observation.
+        let n = self.buffer.scratch_x.len();
+        let newest_original = n - 1;
+        let sorted = sort_by_x(&self.buffer.scratch_x, &self.buffer.scratch_y);
+        let newest_sorted = sorted
+            .indices
+            .iter()
+            .position(|&orig| orig == newest_original)
+            .ok_or_else(|| {
+                LowessError::InvalidNumericValue(
+                    "sort permutation missing newest online point".into(),
+                )
+            })?;
+        let x_vec = sorted.x.as_slice();
+        let y_vec = sorted.y.as_slice();
 
         // Special case: exactly two points, use exact linear fit
         if x_vec.len() == 2 {
@@ -311,7 +379,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
 
             let residual = y - smoothed;
 
-            return Ok(Some(OnlineOutput {
+            return Ok(AddPointResult::Ready(OnlineOutput {
                 y: smoothed,
                 standard_error: None,
                 residual: Some(residual),
@@ -333,8 +401,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
         let (smoothed, std_err, ci_bounds, rob_weight, iterations_used, derivative) =
             match update_mode {
                 UpdateMode::Incremental => {
-                    // Incremental mode: fit only the latest point
-                    let n = x_vec.len();
+                    // Incremental mode: fit only the newest accepted point
                     let window_size = (self.config.fraction * T::from(n).unwrap())
                         .ceil()
                         .to_usize()
@@ -342,14 +409,13 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                         .max(2)
                         .min(n);
 
-                    // Use pre-allocated scratch buffers
                     VecExt::assign(self.buffer.weights.as_vec_mut(), n, T::zero());
                     VecExt::assign(self.buffer.robustness_weights.as_vec_mut(), n, T::one());
 
                     let (smoothed_val, slope, _) = LowessExecutor::fit_single_point(
                         x_vec,
                         y_vec,
-                        n - 1, // Latest point
+                        newest_sorted,
                         window_size,
                         false, // No robustness for single point
                         &self.buffer.robustness_weights,
@@ -408,25 +474,32 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                     let smoothed_vec = result.smoothed;
                     let se_vec = result.std_errors;
 
-                    let smoothed_val = smoothed_vec.last().copied().ok_or_else(|| {
-                        LowessError::InvalidNumericValue("No smoothed output produced".into())
-                    })?;
+                    let smoothed_val =
+                        smoothed_vec.get(newest_sorted).copied().ok_or_else(|| {
+                            LowessError::InvalidNumericValue(
+                                "No smoothed output produced for newest point".into(),
+                            )
+                        })?;
                     let mut std_err = if self.config.bootstrap.is_some() {
                         None
                     } else {
-                        se_vec.as_ref().and_then(|v| v.last().copied())
+                        se_vec.as_ref().and_then(|v| v.get(newest_sorted).copied())
                     };
                     let rob_weight = if self.config.return_robustness_weights {
-                        result.robustness_weights.last().copied()
+                        result.robustness_weights.get(newest_sorted).copied()
                     } else {
                         None
                     };
-                    let deriv = result.derivative.as_ref().and_then(|v| v.last().copied());
+                    let deriv = result
+                        .derivative
+                        .as_ref()
+                        .and_then(|v| v.get(newest_sorted).copied());
 
-                    // Confidence/prediction interval bounds for the latest point, computed
+                    // Confidence/prediction interval bounds for the newest point, computed
                     // from the whole window's smoothed values/SE/residuals the same way
-                    // Batch does (`IntervalMethod::compute_intervals`), then taking the
-                    // last element - the executor itself only produces plain std_errors.
+                    // Batch does (`IntervalMethod::compute_intervals`), then indexing the
+                    // newest sorted position - the executor itself only produces plain
+                    // std_errors.
                     let ci_bounds = if let Some(method) = &self.config.interval_type {
                         let residuals: Vec<T> = y_vec
                             .iter()
@@ -450,7 +523,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                                         })
                                         .collect()
                                 })?;
-                            std_err = out.std_errors.last().copied();
+                            std_err = out.std_errors.get(newest_sorted).copied();
                             (
                                 out.confidence_lower,
                                 out.confidence_upper,
@@ -463,10 +536,10 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
                             (None, None, None, None)
                         };
                         (
-                            cl.as_ref().and_then(|v| v.last().copied()),
-                            cu.as_ref().and_then(|v| v.last().copied()),
-                            pl.as_ref().and_then(|v| v.last().copied()),
-                            pu.as_ref().and_then(|v| v.last().copied()),
+                            cl.as_ref().and_then(|v| v.get(newest_sorted).copied()),
+                            cu.as_ref().and_then(|v| v.get(newest_sorted).copied()),
+                            pl.as_ref().and_then(|v| v.get(newest_sorted).copied()),
+                            pu.as_ref().and_then(|v| v.get(newest_sorted).copied()),
                         )
                     } else {
                         (None, None, None, None)
@@ -487,7 +560,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLowess<T> {
 
         let (confidence_lower, confidence_upper, prediction_lower, prediction_upper) = ci_bounds;
 
-        Ok(Some(OnlineOutput {
+        Ok(AddPointResult::Ready(OnlineOutput {
             y: smoothed,
             standard_error: std_err,
             residual: Some(residual),

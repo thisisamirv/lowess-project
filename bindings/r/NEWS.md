@@ -6,10 +6,14 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Changed
 
 * Breaking change: `add_point()` returns a list with `status` of `"filling"` / `"ready"` / `"dropped"` and `point` instead of an online-output list or `NULL`.
+* Online fits sort the sliding window by `x` before each update so non-monotonic streams stay correct.
+* `process_chunk()` rejects chunks that are not non-decreasing in `x` when merged with the previous overlap; feed ascending chunks or pre-sort the series.
 
 ### Fixed
 
 * Distinguishing Online `add_point` filling vs `missing="drop"` via ternary `status`.
+* Streaming no longer panics when derivatives were requested but missing; it returns an error instead.
+* Extend/Zero boundary pads use unit spacing when leading/trailing `x` ties would otherwise stack pads.
 * Adding idempotent `close()` on `Lowess`, `StreamingLowess`, and `OnlineLowess` (clears retained predict state / releases native adapters).
 * Mapping fit/stream/online/`predict` failures via `map_lowess_result` so InvalidArg vs Runtime categories are preserved.
 * Requiring length-1 numeric `x`/`y` in `add_point()`.

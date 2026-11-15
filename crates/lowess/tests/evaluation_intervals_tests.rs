@@ -579,7 +579,7 @@ fn test_grouped_intervals_work_in_streaming_and_online() {
         .build()
         .unwrap();
     for (&xi, &yi) in x.iter().zip(&y) {
-        if let Some(output) = online.add_point(xi, yi).unwrap() {
+        if let Some(output) = online.add_point(xi, yi).unwrap().ready() {
             assert!(output.standard_error.is_some());
             assert!(output.prediction_lower.is_some());
             assert!(output.confidence_lower.is_none());

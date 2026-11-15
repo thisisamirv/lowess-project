@@ -289,6 +289,16 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             (cx, cy)
         };
 
+        // Overlap merge assumes the previous overlap remains a contiguous prefix of
+        // `combined_*`. That holds only when chunks continue in non-decreasing x order
+        // after each chunk is sorted; reject interleaved / out-of-order streams.
+        if combined_x.windows(2).any(|w| w[0] > w[1]) {
+            return Err(LowessError::InvalidInput(
+                "streaming chunks must form a non-decreasing x sequence when merged with the previous overlap; feed ascending chunks or pre-sort the full series"
+                    .into(),
+            ));
+        }
+
         let zero_flag = self.config.zero_weight_fallback.to_u8();
 
         let config = LowessConfig {
@@ -451,9 +461,12 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
         if let Some(ref mut d_out) = deriv_out
             && prev_overlap_len > 0
         {
-            let deriv = derivative
-                .as_ref()
-                .expect("derivative present when return_derivative is set");
+            let deriv = derivative.as_ref().ok_or_else(|| {
+                LowessError::InvalidInput(
+                    "return_derivative was set but the smoother did not produce derivatives"
+                        .into(),
+                )
+            })?;
             let prev_deriv = self.buffer.overlap_derivative.as_vec();
             for (i, (&prev_val, &curr_val)) in prev_deriv
                 .iter()
@@ -543,9 +556,12 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
                 rw_out.extend_from_slice(&robustness_weights[return_start..overlap_start]);
             }
             if let Some(ref mut d_out) = deriv_out {
-                let deriv = derivative
-                    .as_ref()
-                    .expect("derivative present when return_derivative is set");
+                let deriv = derivative.as_ref().ok_or_else(|| {
+                    LowessError::InvalidInput(
+                        "return_derivative was set but the smoother did not produce derivatives"
+                            .into(),
+                    )
+                })?;
                 d_out.extend_from_slice(&deriv[return_start..overlap_start]);
             }
             if let Some(ref mut out) = se_out {
@@ -655,9 +671,8 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
             self.buffer.overlap_prediction_upper.clear();
         }
 
-        // Note: We return results in sorted order (by x) for streaming chunks.
-        // Unsorting partial results is ambiguous since we only return a subset of the chunk.
-        // The full batch adapter handles global unsorting when processing complete datasets.
+        // Each chunk is sorted before merge, so emitted x is ascending within the
+        // resolved prefix (not necessarily the caller's original input order).
         let x_out = combined_x[0..y_smooth_out.len()].to_vec();
 
         // Update diagnostics cumulatively

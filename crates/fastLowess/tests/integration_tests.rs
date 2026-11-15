@@ -302,7 +302,7 @@ fn test_online_adapter_return_derivative() {
 
     let mut last = None;
     for i in 0..6 {
-        last = processor.add_point(i as f64, 2.0 * i as f64 + 1.0).unwrap();
+        last = processor.add_point(i as f64, 2.0 * i as f64 + 1.0).unwrap().ready();
     }
     assert_abs_diff_eq!(last.unwrap().derivative.unwrap(), 2.0, epsilon = 1e-9);
 }
@@ -323,7 +323,7 @@ fn test_online_adapter_return_se_and_intervals_full_mode() {
     for i in 0..20 {
         let x = i as f64;
         let y = 2.0 * x + 1.0;
-        if let Some(output) = processor.add_point(x, y).unwrap()
+        if let Some(output) = processor.add_point(x, y).unwrap().ready()
             && output.standard_error.is_some()
             && output.confidence_lower.is_some()
             && output.prediction_lower.is_some()

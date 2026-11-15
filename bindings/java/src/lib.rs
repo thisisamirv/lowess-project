@@ -13,7 +13,7 @@
 #![allow(deprecated)]
 
 use fastLowess::internals::LowessBuilder;
-use fastLowess::internals::adapters::online::ParallelOnlineLowess;
+use fastLowess::internals::adapters::online::{AddPointResult, ParallelOnlineLowess};
 use fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
 use fastLowess::internals::binding_support as shared_parse;
 use fastLowess::prelude::{IntervalsBuilder, LowessResult};
@@ -784,7 +784,6 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineAddPoint<'local>(
             return Err(shared_parse::MODEL_POINTER_IS_NULL.into());
         }
         let online = unsafe { &mut *(handle as *mut JavaOnlineLowess) };
-        let dropped_candidate = !(x.is_finite() && y.is_finite());
         let point = online.model.add_point(x, y).map_err(|e| e.to_string())?;
 
         let (
@@ -800,8 +799,8 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineAddPoint<'local>(
             prediction_lower,
             prediction_upper,
         ) = match point {
-            None => (
-                if dropped_candidate { -1 } else { 0 },
+            AddPointResult::Dropped => (
+                -1,
                 f64::NAN,
                 f64::NAN,
                 f64::NAN,
@@ -813,7 +812,20 @@ pub extern "system" fn Java_fastlowess_NativeBridge_onlineAddPoint<'local>(
                 f64::NAN,
                 f64::NAN,
             ),
-            Some(o) => {
+            AddPointResult::Filling => (
+                0,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                -1,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+            ),
+            AddPointResult::Ready(o) => {
                 let (se, res, rw, iters) = shared_parse::extract_online_output(&o);
                 let deriv = o.derivative.unwrap_or(f64::NAN);
                 (

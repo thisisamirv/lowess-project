@@ -199,7 +199,7 @@ Policy for handling non-finite (NaN/Inf) values within each chunk:
 
 ### chunk_size
 
-Number of points processed per chunk. Larger chunks reduce per-chunk overhead and give each local fit more surrounding context, at the cost of higher peak memory; smaller chunks bound memory tightly but increase the fraction of points that fall in overlap regions. A good starting point is balancing available memory against how much processing overhead per chunk is acceptable — match it to your file-read buffer or message-batch size to avoid unnecessary copying.
+Sizes internal scratch/overlap buffers and is the recommended per-call batch size. `process_chunk` still accepts any length ≥ 2; it does not truncate or pad to `chunk_size`. Chunks much larger than `chunk_size` may reallocate. Larger chunks reduce per-chunk overhead and give each local fit more surrounding context, at the cost of higher peak memory; smaller chunks bound memory tightly but increase the fraction of points that fall in overlap regions. Feed chunks in non-decreasing `x` order after each chunk's internal sort (or pre-sort the full series): interleaved chunks error at merge time.
 
 ### overlap
 
@@ -253,7 +253,7 @@ Returned by `process_chunk()` and `finalize()`.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `x` | `Vec<T>` | x values (same order as input) |
+| `x` | `Vec<T>` | x values in ascending order within the emitted prefix (each chunk is sorted before overlap merge; not original input order) |
 | `y` | `Vec<T>` | Smoothed y values |
 | `fraction_used` | `T` | Fraction used |
 | `iterations_used` | `Option<usize>` | Robustness iterations actually performed |

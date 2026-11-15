@@ -47,10 +47,11 @@ fn test_online_exact_linear_reproduction() {
         if let Some(output) = processor
             .add_point(xi, yi)
             .expect("add_point should succeed")
+            .ready()
         {
             smoothed.push(output.y);
         } else {
-            // First few points return None until min_points reached
+            // First few points return Filling until min_points reached
             smoothed.push(yi);
         }
     }
@@ -80,18 +81,17 @@ fn test_online_add_point_basic() {
     // Initially empty window
     assert_eq!(processor.window_size(), 0, "Window should start empty");
 
-    // First point returns None (need min_points)
-    assert_eq!(
-        processor.add_point(0.0, 1.0).expect("add_point ok"),
-        None,
-        "First point should return None"
+    // First point returns Filling (need min_points)
+    assert!(
+        processor.add_point(0.0, 1.0).expect("add_point ok").is_filling(),
+        "First point should return Filling"
     );
 
     // Second point produces smoothed value
     let output = processor.add_point(1.0, 3.0).expect("add_point ok");
-    assert!(output.is_some(), "Second point should return Some");
+    assert!(output.is_ready(), "Second point should return Ready");
     assert_relative_eq!(
-        output.unwrap().y,
+        output.ready().unwrap().y,
         3.0,
         max_relative = 1e-12,
         epsilon = 1e-14
@@ -120,27 +120,26 @@ fn test_online_window_eviction() {
 
     // First point - not enough points yet
     assert_eq!(processor.window_size(), 0);
-    assert_eq!(
-        processor.add_point(0.0, 1.0).expect("ok"),
-        None,
-        "First point returns None"
+    assert!(
+        processor.add_point(0.0, 1.0).expect("ok").is_filling(),
+        "First point returns Filling"
     );
 
     // Second point - produces smoothed value
     let second = processor.add_point(1.0, 3.0).expect("ok");
-    assert!(second.is_some(), "Second point should return Some");
-    assert_relative_eq!(second.unwrap().y, 3.0, max_relative = 1e-12);
+    assert!(second.is_ready(), "Second point should return Ready");
+    assert_relative_eq!(second.ready().unwrap().y, 3.0, max_relative = 1e-12);
 
     // Third point - window fills to capacity
     let third = processor.add_point(2.0, 5.0).expect("ok");
-    assert!(third.is_some(), "Third point should return Some");
-    assert_relative_eq!(third.unwrap().y, 5.0, max_relative = 1e-12);
+    assert!(third.is_ready(), "Third point should return Ready");
+    assert_relative_eq!(third.ready().unwrap().y, 5.0, max_relative = 1e-12);
     assert_eq!(processor.window_size(), 3, "Window should be at capacity");
 
     // Fourth point - oldest should be evicted, window size stays at capacity
     let fourth = processor.add_point(3.0, 7.0).expect("ok");
-    assert!(fourth.is_some(), "Fourth point should return Some");
-    assert_relative_eq!(fourth.unwrap().y, 7.0, max_relative = 1e-12);
+    assert!(fourth.is_ready(), "Fourth point should return Ready");
+    assert_relative_eq!(fourth.ready().unwrap().y, 7.0, max_relative = 1e-12);
     assert_eq!(
         processor.window_size(),
         3,
@@ -169,9 +168,9 @@ fn test_online_sliding_window() {
 
         if i >= 2 {
             // After min_points, should always return Some
-            assert!(result.is_some(), "Should return smoothed value at i={}", i);
+            assert!(result.is_ready(), "Should return smoothed value at i={}", i);
             assert!(
-                result.unwrap().y.is_finite(),
+                result.ready().unwrap().y.is_finite(),
                 "Smoothed value should be finite at i={}",
                 i
             );
@@ -241,17 +240,16 @@ fn test_online_reuse_after_reset() {
     processor.reset();
     assert_eq!(processor.window_size(), 0, "Window should be empty");
 
-    // Reuse after reset: first point returns None again
-    assert_eq!(
-        processor.add_point(10.0, 21.0).expect("ok"),
-        None,
-        "First point after reset should return None"
+    // Reuse after reset: first point returns Filling again
+    assert!(
+        processor.add_point(10.0, 21.0).expect("ok").is_filling(),
+        "First point after reset should return Filling"
     );
 
     // Second point after reset should produce a smoothed value
     let output = processor.add_point(11.0, 23.0).expect("ok");
-    assert!(output.is_some(), "Second point should return Some");
-    assert_relative_eq!(output.unwrap().y, 23.0, max_relative = 1e-12);
+    assert!(output.is_ready(), "Second point should return Ready");
+    assert_relative_eq!(output.ready().unwrap().y, 23.0, max_relative = 1e-12);
 }
 
 // ============================================================================
@@ -358,10 +356,10 @@ fn test_online_valid_builder() {
     assert_eq!(processor.window_size(), 0, "Window should start empty");
 
     // Add points to verify it works
-    assert_eq!(processor.add_point(0.0, 1.0).expect("ok"), None);
-    assert_eq!(processor.add_point(1.0, 3.0).expect("ok"), None);
+    assert!(processor.add_point(0.0, 1.0).expect("ok").is_filling());
+    assert!(processor.add_point(1.0, 3.0).expect("ok").is_filling());
     let third = processor.add_point(2.0, 5.0).expect("ok");
-    assert!(third.is_some(), "Third point should return Some");
+    assert!(third.is_ready(), "Third point should return Ready");
     assert_eq!(processor.window_size(), 3, "Window should have 3 points");
 
     // Reset should work
@@ -411,9 +409,9 @@ fn test_online_lowess_basic() {
     for i in 0..10 {
         let res = model.add_point(i as f64, i as f64 * 2.0).unwrap();
         if i < 4 {
-            assert!(res.is_none());
+            assert!(res.is_filling());
         } else {
-            assert!(res.is_some());
+            assert!(res.is_ready());
         }
     }
 
@@ -435,18 +433,17 @@ fn test_online_duplicate_x_values() {
         .build()
         .expect("Builder should succeed");
 
-    // First point - returns None (needs min_points)
-    assert_eq!(
-        processor.add_point(1.0, 1.0).expect("ok"),
-        None,
-        "First point returns None"
+    // First point - returns Filling (needs min_points)
+    assert!(
+        processor.add_point(1.0, 1.0).expect("ok").is_filling(),
+        "First point returns Filling"
     );
 
     // Second point with same x - should fallback to mean((1+3)/2)=2.0
     let output = processor.add_point(1.0, 3.0).expect("ok");
-    assert!(output.is_some(), "Second point should return Some");
+    assert!(output.is_ready(), "Second point should return Ready");
     assert_relative_eq!(
-        output.unwrap().y,
+        output.ready().unwrap().y,
         2.0,
         max_relative = 1e-12,
         epsilon = 1e-14
@@ -469,10 +466,10 @@ fn test_online_minimum_window_capacity() {
     // Add 3 points
     processor.add_point(0.0, 1.0).expect("ok");
     let second = processor.add_point(1.0, 2.0).expect("ok");
-    assert!(second.is_some(), "Second point should return Some");
+    assert!(second.is_ready(), "Second point should return Ready");
 
     let third = processor.add_point(2.0, 3.0).expect("ok");
-    assert!(third.is_some(), "Third point should return Some");
+    assert!(third.is_ready(), "Third point should return Ready");
     assert_eq!(processor.window_size(), 3, "Window should be at capacity");
 }
 
@@ -501,9 +498,9 @@ fn test_online_robustness_methods() {
             let result = processor.add_point(x, y).expect("add_point ok");
 
             if i >= 2 {
-                assert!(result.is_some(), "Should return smoothed value");
+                assert!(result.is_ready(), "Should return smoothed value");
                 assert!(
-                    result.unwrap().y.is_finite(),
+                    result.ready().unwrap().y.is_finite(),
                     "Smoothed value should be finite"
                 );
             }
@@ -531,7 +528,7 @@ fn test_online_with_residuals() {
         let y = 2.0 * x + 1.0;
         let result = processor.add_point(x, y).expect("add_point ok");
 
-        if let Some(output) = result {
+        if let Some(output) = result.ready() {
             // Verify residual is present when requested
             assert!(
                 output.residual.is_some(),
@@ -587,10 +584,10 @@ fn test_update_mode_consistency() {
     let mut full_results = Vec::new();
 
     for (x, y) in test_data {
-        if let Some(output) = incremental.add_point(x, y).expect("add_point ok") {
+        if let Some(output) = incremental.add_point(x, y).expect("add_point ok").ready() {
             incremental_results.push(output.y);
         }
-        if let Some(output) = full.add_point(x, y).expect("add_point ok") {
+        if let Some(output) = full.add_point(x, y).expect("add_point ok").ready() {
             full_results.push(output.y);
         }
     }
@@ -702,7 +699,7 @@ fn test_online_with_robustness_weights() {
         let y = if i == 15 { 500.0 } else { 2.0 * x + 1.0 };
         let result = processor.add_point(x, y).expect("add_point ok");
 
-        if let Some(output) = result {
+        if let Some(output) = result.ready() {
             // Verify robustness weight is present when requested
             assert!(
                 output.robustness_weight.is_some(),
@@ -745,7 +742,7 @@ fn test_online_full_mode_return_se() {
     for i in 0..20 {
         let x = i as f64;
         let y = 2.0 * x + 1.0;
-        if let Some(output) = processor.add_point(x, y).expect("add_point ok")
+        if let Some(output) = processor.add_point(x, y).expect("add_point ok").ready()
             && let Some(se) = output.standard_error
         {
             saw_se = true;
@@ -775,7 +772,7 @@ fn test_online_full_mode_no_se_by_default() {
     for i in 0..20 {
         let x = i as f64;
         let y = 2.0 * x + 1.0;
-        if let Some(output) = processor.add_point(x, y).expect("add_point ok") {
+        if let Some(output) = processor.add_point(x, y).expect("add_point ok").ready() {
             assert!(
                 output.standard_error.is_none(),
                 "standard_error should stay None without `\"se\"`"
@@ -801,7 +798,7 @@ fn test_online_full_mode_confidence_intervals() {
     for i in 0..20 {
         let x = i as f64;
         let y = 2.0 * x + 1.0;
-        if let Some(output) = processor.add_point(x, y).expect("add_point ok")
+        if let Some(output) = processor.add_point(x, y).expect("add_point ok").ready()
             && let (Some(lower), Some(upper)) = (output.confidence_lower, output.confidence_upper)
         {
             saw_bounds = true;
@@ -839,7 +836,7 @@ fn test_online_full_mode_prediction_intervals() {
     for i in 0..20 {
         let x = i as f64;
         let y = 2.0 * x + 1.0;
-        if let Some(output) = processor.add_point(x, y).expect("add_point ok")
+        if let Some(output) = processor.add_point(x, y).expect("add_point ok").ready()
             && let (Some(lower), Some(upper)) = (output.prediction_lower, output.prediction_upper)
         {
             saw_bounds = true;
@@ -943,7 +940,7 @@ fn test_online_full_mode_iterations_used() {
     for i in 0..20 {
         let x = i as f64;
         let y = if i == 10 { 100.0 } else { 2.0 * x + 1.0 };
-        if let Some(out) = processor.add_point(x, y).expect("add_point ok") {
+        if let Some(out) = processor.add_point(x, y).expect("add_point ok").ready() {
             last = Some(out);
         }
     }
@@ -978,7 +975,7 @@ fn test_online_window_exactly_min_points() {
     for i in 0..5 {
         let output = processor.add_point(i as f64, (i * 2) as f64).unwrap();
         if i >= 4
-            && let Some(output) = output
+            && let Some(output) = output.ready()
         {
             assert!(output.y.is_finite());
         }
@@ -1002,7 +999,7 @@ fn test_online_all_points_identical() {
         let output = processor.add_point(5.0, 10.0).unwrap();
         // Should return the constant value
         if processor.window_size() >= 3
-            && let Some(output) = output
+            && let Some(output) = output.ready()
         {
             assert_relative_eq!(output.y, 10.0, epsilon = 1e-6);
         }
@@ -1013,23 +1010,23 @@ fn test_online_all_points_identical() {
 #[test]
 fn test_online_decreasing_x_values() {
     let mut processor = OnlineLowess::new()
-        .fraction(0.5)
+        .fraction(1.0)
+        .iterations(0)
         .window_capacity(10)
         .min_points(3)
         .build()
         .unwrap();
 
-    // Add points with decreasing x
+    // Add points with decreasing x; window is sorted internally for the fit.
     for i in 0..10 {
         let x = (10 - i) as f64;
         let y = x * 2.0;
         let output = processor.add_point(x, y).unwrap();
 
-        // Should still produce valid output
-        if processor.window_size() >= 3
-            && let Some(output) = output
-        {
+        if let Some(output) = output.ready() {
             assert!(output.y.is_finite());
+            // Exact linear y=2x with fraction=1 should recover the newest y.
+            assert_relative_eq!(output.y, y, epsilon = 1e-9);
         }
     }
 }
@@ -1084,7 +1081,7 @@ fn test_online_fraction_boundaries() {
     for i in 0..10 {
         let output = proc_one.add_point(i as f64, (i * 2) as f64).unwrap();
         if proc_one.window_size() >= 5
-            && let Some(output) = output
+            && let Some(output) = output.ready()
         {
             assert!(output.y.is_finite());
         }
@@ -1154,7 +1151,7 @@ fn test_online_missing_drop_ignores_nan_point() {
         .add_point(1.0, f64::NAN)
         .expect("drop policy should not error on a non-finite point");
 
-    assert!(result.is_none(), "a dropped point should produce no output");
+    assert!(result.is_dropped(), "a dropped point should produce Dropped");
     assert_eq!(
         processor.window_size(),
         0,
@@ -1183,7 +1180,7 @@ fn test_online_derivative_none_by_default() {
 
     let mut last = None;
     for i in 0..5 {
-        last = processor.add_point(i as f64, 2.0 * i as f64 + 1.0).unwrap();
+        last = processor.add_point(i as f64, 2.0 * i as f64 + 1.0).unwrap().ready();
     }
     assert!(last.unwrap().derivative.is_none());
 }
@@ -1199,7 +1196,7 @@ fn test_online_derivative_two_point_exact() {
         .unwrap();
 
     processor.add_point(0.0, 1.0).unwrap();
-    let output = processor.add_point(1.0, 4.0).unwrap().unwrap();
+    let output = processor.add_point(1.0, 4.0).unwrap().ready().unwrap();
     assert_relative_eq!(output.derivative.unwrap(), 3.0, epsilon = 1e-12);
 }
 
@@ -1216,7 +1213,7 @@ fn test_online_derivative_incremental_mode() {
 
     let mut last = None;
     for i in 0..10 {
-        last = processor.add_point(i as f64, 2.0 * i as f64 + 1.0).unwrap();
+        last = processor.add_point(i as f64, 2.0 * i as f64 + 1.0).unwrap().ready();
     }
     assert_relative_eq!(last.unwrap().derivative.unwrap(), 2.0, epsilon = 1e-9);
 }
@@ -1235,7 +1232,7 @@ fn test_online_derivative_full_mode() {
 
     let mut last = None;
     for i in 0..10 {
-        last = processor.add_point(i as f64, 3.0 * i as f64 - 2.0).unwrap();
+        last = processor.add_point(i as f64, 3.0 * i as f64 - 2.0).unwrap().ready();
     }
     assert_relative_eq!(last.unwrap().derivative.unwrap(), 3.0, epsilon = 1e-9);
 }

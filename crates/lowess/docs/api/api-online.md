@@ -45,13 +45,13 @@ fn main() -> Result<(), LowessError> {
 
     let mut processor = OnlineLowess::new().fraction(0.5f64).window_capacity(50usize).min_points(3usize).build()?;;
 
-    // Returns None until min_points (3) are reached
-    let r1 = processor.add_point(x[0], y[0])?;  // None
-    let r2 = processor.add_point(x[1], y[1])?;  // None
+    // Returns Filling until min_points (3) are reached
+    let r1 = processor.add_point(x[0], y[0])?;  // Filling
+    let r2 = processor.add_point(x[1], y[1])?;  // Filling
 
-    // Returns Some(OnlineOutput) once enough points are available
+    // Returns Ready(OnlineOutput) once enough points are available
     let r3 = processor.add_point(x[2], y[2])?;
-    if let Some(output) = r3 {
+    if let Some(output) = r3.ready() {
         println!("Smoothed value: {}", output.y);
     }
 
@@ -63,7 +63,7 @@ fn main() -> Result<(), LowessError> {
 Smoothed value: 0.22659245357374927
 ```
 
-- Returns `Result<Option<OnlineOutput<T>>, LowessError>`.
+- Returns `Result<AddPointResult<T>, LowessError>` (`Filling` / `Ready` / `Dropped`).
 
 #### `reset`
 

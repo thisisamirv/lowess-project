@@ -4,7 +4,9 @@ use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
 use ::fastLowess::internals::LowessBuilder;
-use ::fastLowess::internals::adapters::online::ParallelOnlineLowess;
+use ::fastLowess::internals::adapters::online::{
+    AddPointResult as OnlineAddPointResult, ParallelOnlineLowess,
+};
 use ::fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
 use ::fastLowess::internals::binding_support;
 use ::fastLowess::prelude::IntervalsBuilder;
@@ -920,11 +922,10 @@ impl OnlineLowess {
     /// ignores a non-finite `x` or `y`.
     #[napi(js_name = "add_point")]
     pub fn add_point(&mut self, x: f64, y: f64) -> Result<AddPointResult> {
-        let dropped_candidate = !(x.is_finite() && y.is_finite());
         let output = binding_support::map_lowess_result(self.model_mut()?.add_point(x, y))
             .map_err(to_napi_error)?;
         Ok(match output {
-            Some(o) => AddPointResult {
+            OnlineAddPointResult::Ready(o) => AddPointResult {
                 status: "ready".to_string(),
                 point: Some(OnlineOutput {
                     y: o.y,
@@ -939,11 +940,11 @@ impl OnlineLowess {
                     prediction_upper: o.prediction_upper,
                 }),
             },
-            None if dropped_candidate => AddPointResult {
+            OnlineAddPointResult::Dropped => AddPointResult {
                 status: "dropped".to_string(),
                 point: None,
             },
-            None => AddPointResult {
+            OnlineAddPointResult::Filling => AddPointResult {
                 status: "filling".to_string(),
                 point: None,
             },

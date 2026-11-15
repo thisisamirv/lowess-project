@@ -57,6 +57,18 @@ impl FromStr for BoundaryPolicy {
     }
 }
 
+// Spacing used for Extend/Zero pads. Tied edge x-values would otherwise stack
+// every pad at the same coordinate; fall back to unit spacing so pads stay ordered.
+#[inline]
+fn edge_spacing<T: Float>(inner: T, outer: T) -> T {
+    let dx = outer - inner;
+    if dx == T::zero() {
+        T::one()
+    } else {
+        dx
+    }
+}
+
 // Apply a boundary policy to pad the input data.
 pub fn apply_boundary_policy<T: Float>(
     x: &[T],
@@ -86,7 +98,7 @@ pub fn apply_boundary_policy<T: Float>(
         BoundaryPolicy::Extend => {
             let x0 = x[0];
             let y0 = y[0];
-            let dx = x[1] - x[0];
+            let dx = edge_spacing(x[0], x[1]);
             for i in (1..=pad_len).rev() {
                 px.push(x0 - T::from(i).unwrap() * dx);
                 py.push(y0);
@@ -101,7 +113,7 @@ pub fn apply_boundary_policy<T: Float>(
         }
         BoundaryPolicy::Zero => {
             let x0 = x[0];
-            let dx = x[1] - x[0];
+            let dx = edge_spacing(x[0], x[1]);
             for i in (1..=pad_len).rev() {
                 px.push(x0 - T::from(i).unwrap() * dx);
                 py.push(T::zero());
@@ -119,7 +131,7 @@ pub fn apply_boundary_policy<T: Float>(
         BoundaryPolicy::Extend => {
             let xn = x[n - 1];
             let yn = y[n - 1];
-            let dx = x[n - 1] - x[n - 2];
+            let dx = edge_spacing(x[n - 2], x[n - 1]);
             for i in 1..=pad_len {
                 px.push(xn + T::from(i).unwrap() * dx);
                 py.push(yn);
@@ -134,7 +146,7 @@ pub fn apply_boundary_policy<T: Float>(
         }
         BoundaryPolicy::Zero => {
             let xn = x[n - 1];
-            let dx = x[n - 1] - x[n - 2];
+            let dx = edge_spacing(x[n - 2], x[n - 1]);
             for i in 1..=pad_len {
                 px.push(xn + T::from(i).unwrap() * dx);
                 py.push(T::zero());

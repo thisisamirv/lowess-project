@@ -7,10 +7,14 @@ This changelog includes end-user changes only. For internal development notes, s
 === Changed
 
 * Breaking change: `OnlineLowess.addPoint` returns `AddPointResult` with `OnlinePointStatus` (`FILLING` / `READY` / `DROPPED`) instead of a bare `Optional<PointResult>`.
+* Online fits sort the sliding window by `x` before each update so non-monotonic streams stay correct.
+* `StreamingLowess.processChunk` rejects chunks that are not non-decreasing in `x` when merged with the previous overlap; feed ascending chunks or pre-sort the series.
 
 === Fixed
 
 * Distinguishing Online `addPoint` filling vs `missing="drop"` via `OnlinePointStatus` / `AddPointResult`.
+* Streaming no longer panics when derivatives were requested but missing; it throws instead.
+* Extend/Zero boundary pads use unit spacing when leading/trailing `x` ties would otherwise stack pads.
 * Closing retained `PredictModel` handles through `Result` (`AutoCloseable`) with take-once ownership and a `Cleaner` safety net on native-owning types.
 * Validating equal `x`/`y` lengths and `customWeights` against `y` before JNI.
 

@@ -650,7 +650,8 @@ fn test_streaming_chunk_exactly_overlap_plus_one() {
     let result1 = processor.process_chunk(&x[0..11], &y[0..11]).unwrap();
     assert_eq!(result1.x.len(), 1); // Only 1 non-overlapping point
 
-    let result2 = processor.process_chunk(&x[1..12], &y[1..12]).unwrap();
+    // Next chunk continues after the previous input (adapter retains overlap itself).
+    let result2 = processor.process_chunk(&x[11..20], &y[11..20]).unwrap();
     assert!(!result2.x.is_empty());
 }
 
@@ -708,6 +709,30 @@ fn test_streaming_unsorted_chunks() {
 
     // Should handle unsorted data (internally sorts)
     assert_eq!(result.x.len(), 8); // 10 - 2 overlap
+}
+
+/// Interleaved chunks that break non-decreasing merge order must error.
+#[test]
+fn test_streaming_rejects_out_of_order_chunks() {
+    let mut processor = StreamingLowess::new()
+        .fraction(0.5)
+        .chunk_size(10)
+        .overlap(2)
+        .build()
+        .unwrap();
+
+    let x1: Vec<f64> = (0..10).map(|i| i as f64).collect();
+    let y1: Vec<f64> = x1.iter().map(|&xi| xi * 2.0).collect();
+    processor.process_chunk(&x1, &y1).unwrap();
+
+    // Second chunk's sorted x starts below the buffered overlap tail.
+    let x2 = vec![0.5, 1.5, 2.5, 3.5, 4.5];
+    let y2: Vec<f64> = x2.iter().map(|&xi| xi * 2.0).collect();
+    let err = processor.process_chunk(&x2, &y2).unwrap_err();
+    assert!(
+        matches!(err, LowessError::InvalidInput(_)),
+        "expected InvalidInput for out-of-order chunks, got {err:?}"
+    );
 }
 
 /// Test all merge strategies with identical overlap data.

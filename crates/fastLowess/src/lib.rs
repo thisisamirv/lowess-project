@@ -434,7 +434,7 @@
 //! let mut updates = 0;
 //! let mut latest = None;
 //! for (&xi, &yi) in x.iter().zip(&y) {
-//!     if let Some(output) = model.add_point(xi, yi)? {
+//!     if let Some(output) = model.add_point(xi, yi)?.ready() {
 //!         updates += 1;
 //!         latest = Some(output.y);
 //!     }
@@ -510,7 +510,7 @@
 //!
 //! ### Result and Error Handling
 //!
-//! `build()` and `add_point()` return `Result`; `add_point()` returns `None` until
+//! `build()` and `add_point()` return `Result`; `add_point()` returns `Filling` until
 //! `min_points` is reached. Bulk updates also reject mismatched input lengths:
 //!
 //! ```rust

@@ -10,7 +10,7 @@ use std::fmt::Display;
 use std::sync::Mutex;
 
 use fastLowess::internals::LowessBuilder;
-use fastLowess::internals::adapters::online::ParallelOnlineLowess;
+use fastLowess::internals::adapters::online::{AddPointResult, ParallelOnlineLowess};
 use fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
 use fastLowess::internals::api::{Online, Streaming};
 use fastLowess::internals::binding_support;
@@ -860,7 +860,6 @@ impl PyOnlineLowess {
     /// (`point` holds the output), or `"dropped"` when `missing = "drop"`
     /// ignores a non-finite `x` or `y`.
     fn add_point(&self, py: Python<'_>, x: f64, y: f64) -> PyResult<PyAddPointResult> {
-        let dropped_candidate = !(x.is_finite() && y.is_finite());
         let result = py.detach(move || {
             let mut guard = self.inner.lock().map_err(|e| mutex_poison_err(&e))?;
             let model = guard
@@ -869,7 +868,7 @@ impl PyOnlineLowess {
             binding_support::map_lowess_result(model.add_point(x, y)).map_err(to_py_error)
         })?;
         Ok(match result {
-            Some(o) => PyAddPointResult {
+            AddPointResult::Ready(o) => PyAddPointResult {
                 status: "ready".to_owned(),
                 point: Some(PyOnlineOutput {
                     y: o.y,
@@ -884,11 +883,11 @@ impl PyOnlineLowess {
                     prediction_upper: o.prediction_upper,
                 }),
             },
-            None if dropped_candidate => PyAddPointResult {
+            AddPointResult::Dropped => PyAddPointResult {
                 status: "dropped".to_owned(),
                 point: None,
             },
-            None => PyAddPointResult {
+            AddPointResult::Filling => PyAddPointResult {
                 status: "filling".to_owned(),
                 point: None,
             },

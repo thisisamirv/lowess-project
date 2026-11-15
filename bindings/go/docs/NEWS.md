@@ -13,9 +13,13 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Changed
 
 * Breaking change: `OnlineLowess.AddPoint` now returns `(PointResult, AddPointStatus, error)` instead of `(PointResult, bool, error)`. Use `status == AddPointReady` (or `status.Ready()`) for a smoothed value, `AddPointFilling` while the window is warming up, and `AddPointDropped` when `Missing = "drop"` ignores a non-finite point.
+* Online fits sort the sliding window by `x` before each update so non-monotonic streams stay correct.
+* `StreamingLowess.ProcessChunk` rejects chunks that are not non-decreasing in `x` when merged with the previous overlap; feed ascending chunks or pre-sort the series.
 
 ### Fixed
 
+* Streaming no longer panics when derivatives were requested but missing; it returns an error instead.
+* Extend/Zero boundary pads use unit spacing when leading/trailing `x` ties would otherwise stack pads.
 * Fixed retained-model `predict_handle` ownership so `free_result` no longer leaks or double-frees the handle; Go takes ownership via `go_lowess_take_predict_handle`.
 * Keep Go slice inputs alive across cgo calls, free native results with `defer`, and make `Close`/finalizer races safe with an atomic pointer swap.
 * Reject negative Streaming/Online `Iterations` at the native boundary instead of casting them to a huge unsigned count.

@@ -8,10 +8,14 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Changed
 
 * Breaking change: `OnlineLowess.add_point` returns `AddPointResult` with `status` of `"filling"` / `"ready"` / `"dropped"` instead of `OnlineOutput | None`.
+* Online fits sort the sliding window by `x` before each update so non-monotonic streams stay correct.
+* `StreamingLowess.process_chunk` rejects chunks that are not non-decreasing in `x` when merged with the previous overlap; feed ascending chunks or pre-sort the series.
 
 ### Fixed
 
 * Distinguishing Online `add_point` filling vs `missing="drop"` via ternary `status`.
+* Streaming no longer panics when derivatives were requested but missing; it raises instead.
+* Extend/Zero boundary pads use unit spacing when leading/trailing `x` ties would otherwise stack pads.
 * Adding idempotent `close()` / context-manager support on `OnlineLowess`, `StreamingLowess`, and `LowessResult` (clears retained predict state).
 * Mapping Streaming/Online failures via `map_lowess_result` so InvalidArg vs Runtime categories match Batch/`predict`.
 

@@ -3,6 +3,20 @@
 
 This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md).
 
+## Unreleased
+
+### Changed
+
+* Breaking change: `OnlineLowess::add_point` returns `AddPointResult` (`Filling` / `Ready` / `Dropped`) instead of `Option<OnlineOutput>`.
+* Online fits sort the sliding window by `x` before kernel/windowing so non-monotonic streams stay correct.
+* Streaming rejects overlap merges that are not non-decreasing in `x`; emitted `x` is ascending within each resolved prefix.
+
+### Fixed
+
+* Distinguish Online `missing="drop"` from a still-filling window via `AddPointResult` (bindings no longer infer status from `None`).
+* Replace Streaming `expect` panics when `return_derivative` is set but derivatives are missing with `LowessError::InvalidInput`.
+* Use unit edge spacing for Extend/Zero boundary pads when leading/trailing `x` ties would otherwise stack pads.
+
 ## \[5.0.0\]
 
 ### Added

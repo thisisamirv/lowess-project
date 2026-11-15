@@ -11,6 +11,7 @@ use extendr_api::{error::Result, prelude::*};
 use std::cell::RefCell;
 use std::sync::Arc;
 
+use fastLowess::internals::adapters::online::AddPointResult;
 use fastLowess::internals::binding_support as shared_parse;
 use fastLowess::internals::LowessBuilder;
 use fastLowess::prelude::{IntervalsBuilder, LowessResult};
@@ -502,7 +503,6 @@ impl ROnlineLowess {
     /// Returns a list with `status` (`"filling"`, `"ready"`, or `"dropped"`)
     /// and `point` (an online-output list when ready; otherwise `NULL`).
     fn add_point(&mut self, x: f64, y: f64) -> Result<List> {
-        let dropped_candidate = !(x.is_finite() && y.is_finite());
         let model = self
             .inner
             .as_mut()
@@ -510,7 +510,7 @@ impl ROnlineLowess {
         let output = map_lowess_err(model.add_point(x, y))?;
 
         match output {
-            Some(o) => {
+            AddPointResult::Ready(o) => {
                 let mut items: Vec<(&str, Robj)> = vec![("y", o.y.into_robj())];
                 if let Some(se) = o.standard_error {
                     items.push(("standard_error", se.into_robj()));
@@ -544,11 +544,11 @@ impl ROnlineLowess {
                     ("point", List::from_pairs(items).into_robj()),
                 ]))
             }
-            None if dropped_candidate => Ok(List::from_pairs(vec![
+            AddPointResult::Dropped => Ok(List::from_pairs(vec![
                 ("status", "dropped".into_robj()),
                 ("point", Robj::from(NULL)),
             ])),
-            None => Ok(List::from_pairs(vec![
+            AddPointResult::Filling => Ok(List::from_pairs(vec![
                 ("status", "filling".into_robj()),
                 ("point", Robj::from(NULL)),
             ])),

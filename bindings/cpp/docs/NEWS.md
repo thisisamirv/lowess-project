@@ -10,11 +10,15 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Changed
 
 * `OnlineOutput` now distinguishes a still-filling window from a point dropped under `missing = "drop"` via `OnlinePointStatus` (`status()` / `dropped()`). `has_value()` remains true only when a smoothed estimate is ready.
+* Online fits sort the sliding window by `x` before each update so non-monotonic streams stay correct.
+* `StreamingLowess::process_chunk` rejects chunks that are not non-decreasing in `x` when merged with the previous overlap; feed ascending chunks or pre-sort the series.
 * Breaking change: renamed the public C ABI from the generic `cpp_*` prefix to `fastlowess_*` (for example `fastlowess_lowess_new`, `fastlowess_version`) so symbols do not collide with other bindings.
 * Windows MSVC releases now publish separate Debug and Release shared libraries for vcpkg consumers (both use `/MD` because the Rust MSVC standard library does).
 
 ### Fixed
 
+* Streaming no longer panics when derivatives were requested but missing; it returns an error instead.
+* Extend/Zero boundary pads use unit spacing when leading/trailing `x` ties would otherwise stack pads.
 * Fixed retained-model `predict_handle` ownership so `free_result` no longer leaks the handle; C++ takes ownership via `fastlowess_lowess_take_predict_handle`.
 * `LowessOptions::custom_weights` are now applied by `Lowess::fit` when the fit-argument weights are empty; length mismatches are rejected before the native call.
 * Bounds-check `LowessResult::x_value` / `y_value`.

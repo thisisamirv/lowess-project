@@ -278,7 +278,9 @@ export class OnlineOutput {
 "#;
 
 use ::fastLowess::internals::LowessBuilder;
-use ::fastLowess::internals::adapters::online::ParallelOnlineLowess;
+use ::fastLowess::internals::adapters::online::{
+    AddPointResult as OnlineAddPointResult, ParallelOnlineLowess,
+};
 use ::fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
 use ::fastLowess::internals::binding_support as shared_parse;
 use ::fastLowess::prelude::IntervalsBuilder;
@@ -1172,11 +1174,10 @@ impl OnlineLowess {
 
     #[wasm_bindgen(js_name = "add_point", skip_typescript)]
     pub fn add_point(&mut self, x: f64, y: f64) -> Result<JsValue, JsValue> {
-        let dropped_candidate = !(x.is_finite() && y.is_finite());
         let output = map_lowess_err(self.model_mut()?.add_point(x, y))?;
         let obj = Object::new();
         match output {
-            Some(o) => {
+            OnlineAddPointResult::Ready(o) => {
                 Reflect::set(
                     &obj,
                     &JsValue::from_str("status"),
@@ -1199,7 +1200,7 @@ impl OnlineLowess {
                     }),
                 )?;
             }
-            None if dropped_candidate => {
+            OnlineAddPointResult::Dropped => {
                 Reflect::set(
                     &obj,
                     &JsValue::from_str("status"),
@@ -1207,7 +1208,7 @@ impl OnlineLowess {
                 )?;
                 Reflect::set(&obj, &JsValue::from_str("point"), &JsValue::null())?;
             }
-            None => {
+            OnlineAddPointResult::Filling => {
                 Reflect::set(
                     &obj,
                     &JsValue::from_str("status"),

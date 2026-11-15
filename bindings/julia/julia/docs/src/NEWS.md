@@ -8,10 +8,14 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Changed
 
 * Breaking change: `OnlineLowess` with `missing = "drop"` now returns `:dropped` for non-finite points instead of `nothing`, so drops are distinguishable from a still-filling window.
+* Online fits sort the sliding window by `x` before each update so non-monotonic streams stay correct.
+* `process_chunk` rejects chunks that are not non-decreasing in `x` when merged with the previous overlap; feed ascending chunks or pre-sort the series.
 * `append!` on `LowessResult` now rejects results that include `cv_scores`, `diagnostics`, or `predict_model`; only streaming-style per-point fields can be concatenated.
 
 ### Fixed
 
+* Streaming no longer panics when derivatives were requested but missing; it throws instead.
+* Extend/Zero boundary pads use unit spacing when leading/trailing `x` ties would otherwise stack pads.
 * Fixed retained-model `predict_handle` ownership so error paths no longer leak the handle and successful conversion no longer risks double-free.
 * Free native result buffers with `try`/`finally`, and clear finalizer-owned handles after free.
 * Fixed FFI length fields truncating on 64-bit Windows by using pointer-sized sizes instead of `Culong`.

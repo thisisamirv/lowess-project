@@ -17,7 +17,7 @@ use std::slice::from_raw_parts;
 use std::sync::Arc;
 
 use fastLowess::internals::LowessBuilder;
-use fastLowess::internals::adapters::online::ParallelOnlineLowess;
+use fastLowess::internals::adapters::online::{AddPointResult, ParallelOnlineLowess};
 use fastLowess::internals::adapters::streaming::ParallelStreamingLowess;
 use fastLowess::internals::binding_support as shared_parse;
 use fastLowess::prelude::{IntervalsBuilder, LowessResult};
@@ -1104,16 +1104,18 @@ pub unsafe extern "C" fn go_online_add_point(
             return make_error(shared_parse::MODEL_POINTER_IS_NULL);
         }
         let lowess = unsafe { &mut *ptr };
-        let dropped_candidate = !(x.is_finite() && y.is_finite());
-
         if let Some(model) = &mut lowess.model {
             match model.add_point(x, y) {
                 Err(e) => make_error(&e.to_string()),
-                Ok(None) => GoOnlineOutput {
-                    has_value: if dropped_candidate { -1 } else { 0 },
+                Ok(AddPointResult::Dropped) => GoOnlineOutput {
+                    has_value: -1,
                     ..GoOnlineOutput::default()
                 },
-                Ok(Some(o)) => {
+                Ok(AddPointResult::Filling) => GoOnlineOutput {
+                    has_value: 0,
+                    ..GoOnlineOutput::default()
+                },
+                Ok(AddPointResult::Ready(o)) => {
                     let (standard_error, residual, robustness_weight, iterations_used) =
                         shared_parse::extract_online_output(&o);
                     GoOnlineOutput {
