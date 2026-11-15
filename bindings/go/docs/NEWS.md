@@ -8,6 +8,18 @@ weight: 100
 
 This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md).
 
+## Unreleased
+
+### Changed
+
+* Breaking change: `OnlineLowess.AddPoint` now returns `(PointResult, AddPointStatus, error)` instead of `(PointResult, bool, error)`. Use `status == AddPointReady` (or `status.Ready()`) for a smoothed value, `AddPointFilling` while the window is warming up, and `AddPointDropped` when `Missing = "drop"` ignores a non-finite point.
+
+### Fixed
+
+* Fixed retained-model `predict_handle` ownership so `free_result` no longer leaks or double-frees the handle; Go takes ownership via `go_lowess_take_predict_handle`.
+* Keep Go slice inputs alive across cgo calls, free native results with `defer`, and make `Close`/finalizer races safe with an atomic pointer swap.
+* Reject negative Streaming/Online `Iterations` at the native boundary instead of casting them to a huge unsigned count.
+
 ## [5.0.0]
 
 ### Added

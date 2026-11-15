@@ -82,7 +82,10 @@ typedef struct fastlowess_GoLowessResult {
   double residual_sd;
   /**
    * Opaque handle for `go_predict()`, non-NULL only if `retain_model` was set to 1.
-   * Must eventually be freed via `go_predict_handle_free`.
+   *
+   * Ownership: callers that keep the handle must call `go_lowess_take_predict_handle`
+   * before `go_lowess_free_result`. Otherwise `go_lowess_free_result` frees it.
+   * Taken handles must eventually be freed via `go_predict_handle_free`.
    */
   struct fastlowess_GoPredictHandle *predict_handle;
   /**
@@ -267,6 +270,8 @@ struct fastlowess_GoPredictResult go_predict(struct fastlowess_GoPredictHandle *
 /**
  * Free a GoPredictResult's heap-allocated buffers.
  *
+ * Freed pointers are nulled so a second call is a no-op.
+ *
  * # Safety
  * `result` must be a valid pointer to a GoPredictResult struct.
  */
@@ -369,7 +374,8 @@ struct fastlowess_GoOnlineLowess *go_online_new(double fraction,
 
 /**
  * Add a single point to the model and return its smoothed value.
- * `has_value = 0` in the result means the window is still filling.
+ * `has_value` is `1` when ready, `0` while the window is still filling, and
+ * `-1` when the point was dropped under `missing = "drop"`.
  *
  * # Safety
  * `ptr` must be a valid `GoOnlineLowess` pointer.
@@ -395,7 +401,21 @@ void go_online_free_output(struct fastlowess_GoOnlineOutput *output);
 void go_online_free(struct fastlowess_GoOnlineLowess *ptr);
 
 /**
+ * Take ownership of `predict_handle`, nulling it in `result` so
+ * `go_lowess_free_result` will not free it. The returned pointer must be freed
+ * with `go_predict_handle_free` (or transferred into a Go `PredictModel`).
+ *
+ * # Safety
+ * `result` must be a valid pointer to a `GoLowessResult`, or null.
+ */
+struct fastlowess_GoPredictHandle *go_lowess_take_predict_handle(struct fastlowess_GoLowessResult *result);
+
+/**
  * Free a GoLowessResult.
+ *
+ * Also frees `predict_handle` if it is still non-null. Callers that keep the
+ * handle must call `go_lowess_take_predict_handle` first. Freed pointers are
+ * nulled so a second call is a no-op.
  *
  * # Safety
  * `result` must be a valid pointer to a GoLowessResult struct.

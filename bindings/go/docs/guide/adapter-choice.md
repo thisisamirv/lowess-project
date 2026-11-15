@@ -231,11 +231,11 @@ func main() {
 
  shown := 0
  for i := 0; i < len(x) && shown < 5; i++ {
-  res, ok, err := model.AddPoint(x[i], y[i])
+  res, status, err := model.AddPoint(x[i], y[i])
   if err != nil {
    log.Fatal(err)
   }
-  if ok {
+  if status.Ready() {
    fmt.Println(res.Y)
    shown++
   }

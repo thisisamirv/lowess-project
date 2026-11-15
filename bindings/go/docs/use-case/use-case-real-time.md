@@ -15,7 +15,7 @@ When data arrives continuously—from sensors, logs, or streaming pipelines—yo
 
 For true real-time applications where each point must be processed immediately.
 
-`WindowCapacity = 25` limits the internal buffer to the 25 most recent observations; each `AddPoint` call costs O(window) rather than growing with total history. `MinPoints = 5` suppresses output until the window holds enough points for a stable fit — calls made before that threshold return `ok == false`. `UpdateMode = "incremental"` re-fits only the most recent point rather than the full window, halving typical latency at a modest accuracy cost.
+`WindowCapacity = 25` limits the internal buffer to the 25 most recent observations; each `AddPoint` call costs O(window) rather than growing with total history. `MinPoints = 5` suppresses output until the window holds enough points for a stable fit — calls made before that threshold return `AddPointFilling`. `UpdateMode = "incremental"` re-fits only the most recent point rather than the full window, halving typical latency at a modest accuracy cost.
 
 ### Sensor Data Example
 
@@ -47,11 +47,11 @@ func main() {
  for i := 0; i < 100; i++ {
   xi := float64(i)
   yi := 20.0 + 5.0*math.Sin(xi/10.0) + math.Sin(xi*1.7)*0.5
-  res, ok, err := model.AddPoint(xi, yi)
+  res, status, err := model.AddPoint(xi, yi)
   if err != nil {
    log.Fatal(err)
   }
-  if ok {
+  if status.Ready() {
    if count < 5 {
     fmt.Printf("Time %v: smoothed = %.4f\n", xi, res.Y)
    }

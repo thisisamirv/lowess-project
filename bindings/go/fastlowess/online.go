@@ -8,6 +8,7 @@ import "C"
 import (
 	"errors"
 	"runtime"
+	"unsafe"
 )
 
 // OnlineOptions configures an OnlineLowess model. Start with
@@ -67,8 +68,8 @@ type OnlineOptions struct {
 	UpdateMode string
 
 	// Missing is the policy for non-finite (NaN/Inf) x/y values passed to
-	// AddPoint: "error" (default) returns an error, "drop" silently ignores
-	// the point.
+	// AddPoint: "error" (default) returns an error, "drop" ignores the point
+	// and returns AddPointDropped.
 	Missing string
 }
 
@@ -94,7 +95,7 @@ func DefaultOnlineOptions() OnlineOptions {
 //
 // OnlineLowess is not safe for concurrent use.
 type OnlineLowess struct {
-	ptr *C.fastlowess_GoOnlineLowess
+	ptr unsafe.Pointer // *C.fastlowess_GoOnlineLowess
 }
 
 // NewOnlineLowess creates a new online model with the given options.
@@ -172,7 +173,8 @@ func NewOnlineLowess(opts OnlineOptions) (*OnlineLowess, error) {
 		return nil, errors.New(errMsg)
 	}
 
-	o := &OnlineLowess{ptr: ptr}
+	o := &OnlineLowess{}
+	storeNative(&o.ptr, unsafe.Pointer(ptr))
 	runtime.SetFinalizer(o, finalizeOnline)
 	return o, nil
 }
@@ -181,23 +183,36 @@ func finalizeOnline(o *OnlineLowess) {
 	_ = o.Close()
 }
 
-// AddPoint adds a single (x, y) observation. ok is false while the window is
-// still filling (fewer than MinPoints seen so far); once ok is true, res
-// holds the smoothed value for the most recently added point.
-func (o *OnlineLowess) AddPoint(x, y float64) (res PointResult, ok bool, err error) {
-	if o == nil || o.ptr == nil {
-		return PointResult{}, false, errors.New("fastlowess: AddPoint called on a closed OnlineLowess model")
+func (o *OnlineLowess) native() *C.fastlowess_GoOnlineLowess {
+	if o == nil {
+		return nil
+	}
+	return (*C.fastlowess_GoOnlineLowess)(loadNative(&o.ptr))
+}
+
+// AddPoint adds a single (x, y) observation.
+//
+// Status is AddPointFilling while fewer than MinPoints finite observations have
+// been seen, AddPointReady once smoothing begins (res is valid), and
+// AddPointDropped when Missing = "drop" ignores a non-finite point.
+func (o *OnlineLowess) AddPoint(x, y float64) (res PointResult, status AddPointStatus, err error) {
+	ptr := o.native()
+	if ptr == nil {
+		return PointResult{}, AddPointFilling, errors.New("fastlowess: AddPoint called on a closed OnlineLowess model")
 	}
 
-	cout := C.go_online_add_point(o.ptr, C.double(x), C.double(y))
+	cout := C.go_online_add_point(ptr, C.double(x), C.double(y))
 	runtime.KeepAlive(o)
+	defer C.go_online_free_output(&cout)
+
 	if cout.error != nil {
-		msg := C.GoString(cout.error)
-		C.go_online_free_output(&cout)
-		return PointResult{}, false, errors.New(msg)
+		return PointResult{}, AddPointFilling, errors.New(C.GoString(cout.error))
 	}
 	if cout.has_value == 0 {
-		return PointResult{}, false, nil
+		return PointResult{}, AddPointFilling, nil
+	}
+	if cout.has_value < 0 {
+		return PointResult{}, AddPointDropped, nil
 	}
 
 	res = PointResult{
@@ -212,16 +227,19 @@ func (o *OnlineLowess) AddPoint(x, y float64) (res PointResult, ok bool, err err
 		PredictionLower:  float64(cout.prediction_lower),
 		PredictionUpper:  float64(cout.prediction_upper),
 	}
-	return res, true, nil
+	return res, AddPointReady, nil
 }
 
 // Close releases the native resources held by this model. Safe to call
 // multiple times.
 func (o *OnlineLowess) Close() error {
-	if o != nil && o.ptr != nil {
-		C.go_online_free(o.ptr)
-		o.ptr = nil
-		runtime.SetFinalizer(o, nil)
+	if o == nil {
+		return nil
 	}
+	closeNative(&o.ptr, func(p unsafe.Pointer) {
+		C.go_online_free((*C.fastlowess_GoOnlineLowess)(p))
+	}, func() {
+		runtime.SetFinalizer(o, nil)
+	})
 	return nil
 }

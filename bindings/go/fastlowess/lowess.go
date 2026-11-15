@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"runtime"
 	"strings"
+	"unsafe"
 )
 
 // CVOptions configures batch cross-validation. Nil disables CV.
@@ -174,7 +175,7 @@ func optPtr(p *float64) (float64, bool) {
 // Lowess is not safe for concurrent use; each goroutine should use its own
 // instance, or callers must serialize access.
 type Lowess struct {
-	ptr *C.fastlowess_GoLowess
+	ptr unsafe.Pointer // *C.fastlowess_GoLowess
 }
 
 // NewLowess creates a new batch Lowess model with the given options.
@@ -274,19 +275,29 @@ func NewLowess(opts Options) (*Lowess, error) {
 		C.go_lowess_set_bootstrap(ptr, C.size_t(opts.Intervals.Bootstrap))
 	}
 
-	l := &Lowess{ptr: ptr}
+	l := &Lowess{}
+	storeNative(&l.ptr, unsafe.Pointer(ptr))
 	runtime.SetFinalizer(l, finalizeLowess)
 	return l, nil
 }
+
 
 func finalizeLowess(l *Lowess) {
 	_ = l.Close()
 }
 
+func (l *Lowess) native() *C.fastlowess_GoLowess {
+	if l == nil {
+		return nil
+	}
+	return (*C.fastlowess_GoLowess)(loadNative(&l.ptr))
+}
+
 // Fit smooths y as a function of x. An optional customWeights slice (same
 // length as x/y) applies per-observation case weights.
 func (l *Lowess) Fit(x, y []float64, customWeights ...[]float64) (Result, error) {
-	if l == nil || l.ptr == nil {
+	ptr := l.native()
+	if ptr == nil {
 		return Result{}, errors.New("fastlowess: Fit called on a closed Lowess model")
 	}
 	if len(x) == 0 || len(x) != len(y) {
@@ -307,8 +318,9 @@ func (l *Lowess) Fit(x, y []float64, customWeights ...[]float64) (Result, error)
 	yPtr, _ := cDoubles(y)
 	cwPtr, cwLen := cDoubles(cw)
 
-	cres := C.go_lowess_fit(l.ptr, xPtr, yPtr, xLen, cwPtr, cwLen)
+	cres := C.go_lowess_fit(ptr, xPtr, yPtr, xLen, cwPtr, cwLen)
 	runtime.KeepAlive(l)
+	keepAliveSlices(x, y, cw)
 	return resultFromC(cres)
 }
 
@@ -317,10 +329,13 @@ func (l *Lowess) Fit(x, y []float64, customWeights ...[]float64) (Result, error)
 // garbage collector if not called explicitly, but relying on that delays
 // releasing native memory - call Close explicitly (e.g. via defer) instead.
 func (l *Lowess) Close() error {
-	if l != nil && l.ptr != nil {
-		C.go_lowess_free(l.ptr)
-		l.ptr = nil
-		runtime.SetFinalizer(l, nil)
+	if l == nil {
+		return nil
 	}
+	closeNative(&l.ptr, func(p unsafe.Pointer) {
+		C.go_lowess_free((*C.fastlowess_GoLowess)(p))
+	}, func() {
+		runtime.SetFinalizer(l, nil)
+	})
 	return nil
 }

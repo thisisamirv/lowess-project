@@ -70,6 +70,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Demote library-discovery `@info` logs to `@debug`.
 - Document `jl_lowess_set_cv_seed` as a constructor-only ABI stub (`seed` on `jl_lowess_new`).
 
+**Go:**
+
+- Take `predict_handle` ownership via `go_lowess_take_predict_handle`; `go_lowess_free_result` frees any remaining handle and nulls freed buffers.
+- Keep slice inputs alive across cgo calls, `defer` native result frees, and make `Close`/finalizer races safe with an atomic pointer swap.
+- Distinguish online `missing="drop"` (`AddPointDropped` / `has_value = -1`) from a still-filling window (`AddPointFilling` / `has_value = 0`); `AddPoint` now returns `AddPointStatus`.
+- Reject negative Streaming/Online `iterations` instead of casting them to a huge `usize`.
+
 ## 5.0.0
 
 ### Added

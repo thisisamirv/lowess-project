@@ -8,6 +8,7 @@ import "C"
 import (
 	"errors"
 	"runtime"
+	"unsafe"
 )
 
 // StreamingOptions configures a StreamingLowess model. Start with
@@ -94,7 +95,7 @@ func DefaultStreamingOptions() StreamingOptions {
 //
 // StreamingLowess is not safe for concurrent use.
 type StreamingLowess struct {
-	ptr *C.fastlowess_GoStreamingLowess
+	ptr unsafe.Pointer // *C.fastlowess_GoStreamingLowess
 }
 
 // NewStreamingLowess creates a new streaming model with the given options.
@@ -175,7 +176,8 @@ func NewStreamingLowess(opts StreamingOptions) (*StreamingLowess, error) {
 		return nil, errors.New(errMsg)
 	}
 
-	s := &StreamingLowess{ptr: ptr}
+	s := &StreamingLowess{}
+	storeNative(&s.ptr, unsafe.Pointer(ptr))
 	runtime.SetFinalizer(s, finalizeStreaming)
 	return s, nil
 }
@@ -184,9 +186,17 @@ func finalizeStreaming(s *StreamingLowess) {
 	_ = s.Close()
 }
 
+func (s *StreamingLowess) native() *C.fastlowess_GoStreamingLowess {
+	if s == nil {
+		return nil
+	}
+	return (*C.fastlowess_GoStreamingLowess)(loadNative(&s.ptr))
+}
+
 // ProcessChunk fits and returns the result for one chunk of data.
 func (s *StreamingLowess) ProcessChunk(x, y []float64) (Result, error) {
-	if s == nil || s.ptr == nil {
+	ptr := s.native()
+	if ptr == nil {
 		return Result{}, errors.New("fastlowess: ProcessChunk called on a closed StreamingLowess model")
 	}
 	if len(x) == 0 || len(x) != len(y) {
@@ -194,17 +204,19 @@ func (s *StreamingLowess) ProcessChunk(x, y []float64) (Result, error) {
 	}
 	xPtr, xLen := cDoubles(x)
 	yPtr, _ := cDoubles(y)
-	cres := C.go_streaming_process(s.ptr, xPtr, yPtr, xLen)
+	cres := C.go_streaming_process(ptr, xPtr, yPtr, xLen)
 	runtime.KeepAlive(s)
+	keepAliveSlices(x, y)
 	return resultFromC(cres)
 }
 
 // Finalize flushes any buffered data and returns the final merged result.
 func (s *StreamingLowess) Finalize() (Result, error) {
-	if s == nil || s.ptr == nil {
+	ptr := s.native()
+	if ptr == nil {
 		return Result{}, errors.New("fastlowess: Finalize called on a closed StreamingLowess model")
 	}
-	cres := C.go_streaming_finalize(s.ptr)
+	cres := C.go_streaming_finalize(ptr)
 	runtime.KeepAlive(s)
 	return resultFromC(cres)
 }
@@ -212,10 +224,13 @@ func (s *StreamingLowess) Finalize() (Result, error) {
 // Close releases the native resources held by this model. Safe to call
 // multiple times.
 func (s *StreamingLowess) Close() error {
-	if s != nil && s.ptr != nil {
-		C.go_streaming_free(s.ptr)
-		s.ptr = nil
-		runtime.SetFinalizer(s, nil)
+	if s == nil {
+		return nil
 	}
+	closeNative(&s.ptr, func(p unsafe.Pointer) {
+		C.go_streaming_free((*C.fastlowess_GoStreamingLowess)(p))
+	}, func() {
+		runtime.SetFinalizer(s, nil)
+	})
 	return nil
 }

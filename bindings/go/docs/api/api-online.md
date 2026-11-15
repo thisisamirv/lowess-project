@@ -40,16 +40,16 @@ defer model.Close()
 
 **Methods:**
 
-#### `AddPoint(x, y float64) (res PointResult, ok bool, err error)`
+#### `AddPoint(x, y float64) (res PointResult, status AddPointStatus, err error)`
 
-Adds a single point to the sliding window and returns the smoothed value for that point; `ok` is `false` while the window is still filling up (fewer than `MinPoints` seen so far). Once the window reaches `WindowCapacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `UpdateMode` controls how much work each call does: `"incremental"` re-fits only the newest point, while `"full"` re-smooths the entire window for a more accurate but slower result.
+Adds a single point to the sliding window and returns the smoothed value for that point. `status` is `AddPointFilling` while the window is warming up (fewer than `MinPoints` finite observations), `AddPointReady` once smoothing begins (`res` is valid), and `AddPointDropped` when `Missing = "drop"` ignores a non-finite point. Once the window reaches `WindowCapacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `UpdateMode` controls how much work each call does: `"incremental"` re-fits only the newest point, while `"full"` re-smooths the entire window for a more accurate but slower result.
 
 ```go
-res, ok, err := model.AddPoint(x, y)
+res, status, err := model.AddPoint(x, y)
 if err != nil {
  panic(err)
 }
-if ok {
+if status.Ready() {
  fmt.Println(res.Y)
 }
 ```
@@ -171,7 +171,7 @@ Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `AddPoint`
 | Option | Behavior |
 | --- | --- |
 | `"error"` (default) | Return an error |
-| `"drop"` | Silently ignore the point — `AddPoint` returns `ok=false` instead of adding it to the window |
+| `"drop"` | Ignore the point — `AddPoint` returns `AddPointDropped` instead of adding it to the window |
 
 ### WindowCapacity
 
@@ -179,7 +179,7 @@ Maximum number of most recent points kept in the sliding window; older points ar
 
 ### MinPoints
 
-Minimum number of points required before smoothing starts. `AddPoint` returns `ok == false` until the window reaches this size.
+Minimum number of points required before smoothing starts. `AddPoint` returns `AddPointFilling` until the window reaches this size.
 
 ### UpdateMode
 
@@ -214,7 +214,7 @@ Set `Intervals.Confidence` and/or `Intervals.Prediction` to a level such as `0.9
 
 ### `PointResult`
 
-Returned by `AddPoint` once the window has enough points (`ok == false` until then).
+Returned by `AddPoint` once the window has enough points (`AddPointFilling` until then).
 
 | Field | Type | Notes |
 | --- | --- | --- |
@@ -262,23 +262,23 @@ func main() {
  }
  defer model.Close()
 
- _, ok1, err := model.AddPoint(x[0], y[0])
+ _, status1, err := model.AddPoint(x[0], y[0])
  if err != nil {
   log.Fatal(err)
  }
- fmt.Println(ok1)
+ fmt.Println(status1.Ready())
 
- _, ok2, err := model.AddPoint(x[1], y[1])
+ _, status2, err := model.AddPoint(x[1], y[1])
  if err != nil {
   log.Fatal(err)
  }
- fmt.Println(ok2)
+ fmt.Println(status2.Ready())
 
- res, ok3, err := model.AddPoint(x[2], y[2])
+ res, status3, err := model.AddPoint(x[2], y[2])
  if err != nil {
   log.Fatal(err)
  }
- if ok3 {
+ if status3.Ready() {
   fmt.Println(res.Y)
  }
 }

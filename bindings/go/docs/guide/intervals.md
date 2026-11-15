@@ -277,9 +277,9 @@ func main() {
  defer online.Close()
  ready := false
  for i := range x[:12] {
-  point, ok, err := online.AddPoint(x[i], y[i])
+  point, status, err := online.AddPoint(x[i], y[i])
   if err != nil { panic(err) }
-  if ok { ready = !math.IsNaN(point.PredictionLower) }
+  if status.Ready() { ready = !math.IsNaN(point.PredictionLower) }
  }
  if !ready { panic("online bootstrap failed") }
 }

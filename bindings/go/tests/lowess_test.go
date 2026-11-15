@@ -718,12 +718,19 @@ func TestOnlineLowess(t *testing.T) {
 		}
 		defer model.Close()
 
-		_, ok, err := model.AddPoint(1.0, math.NaN())
+		_, status, err := model.AddPoint(1.0, math.NaN())
 		if err != nil {
 			t.Fatalf("AddPoint failed: %v", err)
 		}
-		if ok {
-			t.Fatal("expected non-finite point to be ignored under missing=drop")
+		if status != fastlowess.AddPointDropped {
+			t.Fatalf("expected AddPointDropped, got %v", status)
+		}
+		_, status, err = model.AddPoint(1.0, 2.0)
+		if err != nil {
+			t.Fatalf("AddPoint failed: %v", err)
+		}
+		if status != fastlowess.AddPointFilling {
+			t.Fatalf("expected AddPointFilling after a dropped point, got %v", status)
 		}
 	})
 
@@ -743,11 +750,11 @@ func TestOnlineLowess(t *testing.T) {
 
 		count := 0
 		for i := range x {
-			_, ok, err := model.AddPoint(x[i], y[i])
+			_, status, err := model.AddPoint(x[i], y[i])
 			if err != nil {
 				t.Fatalf("AddPoint failed at i=%d: %v", i, err)
 			}
-			if ok {
+			if status.Ready() {
 				count++
 			}
 		}
@@ -775,11 +782,11 @@ func TestOnlineLowess(t *testing.T) {
 
 		count := 0
 		for i := range x {
-			_, ok, err := model.AddPoint(x[i], y[i])
+			_, status, err := model.AddPoint(x[i], y[i])
 			if err != nil {
 				t.Fatalf("AddPoint failed at i=%d: %v", i, err)
 			}
-			if ok {
+			if status.Ready() {
 				count++
 			}
 		}
@@ -804,11 +811,11 @@ func TestOnlineLowess(t *testing.T) {
 
 		sawValue := false
 		for i := range x {
-			_, ok, err := model.AddPoint(x[i], y[i])
+			_, status, err := model.AddPoint(x[i], y[i])
 			if err != nil {
 				t.Fatalf("AddPoint failed at i=%d: %v", i, err)
 			}
-			sawValue = sawValue || ok
+			sawValue = sawValue || status.Ready()
 		}
 		if !sawValue {
 			t.Fatal("expected at least one point result")
@@ -829,11 +836,11 @@ func TestOnlineLowess(t *testing.T) {
 		x, y := sineData(100)
 		sawValue := false
 		for i := range x {
-			res, ok, err := model.AddPoint(x[i], y[i])
+			res, status, err := model.AddPoint(x[i], y[i])
 			if err != nil {
 				t.Fatalf("AddPoint failed at i=%d: %v", i, err)
 			}
-			if ok {
+			if status.Ready() {
 				sawValue = true
 				if math.IsNaN(res.Y) {
 					t.Fatalf("unexpected NaN Y at i=%d", i)
@@ -874,11 +881,11 @@ func TestOnlineLowess(t *testing.T) {
 		var last fastlowess.PointResult
 		sawValue := false
 		for i := 0; i < 10; i++ {
-			res, ok, err := model.AddPoint(float64(i), float64(i)*2.0)
+			res, status, err := model.AddPoint(float64(i), float64(i)*2.0)
 			if err != nil {
 				t.Fatalf("AddPoint failed at i=%d: %v", i, err)
 			}
-			if ok {
+			if status.Ready() {
 				last = res
 				sawValue = true
 			}
@@ -1411,11 +1418,11 @@ func TestGroupedBootstrapIntervals(t *testing.T) {
 		defer model.Close()
 		ready := false
 		for i := range x[:12] {
-			value, ok, err := model.AddPoint(x[i], y[i])
+			value, status, err := model.AddPoint(x[i], y[i])
 			if err != nil {
 				t.Fatalf("AddPoint failed: %v", err)
 			}
-			if ok {
+			if status.Ready() {
 				ready = allFinite([]float64{value.StandardError, value.ConfidenceLower, value.PredictionUpper})
 			}
 		}
