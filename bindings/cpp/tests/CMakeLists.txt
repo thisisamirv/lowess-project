@@ -70,6 +70,7 @@ if(WIN32)
             ws2_32
             userenv
             bcrypt
+            synchronization
         )
     else()
         # MinGW compiler - link against the GNU-compatible Rust artifacts.
@@ -80,6 +81,7 @@ if(WIN32)
             ws2_32
             userenv
             bcrypt
+            synchronization
             pthread
         )
         get_filename_component(MINGW_BIN_DIR "${CMAKE_CXX_COMPILER}" DIRECTORY)

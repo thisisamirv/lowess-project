@@ -56,18 +56,20 @@ test_that("gpu_prepare_probe stages probe artifacts for the native library", {
     dir.create(probe_dir)
     on.exit(unlink(probe_dir, recursive = TRUE), add = TRUE)
 
-    result <- prepare(native$dll[["path"]], probe_dir)
+    result <- prepare(native$dll[["path"]], probe_dir, sys_name = "Linux")
     expect_type(result, "list")
     expect_named(result, c("script", "library", "expected"))
     expect_true(file.exists(result$script))
     expect_true(file.exists(result$library))
     expect_true(file.exists(result$expected))
-    expect_true(
-        endsWith(
-            result$library,
-            if (identical(Sys.info()[["sysname"]], "Windows")) ".dll" else ".so"
-        )
-    )
+    expect_true(endsWith(result$library, ".so"))
+
+    win_dir <- tempfile("rfastlowess-gpu-probe-win-")
+    dir.create(win_dir)
+    on.exit(unlink(win_dir, recursive = TRUE), add = TRUE)
+    win <- prepare(native$dll[["path"]], win_dir, sys_name = "Windows")
+    expect_true(endsWith(win$library, ".dll"))
+    expect_true(file.exists(win$library))
 })
 
 test_that("probe directory and staging failures reject candidates", {

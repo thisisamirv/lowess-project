@@ -119,7 +119,9 @@ golden_online_full <- function(d) {
     out <- lapply(seq_along(d$x), function(i) add_point(ol, d$x[[i]], d$y[[i]]))
     yhat <- vapply(
         out,
-        function(r) if (is.null(r)) NA_real_ else r$y,
+        function(r) {
+            if (identical(r$status, "ready")) r$point$y else NA_real_
+        },
         numeric(1)
     )
     data.frame(x = d$x, y = d$y, yhat = yhat)

@@ -81,7 +81,11 @@ dev:
 
 _julia_checks_internal:
 	@echo "=============================================================================="
-	@echo "0. Commit hash update..."
+	@echo "0. Updating dependencies..."
+	@echo "=============================================================================="
+	@cargo update -p $(JL_PKG)
+	@echo "=============================================================================="
+	@echo "0b. Commit hash update..."
 	@echo "=============================================================================="
 	@git fetch origin main 2>/dev/null || true
 	@COMMIT=$$(git rev-parse origin/main 2>/dev/null) && \

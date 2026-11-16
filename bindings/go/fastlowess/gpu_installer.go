@@ -165,7 +165,7 @@ func printRebuildInstructions(dest, dir string) {
 		"CGO_LDFLAGS pointing at it, e.g.:")
 	switch runtime.GOOS {
 	case "windows":
-		fmt.Printf("  set CGO_LDFLAGS=-L%s -lfastlowess_go -lws2_32 -luserenv -lbcrypt -lntdll -lpthread\n", dir)
+		fmt.Printf("  set CGO_LDFLAGS=-L%s -lfastlowess_go -lws2_32 -luserenv -lbcrypt -lntdll -lsynchronization -lpthread\n", dir)
 	case "darwin":
 		fmt.Printf("  export CGO_LDFLAGS=\"-L%s -lfastlowess_go\"\n", dir)
 	default:

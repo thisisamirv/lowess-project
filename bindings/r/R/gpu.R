@@ -64,8 +64,12 @@ gpu_valid_library_file <- function(path, sys_name = Sys.info()[["sysname"]]) {
     TRUE
 }
 
-gpu_prepare_probe <- function(path, probe_dir) {
-    ext <- if (identical(Sys.info()[["sysname"]], "Windows")) ".dll" else ".so"
+gpu_prepare_probe <- function(
+    path,
+    probe_dir,
+    sys_name = Sys.info()[["sysname"]]
+) {
+    ext <- if (identical(sys_name, "Windows")) ".dll" else ".so"
     probe_path <- file.path(probe_dir, paste0("rfastlowess", ext))
     if (!file.copy(path, probe_path, overwrite = TRUE)) {
         return(NULL)

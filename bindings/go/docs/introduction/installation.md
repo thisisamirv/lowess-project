@@ -56,7 +56,7 @@ export CGO_LDFLAGS="-L/path/to/fastlowess_go/lib -lfastlowess_go -lm -ldl -lpthr
 go build -tags=external_native ./...
 ```
 
-On macOS, drop `-ldl -lpthread` (not needed). On Windows, use `-lws2_32 -luserenv -lbcrypt -lntdll -lpthread` instead, and ensure a MinGW-w64 `gcc.exe` is on `PATH`.
+On macOS, drop `-ldl -lpthread` (not needed). On Windows, use `-lws2_32 -luserenv -lbcrypt -lntdll -lsynchronization -lpthread` instead, and ensure a MinGW-w64 `gcc.exe` is on `PATH`.
 
 New releases also publish `libfastlowess_go-<platform>.a` assets for `linux-x64`, `linux-x64-musl` (Alpine), `linux-arm64`, `linux-arm64-musl` (Alpine), `macos-x64`, `macos-arm64`, `win32-x64`, and `win32-arm64`. These separate assets are optional when consuming a bundled module.
 

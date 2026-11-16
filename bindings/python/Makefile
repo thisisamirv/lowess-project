@@ -57,7 +57,11 @@ default:
 dev:
 	@echo "Running $(PY_PKG) checks..."
 	@echo "=============================================================================="
-	@echo "0. Environment Setup..."
+	@echo "0. Updating dependencies..."
+	@echo "=============================================================================="
+	@cargo update -p $(PY_PKG)
+	@echo "=============================================================================="
+	@echo "0b. Environment Setup..."
 	@echo "=============================================================================="
 	@if [ ! -d "$(PY_VENV)" ]; then $(PYTHON) -m venv $(PY_VENV); fi
 	@. $(PY_ACTIVATE) && python -c "import shutil, site; from pathlib import Path; [shutil.rmtree(path, ignore_errors=True) for base in site.getsitepackages() for path in Path(base).glob('~ip*')]"
