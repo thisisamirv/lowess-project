@@ -88,6 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Keep slice inputs alive across cgo calls, `defer` native result frees, and make `Close`/finalizer races safe with an atomic pointer swap.
 - Distinguish online `missing="drop"` (`AddPointDropped` / `has_value = -1`) from a still-filling window (`AddPointFilling` / `has_value = 0`); `AddPoint` now returns `AddPointStatus`.
 - Reject negative Streaming/Online `iterations` instead of casting them to a huge `usize`.
+- Dropped the unused `libc` Rust dependency from the Go binding crate.
 
 **Java:**
 
