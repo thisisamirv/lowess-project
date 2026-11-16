@@ -4,12 +4,18 @@
   "start_url": "/lowess-project/go/",
   "scope": "/lowess-project/go/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
   "icons": [
     {
+      "type": "image/png",
+      "src": "/lowess-project/go/favicon.png",
+      "sizes": "96x96"
+    },
+    {
+      "type": "image/svg+xml",
       "src": "/lowess-project/go/favicon.svg",
-      "sizes": "512x512"
+      "sizes": "any"
     }
   ]
 }
