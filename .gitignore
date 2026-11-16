@@ -62,7 +62,6 @@ venv/
 .vscode/
 .clangd
 !/bindings/cpp/.clangd
-!/bindings/cpp/vcpkg/test-project/.clangd
 .cache/
 compile_commands.json
 *.swp

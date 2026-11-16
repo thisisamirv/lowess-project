@@ -1,7 +1,7 @@
 <!-- markdownlint-disable MD024 MD025 MD041 -->
 This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md).
 
-## Unreleased
+## rfastlowess 5.1.0
 
 ### Changed
 

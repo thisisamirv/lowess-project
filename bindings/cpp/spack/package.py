@@ -18,7 +18,7 @@ class FastlowessCpp(CargoPackage):
 
     homepage = "https://thisisamirv.github.io/lowess-project/cpp/"
     url = (
-        "https://github.com/thisisamirv/lowess-project/archive/refs/tags/v4.1.0.tar.gz"
+        "https://github.com/thisisamirv/lowess-project/archive/refs/tags/v5.1.0.tar.gz"
     )
     git = "https://github.com/thisisamirv/lowess-project.git"
 

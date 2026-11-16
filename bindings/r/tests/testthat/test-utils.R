@@ -12,9 +12,23 @@ validate_params <- getFromNamespace("validate_params", "rfastlowess")
 coerce_nullable <- getFromNamespace("coerce_nullable", "rfastlowess")
 env_args <- getFromNamespace("env_args", "rfastlowess")
 cv_opts <- getFromNamespace("cv_opts", "rfastlowess")
+expand_cv <- getFromNamespace("expand_cv", "rfastlowess")
 parse_outputs_flags <- getFromNamespace("parse_outputs_flags", "rfastlowess")
 
 # ── cv_opts ──────────────────────────────────────────────────────────────────
+
+test_that("expand_cv defaults method and k when omitted", {
+    result <- expand_cv(list(fractions = c(0.2, 0.5)))
+    expect_identical(result$cv_fractions, c(0.2, 0.5))
+    expect_identical(result$cv_method, "kfold")
+    expect_identical(result$cv_k, 5L)
+
+    overridden <- expand_cv(
+        list(fractions = c(0.3, 0.5), method = "loocv", k = 3L)
+    )
+    expect_identical(overridden$cv_method, "loocv")
+    expect_identical(overridden$cv_k, 3L)
+})
 
 test_that("cv_opts validates required and non-empty fractions", {
     expect_error(

@@ -196,6 +196,21 @@ def update_news_headings(new_version: str, dry_run: bool) -> bool:
             updated_lines.append(content + ending)
 
         rel = path.relative_to(REPO_ROOT)
+        if matches == 0:
+            # Idempotent re-runs: heading already versioned by a prior bump.
+            already_re = re.compile(
+                rf"^(?:#{{1,6}}|={{1,6}})[ \t]+"
+                rf"(?:\\?\[{re.escape(new_version)}\\?\]|"
+                rf".+?[ \t]+{re.escape(new_version)})[ \t]*$"
+            )
+            if any(already_re.fullmatch(line.rstrip("\r\n")) for line in lines):
+                print(f"  Already at {new_version}: {rel}")
+                continue
+            print(
+                f"  WARNING: expected one Unreleased/development heading in {rel}, found 0"
+            )
+            all_ok = False
+            continue
         if matches != 1:
             print(
                 f"  WARNING: expected one Unreleased/development heading in {rel}, found {matches}"
@@ -467,25 +482,6 @@ def build_targets(
     )
     targets.append(
         (
-            "bindings/cpp/vcpkg/fastlowess/vcpkg.json",
-            package_json_version_pattern,
-            f'"version": "{new_version}"',
-            1,
-        )
-    )
-    targets.append(
-        (
-            "bindings/cpp/vcpkg/fastlowess/CMakeLists.txt",
-            re.compile(
-                r"project\(fastlowess-vcpkg VERSION \d+\.\d+\.\d+ LANGUAGES CXX\)"
-            ),
-            f"project(fastlowess-vcpkg VERSION {new_version} LANGUAGES CXX)",
-            1,
-        )
-    )
-
-    targets.append(
-        (
             "CITATION.cff",
             re.compile(r'^version: "\d+\.\d+\.\d+"$', re.MULTILINE),
             f'version: "{new_version}"',
@@ -586,6 +582,22 @@ def main() -> int:
 
     print()
     all_ok = apply_go_module_suffix(major, args.dry_run) and all_ok
+
+    sync_lock = REPO_ROOT / "bindings/nodejs/scripts/sync-optional-lock.js"
+    if sync_lock.exists() and not args.dry_run:
+        print()
+        result = subprocess.run(
+            ["node", str(sync_lock)],
+            cwd=REPO_ROOT,
+            check=False,
+        )
+        if result.returncode != 0:
+            print("  WARNING: sync-optional-lock.js failed", file=sys.stderr)
+            all_ok = False
+        else:
+            print(
+                "  Updated: bindings/nodejs/package-lock.json (optional platform packages)"
+            )
 
     print()
     if not all_ok:

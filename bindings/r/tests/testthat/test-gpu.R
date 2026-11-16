@@ -49,6 +49,27 @@ test_that("native probe helpers validate files and process results", {
     expect_identical(probe(native$dll[["path"]]), gpu_available())
 })
 
+test_that("gpu_prepare_probe stages probe artifacts for the native library", {
+    prepare <- getFromNamespace("gpu_prepare_probe", "rfastlowess")
+    native <- getFromNamespace("wrap__gpu_enabled", "rfastlowess")
+    probe_dir <- tempfile("rfastlowess-gpu-probe-")
+    dir.create(probe_dir)
+    on.exit(unlink(probe_dir, recursive = TRUE), add = TRUE)
+
+    result <- prepare(native$dll[["path"]], probe_dir)
+    expect_type(result, "list")
+    expect_named(result, c("script", "library", "expected"))
+    expect_true(file.exists(result$script))
+    expect_true(file.exists(result$library))
+    expect_true(file.exists(result$expected))
+    expect_true(
+        endsWith(
+            result$library,
+            if (identical(Sys.info()[["sysname"]], "Windows")) ".dll" else ".so"
+        )
+    )
+})
+
 test_that("probe directory and staging failures reject candidates", {
     probe <- getFromNamespace("gpu_library_enabled", "rfastlowess")
     prepare <- getFromNamespace("gpu_prepare_probe", "rfastlowess")

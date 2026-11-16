@@ -154,23 +154,6 @@ spack test run --alias fastlowess-cpp-smoke fastlowess-cpp
 spack test results -l fastlowess-cpp-smoke
 ```
 
-## From vcpkg (overlay)
-
-A prebuilt overlay is available for shared CPU libraries on Windows x64/ARM64, Linux x64/ARM64, and macOS x64/ARM64. Windows uses the dynamic MSVC runtime. Linux triplets containing `musl` select musl artifacts; other Linux triplets select glibc artifacts. Use dynamic-linkage triplets: the standard Linux and macOS triplets that default to static linkage are not supported. Rust and Cargo are not required, and Debug and Release consumers use the same upstream Release library. This port is not yet in vcpkg's curated registry.
-
-From the repository root, run the command matching your native build host:
-
-```sh
-# Windows
-vcpkg install fastlowess:x64-windows --overlay-ports=bindings/cpp/vcpkg
-# Linux (using the dynamic community triplet)
-vcpkg install fastlowess:x64-linux-dynamic --overlay-ports=bindings/cpp/vcpkg
-# macOS (using the dynamic community triplet)
-vcpkg install fastlowess:arm64-osx-dynamic --overlay-ports=bindings/cpp/vcpkg
-```
-
-The installed package provides `fastlowess::fastlowess` through `find_package(fastlowess CONFIG REQUIRED)`. See the [overlay packaging guide](https://github.com/thisisamirv/lowess-project/tree/main/bindings/cpp/vcpkg) for bootstrap commands, Debug/Release consumer tests, and submission steps.
-
 ---
 
 ## Verify Installation

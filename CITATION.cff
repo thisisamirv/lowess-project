@@ -27,8 +27,8 @@ keywords:
   - cpp
   - go
   - java
-date-released: "2026-10-07"
-version: "5.0.0"
+date-released: "2026-11-16"
+version: "5.1.0"
 references:
   - type: article
     authors:

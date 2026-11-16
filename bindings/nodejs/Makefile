@@ -57,6 +57,8 @@ dev:
 	@echo "Linting Node.js files..."
 	@cd $(NODE_DIR) && $(NPM) install
 	@cd $(NODE_DIR) && $(NPM) update
+	@# Unpublished platform optionalDeps are dropped by npm update; re-sync from npm/*/package.json.
+	@cd $(NODE_DIR) && $(NODE) scripts/sync-optional-lock.js
 	@cd $(NODE_DIR) && $(NPM) audit || true
 	@# Snippet verification writes temporary JS files here; remove leftovers from interrupted runs before depcheck scans the package.
 	@cd $(NODE_DIR) && rm -f _snippet_*.js
