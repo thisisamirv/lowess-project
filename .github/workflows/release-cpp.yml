@@ -454,8 +454,11 @@ jobs:
         with:
           spack_ref: develop
 
+      # Skip mypy: `spack style` always typechecks the whole Spack tree
+      # (`--package spack`), not the recipe path, so develop tip breakage
+      # would fail this job even with a clean package.py.
       - name: Fix Spack recipe style
-        run: spack style --fix bindings/cpp/spack/package.py
+        run: spack style --fix --skip mypy bindings/cpp/spack/package.py
 
       - name: Commit updated recipe
         run: |
