@@ -35,6 +35,7 @@ class FastlowessCpp(CargoPackage):
 
     # version() lines below are appended/updated by release-cpp.yml's
     # spack-release job on every release; keep newest first.
+    version("5.1.0", sha256="83fa88b80b065cbb8e907808e0a9969258cffa6dc4edea78180e13e9cfcd5a2b")
     version(
         "5.0.0",
         sha256="5aaddb050b08d9efa5493c4181dc2d59d02c5a87320dd95b415b726df1884007",
