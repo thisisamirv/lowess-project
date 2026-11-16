@@ -4,7 +4,6 @@
 <p align="center">
   <a href="https://thisisamirv.r-universe.dev/rfastlowess"><img src="https://img.shields.io/badge/R--universe-276DC3?logo=r&logoColor=white" alt="R-universe"></a>
   <a href="https://anaconda.org/conda-forge/r-rfastlowess"><img src="https://img.shields.io/badge/rfastlowess_(R)-44A833?logo=anaconda&logoColor=white" alt="rfastlowess (R)"></a>
-  <a href="https://github.com/ropensci/software-review/issues/769"><img src="https://badges.ropensci.org/769_status.svg" alt="Status at rOpenSci Software Peer Review"></a>
   <a href="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-r.yml"><img src="https://github.com/thisisamirv/lowess-project/actions/workflows/ci-r.yml/badge.svg" alt="CI"></a>
 </p>
 

@@ -490,7 +490,7 @@
 //! let mut updates = 0;
 //! for i in 0..12 {
 //!     let x = i as f64 * 0.2;
-//!     if let Some(output) = model.add_point(x, x.sin() + 0.1 * (5.0 * x).sin())? {
+//!     if let Some(output) = model.add_point(x, x.sin() + 0.1 * (5.0 * x).sin())?.ready() {
 //!         updates += 1;
 //!         assert!(output.standard_error.is_some());
 //!         assert!(output.confidence_lower.is_some());
@@ -525,7 +525,10 @@
 //! let mismatched = model.add_points(&[1.0, 2.0][..], &[2.0][..]);
 //! assert!(matches!(mismatched, Err(LowessError::InvalidInput(_))));
 //! let outputs = model.add_points(&[1.0, 2.0, 3.0][..], &[2.0, 4.0, 6.0][..])?;
-//! println!("Ready online outputs: {}", outputs.iter().flatten().count());
+//! println!(
+//!     "Ready online outputs: {}",
+//!     outputs.iter().filter(|r| r.is_ready()).count()
+//! );
 //! # Result::<(), LowessError>::Ok(())
 //! ```
 //!
@@ -545,7 +548,7 @@
 //! let y = x.mapv(|xi| 2.0 * xi);
 //! let mut model = OnlineLowess::new().window_capacity(5).min_points(3).build()?;
 //! let outputs = model.add_points(&x, &y)?;
-//! let ready = outputs.iter().flatten().count();
+//! let ready = outputs.iter().filter(|r| r.is_ready()).count();
 //! println!("Online ndarray updates: {ready}");
 //! # assert_eq!(ready, 3);
 //! # Result::<(), LowessError>::Ok(())

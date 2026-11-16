@@ -181,7 +181,7 @@ console.log("Online PI present:", last.prediction_lower !== undefined);
 ```output
 Batch SEs: 30
 Streaming CI present: true
-Online PI present: true
+Online PI present: false
 ```
 
 ---

@@ -532,7 +532,9 @@ pub struct AddPointResult {
     /// `"filling"`, `"ready"`, or `"dropped"`.
     pub status: String,
     /// Smoothed output when `status` is `"ready"`; otherwise `null`.
-    pub point: Option<OnlineOutput>,
+    ///
+    /// Uses [`Either`] so a missing point is JS `null` (not `undefined`).
+    pub point: Either<OnlineOutput, Null>,
 }
 
 /// Build a `LowessBuilder` from Batch options, applying every field.
@@ -927,7 +929,7 @@ impl OnlineLowess {
         Ok(match output {
             OnlineAddPointResult::Ready(o) => AddPointResult {
                 status: "ready".to_string(),
-                point: Some(OnlineOutput {
+                point: Either::A(OnlineOutput {
                     y: o.y,
                     standard_error: o.standard_error,
                     residual: o.residual,
@@ -942,11 +944,11 @@ impl OnlineLowess {
             },
             OnlineAddPointResult::Dropped => AddPointResult {
                 status: "dropped".to_string(),
-                point: None,
+                point: Either::B(Null),
             },
             OnlineAddPointResult::Filling => AddPointResult {
                 status: "filling".to_string(),
-                point: None,
+                point: Either::B(Null),
             },
         })
     }

@@ -125,12 +125,11 @@ fn test_boundary_zero_dx() {
     let x = vec![1.0, 1.0, 2.0, 2.0];
     let y = vec![10.0, 20.0, 30.0, 40.0];
 
-    // x[1] - x[0] = 0.
+    // x[1] - x[0] = 0 → unit edge spacing so pads stay ordered.
     let (px, _) = apply_boundary_policy(&x, &y, 4, BoundaryPolicy::Extend);
 
-    // Padding should all have x=1.0 on the left
-    assert_eq!(px[0], 1.0);
-    assert_eq!(px[1], 1.0);
+    assert_eq!(px[0], -1.0);
+    assert_eq!(px[1], 0.0);
 }
 
 /// Test boundary policy with a small window (size 2).

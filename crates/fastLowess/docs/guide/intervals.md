@@ -312,7 +312,7 @@ fn main() -> Result<(), LowessError> {
         .build()?;
     for i in 0..12 {
         let x = i as f64 * 0.2;
-        if let Some(output) = model.add_point(x, x.sin())? {
+        if let Some(output) = model.add_point(x, x.sin())?.ready() {
             assert!(output.standard_error.is_some());
             assert!(output.confidence_lower.is_some());
             assert!(output.prediction_upper.is_some());

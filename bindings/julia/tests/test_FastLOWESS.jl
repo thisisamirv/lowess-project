@@ -354,8 +354,10 @@ using FastLOWESS
             y = 2 .* x .+ randn(50)
 
             online = OnlineLowess(fraction = 0.3, window_capacity = 20, min_points = 5)
-            results =
-                filter(r -> r isa OnlineOutput, [add_point(online, xi, yi) for (xi, yi) ∈ zip(x, y)])
+            results = filter(
+                r -> r isa OnlineOutput,
+                [add_point(online, xi, yi) for (xi, yi) ∈ zip(x, y)],
+            )
 
             @test length(results) > 0
         end
@@ -365,16 +367,20 @@ using FastLOWESS
             y = 20.0 .+ 5.0 .* sin.(x .* 0.1)
 
             o1 = OnlineLowess(fraction = 0.3, window_capacity = 50, update_mode = "full")
-            results_full =
-                filter(r -> r isa OnlineOutput, [add_point(o1, xi, yi) for (xi, yi) ∈ zip(x, y)])
+            results_full = filter(
+                r -> r isa OnlineOutput,
+                [add_point(o1, xi, yi) for (xi, yi) ∈ zip(x, y)],
+            )
 
             o2 = OnlineLowess(
                 fraction = 0.3,
                 window_capacity = 50,
                 update_mode = "incremental",
             )
-            results_inc =
-                filter(r -> r isa OnlineOutput, [add_point(o2, xi, yi) for (xi, yi) ∈ zip(x, y)])
+            results_inc = filter(
+                r -> r isa OnlineOutput,
+                [add_point(o2, xi, yi) for (xi, yi) ∈ zip(x, y)],
+            )
 
             @test length(results_full) > 0
             @test length(results_inc) > 0
@@ -408,8 +414,10 @@ using FastLOWESS
                 outputs = ["se"],
                 intervals = (confidence = 0.95, prediction = 0.95),
             )
-            results =
-                filter(r -> r isa OnlineOutput, [add_point(online, xi, yi) for (xi, yi) ∈ zip(x, y)])
+            results = filter(
+                r -> r isa OnlineOutput,
+                [add_point(online, xi, yi) for (xi, yi) ∈ zip(x, y)],
+            )
 
             @test length(results) > 0
             last_result = results[end]
@@ -482,7 +490,10 @@ using FastLOWESS
             with_diagnostics,
         )
         with_model = fit(Lowess(retain_model = true), x, y)
-        @test_throws ArgumentError append!(fit(Lowess(retain_model = true), x, y), with_model)
+        @test_throws ArgumentError append!(
+            fit(Lowess(retain_model = true), x, y),
+            with_model,
+        )
     end
 
     @testset "Result Fields" begin

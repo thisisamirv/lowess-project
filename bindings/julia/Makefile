@@ -37,18 +37,26 @@ JL_PKG := fastlowess-jl
 JL_DIR := bindings/julia
 JL_TEST_DIR := bindings/julia/tests
 
+# Honor CARGO_TARGET_DIR when set (CI / sandboxes); otherwise workspace `target/`.
+CARGO_OUT_DIR := $(if $(CARGO_TARGET_DIR),$(subst \,/,$(CARGO_TARGET_DIR)),target)
+
 ifeq ($(HOST_PLATFORM),windows)
-	JL_SHARED_LIB  := target/release/fastlowess_jl.dll
+	JL_SHARED_LIB  := $(CARGO_OUT_DIR)/release/fastlowess_jl.dll
 	JL_EXPORT_SCAN := objdump -p $(JL_SHARED_LIB)
 else ifeq ($(HOST_PLATFORM),macos)
-	JL_SHARED_LIB  := target/release/libfastlowess_jl.dylib
+	JL_SHARED_LIB  := $(CARGO_OUT_DIR)/release/libfastlowess_jl.dylib
 	JL_EXPORT_SCAN := nm -gU $(JL_SHARED_LIB)
 else
-	JL_SHARED_LIB  := target/release/libfastlowess_jl.so
+	JL_SHARED_LIB  := $(CARGO_OUT_DIR)/release/libfastlowess_jl.so
 	JL_EXPORT_SCAN := nm -D $(JL_SHARED_LIB)
 endif
 
+# GNU make's abspath treats `C:/...` as relative on Windows and prefixes cwd.
+ifdef CARGO_TARGET_DIR
+JL_SHARED_LIB_ABS := $(subst \,/,$(CARGO_TARGET_DIR))/release/$(notdir $(JL_SHARED_LIB))
+else
 JL_SHARED_LIB_ABS := $(abspath $(JL_SHARED_LIB))
+endif
 
 .PHONY: default dev clean _julia_checks_internal
 
@@ -144,8 +152,9 @@ _julia_checks_internal:
 		if length(JET.get_reports(report)) > 0; @error "JET found type errors"; exit(1); end'
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (julia)..."
-	@$(PYTHON) dev/check_links.py --lang julia
-	@$(PYTHON) dev/verify_snippets.py --lang julia --timeout 120 --update-outputs
+	@export FASTLOWESS_LIB=$(JL_SHARED_LIB_ABS) && \
+	$(PYTHON) dev/check_links.py --lang julia && \
+	$(PYTHON) dev/verify_snippets.py --lang julia --timeout 120 --update-outputs
 	@echo "$(JL_PKG) checks completed successfully!"
 	@echo ""
 	@echo "To use in Julia:"

@@ -27,7 +27,13 @@ final class Inputs {
     }
 
     static void requireCustomWeights(double[] customWeights, int yLength) {
-        if (customWeights != null && customWeights.length != yLength) {
+        if (customWeights == null) {
+            return;
+        }
+        if (customWeights.length == 0) {
+            throw new IllegalArgumentException("customWeights must not be empty");
+        }
+        if (customWeights.length != yLength) {
             throw new IllegalArgumentException("customWeights must match y length");
         }
     }

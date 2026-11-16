@@ -180,7 +180,7 @@ fn main() -> Result<(), LowessError> {
 
     let mut shown = 0;
     for i in 0..n {
-        if let Some(output) = processor.add_point(x[i], y[i])? {
+        if let Some(output) = processor.add_point(x[i], y[i])?.ready() {
             println!("{}", output.y);
             shown += 1;
             if shown >= 5 {

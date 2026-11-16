@@ -269,16 +269,16 @@ fn test_online_adapter() {
 
     // 1st point (not enough)
     let out1 = processor.add_point(1.0, 2.0).unwrap();
-    assert!(out1.is_none());
+    assert!(out1.is_filling());
 
     // 2nd point (not enough)
     let out2 = processor.add_point(2.0, 4.0).unwrap();
-    assert!(out2.is_none());
+    assert!(out2.is_filling());
 
     // 3rd point (enough!)
     let out3 = processor.add_point(3.0, 6.0).unwrap();
-    assert!(out3.is_some());
-    let val = out3.unwrap();
+    assert!(out3.is_ready());
+    let val = out3.ready().unwrap();
     assert_abs_diff_eq!(val.y, 6.0, epsilon = 0.1);
 
     // Bulk add
@@ -286,8 +286,8 @@ fn test_online_adapter() {
     let y_bulk = vec![8.0, 10.0];
     let results = processor.add_points(&x_bulk, &y_bulk).unwrap();
     assert_eq!(results.len(), 2);
-    assert!(results[0].is_some());
-    assert!(results[1].is_some());
+    assert!(results[0].is_ready());
+    assert!(results[1].is_ready());
 }
 
 #[test]
@@ -302,7 +302,10 @@ fn test_online_adapter_return_derivative() {
 
     let mut last = None;
     for i in 0..6 {
-        last = processor.add_point(i as f64, 2.0 * i as f64 + 1.0).unwrap().ready();
+        last = processor
+            .add_point(i as f64, 2.0 * i as f64 + 1.0)
+            .unwrap()
+            .ready();
     }
     assert_abs_diff_eq!(last.unwrap().derivative.unwrap(), 2.0, epsilon = 1e-9);
 }

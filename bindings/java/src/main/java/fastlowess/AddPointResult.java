@@ -13,6 +13,8 @@ import java.util.Optional;
 public record AddPointResult(OnlinePointStatus status, Optional<PointResult> point) {
 
     /**
+     * Whether this result includes a smoothed point.
+     *
      * @return {@code true} when {@link #status()} is
      * {@link OnlinePointStatus#READY}
      */

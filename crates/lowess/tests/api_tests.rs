@@ -789,12 +789,12 @@ fn test_online_propagates_options() {
     let ob = base.window_capacity(5).adapter(Online);
     let mut online = ob.build().expect("online builder build ok");
 
-    assert_eq!(online.add_point(0.0, 1.0).expect("ok"), None);
-    assert!(online.add_point(1.0, 3.0).expect("ok").is_some());
+    assert!(online.add_point(0.0, 1.0).expect("ok").is_filling());
+    assert!(online.add_point(1.0, 3.0).expect("ok").is_ready());
 
     let third = online.add_point(2.0, 5.0).expect("ok");
-    assert!(third.is_some());
-    assert_relative_eq!(third.unwrap().y, 5.0, epsilon = 1e-12);
+    assert!(third.is_ready());
+    assert_relative_eq!(third.ready().unwrap().y, 5.0, epsilon = 1e-12);
     assert!(online.window_size() > 0);
 
     online.reset();

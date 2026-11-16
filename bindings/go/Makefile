@@ -98,8 +98,11 @@ dev:
 	@echo "=============================================================================="
 	@echo "2b. Go lint (golangci-lint)..."
 	@echo "=============================================================================="
-	@if ! command -v golangci-lint >/dev/null 2>&1; then \
-		echo "golangci-lint not found. Installing $(GOLANGCI_LINT_VERSION)..."; \
+	@_want="$(GOLANGCI_LINT_VERSION)"; _want="$${_want#v}"; \
+	_have=""; command -v golangci-lint >/dev/null 2>&1 && \
+		_have=$$(golangci-lint version 2>/dev/null | sed -n 's/.*version \([0-9][^ ]*\).*/\1/p' | head -n1); \
+	if [ -z "$$_have" ] || [ "$$_have" != "$$_want" ]; then \
+		echo "Installing golangci-lint $(GOLANGCI_LINT_VERSION) (have: $${_have:-none})..."; \
 		curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b "$$(go env GOPATH)/bin" $(GOLANGCI_LINT_VERSION); \
 		export PATH="$$(go env GOPATH)/bin:$$PATH"; \
 	fi; \

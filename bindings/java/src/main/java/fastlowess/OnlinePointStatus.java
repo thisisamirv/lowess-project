@@ -21,6 +21,8 @@ public enum OnlinePointStatus {
     DROPPED;
 
     /**
+     * Whether a smoothed point is available for this outcome.
+     *
      * @return {@code true} when this status is {@link #READY}
      */
     public boolean isReady() {

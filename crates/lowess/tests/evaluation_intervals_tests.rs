@@ -798,10 +798,10 @@ fn test_bootstrap_online_full_matches_batch_window() {
     for idx in 0..x.len() {
         let output = online.add_point(x[idx], y[idx]).unwrap();
         if idx + 1 < 5 {
-            assert!(output.is_none());
+            assert!(output.is_filling());
             continue;
         }
-        let output = output.unwrap();
+        let output = output.ready().unwrap();
         let start = (idx + 1).saturating_sub(10);
         let batch = Lowess::<f64>::new()
             .fraction(0.6)
@@ -865,7 +865,7 @@ fn test_bootstrap_online_se_without_interval_levels() {
         let x = idx as f64;
         let output = online.add_point(x, x.sin()).unwrap();
         if idx >= 2 {
-            let output = output.unwrap();
+            let output = output.ready().unwrap();
             assert!(output.standard_error.unwrap().is_finite());
             assert!(output.confidence_lower.is_none());
             assert!(output.prediction_lower.is_none());

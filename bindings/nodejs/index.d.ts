@@ -59,14 +59,6 @@ export declare class LowessResult {
   predict(newX: Float64Array, options?: PredictOptions | undefined | null): PredictOutput
 }
 
-/** Result of `OnlineLowess.add_point()`. */
-export interface AddPointResult {
-  /** `"filling"`, `"ready"`, or `"dropped"`. */
-  status: 'filling' | 'ready' | 'dropped'
-  /** Smoothed output when `status` is `"ready"`; otherwise `null`. */
-  point?: OnlineOutput
-}
-
 /** Online LOWESS smoother for real-time data. */
 export declare class OnlineLowess {
   /** Create a new online LOWESS smoother. */
@@ -112,6 +104,18 @@ export declare class StreamingLowess {
   finalize(): LowessResult
   /** Release native streaming state early. Idempotent. */
   close(): void
+}
+
+/** Result of [`OnlineLowess::add_point`]. */
+export interface AddPointResult {
+  /** `"filling"`, `"ready"`, or `"dropped"`. */
+  status: 'filling' | 'ready' | 'dropped'
+  /**
+   * Smoothed output when `status` is `"ready"`; otherwise `null`.
+   *
+   * Uses [`Either`] so a missing point is JS `null` (not `undefined`).
+   */
+  point: OnlineOutput | null
 }
 
 /** Grouped cross-validation configuration. Seed k-fold shuffling with the outer `seed`. */
@@ -232,9 +236,6 @@ export interface OnlineSmoothOptions {
   missing?: string
 }
 
-/** Download or install a prebuilt GPU-enabled native addon sidecar. */
-export declare function installGpu(options?: { yes?: boolean; localPath?: string }): Promise<void>
-
 /** Options for `LowessResult.predict()`. */
 export interface PredictOptions {
   /** Optional output components: se, derivative. */
@@ -350,3 +351,6 @@ export interface StreamingSmoothOptions {
   /** Policy for non-finite (NaN/Inf) values in each chunk ("error", "drop"). Default: "error". */
   missing?: string
 }
+
+/** Download or install a prebuilt GPU-enabled native addon sidecar. */
+export declare function installGpu(options?: { yes?: boolean; localPath?: string }): Promise<void>

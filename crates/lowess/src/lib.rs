@@ -399,7 +399,7 @@
 //! let mut updates = 0;
 //! let mut latest = None;
 //! for (&xi, &yi) in x.iter().zip(&y) {
-//!     if let Some(output) = model.add_point(xi, yi)?.ready().ready() {
+//!     if let Some(output) = model.add_point(xi, yi)?.ready() {
 //!         updates += 1;
 //!         latest = Some(output.y);
 //!     }

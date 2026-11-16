@@ -463,8 +463,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> StreamingLowess<T> {
         {
             let deriv = derivative.as_ref().ok_or_else(|| {
                 LowessError::InvalidInput(
-                    "return_derivative was set but the smoother did not produce derivatives"
-                        .into(),
+                    "return_derivative was set but the smoother did not produce derivatives".into(),
                 )
             })?;
             let prev_deriv = self.buffer.overlap_derivative.as_vec();

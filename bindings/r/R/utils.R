@@ -77,13 +77,6 @@ validate_numeric_vector <- function(value, name) {
     }
 }
 
-validate_scalar_numeric <- function(value, name) {
-    validate_numeric_vector(value, name)
-    if (length(value) != 1L) {
-        stop(sprintf("%s must be a single numeric value", name), call. = FALSE)
-    }
-}
-
 validate_named_options <- function(options, valid, name) {
     if (!is.list(options)) {
         stop(sprintf("`%s` must be a named list", name), call. = FALSE)
@@ -110,6 +103,19 @@ validate_named_options <- function(options, valid, name) {
 validate_scalar_numeric <- function(value, name) {
     if (!is.numeric(value) || length(value) != 1L || !is.finite(value)) {
         stop(sprintf("%s must be a single numeric value", name))
+    }
+}
+
+# Length-1 numeric for Online add_point; non-finite values are allowed so the
+# native missing policy can return "dropped" / raise as configured.
+validate_online_scalar <- function(value, name) {
+    if (
+        !is.numeric(value) ||
+            is.complex(value) ||
+            length(value) != 1L ||
+            !is.null(dim(value))
+    ) {
+        stop(sprintf("%s must be a single numeric value", name), call. = FALSE)
     }
 }
 

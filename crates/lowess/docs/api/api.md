@@ -172,7 +172,7 @@ Policy for handling non-finite (NaN/Inf) values in `x`/`y` (and, in Batch, `cust
 | `"error"` (default) | Return an error (`InvalidNumericValue`) if any value is non-finite |
 | `"drop"` | Silently remove observations where `x` or `y` is non-finite before fitting |
 
-**Note:** A length mismatch between `x` and `y` always errors, even under `"drop"` — that is a caller error, not a data-quality issue for `missing` to mask. In Online, `"drop"` silently ignores a non-finite point (`add_point` returns `Ok(None)`) instead of adding it to the window.
+**Note:** A length mismatch between `x` and `y` always errors, even under `"drop"` — that is a caller error, not a data-quality issue for `missing` to mask. In Online, `"drop"` silently ignores a non-finite point (`add_point` returns `Ok(AddPointResult::Dropped)`) instead of adding it to the window.
 
 ### outputs
 

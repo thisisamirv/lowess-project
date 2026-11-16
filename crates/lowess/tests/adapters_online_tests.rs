@@ -83,7 +83,10 @@ fn test_online_add_point_basic() {
 
     // First point returns Filling (need min_points)
     assert!(
-        processor.add_point(0.0, 1.0).expect("add_point ok").is_filling(),
+        processor
+            .add_point(0.0, 1.0)
+            .expect("add_point ok")
+            .is_filling(),
         "First point should return Filling"
     );
 
@@ -1151,7 +1154,10 @@ fn test_online_missing_drop_ignores_nan_point() {
         .add_point(1.0, f64::NAN)
         .expect("drop policy should not error on a non-finite point");
 
-    assert!(result.is_dropped(), "a dropped point should produce Dropped");
+    assert!(
+        result.is_dropped(),
+        "a dropped point should produce Dropped"
+    );
     assert_eq!(
         processor.window_size(),
         0,
@@ -1180,7 +1186,10 @@ fn test_online_derivative_none_by_default() {
 
     let mut last = None;
     for i in 0..5 {
-        last = processor.add_point(i as f64, 2.0 * i as f64 + 1.0).unwrap().ready();
+        last = processor
+            .add_point(i as f64, 2.0 * i as f64 + 1.0)
+            .unwrap()
+            .ready();
     }
     assert!(last.unwrap().derivative.is_none());
 }
@@ -1213,7 +1222,10 @@ fn test_online_derivative_incremental_mode() {
 
     let mut last = None;
     for i in 0..10 {
-        last = processor.add_point(i as f64, 2.0 * i as f64 + 1.0).unwrap().ready();
+        last = processor
+            .add_point(i as f64, 2.0 * i as f64 + 1.0)
+            .unwrap()
+            .ready();
     }
     assert_relative_eq!(last.unwrap().derivative.unwrap(), 2.0, epsilon = 1e-9);
 }
@@ -1232,7 +1244,10 @@ fn test_online_derivative_full_mode() {
 
     let mut last = None;
     for i in 0..10 {
-        last = processor.add_point(i as f64, 3.0 * i as f64 - 2.0).unwrap().ready();
+        last = processor
+            .add_point(i as f64, 3.0 * i as f64 - 2.0)
+            .unwrap()
+            .ready();
     }
     assert_relative_eq!(last.unwrap().derivative.unwrap(), 3.0, epsilon = 1e-9);
 }

@@ -62,11 +62,7 @@ impl FromStr for BoundaryPolicy {
 #[inline]
 fn edge_spacing<T: Float>(inner: T, outer: T) -> T {
     let dx = outer - inner;
-    if dx == T::zero() {
-        T::one()
-    } else {
-        dx
-    }
+    if dx == T::zero() { T::one() } else { dx }
 }
 
 // Apply a boundary policy to pad the input data.

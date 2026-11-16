@@ -281,7 +281,6 @@ func NewLowess(opts Options) (*Lowess, error) {
 	return l, nil
 }
 
-
 func finalizeLowess(l *Lowess) {
 	_ = l.Close()
 }

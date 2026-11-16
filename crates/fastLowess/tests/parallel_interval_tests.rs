@@ -165,7 +165,9 @@ fn test_online_bootstrap_full_update() {
         let y = x.sin() + 0.1 * (x * 7.0).sin();
         let output = online.add_point(x, y).unwrap();
         if idx >= 4 {
-            let output = output.unwrap();
+            let output = output
+                .ready()
+                .expect("online output ready after min_points");
             assert!(output.standard_error.unwrap().is_finite());
             assert!(output.confidence_lower.unwrap() <= output.confidence_upper.unwrap());
             assert!(output.prediction_lower.unwrap() <= output.prediction_upper.unwrap());

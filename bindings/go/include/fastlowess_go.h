@@ -17,8 +17,8 @@ typedef struct fastlowess_GoStreamingLowess fastlowess_GoStreamingLowess;
  */
 typedef struct fastlowess_GoLowessResult {
   /**
-   * x values (length = n). Same order as the input unless `return_sorted` was
-   * set, in which case ascending by x.
+   * x values (length = n). Same order as the input unless `return_sorted` was set,
+   * in which case ascending by x.
    */
   double *x;
   /**
@@ -85,13 +85,11 @@ typedef struct fastlowess_GoLowessResult {
   double effective_df;
   double residual_sd;
   /**
-   * Opaque handle for `go_predict()`, non-NULL only if `retain_model` was set
-   * to 1.
+   * Opaque handle for `go_predict()`, non-NULL only if `retain_model` was set to 1.
    *
-   * Ownership: callers that keep the handle must call
-   * `go_lowess_take_predict_handle` before `go_lowess_free_result`. Otherwise
-   * `go_lowess_free_result` frees it. Taken handles must eventually be freed
-   * via `go_predict_handle_free`.
+   * Ownership: callers that keep the handle must call `go_lowess_take_predict_handle`
+   * before `go_lowess_free_result`. Otherwise `go_lowess_free_result` frees it.
+   * Taken handles must eventually be freed via `go_predict_handle_free`.
    */
   struct fastlowess_GoPredictHandle *predict_handle;
   /**
@@ -101,8 +99,8 @@ typedef struct fastlowess_GoLowessResult {
 } fastlowess_GoLowessResult;
 
 /**
- * Result of `go_predict()`. All arrays are allocated by Rust and must be freed
- * via `go_predict_free_result`.
+ * Result of `go_predict()`. All arrays are allocated by Rust and must be freed via
+ * `go_predict_free_result`.
  */
 typedef struct fastlowess_GoPredictResult {
   /**
@@ -190,19 +188,16 @@ extern "C" {
 #endif // __cplusplus
 
 /**
- * Thread-local last-error message from the most recent failed constructor on
- * this OS thread.
+ * Thread-local last-error message from the most recent failed constructor on this OS thread.
  *
- * The returned pointer is owned by the library and remains valid only until the
- * next call that sets or clears the last-error slot on this thread. Callers
- * must read it on the same OS thread as the failing call. Returns null when no
- * error is stored.
+ * The returned pointer is owned by the library and remains valid only until the next call that
+ * sets or clears the last-error slot on this thread. Callers must read it on the same OS thread
+ * as the failing call. Returns null when no error is stored.
  */
 const char *go_last_error_message(void);
 
 /**
- * Returns 1 if this library was built with the `gpu` Cargo feature enabled, 0
- * otherwise.
+ * Returns 1 if this library was built with the `gpu` Cargo feature enabled, 0 otherwise.
  */
 int go_gpu_enabled(void);
 
@@ -212,16 +207,31 @@ int go_gpu_enabled(void);
  * # Safety
  * Pointers must be valid null-terminated strings or null. Arrays must be valid.
  */
-struct fastlowess_GoLowess *go_lowess_new(
-    double fraction, int iterations, double delta, const char *weight_function,
-    const char *robustness_method, const char *scaling_method,
-    const char *boundary_policy, double confidence_intervals,
-    double prediction_intervals, int return_diagnostics, int return_residuals,
-    int return_robustness_weights, const char *zero_weight_fallback,
-    double auto_converge, const double *cv_fractions, size_t cv_fractions_len,
-    const char *cv_method, int cv_k, int parallel, int return_se,
-    int return_sorted, const char *backend, const char *missing,
-    int retain_model, int return_derivative);
+struct fastlowess_GoLowess *go_lowess_new(double fraction,
+                                          int iterations,
+                                          double delta,
+                                          const char *weight_function,
+                                          const char *robustness_method,
+                                          const char *scaling_method,
+                                          const char *boundary_policy,
+                                          double confidence_intervals,
+                                          double prediction_intervals,
+                                          int return_diagnostics,
+                                          int return_residuals,
+                                          int return_robustness_weights,
+                                          const char *zero_weight_fallback,
+                                          double auto_converge,
+                                          const double *cv_fractions,
+                                          size_t cv_fractions_len,
+                                          const char *cv_method,
+                                          int cv_k,
+                                          int parallel,
+                                          int return_se,
+                                          int return_sorted,
+                                          const char *backend,
+                                          const char *missing,
+                                          int retain_model,
+                                          int return_derivative);
 
 /**
  * Set one seed for CV and residual bootstrap.
@@ -229,8 +239,7 @@ struct fastlowess_GoLowess *go_lowess_new(
  * # Safety
  * ptr must be valid.
  */
-void go_lowess_set_seed(struct fastlowess_GoLowess *ptr,
-                        unsigned long long seed);
+void go_lowess_set_seed(struct fastlowess_GoLowess *ptr, unsigned long long seed);
 
 /**
  * Configure residual-bootstrap refits for Batch intervals.
@@ -250,7 +259,8 @@ void go_lowess_set_bootstrap(struct fastlowess_GoLowess *ptr, size_t n_boot);
  */
 struct fastlowess_GoLowessResult go_lowess_fit(struct fastlowess_GoLowess *ptr,
                                                const double *x_values,
-                                               const double *y_values, size_t n,
+                                               const double *y_values,
+                                               size_t n,
                                                const double *custom_weights,
                                                size_t custom_weights_len);
 
@@ -263,22 +273,28 @@ struct fastlowess_GoLowessResult go_lowess_fit(struct fastlowess_GoLowess *ptr,
 void go_lowess_free(struct fastlowess_GoLowess *ptr);
 
 /**
- * Evaluate a fitted model (retained via `retain_model = 1`) at out-of-sample
- * query points not in the training set.
+ * Evaluate a fitted model (retained via `retain_model = 1`) at out-of-sample query
+ * points not in the training set.
  *
  * # Safety
  * `handle` must be a valid pointer obtained via `go_lowess_take_predict_handle`
  * (or still owned in a result that has not been freed).
- * `new_x` must be a valid array of length `new_x_len`. `extrapolation` must be
- * a valid null-terminated string or null (defaults to "clamp").
+ * `new_x` must be a valid array of length `new_x_len`. `extrapolation` must be a
+ * valid null-terminated string or null (defaults to "clamp").
  */
-struct fastlowess_GoPredictResult
-go_predict(struct fastlowess_GoPredictHandle *handle, const double *new_x,
-           size_t new_x_len, int return_se, double confidence_level,
-           double prediction_level, int return_derivative,
-           const char *extrapolation, double max_extrapolation_distance,
-           double max_neighbor_distance, size_t n_boot, unsigned long long seed,
-           int has_seed);
+struct fastlowess_GoPredictResult go_predict(struct fastlowess_GoPredictHandle *handle,
+                                             const double *new_x,
+                                             size_t new_x_len,
+                                             int return_se,
+                                             double confidence_level,
+                                             double prediction_level,
+                                             int return_derivative,
+                                             const char *extrapolation,
+                                             double max_extrapolation_distance,
+                                             double max_neighbor_distance,
+                                             size_t n_boot,
+                                             unsigned long long seed,
+                                             int has_seed);
 
 /**
  * Free a GoPredictResult's heap-allocated buffers.
@@ -294,8 +310,7 @@ void go_predict_free_result(struct fastlowess_GoPredictResult *result);
  * Free a `GoPredictHandle` returned via `GoLowessResult::predict_handle`.
  *
  * # Safety
- * `ptr` must be a valid pointer returned via `GoLowessResult::predict_handle`,
- * or null.
+ * `ptr` must be a valid pointer returned via `GoLowessResult::predict_handle`, or null.
  */
 void go_predict_handle_free(struct fastlowess_GoPredictHandle *ptr);
 
@@ -305,15 +320,30 @@ void go_predict_handle_free(struct fastlowess_GoPredictHandle *ptr);
  * # Safety
  * Pointers must be valid null-terminated strings or null.
  */
-struct fastlowess_GoStreamingLowess *go_streaming_new(
-    double fraction, int iterations, double delta, const char *weight_function,
-    const char *robustness_method, const char *scaling_method,
-    const char *boundary_policy, int return_diagnostics, int return_residuals,
-    int return_robustness_weights, const char *zero_weight_fallback,
-    double auto_converge, int parallel, int chunk_size, int overlap,
-    const char *merge_strategy, const char *missing, int return_derivative,
-    int return_se, double confidence_intervals, double prediction_intervals,
-    size_t n_boot, unsigned long long seed, int has_seed);
+struct fastlowess_GoStreamingLowess *go_streaming_new(double fraction,
+                                                      int iterations,
+                                                      double delta,
+                                                      const char *weight_function,
+                                                      const char *robustness_method,
+                                                      const char *scaling_method,
+                                                      const char *boundary_policy,
+                                                      int return_diagnostics,
+                                                      int return_residuals,
+                                                      int return_robustness_weights,
+                                                      const char *zero_weight_fallback,
+                                                      double auto_converge,
+                                                      int parallel,
+                                                      int chunk_size,
+                                                      int overlap,
+                                                      const char *merge_strategy,
+                                                      const char *missing,
+                                                      int return_derivative,
+                                                      int return_se,
+                                                      double confidence_intervals,
+                                                      double prediction_intervals,
+                                                      size_t n_boot,
+                                                      unsigned long long seed,
+                                                      int has_seed);
 
 /**
  * Process a chunk of data.
@@ -322,9 +352,10 @@ struct fastlowess_GoStreamingLowess *go_streaming_new(
  * `ptr` must be valid. `x_values` and `y_values` must be valid arrays of
  * length `n`.
  */
-struct fastlowess_GoLowessResult
-go_streaming_process(struct fastlowess_GoStreamingLowess *ptr,
-                     const double *x_values, const double *y_values, size_t n);
+struct fastlowess_GoLowessResult go_streaming_process(struct fastlowess_GoStreamingLowess *ptr,
+                                                      const double *x_values,
+                                                      const double *y_values,
+                                                      size_t n);
 
 /**
  * Finalize the streaming process.
@@ -332,8 +363,7 @@ go_streaming_process(struct fastlowess_GoStreamingLowess *ptr,
  * # Safety
  * `ptr` must be valid.
  */
-struct fastlowess_GoLowessResult
-go_streaming_finalize(struct fastlowess_GoStreamingLowess *ptr);
+struct fastlowess_GoLowessResult go_streaming_finalize(struct fastlowess_GoStreamingLowess *ptr);
 
 /**
  * Free streaming model.
@@ -349,16 +379,27 @@ void go_streaming_free(struct fastlowess_GoStreamingLowess *ptr);
  * # Safety
  * Pointers must be valid null-terminated strings or null.
  */
-struct fastlowess_GoOnlineLowess *
-go_online_new(double fraction, int iterations, double delta,
-              const char *weight_function, const char *robustness_method,
-              const char *scaling_method, const char *boundary_policy,
-              int return_robustness_weights, const char *zero_weight_fallback,
-              double auto_converge, int window_capacity, int min_points,
-              const char *update_mode, const char *missing,
-              int return_derivative, int return_se, double confidence_intervals,
-              double prediction_intervals, size_t n_boot,
-              unsigned long long seed, int has_seed);
+struct fastlowess_GoOnlineLowess *go_online_new(double fraction,
+                                                int iterations,
+                                                double delta,
+                                                const char *weight_function,
+                                                const char *robustness_method,
+                                                const char *scaling_method,
+                                                const char *boundary_policy,
+                                                int return_robustness_weights,
+                                                const char *zero_weight_fallback,
+                                                double auto_converge,
+                                                int window_capacity,
+                                                int min_points,
+                                                const char *update_mode,
+                                                const char *missing,
+                                                int return_derivative,
+                                                int return_se,
+                                                double confidence_intervals,
+                                                double prediction_intervals,
+                                                size_t n_boot,
+                                                unsigned long long seed,
+                                                int has_seed);
 
 /**
  * Add a single point to the model and return its smoothed value.
@@ -368,8 +409,9 @@ go_online_new(double fraction, int iterations, double delta,
  * # Safety
  * `ptr` must be a valid `GoOnlineLowess` pointer.
  */
-struct fastlowess_GoOnlineOutput
-go_online_add_point(struct fastlowess_GoOnlineLowess *ptr, double x, double y);
+struct fastlowess_GoOnlineOutput go_online_add_point(struct fastlowess_GoOnlineLowess *ptr,
+                                                     double x,
+                                                     double y);
 
 /**
  * Free heap-owned fields in a `GoOnlineOutput` (currently the error string).
@@ -398,8 +440,7 @@ void go_online_free(struct fastlowess_GoOnlineLowess *ptr);
  * # Safety
  * `result` must be a valid pointer to a `GoLowessResult`, or null.
  */
-struct fastlowess_GoPredictHandle *
-go_lowess_take_predict_handle(struct fastlowess_GoLowessResult *result);
+struct fastlowess_GoPredictHandle *go_lowess_take_predict_handle(struct fastlowess_GoLowessResult *result);
 
 /**
  * Free a GoLowessResult.
@@ -414,7 +455,7 @@ go_lowess_take_predict_handle(struct fastlowess_GoLowessResult *result);
 void go_lowess_free_result(struct fastlowess_GoLowessResult *result);
 
 #ifdef __cplusplus
-} // extern "C"
-#endif // __cplusplus
+}  // extern "C"
+#endif  // __cplusplus
 
-#endif /* FASTLOWESS_GO_H */
+#endif  /* FASTLOWESS_GO_H */

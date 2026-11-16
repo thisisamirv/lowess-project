@@ -190,15 +190,15 @@ fit.Lowess <- function(model, x, y, custom_weights = NULL, ...) {
 #' predict(model, c(2.5, 7.5))
 #' @export
 predict.Lowess <- function(
-  object,
-  new_x,
-  outputs = NULL,
-  intervals = NULL,
-  seed = NULL,
-  extrapolation = "clamp",
-  max_extrapolation_distance = NULL,
-  max_neighbor_distance = NULL,
-  ...
+    object,
+    new_x,
+    outputs = NULL,
+    intervals = NULL,
+    seed = NULL,
+    extrapolation = "clamp",
+    max_extrapolation_distance = NULL,
+    max_neighbor_distance = NULL,
+    ...
 ) {
     if (...length() > 0L) {
         stop("unused arguments (...)")
@@ -294,8 +294,8 @@ add_point.OnlineLowess <- function(model, x, y, ...) {
     if (...length() > 0L) {
         stop("unused arguments (...)")
     }
-    validate_scalar_numeric(x, "x")
-    validate_scalar_numeric(y, "y")
+    validate_online_scalar(x, "x")
+    validate_online_scalar(y, "y")
     model$handle$add_point(as.double(x), as.double(y))
 }
 
@@ -310,6 +310,10 @@ add_point.OnlineLowess <- function(model, x, y, ...) {
 #'   object.
 #' @param ... Must be empty.
 #' @return \code{NULL}, invisibly.
+#' @examples
+#' model <- Lowess(fraction = 0.3, retain_model = TRUE)
+#' invisible(fit(model, 1:10, sin(1:10)))
+#' close(model)
 #' @export
 close.Lowess <- function(con, ...) {
     if (...length() > 0L) {

@@ -131,6 +131,26 @@ test_that("add_point.OnlineLowess errors on unused ... arguments", {
     expect_error(add_point(model, 1.0, 0.5, extra = 1), "unused arguments")
 })
 
+test_that("close methods release adapters and reject unused arguments", {
+    batch <- Lowess(fraction = 0.3, retain_model = TRUE)
+    invisible(fit(batch, 1:10, sin(1:10)))
+    expect_null(close(batch))
+    expect_null(close(batch))
+    expect_error(close(batch, extra = 1), "unused arguments")
+
+    streaming <- StreamingLowess(fraction = 0.5, chunk_size = 10L)
+    invisible(process_chunk(streaming, 1:10, sin(1:10)))
+    expect_null(close(streaming))
+    expect_null(close(streaming))
+    expect_error(close(streaming, extra = 1), "unused arguments")
+
+    online <- OnlineLowess(fraction = 0.5, window_capacity = 20L)
+    invisible(add_point(online, 1.0, 0.5))
+    expect_null(close(online))
+    expect_null(close(online))
+    expect_error(close(online, extra = 1), "unused arguments")
+})
+
 # ── predict.Lowess ────────────────────────────────────────────────────────────
 
 test_that("predict.Lowess returns predicted y values", {

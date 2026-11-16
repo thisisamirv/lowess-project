@@ -526,7 +526,7 @@ function predict(
             Csize_t(iv.bootstrap),
             seed_value,
             has_seed,
-        ),
+        )
     )
 
     try
@@ -751,12 +751,7 @@ function convert_result(c_result::CJlLowessResult)
             predict_model,
         )
     finally
-        ccall(
-            (:jl_lowess_free_result, libfastlowess),
-            Cvoid,
-            (Ptr{CJlLowessResult},),
-            r,
-        )
+        ccall((:jl_lowess_free_result, libfastlowess), Cvoid, (Ptr{CJlLowessResult},), r)
     end
 end
 

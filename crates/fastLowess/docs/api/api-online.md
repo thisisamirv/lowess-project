@@ -32,7 +32,7 @@ fn main() -> Result<(), LowessError> {
 
 #### `add_point`
 
-Adds a single point to the sliding window and returns the smoothed value for that point, or `None` while the window is still filling up (fewer than `min_points` seen so far). Once the window reaches `window_capacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `update_mode` controls how much work each call does: `"incremental"` re-fits only the newest point, while `"full"` re-smooths the entire window for a more accurate but slower result.
+Adds a single point to the sliding window and returns an `AddPointResult`: `Filling` while fewer than `min_points` have been seen, `Dropped` under `missing = "drop"`, or `Ready(OnlineOutput)` once a smoothed value is available. Once the window reaches `window_capacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `update_mode` controls how much work each call does: `"incremental"` re-fits only the newest point, while `"full"` re-smooths the entire window for a more accurate but slower result.
 
 ```rust
 use fastLowess::prelude::*;
@@ -43,15 +43,15 @@ fn main() -> Result<(), LowessError> {
     let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
     let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    let mut processor = OnlineLowess::new().fraction(0.5f64).window_capacity(50usize).min_points(3usize).build()?;;
+    let mut processor = OnlineLowess::new().fraction(0.5f64).window_capacity(50usize).min_points(3usize).build()?;
 
-    // Returns None until min_points (3) are reached
-    let r1 = processor.add_point(x[0], y[0])?;  // None
-    let r2 = processor.add_point(x[1], y[1])?;  // None
+    // Returns Filling until min_points (3) are reached
+    let r1 = processor.add_point(x[0], y[0])?;  // Filling
+    let r2 = processor.add_point(x[1], y[1])?;  // Filling
 
-    // Returns Some(OnlineOutput) once enough points are available
+    // Returns Ready(OnlineOutput) once enough points are available
     let r3 = processor.add_point(x[2], y[2])?;
-    if let Some(output) = r3 {
+    if let Some(output) = r3.ready() {
         println!("Smoothed value: {}", output.y);
     }
 
@@ -63,7 +63,7 @@ fn main() -> Result<(), LowessError> {
 Smoothed value: 0.22659245357374927
 ```
 
-- Returns `Result<Option<OnlineOutput<T>>, LowessError>`.
+- Returns `Result<AddPointResult<T>, LowessError>`.
 
 #### `reset`
 
@@ -195,7 +195,7 @@ Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `add_point
 | Option | Behavior |
 | --- | --- |
 | `"error"` (default) | Return an error (`InvalidNumericValue`) |
-| `"drop"` | Silently ignore the point — `add_point` returns `Ok(None)` instead of adding it to the window |
+| `"drop"` | Silently ignore the point — `add_point` returns `Ok(AddPointResult::Dropped)` instead of adding it to the window |
 
 ### outputs
 
@@ -226,7 +226,7 @@ Maximum number of most recent points kept in the sliding window; older points ar
 
 ### min_points
 
-Minimum number of points required before smoothing starts. `add_point()` returns `None` until the window reaches this size.
+Minimum number of points required before smoothing starts. `add_point()` returns `Filling` until the window reaches this size.
 
 ### update_mode
 
@@ -247,7 +247,7 @@ Use `.intervals(IntervalsBuilder::new().confidence(0.90).prediction(0.99))` to r
 
 ### `OnlineOutput<T>`
 
-Returned by `add_point()` inside `Option`. Is `None` while the window is still filling.
+Returned inside `Ok(Ready(...))` by `add_point()`. `Filling` while the window is still filling.
 
 | Field | Type | Description |
 | --- | --- | --- |

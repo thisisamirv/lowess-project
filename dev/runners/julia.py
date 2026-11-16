@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from pathlib import Path
 
 from .base import REPO_ROOT, RunResult, Snippet, _find_exe
 
@@ -88,9 +89,15 @@ def run_julia(snippet: Snippet, timeout: int) -> RunResult:
         env["JULIA_PROJECT"] = str(julia_project)
 
     if "FASTLOWESS_LIB" not in env:
-        local_lib = REPO_ROOT / "target" / "release" / _JL_LIB_NAME
-        if local_lib.exists():
-            env["FASTLOWESS_LIB"] = str(local_lib)
+        cargo_target = os.environ.get("CARGO_TARGET_DIR")
+        candidates = []
+        if cargo_target:
+            candidates.append(Path(cargo_target) / "release" / _JL_LIB_NAME)
+        candidates.append(REPO_ROOT / "target" / "release" / _JL_LIB_NAME)
+        for local_lib in candidates:
+            if local_lib.exists():
+                env["FASTLOWESS_LIB"] = str(local_lib)
+                break
 
     try:
         t0 = time.monotonic()
