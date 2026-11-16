@@ -5,7 +5,7 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     groups:
       github-actions:
         patterns: ["*"]
@@ -18,7 +18,7 @@ updates:
   - package-ecosystem: "cargo"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     open-pull-requests-limit: 10
     groups:
       rust-dependencies:
@@ -30,7 +30,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "/bindings/nodejs"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     groups:
       npm-dependencies:
         patterns: ["*"]
@@ -41,7 +41,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "/bindings/wasm"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     groups:
       npm-dependencies:
         patterns: ["*"]
@@ -52,7 +52,7 @@ updates:
   - package-ecosystem: "pip"
     directory: "/bindings/python"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     groups:
       python-dependencies:
         patterns: ["*"]
@@ -63,7 +63,7 @@ updates:
   - package-ecosystem: "maven"
     directory: "/bindings/java"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     groups:
       maven-dependencies:
         patterns: ["*"]
@@ -74,7 +74,7 @@ updates:
   - package-ecosystem: "gomod"
     directory: "/bindings/go/fastlowess"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     groups:
       go-dependencies:
         patterns: ["*"]
@@ -85,7 +85,7 @@ updates:
   - package-ecosystem: "gomod"
     directory: "/bindings/go/tests"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     groups:
       go-dependencies:
         patterns: ["*"]
@@ -97,7 +97,7 @@ updates:
   - package-ecosystem: "gomod"
     directory: "/bindings/go/docs-site"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     groups:
       go-dependencies:
         patterns: ["*"]

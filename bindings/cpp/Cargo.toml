@@ -21,7 +21,6 @@ fastLowess = { path = "../../crates/fastLowess", version = "5.1", features = [
     "cpu",
     "dev",
 ] }
-libc = "0.2"
 
 [build-dependencies]
 cbindgen = "0.29"

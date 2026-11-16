@@ -408,7 +408,6 @@ version = "5.1.0"
 dependencies = [
  "cbindgen",
  "fastLowess",
- "libc",
 ]
 
 [[package]]

@@ -14,6 +14,7 @@ This changelog includes end-user changes only. For internal development notes, s
 * `StreamingLowess::process_chunk` rejects chunks that are not non-decreasing in `x` when merged with the previous overlap; feed ascending chunks or pre-sort the series.
 * Breaking change: renamed the public C ABI from the generic `cpp_*` prefix to `fastlowess_*` (for example `fastlowess_lowess_new`, `fastlowess_version`) so symbols do not collide with other bindings.
 * Windows MSVC releases now publish separate Debug and Release shared libraries for vcpkg consumers (both use `/MD` because the Rust MSVC standard library does).
+* Dropped the unused `libc` Rust dependency from the C++ binding crate.
 
 ### Fixed
 
