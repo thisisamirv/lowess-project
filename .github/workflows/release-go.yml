@@ -167,6 +167,11 @@ jobs:
         working-directory: bindings/go
         run: cargo build --locked --profile release-c --lib ${{ matrix.cargo_target }}
 
+      - name: Strip cgo-disallowed LTO sections
+        if: ${{ !matrix.musl_docker }}
+        shell: bash
+        run: bash bindings/go/scripts/strip-cgo-lto-sections.sh ${{ matrix.target_dir }}/libfastlowess_go.a
+
       - name: Test standalone Go consumer
         if: ${{ !matrix.musl_docker }}
         shell: bash
@@ -203,6 +208,8 @@ jobs:
               apk add --no-cache build-base curl bash git go
               cargo build --locked --profile release-c --lib \
                 --manifest-path bindings/go/Cargo.toml
+              bash bindings/go/scripts/strip-cgo-lto-sections.sh \
+                target/release-c/libfastlowess_go.a
 
               staging="$(mktemp -d)"
               cp -R bindings/go/fastlowess "$staging/fastlowess"

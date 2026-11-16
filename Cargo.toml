@@ -23,12 +23,15 @@ opt-level = 3
 lto = true
 codegen-units = 1
 
-# C/C++ binding release profile: panic=abort ensures no GCC unwind symbols
+# C/C++/Go binding release profile: panic=abort ensures no GCC unwind symbols
 # (_Unwind_Resume, _Unwind_RaiseException, etc.) are embedded in the static
 # archive or DLL, making the artifact linkable by MSVC, Clang, and GCC alike.
+# Disable LTO so the staticlib contains native objects rather than LLVM
+# bitcode (.llvmbc); newer Go cgo rejects those sections.
 [profile.release-c]
 inherits = "release"
 panic = "abort"
+lto = false
 
 # Matching Debug profile for Windows MSVC vcpkg consumers.
 [profile.debug-c]
