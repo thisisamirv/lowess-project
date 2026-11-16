@@ -3,8 +3,6 @@
 [![R-universe](https://img.shields.io/badge/R--universe-276DC3?logo=r&logoColor=white)](https://thisisamirv.r-universe.dev/rfastlowess)
 [![rfastlowess
 (R)](https://img.shields.io/badge/rfastlowess_(R)-44A833?logo=anaconda&logoColor=white)](https://anaconda.org/conda-forge/r-rfastlowess)
-[![Status at rOpenSci Software Peer
-Review](https://badges.ropensci.org/769_status.svg)](https://github.com/ropensci/software-review/issues/769)
 [![CI](https://github.com/thisisamirv/lowess-project/actions/workflows/ci-r.yml/badge.svg)](https://github.com/thisisamirv/lowess-project/actions/workflows/ci-r.yml)
 
 ![One LOWESS to Rule Them
@@ -220,6 +218,11 @@ Objects returned by fit methods and helper functions.
 
 - [`add_point()`](https://thisisamirv.github.io/lowess-project/r/reference/add_point.md)
   : Add a single point to an online LOWESS model
+
+- [`close(`*`<Lowess>`*`)`](https://thisisamirv.github.io/lowess-project/r/reference/close.Lowess.md)
+  [`close(`*`<StreamingLowess>`*`)`](https://thisisamirv.github.io/lowess-project/r/reference/close.Lowess.md)
+  [`close(`*`<OnlineLowess>`*`)`](https://thisisamirv.github.io/lowess-project/r/reference/close.Lowess.md)
+  : Release native resources held by a LOWESS model
 
 - [`plot(`*`<LowessResult>`*`)`](https://thisisamirv.github.io/lowess-project/r/reference/plot.LowessResult.md)
   : Plot Lowess Result

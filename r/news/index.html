@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastlowess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">5.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">5.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,6 +34,25 @@
       <small>Source: <a href="https://github.com/thisisamirv/lowess-project/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="5.1.0" id="rfastlowess-510">rfastlowess 5.1.0<a class="anchor" aria-label="anchor" href="#rfastlowess-510"></a></h2>
+<div class="section level3">
+<h3 id="changed-5-1-0">Changed<a class="anchor" aria-label="anchor" href="#changed-5-1-0"></a></h3>
+<ul><li>Breaking change: <code><a href="../reference/add_point.html">add_point()</a></code> returns a list with <code>status</code> of <code>"filling"</code> / <code>"ready"</code> / <code>"dropped"</code> and <code>point</code> instead of an online-output list or <code>NULL</code>.</li>
+<li>Online fits sort the sliding window by <code>x</code> before each update so non-monotonic streams stay correct.</li>
+<li>
+<code><a href="../reference/process_chunk.html">process_chunk()</a></code> rejects chunks that are not non-decreasing in <code>x</code> when merged with the previous overlap; feed ascending chunks or pre-sort the series.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-5-1-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-5-1-0"></a></h3>
+<ul><li>Distinguishing Online <code>add_point</code> filling vs <code>missing="drop"</code> via ternary <code>status</code>.</li>
+<li>Streaming no longer panics when derivatives were requested but missing; it returns an error instead.</li>
+<li>Extend/Zero boundary pads use unit spacing when leading/trailing <code>x</code> ties would otherwise stack pads.</li>
+<li>Adding idempotent <code><a href="https://rdrr.io/r/base/connections.html" class="external-link">close()</a></code> on <code>Lowess</code>, <code>StreamingLowess</code>, and <code>OnlineLowess</code> (clears retained predict state / releases native adapters).</li>
+<li>Mapping fit/stream/online/<code>predict</code> failures via <code>map_lowess_result</code> so InvalidArg vs Runtime categories are preserved.</li>
+<li>Requiring length-1 numeric <code>x</code>/<code>y</code> in <code><a href="../reference/add_point.html">add_point()</a></code>.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="5.0.0" id="rfastlowess-500">rfastlowess 5.0.0<a class="anchor" aria-label="anchor" href="#rfastlowess-500"></a></h2>
 <div class="section level3">

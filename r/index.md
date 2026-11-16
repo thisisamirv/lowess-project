@@ -3,8 +3,6 @@
 [![R-universe](https://img.shields.io/badge/R--universe-276DC3?logo=r&logoColor=white)](https://thisisamirv.r-universe.dev/rfastlowess)
 [![rfastlowess
 (R)](https://img.shields.io/badge/rfastlowess_(R)-44A833?logo=anaconda&logoColor=white)](https://anaconda.org/conda-forge/r-rfastlowess)
-[![Status at rOpenSci Software Peer
-Review](https://badges.ropensci.org/769_status.svg)](https://github.com/ropensci/software-review/issues/769)
 [![CI](https://github.com/thisisamirv/lowess-project/actions/workflows/ci-r.yml/badge.svg)](https://github.com/thisisamirv/lowess-project/actions/workflows/ci-r.yml)
 
 ![One LOWESS to Rule Them

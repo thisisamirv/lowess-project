@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastlowess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">5.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">5.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,8 +69,9 @@
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An online result list, or <code>NULL</code> if fewer than
-<code>min_points</code> have been added.</p>
+    <p>A list with <code>status</code> (<code>"filling"</code>, <code>"ready"</code>, or
+<code>"dropped"</code>) and <code>point</code> (an online-output list when ready;
+otherwise <code>NULL</code>).</p>
     </div>
 
     <div class="section level2">
@@ -78,17 +79,22 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="OnlineLowess.html">OnlineLowess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.2</span>, window_capacity <span class="op">=</span> <span class="fl">20L</span>, min_points <span class="op">=</span> <span class="fl">2L</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="fu">add_point</span><span class="op">(</span><span class="va">model</span>, <span class="fl">1.0</span>, <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">add_point</span><span class="op">(</span><span class="va">model</span>, <span class="fl">2.0</span>, <span class="fl">0.6</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $y</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "ready"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $point</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $point$y</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.6</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $residual</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $point$residual</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $robustness_weight</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $point$robustness_weight</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $iterations_used</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $point$iterations_used</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 </code></pre></div>
     </div>

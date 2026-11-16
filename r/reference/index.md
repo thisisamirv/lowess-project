@@ -38,6 +38,11 @@ Objects returned by fit methods and helper functions.
 - [`add_point()`](https://thisisamirv.github.io/lowess-project/r/reference/add_point.md)
   : Add a single point to an online LOWESS model
 
+- [`close(`*`<Lowess>`*`)`](https://thisisamirv.github.io/lowess-project/r/reference/close.Lowess.md)
+  [`close(`*`<StreamingLowess>`*`)`](https://thisisamirv.github.io/lowess-project/r/reference/close.Lowess.md)
+  [`close(`*`<OnlineLowess>`*`)`](https://thisisamirv.github.io/lowess-project/r/reference/close.Lowess.md)
+  : Release native resources held by a LOWESS model
+
 - [`plot(`*`<LowessResult>`*`)`](https://thisisamirv.github.io/lowess-project/r/reference/plot.LowessResult.md)
   : Plot Lowess Result
 

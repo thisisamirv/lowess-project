@@ -163,7 +163,9 @@ y <- sin(x * 0.1) + rnorm(50, 0, 0.1)
 smoothed <- numeric(0)
 for (i in seq_along(x)) {
     result <- add_point(model, x[i], y[i])
-    if (!is.null(result)) smoothed <- c(smoothed, result$y)
+    if (identical(result$status, "ready")) {
+        smoothed <- c(smoothed, result$point$y)
+    }
 }
 head(smoothed, 5)
 #> [1] 0.1201261 0.1898465 0.3098642 0.3037980 0.4955887
