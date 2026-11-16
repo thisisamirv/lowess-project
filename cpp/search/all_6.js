@@ -11,10 +11,11 @@ var searchData=
   ['fastlowess_5fcpp_5fversion_5fpatch_8',['FASTLOWESS_CPP_VERSION_PATCH',['../fastlowess__version_8h.html#afb996805bf9b01604cda36242bcecbd9',1,'fastlowess_version.h']]],
   ['fastlowess_5fcpp_5fversion_5fstring_9',['FASTLOWESS_CPP_VERSION_STRING',['../fastlowess__version_8h.html#a3cb6516b1dc01019bab6efb32ac990f7',1,'fastlowess_version.h']]],
   ['fastlowess_5fversion_2eh_10',['fastlowess_version.h',['../fastlowess__version_8h.html',1,'']]],
-  ['finalize_11',['finalize',['../classfastlowess_1_1StreamingLowess.html#a2e00c5df38b02cf9b32e3eba9f75cc09',1,'fastlowess::StreamingLowess']]],
-  ['fit_12',['fit',['../classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e',1,'fastlowess::Lowess']]],
-  ['fraction_13',['fraction',['../structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6',1,'fastlowess::LowessOptions::fraction'],['../structfastlowess_1_1OnlineOptions.html#a6acb9ee334a76cd3701228b0cab4ac62',1,'fastlowess::OnlineOptions::fraction']]],
-  ['fraction_5fused_14',['fraction_used',['../classfastlowess_1_1LowessResult.html#a80b7486011abac87056d6449ed80209b',1,'fastlowess::LowessResult']]],
-  ['fractions_15',['fractions',['../structfastlowess_1_1CVOptions.html#aaf2092553ba939b353fb8b23b5287871',1,'fastlowess::CVOptions']]],
-  ['functions_16',['Weight Functions',['../kernels.html',1,'weighting']]]
+  ['filling_11',['Filling',['../namespacefastlowess.html#aa8d8c82838a0e649da4577647c4701aaadd9f2a11a5ac6eea9163f4c453b61d02',1,'fastlowess']]],
+  ['finalize_12',['finalize',['../classfastlowess_1_1StreamingLowess.html#a2e00c5df38b02cf9b32e3eba9f75cc09',1,'fastlowess::StreamingLowess']]],
+  ['fit_13',['fit',['../classfastlowess_1_1Lowess.html#a504a722970109b32ab8318352d224a2e',1,'fastlowess::Lowess']]],
+  ['fraction_14',['fraction',['../structfastlowess_1_1LowessOptions.html#ac4c7e581cd561fc11a928f9901bb5ec6',1,'fastlowess::LowessOptions::fraction'],['../structfastlowess_1_1OnlineOptions.html#a6acb9ee334a76cd3701228b0cab4ac62',1,'fastlowess::OnlineOptions::fraction']]],
+  ['fraction_5fused_15',['fraction_used',['../classfastlowess_1_1LowessResult.html#a80b7486011abac87056d6449ed80209b',1,'fastlowess::LowessResult']]],
+  ['fractions_16',['fractions',['../structfastlowess_1_1CVOptions.html#aaf2092553ba939b353fb8b23b5287871',1,'fastlowess::CVOptions']]],
+  ['functions_17',['Weight Functions',['../kernels.html',1,'weighting']]]
 ];

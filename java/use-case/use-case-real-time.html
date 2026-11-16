@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Real-Time Processing :: fastlowess (Java)</title>
     <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/use-case/use-case-real-time.html">
-    <meta name="generator" content="Antora 3.2.1">
+    <meta name="generator" content="Antora 3.2.3">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
   <body class="article">
@@ -211,17 +211,15 @@
 <p>For true real-time applications where each point must be processed immediately.</p>
 </div>
 <div class="paragraph">
-<p><code>windowCapacity = 25</code> limits the internal buffer to the 25 most recent observations; each <code>addPoint</code> call costs O(window) rather than growing with total history. <code>minPoints = 5</code> suppresses output until the window holds enough points for a stable fit — calls made before that threshold return <code>Optional.empty()</code>. <code>updateMode = "incremental"</code> re-fits only the most recent point rather than the full window, halving typical latency at a modest accuracy cost.</p>
+<p><code>windowCapacity = 25</code> limits the internal buffer to the 25 most recent observations; each <code>addPoint</code> call costs O(window) rather than growing with total history. <code>minPoints = 5</code> suppresses output until the window holds enough points for a stable fit — calls made before that threshold return status <code>FILLING</code>. <code>updateMode = "incremental"</code> re-fits only the most recent point rather than the full window, halving typical latency at a modest accuracy cost.</p>
 </div>
 <div class="sect2">
 <h3 id="sensor-data-example"><a class="anchor" href="#sensor-data-example"></a>Sensor Data Example</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.OnlineLowess;
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.AddPointResult;
+import fastlowess.OnlineLowess;
 import fastlowess.OnlineOptions;
-import fastlowess.PointResult;
-
-import java.util.Optional;
 
 public class Example {
     public static void main(String[] args) {
@@ -238,10 +236,10 @@ public class Example {
                 double xi = i;
                 double yi = 20.0 + 5.0 * Math.sin(xi / 10.0) + Math.sin(xi * 1.7) * 0.5;
 
-                Optional&lt;PointResult&gt; res = model.addPoint(xi, yi);
-                if (res.isPresent()) {
+                AddPointResult res = model.addPoint(xi, yi);
+                if (res.isReady()) {
                     if (count &lt; 5) {
-                        System.out.printf("Time %s: smoothed = %.4f%n", xi, res.get().y());
+                        System.out.printf("Time %s: smoothed = %.4f%n", xi, res.point().orElseThrow().y());
                     }
                     count++;
                 }

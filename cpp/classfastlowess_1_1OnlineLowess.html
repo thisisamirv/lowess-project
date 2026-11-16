@@ -271,7 +271,7 @@ Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Add a single point and return the smoothed value. </p>
-<p>Returns an <a class="el" href="classfastlowess_1_1OnlineOutput.html" title="Result of a single online update step.">OnlineOutput</a>. Call has_value() to check if the window is ready. When false, the window is still filling. </p>
+<p>Returns an <a class="el" href="classfastlowess_1_1OnlineOutput.html" title="Result of a single online update step.">OnlineOutput</a>. Use <code>has_value()</code> / <code>status()</code> / <code>dropped()</code> to distinguish a ready estimate, a still-filling window, and a point dropped under <code>missing = "drop"</code>. </p>
 
 </div>
 </div>

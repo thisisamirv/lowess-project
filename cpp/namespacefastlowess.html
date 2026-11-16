@@ -102,6 +102,7 @@ $(document).ready(function(){initNavTree('namespacefastlowess.html',''); initRes
   <div class="summary">
 <a href="#namespaces">Namespaces</a> &#124;
 <a href="#nested-classes">Classes</a> &#124;
+<a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">fastlowess Namespace Reference</div></div>
 </div><!--header-->
@@ -163,6 +164,15 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Options for streaming LOWESS.  <a href="structfastlowess_1_1StreamingOptions.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="enum-members" name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:aa8d8c82838a0e649da4577647c4701aa" id="r_aa8d8c82838a0e649da4577647c4701aa"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacefastlowess.html#aa8d8c82838a0e649da4577647c4701aa">OnlinePointStatus</a> : std::int8_t { <a class="el" href="namespacefastlowess.html#aa8d8c82838a0e649da4577647c4701aaadd9f2a11a5ac6eea9163f4c453b61d02">Filling</a> = 0
+, <a class="el" href="namespacefastlowess.html#aa8d8c82838a0e649da4577647c4701aaae7d31fc0602fb2ede144d18cdffd816b">Ready</a> = 1
+, <a class="el" href="namespacefastlowess.html#aa8d8c82838a0e649da4577647c4701aaa74339e8d9916761b9b69183a081076c6">Dropped</a> = -1
+ }</td></tr>
+<tr class="memdesc:aa8d8c82838a0e649da4577647c4701aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Outcome of <code>OnlineLowess::add_point</code>.  <a href="namespacefastlowess.html#aa8d8c82838a0e649da4577647c4701aa">More...</a><br /></td></tr>
+<tr class="separator:aa8d8c82838a0e649da4577647c4701aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:abaf563498cf7cfe83bce50a7c3c10518" id="r_abaf563498cf7cfe83bce50a7c3c10518"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacefastlowess.html#abaf563498cf7cfe83bce50a7c3c10518">hasOutput</a> (<a class="el" href="classfastlowess_1_1Expected.html">const</a> std::vector&lt; std::string &gt; &amp;outputs, <a class="el" href="classfastlowess_1_1Expected.html">const</a> <a class="el" href="classfastlowess_1_1Expected.html">char</a> *<a class="el" href="classfastlowess_1_1Expected.html">name</a>)</td></tr>
@@ -171,7 +181,42 @@ Functions</h2></td></tr>
 <tr class="separator:ad6e51b52db8b075297d783ae2670f721"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a117df3e30f2597719a19fbabde4b247b" id="r_a117df3e30f2597719a19fbabde4b247b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastlowess_1_1Expected.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacefastlowess.html#a117df3e30f2597719a19fbabde4b247b">throwInitializationError</a> (<a class="el" href="classfastlowess_1_1Expected.html">const</a> <a class="el" href="classfastlowess_1_1Expected.html">char</a> *<a class="el" href="classfastlowess_1_1Expected.html">fallback</a>)</td></tr>
 <tr class="separator:a117df3e30f2597719a19fbabde4b247b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abab04777ba30c3f1ba0bb7ca91e21401" id="r_abab04777ba30c3f1ba0bb7ca91e21401"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacefastlowess.html#aa8d8c82838a0e649da4577647c4701aa">OnlinePointStatus</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacefastlowess.html#abab04777ba30c3f1ba0bb7ca91e21401">onlinePointStatusFromRaw</a> (<a class="el" href="classfastlowess_1_1Expected.html">int</a> has_value)</td></tr>
+<tr class="separator:abab04777ba30c3f1ba0bb7ca91e21401"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Enumeration Type Documentation</h2>
+<a id="aa8d8c82838a0e649da4577647c4701aa" name="aa8d8c82838a0e649da4577647c4701aa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa8d8c82838a0e649da4577647c4701aa">&#9670;&#160;</a></span>OnlinePointStatus</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastlowess_1_1Expected.html">enum</a> <a class="el" href="classfastlowess_1_1Expected.html">class</a> <a class="el" href="namespacefastlowess.html#aa8d8c82838a0e649da4577647c4701aa">fastlowess::OnlinePointStatus</a> : std::int8_t</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Outcome of <code><a class="el" href="classfastlowess_1_1OnlineLowess.html#a6bb43023f9e7f8884320dd29ac803aa9" title="Add a single point and return the smoothed value.">OnlineLowess::add_point</a></code>. </p>
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="aa8d8c82838a0e649da4577647c4701aaadd9f2a11a5ac6eea9163f4c453b61d02" name="aa8d8c82838a0e649da4577647c4701aaadd9f2a11a5ac6eea9163f4c453b61d02"></a>Filling&#160;</td><td class="fielddoc"><p>Window still has fewer than min_points finite observations. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="aa8d8c82838a0e649da4577647c4701aaae7d31fc0602fb2ede144d18cdffd816b" name="aa8d8c82838a0e649da4577647c4701aaae7d31fc0602fb2ede144d18cdffd816b"></a>Ready&#160;</td><td class="fielddoc"><p>Smoothed fields are valid for the latest point. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="aa8d8c82838a0e649da4577647c4701aaa74339e8d9916761b9b69183a081076c6" name="aa8d8c82838a0e649da4577647c4701aaa74339e8d9916761b9b69183a081076c6"></a>Dropped&#160;</td><td class="fielddoc"><p>Point ignored under missing = "drop". </p>
+</td></tr>
+</table>
+
+</div>
+</div>
 <h2 class="groupheader">Function Documentation</h2>
 <a id="abaf563498cf7cfe83bce50a7c3c10518" name="abaf563498cf7cfe83bce50a7c3c10518"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#abaf563498cf7cfe83bce50a7c3c10518">&#9670;&#160;</a></span>hasOutput()</h2>
@@ -198,6 +243,32 @@ Functions</h2></td></tr>
           <td></td>
           <td>)</td>
           <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="abab04777ba30c3f1ba0bb7ca91e21401" name="abab04777ba30c3f1ba0bb7ca91e21401"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abab04777ba30c3f1ba0bb7ca91e21401">&#9670;&#160;</a></span>onlinePointStatusFromRaw()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="namespacefastlowess.html#aa8d8c82838a0e649da4577647c4701aa">OnlinePointStatus</a> fastlowess::onlinePointStatusFromRaw </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classfastlowess_1_1Expected.html">int</a>&#160;</td>
+          <td class="paramname"><em>has_value</em></td><td>)</td>
+          <td></td>
         </tr>
       </table>
   </td>

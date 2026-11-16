@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Intervals :: fastlowess (Java)</title>
     <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/guide/intervals.html">
-    <meta name="generator" content="Antora 3.2.1">
+    <meta name="generator" content="Antora 3.2.3">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
   <body class="article">
@@ -514,7 +514,7 @@ public class Example {
                 .minPoints(5).updateMode("full").intervals(intervals).seed(42L).build())) {
             PointResult last = null;
             for (int i = 0; i &lt; 12; i++) {
-                last = online.addPoint(x[i], y[i]).orElse(last);
+                last = online.addPoint(x[i], y[i]).point().orElse(last);
             }
             System.out.println("Online PI present: " + last.predictionLower().isPresent());
         }

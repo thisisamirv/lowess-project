@@ -12,8 +12,9 @@ var searchData=
   ['standard_5ferrors_9',['standard_errors',['../classfastlowess_1_1LowessResult.html#a639b05174c5a1003425c96088f0786cc',1,'fastlowess::LowessResult::standard_errors()'],['../classfastlowess_1_1PredictResult.html#a23945e180d53d99fdc2feae728e04d42',1,'fastlowess::PredictResult::standard_errors()']]],
   ['start_10',['Quick Start',['../quickstart.html',1,'getting_started']]],
   ['started_11',['Getting Started',['../getting_started.html',1,'']]],
-  ['strategies_12',['Merge Strategies',['../merge.html',1,'advanced']]],
-  ['streaminglowess_13',['streaminglowess',['../classfastlowess_1_1StreamingLowess.html#a7598a426037d92f3e4c648dec8896989',1,'fastlowess::StreamingLowess::StreamingLowess(const StreamingLowess &amp;)=delete'],['../classfastlowess_1_1StreamingLowess.html#a4022a36817d7d5c8657ce8c4a6e11a3d',1,'fastlowess::StreamingLowess::StreamingLowess(StreamingLowess &amp;&amp;other) noexcept'],['../classfastlowess_1_1StreamingLowess.html#aead0b92d8add6a3b0afb09858f589e0c',1,'fastlowess::StreamingLowess::StreamingLowess(const StreamingOptions &amp;options={})'],['../classfastlowess_1_1StreamingLowess.html',1,'fastlowess::StreamingLowess']]],
-  ['streaminglowess_20api_14',['StreamingLowess API',['../api_streaming.html',1,'api']]],
-  ['streamingoptions_15',['StreamingOptions',['../structfastlowess_1_1StreamingOptions.html',1,'fastlowess']]]
+  ['status_12',['status',['../classfastlowess_1_1OnlineOutput.html#a1fe7b51ea97894ab7c3a819ca8be6ea5',1,'fastlowess::OnlineOutput']]],
+  ['strategies_13',['Merge Strategies',['../merge.html',1,'advanced']]],
+  ['streaminglowess_14',['streaminglowess',['../classfastlowess_1_1StreamingLowess.html#aead0b92d8add6a3b0afb09858f589e0c',1,'fastlowess::StreamingLowess::StreamingLowess(const StreamingOptions &amp;options={})'],['../classfastlowess_1_1StreamingLowess.html#a7598a426037d92f3e4c648dec8896989',1,'fastlowess::StreamingLowess::StreamingLowess(const StreamingLowess &amp;)=delete'],['../classfastlowess_1_1StreamingLowess.html#a4022a36817d7d5c8657ce8c4a6e11a3d',1,'fastlowess::StreamingLowess::StreamingLowess(StreamingLowess &amp;&amp;other) noexcept'],['../classfastlowess_1_1StreamingLowess.html',1,'fastlowess::StreamingLowess']]],
+  ['streaminglowess_20api_15',['StreamingLowess API',['../api_streaming.html',1,'api']]],
+  ['streamingoptions_16',['StreamingOptions',['../structfastlowess_1_1StreamingOptions.html',1,'fastlowess']]]
 ];

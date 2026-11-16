@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>OnlineLowess API :: fastlowess (Java)</title>
     <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/api/api-online.html">
-    <meta name="generator" content="Antora 3.2.1">
+    <meta name="generator" content="Antora 3.2.3">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
   <body class="article">
@@ -258,14 +258,14 @@ try (OnlineLowess model = new OnlineLowess(options)) {
 <p><strong>Methods:</strong></p>
 </div>
 <div class="sect3">
-<h4 id="addpointdouble-x-double-y-optionalpointresult"><a class="anchor" href="#addpointdouble-x-double-y-optionalpointresult"></a><code>addPoint(double x, double y) Optional&lt;PointResult&gt;</code></h4>
+<h4 id="addpointdouble-x-double-y-addpointresult"><a class="anchor" href="#addpointdouble-x-double-y-addpointresult"></a><code>addPoint(double x, double y) AddPointResult</code></h4>
 <div class="paragraph">
-<p>Adds a single point to the sliding window and returns the smoothed value for that point, or <code>Optional.empty()</code> while the window is still filling up (fewer than <code>minPoints</code> seen so far). Once the window reaches <code>windowCapacity</code>, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. <code>updateMode</code> controls how much work each call does: <code>"incremental"</code> re-fits only the newest point, while <code>"full"</code> re-smooths the entire window for a more accurate but slower result.</p>
+<p>Adds a single point to the sliding window. Returns an <code>AddPointResult</code> whose <code>status()</code> is <code>FILLING</code> while fewer than <code>minPoints</code> finite observations have been accepted, <code>READY</code> once smoothing begins (<code>point()</code> holds the <code>PointResult</code>), or <code>DROPPED</code> when <code>missing = "drop"</code> ignores a non-finite input. Once the window reaches <code>windowCapacity</code>, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. <code>updateMode</code> controls how much work each call does: <code>"incremental"</code> re-fits only the newest point, while <code>"full"</code> re-smooths the entire window for a more accurate but slower result.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Optional&lt;PointResult&gt; result = model.addPoint(x, y);
-result.ifPresent(r -&gt; System.out.println(r.y()));</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">AddPointResult result = model.addPoint(x, y);
+result.point().ifPresent(r -&gt; System.out.println(r.y()));</code></pre>
 </div>
 </div>
 <div class="ulist">
@@ -655,7 +655,7 @@ result.ifPresent(r -&gt; System.out.println(r.y()));</code></pre>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>"drop"</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Silently ignore the point — <code>addPoint</code> returns <code>Optional.empty()</code> instead of adding it to the window</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Silently ignore the point — <code>addPoint</code> returns status <code>DROPPED</code> instead of adding it to the window</p></td>
 </tr>
 </tbody>
 </table>
@@ -669,7 +669,7 @@ result.ifPresent(r -&gt; System.out.println(r.y()));</code></pre>
 <div class="sect2">
 <h3 id="minpoints"><a class="anchor" href="#minpoints"></a>minPoints</h3>
 <div class="paragraph">
-<p>Minimum number of points required before smoothing starts. <code>addPoint</code> returns <code>Optional.empty()</code> until the window reaches this size.</p>
+<p>Minimum number of points required before smoothing starts. <code>addPoint</code> returns status <code>FILLING</code> until the window reaches this size.</p>
 </div>
 </div>
 <div class="sect2">
@@ -744,7 +744,7 @@ result.ifPresent(r -&gt; System.out.println(r.y()));</code></pre>
 <div class="sect2">
 <h3 id="pointresult"><a class="anchor" href="#pointresult"></a><code>PointResult</code></h3>
 <div class="paragraph">
-<p>Returned by <code>addPoint</code> once the window has enough points (<code>Optional.empty()</code> until then).</p>
+<p>Returned in <code>AddPointResult.point()</code> once the window has enough points (<code>status</code> is <code>FILLING</code> or <code>DROPPED</code> otherwise).</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
@@ -813,11 +813,9 @@ result.ifPresent(r -&gt; System.out.println(r.y()));</code></pre>
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.OnlineLowess;
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastlowess.AddPointResult;
+import fastlowess.OnlineLowess;
 import fastlowess.OnlineOptions;
-import fastlowess.PointResult;
-
-import java.util.Optional;
 
 public class Example {
     public static void main(String[] args) {
@@ -836,14 +834,14 @@ public class Example {
                 .build();
 
         try (OnlineLowess model = new OnlineLowess(options)) {
-            Optional&lt;PointResult&gt; r1 = model.addPoint(x[0], y[0]);
-            System.out.println(r1.isPresent());
+            AddPointResult r1 = model.addPoint(x[0], y[0]);
+            System.out.println(r1.isReady());
 
-            Optional&lt;PointResult&gt; r2 = model.addPoint(x[1], y[1]);
-            System.out.println(r2.isPresent());
+            AddPointResult r2 = model.addPoint(x[1], y[1]);
+            System.out.println(r2.isReady());
 
-            Optional&lt;PointResult&gt; r3 = model.addPoint(x[2], y[2]);
-            r3.ifPresent(r -&gt; System.out.println(r.y()));
+            AddPointResult r3 = model.addPoint(x[2], y[2]);
+            r3.point().ifPresent(r -&gt; System.out.println(r.y()));
         }
     }
 }</code></pre>

@@ -17,7 +17,13 @@ var fastlowess_8hpp =
     [ "fastlowess::Lowess", "classfastlowess_1_1Lowess.html", "classfastlowess_1_1Lowess" ],
     [ "fastlowess::StreamingLowess", "classfastlowess_1_1StreamingLowess.html", "classfastlowess_1_1StreamingLowess" ],
     [ "fastlowess::OnlineLowess", "classfastlowess_1_1OnlineLowess.html", "classfastlowess_1_1OnlineLowess" ],
+    [ "OnlinePointStatus", "fastlowess_8hpp.html#aa8d8c82838a0e649da4577647c4701aa", [
+      [ "Filling", "fastlowess_8hpp.html#aa8d8c82838a0e649da4577647c4701aaadd9f2a11a5ac6eea9163f4c453b61d02", null ],
+      [ "Ready", "fastlowess_8hpp.html#aa8d8c82838a0e649da4577647c4701aaae7d31fc0602fb2ede144d18cdffd816b", null ],
+      [ "Dropped", "fastlowess_8hpp.html#aa8d8c82838a0e649da4577647c4701aaa74339e8d9916761b9b69183a081076c6", null ]
+    ] ],
     [ "hasOutput", "fastlowess_8hpp.html#abaf563498cf7cfe83bce50a7c3c10518", null ],
+    [ "onlinePointStatusFromRaw", "fastlowess_8hpp.html#abab04777ba30c3f1ba0bb7ca91e21401", null ],
     [ "throwInitializationError", "fastlowess_8hpp.html#a117df3e30f2597719a19fbabde4b247b", null ],
     [ "validateOutputs", "fastlowess_8hpp.html#ad6e51b52db8b075297d783ae2670f721", null ],
     [ "k_default_chunk_size", "fastlowess_8hpp.html#a59395fbc126884e972f950ea475927f8", null ],

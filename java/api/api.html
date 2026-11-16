@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>API :: fastlowess (Java)</title>
     <link rel="canonical" href="https://thisisamirv.github.io/lowess-project/java/api/api.html">
-    <meta name="generator" content="Antora 3.2.1">
+    <meta name="generator" content="Antora 3.2.3">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
   <body class="article">
@@ -817,7 +817,7 @@ try (Lowess model = new Lowess(options)) {
 <p><em>See: <a href="../guide/predict.html" class="xref page">Predict</a></em></p>
 </div>
 <div class="paragraph">
-<p>Retains the fitted model&#8217;s training data, populating <code>Result.predictModel()</code> with an <code>Optional&lt;PredictModel&gt;</code> usable to evaluate the fit at out-of-sample query points not in the training set. <code>false</code> (default) — no extra memory/copy cost unless requested.</p>
+<p>Retains the fitted model&#8217;s training data, populating <code>Result.predictModel()</code> with an <code>Optional&lt;PredictModel&gt;</code> usable to evaluate the fit at out-of-sample query points not in the training set. Close the <code>Result</code> (or the nested <code>PredictModel</code>) to free the native handle. <code>false</code> (default) — no extra memory/copy cost unless requested.</p>
 </div>
 </div>
 <div class="sect2">

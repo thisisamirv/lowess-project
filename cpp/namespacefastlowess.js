@@ -25,7 +25,13 @@ var namespacefastlowess =
     [ "PredictResult", "classfastlowess_1_1PredictResult.html", "classfastlowess_1_1PredictResult" ],
     [ "StreamingLowess", "classfastlowess_1_1StreamingLowess.html", "classfastlowess_1_1StreamingLowess" ],
     [ "StreamingOptions", "structfastlowess_1_1StreamingOptions.html", "structfastlowess_1_1StreamingOptions" ],
+    [ "OnlinePointStatus", "namespacefastlowess.html#aa8d8c82838a0e649da4577647c4701aa", [
+      [ "Filling", "namespacefastlowess.html#aa8d8c82838a0e649da4577647c4701aaadd9f2a11a5ac6eea9163f4c453b61d02", null ],
+      [ "Ready", "namespacefastlowess.html#aa8d8c82838a0e649da4577647c4701aaae7d31fc0602fb2ede144d18cdffd816b", null ],
+      [ "Dropped", "namespacefastlowess.html#aa8d8c82838a0e649da4577647c4701aaa74339e8d9916761b9b69183a081076c6", null ]
+    ] ],
     [ "hasOutput", "namespacefastlowess.html#abaf563498cf7cfe83bce50a7c3c10518", null ],
+    [ "onlinePointStatusFromRaw", "namespacefastlowess.html#abab04777ba30c3f1ba0bb7ca91e21401", null ],
     [ "throwInitializationError", "namespacefastlowess.html#a117df3e30f2597719a19fbabde4b247b", null ],
     [ "validateOutputs", "namespacefastlowess.html#ad6e51b52db8b075297d783ae2670f721", null ]
 ];

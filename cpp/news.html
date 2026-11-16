@@ -104,6 +104,23 @@ $(document).ready(function(){initNavTree('news.html',''); initResizable(); });
 <div class="contents">
 <div class="textblock"><h1>Changelog</h1>
 <p>This changelog includes end-user changes only. For internal development notes, see the <a href="https://github.com/thisisamirv/lowess-project/blob/main/CHANGELOG.md">repository changelog</a>.</p>
+<h2>[5.1.0]</h2>
+<h3>Changed</h3>
+<ul>
+<li><code>OnlineOutput</code> now distinguishes a still-filling window from a point dropped under <code>missing = "drop"</code> via <code>OnlinePointStatus</code> (<code>status()</code> / <code>dropped()</code>). <code>has_value()</code> remains true only when a smoothed estimate is ready.</li>
+<li>Online fits sort the sliding window by <code>x</code> before each update so non-monotonic streams stay correct.</li>
+<li><code>StreamingLowess::process_chunk</code> rejects chunks that are not non-decreasing in <code>x</code> when merged with the previous overlap; feed ascending chunks or pre-sort the series.</li>
+<li>Breaking change: renamed the public C ABI from the generic <code>cpp_*</code> prefix to <code>fastlowess_*</code> (for example <code>fastlowess_lowess_new</code>, <code>fastlowess_version</code>) so symbols do not collide with other bindings.</li>
+<li>Windows MSVC releases now publish separate Debug and Release shared libraries for vcpkg consumers (both use <code>/MD</code> because the Rust MSVC standard library does).</li>
+</ul>
+<h3>Fixed</h3>
+<ul>
+<li>Streaming no longer panics when derivatives were requested but missing; it returns an error instead.</li>
+<li>Extend/Zero boundary pads use unit spacing when leading/trailing <code>x</code> ties would otherwise stack pads.</li>
+<li>Fixed retained-model <code>predict_handle</code> ownership so <code>free_result</code> no longer leaks the handle; C++ takes ownership via <code>fastlowess_lowess_take_predict_handle</code>.</li>
+<li><code>LowessOptions::custom_weights</code> are now applied by <code>Lowess::fit</code> when the fit-argument weights are empty; length mismatches are rejected before the native call.</li>
+<li>Bounds-check <code>LowessResult::x_value</code> / <code>y_value</code>.</li>
+</ul>
 <h2>[5.0.0]</h2>
 <h3>Added</h3>
 <ul>
