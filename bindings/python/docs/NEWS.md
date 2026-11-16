@@ -8,6 +8,7 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Changed
 
 * Breaking change: `OnlineLowess.add_point` returns `AddPointResult` with `status` of `"filling"` / `"ready"` / `"dropped"` instead of `OnlineOutput | None`.
+* Breaking change: minimum supported Python is now 3.9 (`requires-python = ">=3.9"`).
 * Online fits sort the sliding window by `x` before each update so non-monotonic streams stay correct.
 * `StreamingLowess.process_chunk` rejects chunks that are not non-decreasing in `x` when merged with the previous overlap; feed ascending chunks or pre-sort the series.
 

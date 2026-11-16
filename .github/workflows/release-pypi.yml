@@ -14,8 +14,8 @@ permissions:
   contents: read
 
 env:
-  # Build wheels for Python 3.8 through 3.14
-  PYTHON_VERSIONS: "cp38 cp39 cp310 cp311 cp312 cp313 cp314"
+  # Build wheels for Python 3.9 through 3.14
+  PYTHON_VERSIONS: "cp39 cp310 cp311 cp312 cp313 cp314"
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
 
@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ["3.8"]
+        python: ["3.9"]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ["3.8"]
+        python: ["3.9"]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -84,7 +84,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ["3.8"]
+        python: ["3.9"]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -112,7 +112,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ["3.8"]
+        python: ["3.9"]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -140,7 +140,7 @@ jobs:
     runs-on: macos-15-intel
     strategy:
       matrix:
-        python: ["3.8"]
+        python: ["3.9"]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -175,7 +175,7 @@ jobs:
     runs-on: macos-14 # Apple Silicon runner
     strategy:
       matrix:
-        python: ["3.8"]
+        python: ["3.9"]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -210,7 +210,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python: ["3.8"]
+        python: ["3.9"]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -246,8 +246,8 @@ jobs:
     strategy:
       matrix:
         # python.org's official Windows installers only ship win-arm64 builds
-        # from 3.11 onward, unlike the other jobs' 3.8 baseline; the resulting
-        # wheel is still abi3-py38-compatible (see Cargo.toml's `abi3-py38`
+        # from 3.11 onward, unlike the other jobs' 3.9 baseline; the resulting
+        # wheel is still abi3-py39-compatible (see Cargo.toml's `abi3-py39`
         # PyO3 feature), so this doesn't change the wheel's declared support.
         python: ["3.11"]
     steps:

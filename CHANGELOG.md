@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Python:**
 
 - Breaking change: `OnlineLowess.add_point` returns `AddPointResult` with `status` of `"filling"` / `"ready"` / `"dropped"` instead of `OnlineOutput | None`.
+- Breaking change: minimum supported Python is now 3.9 (`abi3-py39` / `requires-python = ">=3.9"`), matching PyO3 0.30.
 - Bumped `pyo3` and `numpy` to v0.30.
 
 **R:**
