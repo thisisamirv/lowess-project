@@ -10,7 +10,7 @@ on:
         required: true
         type: string
       commit:
-        description: "Commit SHA to build from (defaults to the workflow's own ref)"
+        description: "Commit SHA to build from (tag or a descendant; defaults to the workflow's own ref)"
         required: false
         type: string
 
@@ -53,12 +53,17 @@ jobs:
           actual_module="$(cd bindings/go/fastlowess && go list -m)"
           test "$actual_module" = "$expected_module"
           release_commit="$(git rev-parse "refs/tags/${TAG}^{commit}")"
-          test "$release_commit" = "$(git rev-parse HEAD)"
+          build_commit="$(git rev-parse HEAD)"
+          # Same as other release workflows: build from the tag or a newer
+          # descendant (e.g. packaging hotfix) while still attaching assets to TAG.
+          git merge-base --is-ancestor "$release_commit" "$build_commit"
           module_tag="bindings/go/fastlowess/${TAG}"
           if git show-ref --verify --quiet "refs/tags/$module_tag"; then
-            test "$(git rev-parse "${module_tag}^")" = "$release_commit"
-            git show "${module_tag}:bindings/go/fastlowess/native/manifest.json" | jq -e --arg commit "$release_commit" --arg version "$TAG" '.source_commit == $commit and .version == $version'
-            git diff --quiet "$release_commit" "$module_tag" -- . ':(exclude)bindings/go/fastlowess/include' ':(exclude)bindings/go/fastlowess/native'
+            published_source="$(git show "${module_tag}:bindings/go/fastlowess/native/manifest.json" | jq -r '.source_commit')"
+            test -n "$published_source"
+            test "$(git rev-parse "${module_tag}^")" = "$published_source"
+            git show "${module_tag}:bindings/go/fastlowess/native/manifest.json" | jq -e --arg version "$TAG" '.version == $version'
+            git diff --quiet "$published_source" "$module_tag" -- . ':(exclude)bindings/go/fastlowess/include' ':(exclude)bindings/go/fastlowess/native'
             staging="$(mktemp -d)"
             git archive "${module_tag}:bindings/go/fastlowess" | tar -x -C "$staging"
             (cd "$staging" && sha256sum -c native/SHA256SUMS)

@@ -172,7 +172,7 @@ jobs:
   # ============================================================================
   macos-aarch64:
     name: Build macOS ARM64 (py${{ matrix.python }})
-    runs-on: macos-14 # Apple Silicon runner
+    runs-on: macos-15 # Apple Silicon runner
     strategy:
       matrix:
         python: ["3.9"]

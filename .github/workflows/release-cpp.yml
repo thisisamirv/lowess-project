@@ -449,6 +449,14 @@ jobs:
             PY
             echo "Updated $PACKAGE_FILE with version $VERSION"
 
+      - name: Setup Spack
+        uses: spack/setup-spack@v3
+        with:
+          spack_ref: develop
+
+      - name: Fix Spack recipe style
+        run: spack style --fix bindings/cpp/spack/package.py
+
       - name: Commit updated recipe
         run: |
           git config user.name "github-actions[bot]"

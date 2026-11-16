@@ -149,6 +149,34 @@ jobs:
       - name: Move Downloaded Artifacts
         run: ls -R bindings/nodejs/npm
 
+      # npm provenance requires repository.url to match the GitHub repo that
+      # minted the OIDC token. napi platform packages do not inherit it.
+      - name: Ensure repository metadata for provenance
+        working-directory: bindings/nodejs
+        run: |
+          node <<'NODE'
+          const fs = require('fs')
+          const path = require('path')
+          const repository = {
+            type: 'git',
+            url: `https://github.com/${process.env.GITHUB_REPOSITORY}.git`,
+          }
+          const files = [
+            'package.json',
+            ...fs
+              .readdirSync('npm', { withFileTypes: true })
+              .filter((entry) => entry.isDirectory())
+              .map((entry) => path.join('npm', entry.name, 'package.json')),
+          ]
+          for (const file of files) {
+            if (!fs.existsSync(file)) continue
+            const pkg = JSON.parse(fs.readFileSync(file, 'utf8'))
+            pkg.repository = repository
+            fs.writeFileSync(file, `${JSON.stringify(pkg, null, 4)}\n`)
+            console.log(`set repository on ${file}`)
+          }
+          NODE
+
       - name: Publish Subpackages
         working-directory: bindings/nodejs
         run: |

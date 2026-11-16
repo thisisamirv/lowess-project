@@ -102,7 +102,7 @@ jobs:
   # ============================================================================
   macos-aarch64:
     name: Build macOS ARM64 GPU
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v7
         with:
@@ -313,7 +313,7 @@ jobs:
   # ============================================================================
   julia-macos-aarch64:
     name: Build Julia GPU library (macOS ARM64)
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v7
         with:
@@ -453,7 +453,7 @@ jobs:
   # ============================================================================
   cpp-macos-aarch64:
     name: Build C++ GPU library (macOS ARM64)
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v7
         with:
@@ -645,7 +645,7 @@ jobs:
   # ============================================================================
   node-darwin-arm64:
     name: Build Node.js GPU binary (darwin-arm64)
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v7
         with:
@@ -1074,7 +1074,7 @@ jobs:
   # ============================================================================
   r-macos-aarch64:
     name: Build R GPU library (macOS ARM64)
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v7
         with:
@@ -1262,7 +1262,7 @@ jobs:
   # ============================================================================
   go-macos-aarch64:
     name: Build Go GPU library (macOS ARM64)
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v7
         with:
@@ -1450,7 +1450,7 @@ jobs:
   # ============================================================================
   java-macos-aarch64:
     name: Build Java GPU library (macOS ARM64)
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v7
         with:
