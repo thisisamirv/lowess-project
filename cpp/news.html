@@ -112,6 +112,7 @@ $(document).ready(function(){initNavTree('news.html',''); initResizable(); });
 <li><code>StreamingLowess::process_chunk</code> rejects chunks that are not non-decreasing in <code>x</code> when merged with the previous overlap; feed ascending chunks or pre-sort the series.</li>
 <li>Breaking change: renamed the public C ABI from the generic <code>cpp_*</code> prefix to <code>fastlowess_*</code> (for example <code>fastlowess_lowess_new</code>, <code>fastlowess_version</code>) so symbols do not collide with other bindings.</li>
 <li>Windows MSVC releases now publish separate Debug and Release shared libraries for vcpkg consumers (both use <code>/MD</code> because the Rust MSVC standard library does).</li>
+<li>Dropped the unused <code>libc</code> Rust dependency from the C++ binding crate.</li>
 </ul>
 <h3>Fixed</h3>
 <ul>
