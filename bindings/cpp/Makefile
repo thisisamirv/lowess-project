@@ -65,7 +65,7 @@ ifeq ($(HOST_PLATFORM),windows)
 	CPP_EXPORT_SCAN := objdump -p $(CPP_SHARED_LIB)
 	ifeq ($(CPP_WIN_TOOLCHAIN),mingw)
 		CPP_TEST_LIB        :=
-		CPP_CMAKE_GENERATOR := -G "MinGW Makefiles"
+		CPP_CMAKE_GENERATOR := -G "MinGW Makefiles" -DCMAKE_CXX_COMPILER=g++
 		CPP_TEST_BUILD      := cmake --build .
 		CPP_TEST_RUN        := cmake -E copy_if_different "$(abspath $(CPP_SHARED_LIB))" . && ctest --verbose --output-on-failure --timeout 120 -C Release
 	else

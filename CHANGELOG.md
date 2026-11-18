@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Preserve `clang-tidy` diagnostics when the C++ lint check fails.
 - Install LLVM 22 in Windows C++ CI jobs so `clang-tidy` supports the runner's MSVC standard library headers.
+- Explicitly select `g++` for MinGW C++ tests so LLVM on `PATH` cannot switch the build to the MSVC ABI.
 
 ## 5.1.0
 
