@@ -22,8 +22,9 @@
     }
     .display.math{display: block; text-align: center; margin: 0.5rem auto;}
     /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
     pre > code.sourceCode { white-space: pre; position: relative; }
-    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
     pre > code.sourceCode > span:empty { height: 1.2em; }
     .sourceCode { overflow: visible; }
     code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -182,56 +183,56 @@ C++, Go, and Java. See the documentation for your binding/crate below
 for installation instructions.</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Binding / Crate</th>
 <th>Documentation</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><code>lowess</code> (Rust)</td>
 <td><a href="https://docs.rs/lowess">docs.rs/lowess</a></td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>fastLowess</code> (Rust)</td>
 <td><a href="https://docs.rs/fastLowess">docs.rs/fastLowess</a></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Python</td>
 <td><a
 href="https://lowess.readthedocs.io/">lowess.readthedocs.io</a></td>
 </tr>
-<tr class="even">
+<tr>
 <td>R</td>
 <td><a
 href="https://thisisamirv.github.io/lowess-project/r/">thisisamirv.github.io/lowess-project/r</a></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Julia</td>
 <td><a
 href="https://thisisamirv.github.io/lowess-project/julia/">thisisamirv.github.io/lowess-project/julia</a></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Node.js</td>
 <td><a
 href="https://thisisamirv.github.io/lowess-project/nodejs/">thisisamirv.github.io/lowess-project/nodejs</a></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>WebAssembly</td>
 <td><a
 href="https://thisisamirv.github.io/lowess-project/wasm/">thisisamirv.github.io/lowess-project/wasm</a></td>
 </tr>
-<tr class="even">
+<tr>
 <td>C++</td>
 <td><a
 href="https://thisisamirv.github.io/lowess-project/cpp/">thisisamirv.github.io/lowess-project/cpp</a></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Go</td>
 <td><a
 href="https://thisisamirv.github.io/lowess-project/go/">thisisamirv.github.io/lowess-project/go</a></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Java</td>
 <td><a
 href="https://thisisamirv.github.io/lowess-project/java/">thisisamirv.github.io/lowess-project/java</a></td>
@@ -248,29 +249,29 @@ details.</p>
 <h2 id="loess-vs-lowess">LOESS vs. LOWESS</h2>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Feature</th>
 <th>LOESS</th>
 <th>LOWESS (This Crate)</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Polynomial Degree</strong></td>
 <td>Linear, Quadratic, Cubic, Quartic</td>
 <td>Linear (Degree 1)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Dimensions</strong></td>
 <td>Multivariate (n-D support)</td>
 <td>Univariate (1-D only)</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Flexibility</strong></td>
 <td>High (Distance metrics)</td>
 <td>Standard</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Complexity</strong></td>
 <td>Higher (Matrix inversion)</td>
 <td>Lower (Weighted average/slope)</td>
@@ -338,7 +339,7 @@ neighborhoods.</li>
 <p>A variety of features, supporting a range of use cases:</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Feature</th>
 <th style="text-align: center;">This package</th>
 <th style="text-align: center;">statsmodels</th>
@@ -346,85 +347,85 @@ neighborhoods.</li>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Kernel</td>
 <td style="text-align: center;">7 options</td>
 <td style="text-align: center;">only Tricube</td>
 <td style="text-align: center;">only Tricube</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Robustness Weighting</td>
 <td style="text-align: center;">3 options</td>
 <td style="text-align: center;">only Huber</td>
 <td style="text-align: center;">only Huber</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Scale Estimation</td>
 <td style="text-align: center;">2 options</td>
 <td style="text-align: center;">only MAR</td>
 <td style="text-align: center;">only MAR</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Boundary Padding</td>
 <td style="text-align: center;">4 options</td>
 <td style="text-align: center;">no padding</td>
 <td style="text-align: center;">no padding</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Zero Weight Fallback</td>
 <td style="text-align: center;">3 options</td>
 <td style="text-align: center;">no</td>
 <td style="text-align: center;">no</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Auto Convergence</td>
 <td style="text-align: center;">yes</td>
 <td style="text-align: center;">no</td>
 <td style="text-align: center;">no</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Online Mode</td>
 <td style="text-align: center;">yes</td>
 <td style="text-align: center;">no</td>
 <td style="text-align: center;">no</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Streaming Mode</td>
 <td style="text-align: center;">yes</td>
 <td style="text-align: center;">no</td>
 <td style="text-align: center;">no</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Confidence Intervals</td>
 <td style="text-align: center;">yes</td>
 <td style="text-align: center;">no</td>
 <td style="text-align: center;">no</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Prediction Intervals</td>
 <td style="text-align: center;">yes</td>
 <td style="text-align: center;">no</td>
 <td style="text-align: center;">no</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Cross-Validation</td>
 <td style="text-align: center;">2 options</td>
 <td style="text-align: center;">no</td>
 <td style="text-align: center;">no</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Parallel Execution</td>
 <td style="text-align: center;">yes</td>
 <td style="text-align: center;">no</td>
 <td style="text-align: center;">no</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>GPU Acceleration</td>
 <td style="text-align: center;">yes</td>
 <td style="text-align: center;">no</td>
 <td style="text-align: center;">no</td>
 </tr>
-<tr class="even">
+<tr>
 <td><code>no-std</code> Support</td>
 <td style="text-align: center;">yes</td>
 <td style="text-align: center;">no</td>
@@ -437,24 +438,24 @@ neighborhoods.</li>
 <code>lowess</code>:</p>
 <table>
 <thead>
-<tr class="header">
+<tr>
 <th>Aspect</th>
 <th>Status</th>
 <th>Details</th>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><strong>Accuracy</strong></td>
 <td>✅ EXACT MATCH</td>
 <td>Max diff &lt; 1e-12 across all scenarios</td>
 </tr>
-<tr class="even">
+<tr>
 <td><strong>Consistency</strong></td>
 <td>✅ PERFECT</td>
 <td>Multiple scenarios pass with strict tolerance</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><strong>Robustness</strong></td>
 <td>✅ VERIFIED</td>
 <td>Robust smoothing matches R exactly</td>

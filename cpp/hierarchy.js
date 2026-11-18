@@ -2,8 +2,8 @@ var hierarchy =
 [
     [ "fastlowess::CVOptions", "structfastlowess_1_1CVOptions.html", null ],
     [ "fastlowess::Diagnostics", "classfastlowess_1_1Diagnostics.html", null ],
-    [ "fastlowess::Expected< T >::ErrorTag", "structfastlowess_1_1Expected_1_1ErrorTag.html", null ],
-    [ "fastlowess::Expected< T >", "classfastlowess_1_1Expected.html", null ],
+    [ "fastlowess::Expected&lt; T &gt;::ErrorTag", "structfastlowess_1_1Expected_1_1ErrorTag.html", null ],
+    [ "fastlowess::Expected&lt; T &gt;", "classfastlowess_1_1Expected.html", null ],
     [ "fastlowess::IntervalsOptions", "structfastlowess_1_1IntervalsOptions.html", null ],
     [ "fastlowess::Lowess", "classfastlowess_1_1Lowess.html", null ],
     [ "fastlowess::LowessOptions", "structfastlowess_1_1LowessOptions.html", [

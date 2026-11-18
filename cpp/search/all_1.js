@@ -6,9 +6,11 @@ var searchData=
   ['aic_3',['aic',['../classfastlowess_1_1Diagnostics.html#a13b5421852d89a1500e23578e9bfb36e',1,'fastlowess::Diagnostics']]],
   ['aicc_4',['aicc',['../classfastlowess_1_1Diagnostics.html#a15df7a04baaf917ea6e9c3b9493a55cd',1,'fastlowess::Diagnostics']]],
   ['analysis_5',['Time Series Analysis',['../use_case_time_series.html',1,'use_case']]],
-  ['api_6',['api',['../api.html',1,'API'],['../api_online.html',1,'OnlineLowess API'],['../api_streaming.html',1,'StreamingLowess API']]],
+  ['api_6',['API',['../api.html',1,'API'],['../api_online.html',1,'OnlineLowess API'],['../api_streaming.html',1,'StreamingLowess API']]],
   ['api_2donline_2emd_7',['api-online.md',['../api-online_8md.html',1,'']]],
   ['api_2dstreaming_2emd_8',['api-streaming.md',['../api-streaming_8md.html',1,'']]],
   ['api_2emd_9',['api.md',['../api_8md.html',1,'']]],
-  ['auto_5fconverge_10',['auto_converge',['../structfastlowess_1_1LowessOptions.html#ab818fecad4f18a4f6ab947ebe75deb06',1,'fastlowess::LowessOptions::auto_converge'],['../structfastlowess_1_1OnlineOptions.html#a6950c44ed0571eed6219ecd34e78b0bd',1,'fastlowess::OnlineOptions::auto_converge']]]
+  ['archtag_10',['archTag',['../namespacefastlowess_1_1gpu_1_1detail.html#a7490e7cdc2842ff4fa6b304b31400521',1,'fastlowess::gpu::detail']]],
+  ['auto_5fconverge_11',['auto_converge',['../structfastlowess_1_1LowessOptions.html#ab818fecad4f18a4f6ab947ebe75deb06',1,'fastlowess::LowessOptions::auto_converge'],['../structfastlowess_1_1OnlineOptions.html#a6950c44ed0571eed6219ecd34e78b0bd',1,'fastlowess::OnlineOptions::auto_converge']]],
+  ['available_12',['available',['../namespacefastlowess_1_1gpu.html#a863e3af5ccb749114a91aa3a261e2145',1,'fastlowess::gpu']]]
 ];

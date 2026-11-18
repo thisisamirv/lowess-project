@@ -25,39 +25,15 @@
 var NAVTREE =
 [
   [ "fastlowess-cpp", "index.html", [
-    [ "Advanced", "advanced.html", [
-      [ "Boundary Handling", "boundary.html", null ],
-      [ "Merge Strategies", "merge.html", null ],
-      [ "GPU Backend", "gpu_backend.html", null ]
-    ] ],
-    [ "API", "api.html", [
-      [ "StreamingLowess API", "api_streaming.html", null ],
-      [ "OnlineLowess API", "api_online.html", null ]
-    ] ],
+    [ "Advanced", "advanced.html", "advanced" ],
+    [ "API", "api.html", "api" ],
     [ "Benchmarks", "benchmarks.html", null ],
-    [ "User Guide", "user_guide.html", [
-      [ "Execution Modes", "adapter_choice.html", null ],
-      [ "Intervals", "intervals.html", null ],
-      [ "Cross-Validation", "cross_validation.html", null ]
-    ] ],
+    [ "User Guide", "user_guide.html", "user_guide" ],
     [ "Out-of-Sample Prediction", "guide_predict.html", null ],
-    [ "Getting Started", "getting_started.html", [
-      [ "Installation", "installation.html", null ],
-      [ "Quick Start", "quickstart.html", null ],
-      [ "Concepts", "concepts.html", null ]
-    ] ],
+    [ "Getting Started", "getting_started.html", "getting_started" ],
     [ "News", "news.html", null ],
-    [ "Use Cases", "use_case.html", [
-      [ "Genomic Data Smoothing", "use_case_genomics.html", null ],
-      [ "Time Series Analysis", "use_case_time_series.html", null ],
-      [ "Real-Time Processing", "use_case_real_time.html", null ]
-    ] ],
-    [ "Weight & Robustness", "weighting.html", [
-      [ "Weight Functions", "kernels.html", null ],
-      [ "Robustness", "robustness.html", null ],
-      [ "Scaling Methods", "scaling.html", null ],
-      [ "Custom Weights", "custom_weights.html", null ]
-    ] ],
+    [ "Use Cases", "use_case.html", "use_case" ],
+    [ "Weight &amp; Robustness", "weighting.html", "weighting" ],
     [ "Namespaces", "namespaces.html", [
       [ "Namespace List", "namespaces.html", "namespaces_dup" ],
       [ "Namespace Members", "namespacemembers.html", [
@@ -94,5 +70,6 @@ var NAVTREEINDEX =
 "dir_113f19dc36fc2e9300a82e4ea01a9141.html"
 ];
 
-var SYNCONMSG = 'click to disable panel synchronisation';
-var SYNCOFFMSG = 'click to enable panel synchronisation';
+var SYNCONMSG = 'click to disable panel synchronization';
+var SYNCOFFMSG = 'click to enable panel synchronization';
+var LISTOFALLMEMBERS = 'List of all members';

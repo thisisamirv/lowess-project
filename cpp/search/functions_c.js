@@ -1,8 +1,12 @@
 var searchData=
 [
-  ['size_0',['size',['../classfastlowess_1_1PredictResult.html#afd50396b31c2063c98170f0b9d009e99',1,'fastlowess::PredictResult::size()'],['../classfastlowess_1_1LowessResult.html#aac2ee9f7edd671370098a32c902f3825',1,'fastlowess::LowessResult::size()']]],
-  ['standard_5ferror_1',['standard_error',['../classfastlowess_1_1OnlineOutput.html#a6daf4f19a07656b8034624c731ce623c',1,'fastlowess::OnlineOutput']]],
-  ['standard_5ferrors_2',['standard_errors',['../classfastlowess_1_1PredictResult.html#a23945e180d53d99fdc2feae728e04d42',1,'fastlowess::PredictResult::standard_errors()'],['../classfastlowess_1_1LowessResult.html#a639b05174c5a1003425c96088f0786cc',1,'fastlowess::LowessResult::standard_errors()']]],
-  ['status_3',['status',['../classfastlowess_1_1OnlineOutput.html#a1fe7b51ea97894ab7c3a819ca8be6ea5',1,'fastlowess::OnlineOutput']]],
-  ['streaminglowess_4',['streaminglowess',['../classfastlowess_1_1StreamingLowess.html#aead0b92d8add6a3b0afb09858f589e0c',1,'fastlowess::StreamingLowess::StreamingLowess(const StreamingOptions &amp;options={})'],['../classfastlowess_1_1StreamingLowess.html#a7598a426037d92f3e4c648dec8896989',1,'fastlowess::StreamingLowess::StreamingLowess(const StreamingLowess &amp;)=delete'],['../classfastlowess_1_1StreamingLowess.html#a4022a36817d7d5c8657ce8c4a6e11a3d',1,'fastlowess::StreamingLowess::StreamingLowess(StreamingLowess &amp;&amp;other) noexcept']]]
+  ['r_5fsquared_0',['r_squared',['../classfastlowess_1_1Diagnostics.html#aa0fffdce0f5a491f81c95ae2972c8c46',1,'fastlowess::Diagnostics']]],
+  ['removefile_1',['removeFile',['../namespacefastlowess_1_1gpu_1_1detail.html#aebc66c281df112469c5730bf9c0deaf0',1,'fastlowess::gpu::detail']]],
+  ['residual_2',['residual',['../classfastlowess_1_1OnlineOutput.html#ada2082be0f3d7371969ebca0cfd7b074',1,'fastlowess::OnlineOutput']]],
+  ['residual_5fsd_3',['residual_sd',['../classfastlowess_1_1Diagnostics.html#ab0626e0bb903038efeae2785cbcd2f23',1,'fastlowess::Diagnostics']]],
+  ['residuals_4',['residuals',['../classfastlowess_1_1LowessResult.html#a2bc1288fa77f608d2018b9a2d8692af5',1,'fastlowess::LowessResult']]],
+  ['rmse_5',['rmse',['../classfastlowess_1_1Diagnostics.html#a7a7fe5265de253a6d4210ab9635a0bd2',1,'fastlowess::Diagnostics']]],
+  ['robustness_5fweight_6',['robustness_weight',['../classfastlowess_1_1OnlineOutput.html#aa2ed697e5067d27b74def55c301d4443',1,'fastlowess::OnlineOutput']]],
+  ['robustness_5fweights_7',['robustness_weights',['../classfastlowess_1_1LowessResult.html#ac30cbf210940f36ce0fe65718be08af2',1,'fastlowess::LowessResult']]],
+  ['runprocess_8',['runProcess',['../namespacefastlowess_1_1gpu_1_1detail.html#a3824c16a1e2115548a295d2f32bea6eb',1,'fastlowess::gpu::detail']]]
 ];

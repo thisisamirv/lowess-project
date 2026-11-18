@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['lowess_0',['lowess',['../classfastlowess_1_1Lowess.html#aeb64128717ffc0cfeec679d9902a531f',1,'fastlowess::Lowess::Lowess(const LowessOptions &amp;options={})'],['../classfastlowess_1_1Lowess.html#a6881fe78c6cc7b606c2a4a35f9c3d2e7',1,'fastlowess::Lowess::Lowess(const Lowess &amp;)=delete'],['../classfastlowess_1_1Lowess.html#aee45723ef740443b160b664dd8fccff8',1,'fastlowess::Lowess::Lowess(Lowess &amp;&amp;other) noexcept']]],
-  ['lowesserror_1',['LowessError',['../classfastlowess_1_1LowessError.html#aa757849d28bbb66407c72f9872200d86',1,'fastlowess::LowessError']]],
-  ['lowessresult_2',['lowessresult',['../classfastlowess_1_1LowessResult.html#adfec572c42ea53c2db14b70db29e072c',1,'fastlowess::LowessResult::LowessResult()'],['../classfastlowess_1_1LowessResult.html#ac86141f193bac1ef68fad68d2cae44a4',1,'fastlowess::LowessResult::LowessResult(const fastlowess_CppLowessResult &amp;c_result)'],['../classfastlowess_1_1LowessResult.html#a99de99bdf1f6b24516cbda340b4bb73a',1,'fastlowess::LowessResult::LowessResult(const LowessResult &amp;)=delete'],['../classfastlowess_1_1LowessResult.html#a0fdb2fea87519fa6de8feea9f8a8015b',1,'fastlowess::LowessResult::LowessResult(LowessResult &amp;&amp;other) noexcept']]]
+  ['install_0',['install',['../namespacefastlowess_1_1gpu.html#aa24c2e72fc7971efa10b727c4ea63809',1,'fastlowess::gpu']]],
+  ['installlocalgpufile_1',['installLocalGpuFile',['../namespacefastlowess_1_1gpu_1_1detail.html#a777b9228b18ff6e6817f9dfa550a751f',1,'fastlowess::gpu::detail']]],
+  ['iterations_5fused_2',['iterations_used',['../classfastlowess_1_1OnlineOutput.html#ab895dec754b68f10ca75863ff07c19fc',1,'fastlowess::OnlineOutput::iterations_used()'],['../classfastlowess_1_1LowessResult.html#a8a62026a77efb2bc918a2e4bdde38e09',1,'fastlowess::LowessResult::iterations_used()']]]
 ];
