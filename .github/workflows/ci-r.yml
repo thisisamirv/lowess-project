@@ -55,6 +55,8 @@ jobs:
       - uses: r-lib/actions/setup-tinytex@v2
 
       - name: Install LaTeX packages for PDF manual
+        env:
+          TEXLIVE_PREFETCH: "0"
         run: tlmgr update --self && tlmgr install inconsolata times helvetic courier url
 
       - name: Bootstrap pak (Windows)
@@ -125,6 +127,8 @@ jobs:
       - uses: r-lib/actions/setup-tinytex@v2
 
       - name: Install LaTeX packages for PDF manual
+        env:
+          TEXLIVE_PREFETCH: "0"
         run: tlmgr update --self && tlmgr install inconsolata times helvetic courier url
 
       - uses: r-lib/actions/setup-r-dependencies@v2
