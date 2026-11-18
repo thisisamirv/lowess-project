@@ -94,8 +94,8 @@ jobs:
           # Replace the top-level package version only.
           CONTENT=$(echo "$CONTENT" | sed -E "s/^version = v\"[^\"]*\"$/version = v\"$VERSION\"/")
 
-          # Replace only the GitSource commit hash line.
-          CONTENT=$(echo "$CONTENT" | sed -E "s/(GitSource\(\"[^\"]*\", \")([0-9a-f]{40})(\"\),)/\1$COMMIT\3/")
+          # Replace only the GitSource commit hash, preserving the release tag check.
+          CONTENT=$(echo "$CONTENT" | sed -E "s/(GitSource\(\"[^\"]*\", \")[0-9a-f]{40}(\".*\),)/\1$COMMIT\2/")
 
           # Verify replacements
           echo "=== Updated Script (first 30 lines) ==="
@@ -109,7 +109,7 @@ jobs:
           fi
 
           # Verify commit was replaced
-          if ! echo "$CONTENT" | grep -qE "GitSource\(\"[^\"]*\", \"$COMMIT\"\),"; then
+          if ! echo "$CONTENT" | grep -qE "GitSource\(\"[^\"]*\", \"$COMMIT\".*\),"; then
             echo "❌ Failed to update commit hash in script"
             exit 1
           fi

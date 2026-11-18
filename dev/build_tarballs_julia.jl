@@ -7,7 +7,7 @@ version = v"1.3.0"
 
 # Update the commit hash when releasing a new version
 sources = [
-    GitSource("https://github.com/thisisamirv/lowess-project.git", "9235ec5a47552e72f6b2835bbab427bc70a83bd3"),
+    GitSource("https://github.com/thisisamirv/lowess-project.git", "9235ec5a47552e72f6b2835bbab427bc70a83bd3"; tag="v$(version)"),
 ]
 
 # Build script
@@ -23,7 +23,7 @@ if [[ "${rust_target}" == *-linux-musl* ]]; then
     RUSTFLAGS="${RUSTFLAGS} -C target-feature=-crt-static"
 fi
 # Build the release library
-cargo build --release --target ${rust_target} --target-dir target
+cargo build --locked --release --target ${rust_target} --target-dir target
 # Install the shared library
 install -Dvm755 target/${rust_target}/release/*fastlowess_jl.${dlext} -t "${libdir}"
 # Install licenses
