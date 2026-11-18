@@ -125,8 +125,11 @@ dev:
 	@echo "Linting C++ files..."
 	@if command -v clang-tidy >/dev/null 2>&1; then \
 		clang_tidy_log="$(TEMP)/clang-tidy-cpp.log"; \
-		clang-tidy --config-file=bindings/cpp/.clang-tidy bindings/cpp/include/fastlowess.hpp $(CPP_DIR)/tests/test_fastlowess.cpp -- -I bindings/cpp/include -std=c++17 > "$$clang_tidy_log" 2>&1; \
-		clang_tidy_status=$$?; \
+		if clang-tidy --config-file=bindings/cpp/.clang-tidy bindings/cpp/include/fastlowess.hpp $(CPP_DIR)/tests/test_fastlowess.cpp -- -I bindings/cpp/include -std=c++17 > "$$clang_tidy_log" 2>&1; then \
+			clang_tidy_status=0; \
+		else \
+			clang_tidy_status=$$?; \
+		fi; \
 		grep -Ev '^(\[[0-9]+/[0-9]+\] Processing file |[0-9]+ warnings generated\.|Suppressed [0-9]+ warnings \([0-9]+ in non-user code\)\.|Use -header-filter=\.\* or leave it as default to display errors from all non-system headers\.|Use -system-headers to display errors from system headers as well\.)' "$$clang_tidy_log" || true; \
 		rm -f "$$clang_tidy_log"; \
 		if [ $$clang_tidy_status -ne 0 ]; then \

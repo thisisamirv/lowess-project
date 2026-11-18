@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Disable TinyTeX package prefetching in CI to avoid Windows hangs during LaTeX package installation.
 
+**C++:**
+
+- Preserve `clang-tidy` diagnostics when the C++ lint check fails.
+
 ## 5.1.0
 
 ### Changed
