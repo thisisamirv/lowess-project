@@ -94,11 +94,7 @@ jobs:
 
       - name: Install LLVM 22 for Windows STL compatibility
         if: runner.os == 'Windows'
-        uses: KyleMayes/install-llvm-action@v2
-        with:
-          version: "22.1.0"
-          force-url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.0/LLVM-22.1.0-win64.exe
-          env: false
+        uses: ./.github/actions/setup-windows-llvm
 
       - uses: Swatinem/rust-cache@v2
         with:
@@ -239,11 +235,7 @@ jobs:
           if (-not $cppcheckExe) { throw "cppcheck.exe not found after winget install" }
           $cppcheckExe.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
       - name: Install LLVM 22 for Windows STL compatibility
-        uses: KyleMayes/install-llvm-action@v2
-        with:
-          version: "22.1.0"
-          force-url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.0/LLVM-22.1.0-win64.exe
-          env: false
+        uses: ./.github/actions/setup-windows-llvm
       - uses: Swatinem/rust-cache@v2
         with:
           key: cpp-windows-clangcl
@@ -299,11 +291,7 @@ jobs:
           if (-not $cppcheckExe) { throw "cppcheck.exe not found after winget install" }
           $cppcheckExe.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
       - name: Install LLVM 22 for Windows STL compatibility
-        uses: KyleMayes/install-llvm-action@v2
-        with:
-          version: "22.1.0"
-          force-url: https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.0/LLVM-22.1.0-win64.exe
-          env: false
+        uses: ./.github/actions/setup-windows-llvm
       - uses: Swatinem/rust-cache@v2
         with:
           key: cpp-windows-mingw

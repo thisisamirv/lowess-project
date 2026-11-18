@@ -1,0 +1,27 @@
+name: Install LLVM 22 on Windows
+description: Install the pinned LLVM tools without changing CC or CXX.
+runs:
+  using: composite
+  steps:
+    - shell: pwsh
+      run: |
+        $version = '22.1.0'
+        $asset = "LLVM-$version-win64.exe"
+        $sha256 = 'b31d5f54942e017cb878e594529723dd629cc7b54c9bf7a331e2dc01e8ea5e75'
+        $installer = Join-Path $env:RUNNER_TEMP $asset
+        $llvm = Join-Path $env:ProgramFiles 'LLVM'
+        $bin = Join-Path $llvm 'bin'
+
+        curl.exe --fail --location --retry 3 --output $installer "https://github.com/llvm/llvm-project/releases/download/llvmorg-$version/$asset"
+        if ($LASTEXITCODE -ne 0) { throw "Failed to download $asset" }
+        if ((Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash -ne $sha256) {
+          throw "SHA-256 mismatch for $asset"
+        }
+
+        7z x $installer "-o$llvm" -y
+        if ($LASTEXITCODE -ne 0) { throw "Failed to extract $asset" }
+        & (Join-Path $bin 'clang-tidy.exe') --version
+        if ($LASTEXITCODE -ne 0) { throw "clang-tidy failed after extracting $asset" }
+
+        $bin | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+        "LLVM_PATH=$llvm" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
