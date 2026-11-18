@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **R:**
 
-- Disable TinyTeX package prefetching in CI to avoid Windows hangs during LaTeX package installation.
+- Disable TinyTeX package prefetching and use `curl` in CI to avoid Windows hangs during LaTeX package downloads.
 
 **C++:**
 
