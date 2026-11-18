@@ -1,13 +1,25 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-# isort: skip_file
 
 import os
 import textwrap
 
-from spack.package import *
 from spack_repo.builtin.build_systems.cargo import CargoPackage
+
+from spack.package import (
+    Executable,
+    depends_on,
+    find_headers,
+    find_libraries,
+    install,
+    join_path,
+    license,
+    maintainers,
+    mkdirp,
+    version,
+    which,
+)
 
 
 class FastlowessCpp(CargoPackage):
@@ -18,9 +30,7 @@ class FastlowessCpp(CargoPackage):
     libraries with an owning C++ interface and a C-compatible API."""
 
     homepage = "https://thisisamirv.github.io/lowess-project/cpp/"
-    url = (
-        "https://github.com/thisisamirv/lowess-project/archive/refs/tags/v5.1.0.tar.gz"
-    )
+    url = "https://github.com/thisisamirv/lowess-project/archive/refs/tags/v5.1.0.tar.gz"
     git = "https://github.com/thisisamirv/lowess-project.git"
 
     test_requires_compiler = True
@@ -37,26 +47,11 @@ class FastlowessCpp(CargoPackage):
     # version() lines below are appended/updated by release-cpp.yml's
     # spack-release job on every release; keep newest first.
     version("5.1.0", sha256="83fa88b80b065cbb8e907808e0a9969258cffa6dc4edea78180e13e9cfcd5a2b")
-    version(
-        "5.0.0",
-        sha256="5aaddb050b08d9efa5493c4181dc2d59d02c5a87320dd95b415b726df1884007",
-    )
-    version(
-        "4.1.0",
-        sha256="ec0e99ac8f53ad80105eb47891569298e1e02d4068b6be89ab248e56cddbc8fa",
-    )
-    version(
-        "4.0.0",
-        sha256="56f277da4a7f5beeebe822f4827d33d35430087bc68b99e044dae76825d17c90",
-    )
-    version(
-        "3.2.1",
-        sha256="418d0620a1fcf9ef81910fc89d891edccb123bebc3dd07b359933e42801043e1",
-    )
-    version(
-        "3.1.0",
-        sha256="610a6af65a3e8eaa5483332c256e7ce6c3fe2b7ac3ec0f04e08ecd70bf6abe0f",
-    )
+    version("5.0.0", sha256="5aaddb050b08d9efa5493c4181dc2d59d02c5a87320dd95b415b726df1884007")
+    version("4.1.0", sha256="ec0e99ac8f53ad80105eb47891569298e1e02d4068b6be89ab248e56cddbc8fa")
+    version("4.0.0", sha256="56f277da4a7f5beeebe822f4827d33d35430087bc68b99e044dae76825d17c90")
+    version("3.2.1", sha256="418d0620a1fcf9ef81910fc89d891edccb123bebc3dd07b359933e42801043e1")
+    version("3.1.0", sha256="610a6af65a3e8eaa5483332c256e7ce6c3fe2b7ac3ec0f04e08ecd70bf6abe0f")
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
@@ -74,7 +69,7 @@ class FastlowessCpp(CargoPackage):
         # bindings/cpp is a member of the repo's Cargo workspace, so the
         # build output lands in target/release at the workspace root, not
         # under bindings/cpp/target -- build by package name instead of cd'ing.
-        cargo("build", "--release", "--lib", "-p", "fastlowess-cpp")
+        self.module.cargo("build", "--release", "--lib", "-p", "fastlowess-cpp")
 
     def install(self, spec, prefix):
         mkdirp(prefix.include)
@@ -130,9 +125,7 @@ class FastlowessCpp(CargoPackage):
 
         cxx = which(os.environ["CXX"])
         windows = self.spec.satisfies("platform=windows")
-        executable = (
-            "fastlowess_spack_smoke.exe" if windows else "fastlowess_spack_smoke"
-        )
+        executable = "fastlowess_spack_smoke.exe" if windows else "fastlowess_spack_smoke"
         compiler_name = os.path.basename(os.environ["CXX"]).lower()
         if compiler_name in ("cl", "cl.exe", "clang-cl", "clang-cl.exe"):
             cxx(
@@ -147,25 +140,13 @@ class FastlowessCpp(CargoPackage):
             link_flags = (
                 [join_path(self.prefix.lib, "fastlowess_cpp.dll.lib")]
                 if windows
-                else [
-                    f"-L{self.prefix.lib}",
-                    "-lfastlowess_cpp",
-                    f"-Wl,-rpath,{self.prefix.lib}",
-                ]
+                else [f"-L{self.prefix.lib}", "-lfastlowess_cpp", f"-Wl,-rpath,{self.prefix.lib}"]
             )
-            cxx(
-                "-std=c++17",
-                f"-I{self.prefix.include}",
-                source,
-                *link_flags,
-                "-o",
-                executable,
-            )
+            cxx("-std=c++17", f"-I{self.prefix.include}", source, *link_flags, "-o", executable)
 
         smoke = Executable(join_path(os.getcwd(), executable))
         if windows:
             smoke.add_default_env(
-                "PATH",
-                os.pathsep.join([str(self.prefix.bin), os.environ.get("PATH", "")]),
+                "PATH", os.pathsep.join([str(self.prefix.bin), os.environ.get("PATH", "")])
             )
         smoke()
